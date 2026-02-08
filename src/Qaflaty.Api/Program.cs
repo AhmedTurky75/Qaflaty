@@ -33,15 +33,7 @@ builder.Services.AddCors(options =>
 
 // Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
-    {
-        Title = "Qaflaty API",
-        Version = "v1",
-        Description = "Multi-tenant e-commerce SaaS platform API"
-    });
-});
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 

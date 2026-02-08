@@ -81,3 +81,7 @@ logs/
 # OS Files
 .DS_Store
 Thumbs.db
+
+# Docker
+docker-compose.override.yml
+.docker/

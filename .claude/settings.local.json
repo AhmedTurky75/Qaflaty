@@ -129,7 +129,8 @@
       "Bash(dotnet ef migrations add:*)",
       "Bash(cat:*)",
       "Bash(dotnet remove:*)",
-      "Bash(dotnet sln add:*)"
+      "Bash(dotnet sln add:*)",
+      "Bash(dotnet clean:*)"
     ],
     "deny": [],
     "ask": []
