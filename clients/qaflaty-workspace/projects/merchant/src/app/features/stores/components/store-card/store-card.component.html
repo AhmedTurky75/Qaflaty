@@ -1,0 +1,91 @@
+<div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 relative">
+  <!-- Status Badge -->
+  <div class="absolute top-4 right-4">
+    <span [class]="'px-2 py-1 text-xs font-medium rounded-full ' + getStatusColor(store.status)">
+      {{ store.status }}
+    </span>
+  </div>
+
+  <!-- Store Logo/Icon -->
+  <div class="flex items-start mb-4">
+    @if (store.branding.logoUrl) {
+      <img
+        [src]="store.branding.logoUrl"
+        [alt]="store.name"
+        class="w-16 h-16 rounded-lg object-cover"
+      />
+    } @else {
+      <div
+        class="w-16 h-16 rounded-lg flex items-center justify-center text-white text-2xl font-bold"
+        [style.background-color]="store.branding.primaryColor"
+      >
+        {{ store.name.charAt(0).toUpperCase() }}
+      </div>
+    }
+  </div>
+
+  <!-- Store Name -->
+  <h3 class="text-xl font-semibold text-gray-900 mb-2">
+    {{ store.name }}
+  </h3>
+
+  <!-- Store URL -->
+  <div class="flex items-center text-sm text-gray-600 mb-2">
+    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+    </svg>
+    <a
+      [href]="'https://' + getStoreUrl()"
+      target="_blank"
+      class="hover:text-primary-600 hover:underline"
+      (click)="$event.stopPropagation()"
+    >
+      {{ getStoreUrl() }}
+    </a>
+  </div>
+
+  <!-- Store Description -->
+  @if (store.description) {
+    <p class="text-sm text-gray-600 mb-4 line-clamp-2">
+      {{ store.description }}
+    </p>
+  }
+
+  <!-- Delivery Info -->
+  <div class="flex items-center text-xs text-gray-500 mb-4">
+    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+    </svg>
+    <span>
+      Delivery: {{ store.deliverySettings.deliveryFee.amount }} {{ store.deliverySettings.deliveryFee.currency }}
+      @if (store.deliverySettings.freeDeliveryThreshold) {
+        <span class="ml-1">
+          (Free above {{ store.deliverySettings.freeDeliveryThreshold.amount }} {{ store.deliverySettings.freeDeliveryThreshold.currency }})
+        </span>
+      }
+    </span>
+  </div>
+
+  <!-- Actions -->
+  <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+    <a
+      [routerLink]="['/stores', store.id]"
+      class="text-sm font-medium text-primary-600 hover:text-primary-700"
+    >
+      Manage Store →
+    </a>
+
+    <button
+      type="button"
+      (click)="onDelete($event)"
+      class="text-sm font-medium text-red-600 hover:text-red-700"
+    >
+      Delete
+    </button>
+  </div>
+
+  <!-- Created Date -->
+  <div class="mt-4 text-xs text-gray-400">
+    Created {{ store.createdAt | date:'mediumDate' }}
+  </div>
+</div>

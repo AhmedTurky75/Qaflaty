@@ -130,7 +130,13 @@
       "Bash(cat:*)",
       "Bash(dotnet remove:*)",
       "Bash(dotnet sln add:*)",
-      "Bash(dotnet clean:*)"
+      "Bash(dotnet clean:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(test:*)",
+      "Bash(ng generate:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(ng build:*)"
     ],
     "deny": [],
     "ask": []

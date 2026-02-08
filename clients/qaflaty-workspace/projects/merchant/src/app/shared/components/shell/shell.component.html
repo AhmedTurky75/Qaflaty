@@ -1,0 +1,153 @@
+<div class="min-h-screen bg-gray-100">
+  <!-- Mobile sidebar backdrop -->
+  @if (sidebarOpen()) {
+    <div
+      class="fixed inset-0 bg-gray-600 bg-opacity-75 z-20 lg:hidden"
+      (click)="toggleSidebar()"
+    ></div>
+  }
+
+  <!-- Sidebar -->
+  <aside
+    class="fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+    [class.-translate-x-full]="!sidebarOpen()"
+  >
+    <!-- Logo -->
+    <div class="flex items-center justify-center h-16 px-4 bg-primary-600">
+      <h1 class="text-2xl font-bold text-white">Qaflaty</h1>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="mt-6 px-3">
+      @for (item of navigationItems; track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="bg-primary-50 text-primary-700"
+          class="flex items-center px-4 py-3 mb-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+          (click)="sidebarOpen.set(false)"
+        >
+          <span class="text-2xl mr-3">
+            @switch (item.icon) {
+              @case ('home') { 🏠 }
+              @case ('store') { 🏪 }
+              @case ('box') { 📦 }
+              @case ('shopping-bag') { 🛍️ }
+              @case ('users') { 👥 }
+              @case ('settings') { ⚙️ }
+            }
+          </span>
+          <span class="font-medium">{{ item.name }}</span>
+        </a>
+      }
+    </nav>
+
+    <!-- User info at bottom -->
+    <div class="absolute bottom-0 w-full p-4 border-t border-gray-200">
+      @if (currentMerchant$ | async; as merchant) {
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-10 h-10 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold">
+              {{ merchant.fullName.charAt(0).toUpperCase() }}
+            </div>
+          </div>
+          <div class="ml-3 flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900 truncate">
+              {{ merchant.fullName }}
+            </p>
+            <p class="text-xs text-gray-500 truncate">
+              {{ merchant.email }}
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+  </aside>
+
+  <!-- Main content -->
+  <div class="lg:pl-64">
+    <!-- Top navigation bar -->
+    <header class="bg-white shadow-sm sticky top-0 z-10">
+      <div class="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
+        <!-- Mobile menu button -->
+        <button
+          type="button"
+          (click)="toggleSidebar()"
+          class="lg:hidden p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+        >
+          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
+        <!-- Right side -->
+        <div class="flex items-center ml-auto space-x-4">
+          <!-- Notifications (placeholder) -->
+          <button
+            type="button"
+            class="p-2 rounded-full text-gray-400 hover:text-gray-500 hover:bg-gray-100"
+          >
+            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+          </button>
+
+          <!-- User menu -->
+          <div class="relative">
+            <button
+              type="button"
+              (click)="toggleUserMenu()"
+              class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100"
+            >
+              @if (currentMerchant$ | async; as merchant) {
+                <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-semibold text-sm">
+                  {{ merchant.fullName.charAt(0).toUpperCase() }}
+                </div>
+                <span class="hidden md:block text-sm font-medium text-gray-700">
+                  {{ merchant.fullName }}
+                </span>
+              }
+              <svg class="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+
+            <!-- Dropdown menu -->
+            @if (userMenuOpen()) {
+              <div
+                class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5"
+              >
+                <a
+                  routerLink="/settings/profile"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  (click)="toggleUserMenu()"
+                >
+                  Profile Settings
+                </a>
+                <a
+                  routerLink="/settings"
+                  class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  (click)="toggleUserMenu()"
+                >
+                  Account Settings
+                </a>
+                <hr class="my-1">
+                <button
+                  type="button"
+                  (click)="logout()"
+                  class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                >
+                  Sign out
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page content -->
+    <main class="p-4 sm:p-6 lg:p-8">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

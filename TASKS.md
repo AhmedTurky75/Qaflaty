@@ -2083,7 +2083,7 @@ Implement authentication in the Merchant Angular application.
 
 See original Task 2.2 for full details.
 
-**Status**: [ ] Pending
+**Status**: [x] Completed
 
 ---
 
@@ -2103,7 +2103,7 @@ Create store management UI in Merchant application.
 
 See original Task 3.2 for full details.
 
-**Status**: [ ] Pending
+**Status**: [x] Completed
 
 ---
 
@@ -2252,7 +2252,7 @@ Build the marketing landing page.
 
 See original Task 8.1 for full details.
 
-**Status**: [ ] Pending
+**Status**: [x] Completed
 
 ---
 
