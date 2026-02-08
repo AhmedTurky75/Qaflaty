@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Qaflaty.Api/Qaflaty.Api.csproj" />
+    <Project Path="src/Qaflaty.Application/Qaflaty.Application.csproj" />
+    <Project Path="src/Qaflaty.Domain/Qaflaty.Domain.csproj" />
+    <Project Path="src/Qaflaty.Infrastructure/Qaflaty.Infrastructure.csproj" />
+  </Folder>
+</Solution>
