@@ -1,6 +1,8 @@
+using MediatR;
+
 namespace Qaflaty.Domain.Common.Primitives;
 
-public interface IDomainEvent
+public interface IDomainEvent : INotification
 {
     Guid EventId { get; }
     DateTime OccurredAt { get; }

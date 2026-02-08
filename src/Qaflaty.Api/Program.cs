@@ -1,3 +1,5 @@
+using Qaflaty.Application;
+using Qaflaty.Infrastructure;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,6 +32,11 @@ builder.Services.AddCors(options =>
             .AllowCredentials();
     });
 });
+
+// Register Application and Infrastructure layers
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHttpContextAccessor();
 
 // Configure Swagger/OpenAPI
 builder.Services.AddEndpointsApiExplorer();
