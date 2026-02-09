@@ -1,0 +1,200 @@
+<div>
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <div>
+      <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+        <a routerLink="/products" class="hover:text-primary-600">Products</a>
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+        <span>Categories</span>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-900">Category Management</h1>
+      <p class="mt-1 text-sm text-gray-600">
+        Organize your products with categories
+      </p>
+    </div>
+
+    <button
+      type="button"
+      (click)="onAddCategory()"
+      class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+    >
+      <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+      </svg>
+      Add Category
+    </button>
+  </div>
+
+  <!-- Category Form Modal -->
+  @if (showCategoryForm()) {
+    <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-50" (click)="onCancelForm()"></div>
+    <div class="fixed inset-0 z-50 overflow-y-auto">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+        <div class="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg" (click)="$event.stopPropagation()">
+          <form [formGroup]="categoryForm" (ngSubmit)="onSubmitCategory()">
+            <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+              <div class="sm:flex sm:items-start">
+                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <svg class="h-6 w-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                  </svg>
+                </div>
+                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left flex-1">
+                  <h3 class="text-base font-semibold leading-6 text-gray-900">
+                    {{ isEditMode() ? 'Edit Category' : 'Add New Category' }}
+                  </h3>
+                  <div class="mt-4 space-y-4">
+                    <!-- Category Name -->
+                    <div>
+                      <label for="categoryName" class="block text-sm font-medium text-gray-700 mb-1">
+                        Category Name <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="categoryName"
+                        formControlName="name"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        [class.border-red-500]="name?.invalid && name?.touched"
+                      />
+                      @if (name?.invalid && name?.touched) {
+                        <p class="mt-1 text-sm text-red-600">
+                          @if (name?.errors?.['required']) {
+                            Category name is required
+                          }
+                          @if (name?.errors?.['minlength']) {
+                            Category name must be at least 2 characters
+                          }
+                          @if (name?.errors?.['maxlength']) {
+                            Category name must be less than 100 characters
+                          }
+                        </p>
+                      }
+                    </div>
+
+                    <!-- Slug -->
+                    <div>
+                      <label for="categorySlug" class="block text-sm font-medium text-gray-700 mb-1">
+                        Slug <span class="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="categorySlug"
+                        formControlName="slug"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        [class.border-red-500]="slug?.invalid && slug?.touched"
+                      />
+                      <p class="mt-1 text-xs text-gray-500">URL-friendly version of the name</p>
+                      @if (slug?.invalid && slug?.touched) {
+                        <p class="mt-1 text-sm text-red-600">Slug is required</p>
+                      }
+                    </div>
+
+                    <!-- Parent Category -->
+                    <div>
+                      <label for="parentId" class="block text-sm font-medium text-gray-700 mb-1">
+                        Parent Category
+                      </label>
+                      <select
+                        id="parentId"
+                        formControlName="parentId"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                      >
+                        <option value="">No Parent (Top Level)</option>
+                        @for (category of flatCategories(); track category.id) {
+                          @if (category.id !== editingCategoryId()) {
+                            <option [value]="category.id">{{ category.name }}</option>
+                          }
+                        }
+                      </select>
+                      <p class="mt-1 text-xs text-gray-500">Select a parent category to create a subcategory</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+              <button
+                type="submit"
+                [disabled]="categoryForm.invalid"
+                class="inline-flex w-full justify-center rounded-md bg-primary-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-primary-700 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ isEditMode() ? 'Update' : 'Create' }}
+              </button>
+              <button
+                type="button"
+                (click)="onCancelForm()"
+                class="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <h3 class="text-sm font-medium text-red-800">Error loading categories</h3>
+          <p class="mt-1 text-sm text-red-700">{{ error() }}</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="flex items-center justify-center py-12">
+      <svg class="animate-spin h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @else if (!error() && categories().length === 0) {
+    <div class="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
+      <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+      </svg>
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No categories yet</h3>
+      <p class="mt-1 text-sm text-gray-500">Get started by creating your first category.</p>
+      <div class="mt-6">
+        <button
+          type="button"
+          (click)="onAddCategory()"
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700"
+        >
+          <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          Create Your First Category
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Category Tree -->
+  @else if (!error()) {
+    <div class="bg-white rounded-lg shadow-sm border border-gray-200">
+      <app-category-tree
+        [categories]="categories()"
+        (edit)="onEditCategory($event)"
+        (delete)="onDeleteCategory($event)"
+        (addChild)="onAddChildCategory($event)"
+      ></app-category-tree>
+    </div>
+  }
+</div>

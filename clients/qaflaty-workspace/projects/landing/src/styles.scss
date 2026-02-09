@@ -5,6 +5,25 @@
 @tailwind utilities;
 
 /* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   @apply font-sans antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Utility classes for container */
+.container {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
 }
