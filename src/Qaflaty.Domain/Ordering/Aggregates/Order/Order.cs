@@ -69,6 +69,7 @@ public sealed class Order : AggregateRoot<OrderId>
         var existingItem = _items.FirstOrDefault(i => i.ProductId.Value == productId.Value);
         if (existingItem != null)
         {
+            //Question : Why we return witout RecalculatePricing again ?
             return existingItem.UpdateQuantity(existingItem.Quantity + quantity);
         }
 
@@ -206,6 +207,7 @@ public sealed class Order : AggregateRoot<OrderId>
 
     private void ChangeStatus(OrderStatus newStatus, string? notes = null)
     {
+        //Question : Why always changedBy = "System" ?
         var statusChange = OrderStatusChange.Create(Status, newStatus, "System", notes);
         _statusHistory.Add(statusChange);
         Status = newStatus;

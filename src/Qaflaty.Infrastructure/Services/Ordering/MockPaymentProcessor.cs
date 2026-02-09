@@ -10,6 +10,7 @@ public class MockPaymentProcessor : IPaymentProcessor
         await Task.Delay(500, ct);
 
         // Generate transaction ID
+        //Question : Why we use only the first 20 char of GUID ? This may break uniqness.
         var transactionId = $"TXN-{Guid.NewGuid():N}"[..20];
 
         // Mock: always succeed for now
@@ -21,6 +22,7 @@ public class MockPaymentProcessor : IPaymentProcessor
         // Simulate network delay
         await Task.Delay(300, ct);
 
+        //Question : Why we use only the first 20 char of GUID ? This may break uniqness.
         var refundTransactionId = $"RFN-{Guid.NewGuid():N}"[..20];
 
         return new PaymentResult(true, refundTransactionId, null);
