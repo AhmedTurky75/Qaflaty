@@ -11,6 +11,8 @@ public sealed class PaymentInfo : ValueObject
     public DateTime? PaidAt { get; private set; }
     public string? FailureReason { get; private set; }
 
+    private PaymentInfo() { }
+
     private PaymentInfo(PaymentMethod method)
     {
         Method = method;

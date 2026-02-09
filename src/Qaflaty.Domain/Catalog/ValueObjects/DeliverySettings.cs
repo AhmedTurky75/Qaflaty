@@ -7,8 +7,11 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class DeliverySettings : ValueObject
 {
-    public Money DeliveryFee { get; }
-    public Money? FreeDeliveryThreshold { get; }
+    public Money DeliveryFee { get; private set; } = null!;
+    public Money? FreeDeliveryThreshold { get; private set; }
+
+    // EF Core requires parameterless constructor for types with owned navigations
+    private DeliverySettings() { }
 
     private DeliverySettings(Money deliveryFee, Money? freeDeliveryThreshold)
     {

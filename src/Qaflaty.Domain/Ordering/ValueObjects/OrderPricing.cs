@@ -6,9 +6,11 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class OrderPricing : ValueObject
 {
-    public Money Subtotal { get; }
-    public Money DeliveryFee { get; }
-    public Money Total { get; }
+    public Money Subtotal { get; private set; } = null!;
+    public Money DeliveryFee { get; private set; } = null!;
+    public Money Total { get; private set; } = null!;
+
+    private OrderPricing() { }
 
     private OrderPricing(Money subtotal, Money deliveryFee, Money total)
     {

@@ -4,8 +4,10 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class DeliveryInfo : ValueObject
 {
-    public Address Address { get; }
-    public string? Instructions { get; }
+    public Address Address { get; private set; } = null!;
+    public string? Instructions { get; private set; }
+
+    private DeliveryInfo() { }
 
     private DeliveryInfo(Address address, string? instructions)
     {

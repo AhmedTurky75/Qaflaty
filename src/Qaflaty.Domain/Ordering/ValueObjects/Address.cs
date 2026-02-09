@@ -6,12 +6,14 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class Address : ValueObject
 {
-    public string Street { get; }
-    public string City { get; }
-    public string? District { get; }
-    public string? PostalCode { get; }
-    public string Country { get; }
-    public string? AdditionalInfo { get; }
+    public string Street { get; private set; } = null!;
+    public string City { get; private set; } = null!;
+    public string? District { get; private set; }
+    public string? PostalCode { get; private set; }
+    public string Country { get; private set; } = null!;
+    public string? AdditionalInfo { get; private set; }
+
+    private Address() { }
 
     private Address(string street, string city, string? district, string? postalCode, string country, string? additionalInfo)
     {

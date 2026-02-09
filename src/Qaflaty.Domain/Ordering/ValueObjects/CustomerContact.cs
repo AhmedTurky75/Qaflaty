@@ -6,9 +6,11 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class CustomerContact : ValueObject
 {
-    public PersonName FullName { get; }
-    public PhoneNumber Phone { get; }
-    public Email? Email { get; }
+    public PersonName FullName { get; private set; } = null!;
+    public PhoneNumber Phone { get; private set; } = null!;
+    public Email? Email { get; private set; }
+
+    private CustomerContact() { }
 
     private CustomerContact(PersonName fullName, PhoneNumber phone, Email? email)
     {

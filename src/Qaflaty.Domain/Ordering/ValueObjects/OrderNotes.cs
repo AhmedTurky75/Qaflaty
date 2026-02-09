@@ -7,6 +7,8 @@ public sealed class OrderNotes : ValueObject
     public string? CustomerNotes { get; private set; }
     public string? MerchantNotes { get; private set; }
 
+    private OrderNotes() { }
+
     private OrderNotes(string? customerNotes, string? merchantNotes)
     {
         CustomerNotes = customerNotes;

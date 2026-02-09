@@ -7,14 +7,16 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class ProductPricing : ValueObject
 {
-    public Money Price { get; }
-    public Money? CompareAtPrice { get; }
+    public Money Price { get; private set; } = null!;
+    public Money? CompareAtPrice { get; private set; }
 
     public bool HasDiscount => CompareAtPrice != null;
     public decimal DiscountPercentage => HasDiscount
         ? Math.Round(((CompareAtPrice!.Amount - Price.Amount) / CompareAtPrice.Amount) * 100, 2)
         : 0;
     public Money? DiscountAmount => HasDiscount ? CompareAtPrice!.Subtract(Price) : null;
+
+    private ProductPricing() { }
 
     private ProductPricing(Money price, Money? compareAtPrice)
     {
