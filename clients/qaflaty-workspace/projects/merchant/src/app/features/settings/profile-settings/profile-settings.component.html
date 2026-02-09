@@ -1,0 +1,136 @@
+<div class="bg-white rounded-lg shadow">
+  <div class="px-6 py-4 border-b border-gray-200">
+    <h2 class="text-xl font-semibold text-gray-900">Profile Settings</h2>
+    <p class="mt-1 text-sm text-gray-600">
+      Update your personal information and contact details.
+    </p>
+  </div>
+
+  <div class="p-6">
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
+      <!-- Full Name Field -->
+      <div>
+        <label for="fullName" class="block text-sm font-medium text-gray-700">
+          Full Name <span class="text-red-500">*</span>
+        </label>
+        <div class="mt-1">
+          <input
+            id="fullName"
+            type="text"
+            formControlName="fullName"
+            autocomplete="name"
+            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            [class.border-red-300]="fullName?.invalid && fullName?.touched"
+          />
+        </div>
+        @if (fullName?.invalid && fullName?.touched) {
+          <p class="mt-2 text-sm text-red-600">
+            @if (fullName?.errors?.['required']) {
+              Full name is required
+            } @else if (fullName?.errors?.['minlength']) {
+              Full name must be at least 2 characters
+            } @else if (fullName?.errors?.['maxlength']) {
+              Full name cannot exceed 100 characters
+            }
+          </p>
+        }
+      </div>
+
+      <!-- Email Field (Read-only) -->
+      <div>
+        <label for="email" class="block text-sm font-medium text-gray-700">
+          Email Address
+        </label>
+        <div class="mt-1">
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 cursor-not-allowed sm:text-sm"
+          />
+        </div>
+        <p class="mt-2 text-sm text-gray-500">
+          Email address cannot be changed. Contact support if you need to update your email.
+        </p>
+      </div>
+
+      <!-- Phone Number Field -->
+      <div>
+        <label for="phone" class="block text-sm font-medium text-gray-700">
+          Phone Number
+        </label>
+        <div class="mt-1">
+          <input
+            id="phone"
+            type="tel"
+            formControlName="phone"
+            autocomplete="tel"
+            placeholder="+966 50 123 4567"
+            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+            [class.border-red-300]="phone?.invalid && phone?.touched"
+          />
+        </div>
+        @if (phone?.invalid && phone?.touched) {
+          <p class="mt-2 text-sm text-red-600">
+            @if (phone?.errors?.['pattern']) {
+              Please enter a valid phone number
+            }
+          </p>
+        }
+      </div>
+
+      <!-- Success Message -->
+      @if (success()) {
+        <div class="rounded-md bg-green-50 p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-green-800">
+                Profile updated successfully!
+              </p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Error Message -->
+      @if (error()) {
+        <div class="rounded-md bg-red-50 p-4">
+          <div class="flex">
+            <div class="flex-shrink-0">
+              <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+              </svg>
+            </div>
+            <div class="ml-3">
+              <p class="text-sm font-medium text-red-800">{{ error() }}</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Submit Button -->
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          [disabled]="loading() || profileForm.invalid"
+          class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          @if (loading()) {
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="ml-2">Saving...</span>
+          } @else {
+            Save Changes
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -9,6 +9,7 @@ import {
   RegisterRequest,
   RefreshTokenRequest,
   ChangePasswordRequest,
+  UpdateProfileRequest,
   MerchantDto
 } from 'shared';
 
@@ -93,6 +94,16 @@ export class AuthService {
 
   getCurrentMerchant(): Observable<MerchantDto> {
     return this.http.get<MerchantDto>(`${environment.apiUrl}/auth/me`)
+      .pipe(
+        tap(merchant => {
+          this.currentMerchantSubject.next(merchant);
+          this.storeMerchant(merchant);
+        })
+      );
+  }
+
+  updateProfile(request: UpdateProfileRequest): Observable<MerchantDto> {
+    return this.http.put<MerchantDto>(`${environment.apiUrl}/auth/profile`, request)
       .pipe(
         tap(merchant => {
           this.currentMerchantSubject.next(merchant);
