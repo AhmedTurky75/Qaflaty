@@ -1,0 +1,38 @@
+<div class="flow-root">
+  <ul role="list" class="-mb-8">
+    @for (change of statusHistory; track change.id; let last = $last) {
+      <li>
+        <div class="relative pb-8">
+          @if (!last) {
+            <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+          }
+          <div class="relative flex space-x-3">
+            <div>
+              <span [class]="getStatusColor(change.toStatus) + ' h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white'">
+                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getStatusIcon(change.toStatus)" />
+                </svg>
+              </span>
+            </div>
+            <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+              <div>
+                <p class="text-sm text-gray-900 font-medium">
+                  {{ change.toStatus }}
+                </p>
+                @if (change.notes) {
+                  <p class="mt-0.5 text-sm text-gray-500">{{ change.notes }}</p>
+                }
+                @if (change.changedBy) {
+                  <p class="mt-0.5 text-xs text-gray-400">by {{ change.changedBy }}</p>
+                }
+              </div>
+              <div class="whitespace-nowrap text-right text-sm text-gray-500">
+                <time [dateTime]="change.changedAt">{{ formatDate(change.changedAt) }}</time>
+              </div>
+            </div>
+          </div>
+        </div>
+      </li>
+    }
+  </ul>
+</div>

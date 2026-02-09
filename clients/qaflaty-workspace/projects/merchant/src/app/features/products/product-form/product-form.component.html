@@ -1,0 +1,328 @@
+<div>
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex items-center gap-2 text-sm text-gray-600 mb-2">
+      <a routerLink="/products" class="hover:text-primary-600">Products</a>
+      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+      </svg>
+      <span>{{ isEditMode() ? 'Edit Product' : 'Create Product' }}</span>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-900">
+      {{ isEditMode() ? 'Edit Product' : 'Create New Product' }}
+    </h1>
+  </div>
+
+  <!-- Error Message -->
+  @if (error()) {
+    <div class="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+      <div class="flex">
+        <div class="flex-shrink-0">
+          <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </div>
+        <div class="ml-3">
+          <p class="text-sm text-red-700">{{ error() }}</p>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Form -->
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Main Content -->
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Basic Info -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Basic Information</h2>
+
+          <div class="space-y-4">
+            <!-- Product Name -->
+            <div>
+              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
+                Product Name <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="name"
+                formControlName="name"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                [class.border-red-500]="name?.invalid && name?.touched"
+              />
+              @if (name?.invalid && name?.touched) {
+                <p class="mt-1 text-sm text-red-600">
+                  @if (name?.errors?.['required']) {
+                    Product name is required
+                  }
+                  @if (name?.errors?.['minlength']) {
+                    Product name must be at least 2 characters
+                  }
+                  @if (name?.errors?.['maxlength']) {
+                    Product name must be less than 200 characters
+                  }
+                </p>
+              }
+            </div>
+
+            <!-- Slug -->
+            <div>
+              <label for="slug" class="block text-sm font-medium text-gray-700 mb-1">
+                Slug <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="slug"
+                formControlName="slug"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                [class.border-red-500]="slug?.invalid && slug?.touched"
+              />
+              <p class="mt-1 text-xs text-gray-500">URL-friendly version of the name</p>
+              @if (slug?.invalid && slug?.touched) {
+                <p class="mt-1 text-sm text-red-600">Slug is required</p>
+              }
+            </div>
+
+            <!-- Description -->
+            <div>
+              <label for="description" class="block text-sm font-medium text-gray-700 mb-1">
+                Description
+              </label>
+              <textarea
+                id="description"
+                formControlName="description"
+                rows="4"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                [class.border-red-500]="description?.invalid && description?.touched"
+              ></textarea>
+              @if (description?.invalid && description?.touched) {
+                <p class="mt-1 text-sm text-red-600">
+                  Description must be less than 2000 characters
+                </p>
+              }
+            </div>
+
+            <!-- Category -->
+            <div>
+              <label for="categoryId" class="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                id="categoryId"
+                formControlName="categoryId"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="">No Category</option>
+                @for (category of categories(); track category.id) {
+                  <option [value]="category.id">{{ category.name }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pricing -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Pricing</h2>
+
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Price -->
+              <div>
+                <label for="price" class="block text-sm font-medium text-gray-700 mb-1">
+                  Price <span class="text-red-500">*</span>
+                </label>
+                <div class="flex gap-2">
+                  <input
+                    type="number"
+                    id="price"
+                    formControlName="price"
+                    min="0"
+                    step="0.01"
+                    class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                    [class.border-red-500]="price?.invalid && price?.touched"
+                  />
+                  <select
+                    formControlName="currency"
+                    class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  >
+                    @for (option of currencyOptions; track option.value) {
+                      <option [value]="option.value">{{ option.label }}</option>
+                    }
+                  </select>
+                </div>
+                @if (price?.invalid && price?.touched) {
+                  <p class="mt-1 text-sm text-red-600">
+                    @if (price?.errors?.['required']) {
+                      Price is required
+                    }
+                    @if (price?.errors?.['min']) {
+                      Price must be greater than or equal to 0
+                    }
+                  </p>
+                }
+              </div>
+
+              <!-- Compare At Price -->
+              <div>
+                <label for="compareAtPrice" class="block text-sm font-medium text-gray-700 mb-1">
+                  Compare At Price
+                </label>
+                <input
+                  type="number"
+                  id="compareAtPrice"
+                  formControlName="compareAtPrice"
+                  min="0"
+                  step="0.01"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  [class.border-red-500]="compareAtPrice?.invalid && compareAtPrice?.touched"
+                />
+                <p class="mt-1 text-xs text-gray-500">Original price for showing discount</p>
+                @if (compareAtPrice?.invalid && compareAtPrice?.touched) {
+                  <p class="mt-1 text-sm text-red-600">
+                    Compare at price must be greater than or equal to 0
+                  </p>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inventory -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Inventory</h2>
+
+          <div class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Quantity -->
+              <div>
+                <label for="quantity" class="block text-sm font-medium text-gray-700 mb-1">
+                  Quantity <span class="text-red-500">*</span>
+                </label>
+                <input
+                  type="number"
+                  id="quantity"
+                  formControlName="quantity"
+                  min="0"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  [class.border-red-500]="quantity?.invalid && quantity?.touched"
+                />
+                @if (quantity?.invalid && quantity?.touched) {
+                  <p class="mt-1 text-sm text-red-600">
+                    @if (quantity?.errors?.['required']) {
+                      Quantity is required
+                    }
+                    @if (quantity?.errors?.['min']) {
+                      Quantity must be greater than or equal to 0
+                    }
+                  </p>
+                }
+              </div>
+
+              <!-- SKU -->
+              <div>
+                <label for="sku" class="block text-sm font-medium text-gray-700 mb-1">
+                  SKU
+                </label>
+                <input
+                  type="text"
+                  id="sku"
+                  formControlName="sku"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                />
+                <p class="mt-1 text-xs text-gray-500">Stock Keeping Unit</p>
+              </div>
+            </div>
+
+            <!-- Track Inventory -->
+            <div class="flex items-center">
+              <input
+                type="checkbox"
+                id="trackInventory"
+                formControlName="trackInventory"
+                class="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <label for="trackInventory" class="ml-2 block text-sm text-gray-900">
+                Track inventory for this product
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Images -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Product Images</h2>
+          <app-image-upload
+            [images]="images()"
+            (imagesChange)="onImagesChange($event)"
+          ></app-image-upload>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="lg:col-span-1 space-y-6">
+        <!-- Status -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <h2 class="text-lg font-semibold text-gray-900 mb-4">Status</h2>
+
+          <div>
+            <label for="status" class="block text-sm font-medium text-gray-700 mb-1">
+              Product Status <span class="text-red-500">*</span>
+            </label>
+            <select
+              id="status"
+              formControlName="status"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+            >
+              @for (option of productStatusOptions; track option.value) {
+                <option [value]="option.value">{{ option.label }}</option>
+              }
+            </select>
+            <p class="mt-2 text-xs text-gray-500">
+              @switch (productForm.get('status')?.value) {
+                @case (ProductStatus.Draft) {
+                  Product will not be visible to customers
+                }
+                @case (ProductStatus.Active) {
+                  Product will be visible and available for purchase
+                }
+                @case (ProductStatus.Inactive) {
+                  Product will not be available for purchase
+                }
+              }
+            </p>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="space-y-3">
+            <button
+              type="submit"
+              [disabled]="loading() || productForm.invalid"
+              class="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              @if (loading()) {
+                <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                {{ isEditMode() ? 'Updating...' : 'Creating...' }}
+              } @else {
+                {{ isEditMode() ? 'Update Product' : 'Create Product' }}
+              }
+            </button>
+
+            <a
+              routerLink="/products"
+              class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Cancel
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
