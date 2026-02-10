@@ -170,6 +170,7 @@ export class ProductFormComponent implements OnInit {
       // Update existing product
       this.productService.updateProduct(storeId, this.productId, {
         name: productData.name,
+        slug: productData.slug,
         description: productData.description,
         categoryId: productData.categoryId
       }).subscribe({

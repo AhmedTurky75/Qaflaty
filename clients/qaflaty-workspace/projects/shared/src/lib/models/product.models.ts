@@ -53,6 +53,7 @@ export interface CreateProductRequest {
 
 export interface UpdateProductRequest {
   name: string;
+  slug: string;
   description?: string;
   categoryId?: string;
 }
