@@ -88,7 +88,7 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
 
         // Update additional info
         CategoryId? categoryId = request.CategoryId.HasValue ? new CategoryId(request.CategoryId.Value) : null;
-        product.UpdateInfo(nameResult.Value, request.Description, categoryId);
+        product.UpdateInfo(nameResult.Value, slugResult.Value, request.Description, categoryId);
 
         // Set status if provided
         if (!string.IsNullOrEmpty(request.Status) && Enum.TryParse<ProductStatus>(request.Status, true, out var status))

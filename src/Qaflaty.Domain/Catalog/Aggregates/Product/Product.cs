@@ -51,9 +51,10 @@ public sealed class Product : AggregateRoot<ProductId>
         return Result.Success(product);
     }
 
-    public Result UpdateInfo(ProductName name, string? description, CategoryId? categoryId)
+    public Result UpdateInfo(ProductName name, ProductSlug slug, string? description, CategoryId? categoryId)
     {
         Name = name;
+        Slug = slug;
         Description = description;
         CategoryId = categoryId;
         UpdatedAt = DateTime.UtcNow;
