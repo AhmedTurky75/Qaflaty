@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { StoreService } from '../services/store.service';
 import { StoreCardComponent } from '../components/store-card/store-card.component';
+import { StoreContextService } from '../../../core/services/store-context.service';
 import { StoreDto } from 'shared';
 
 @Component({
@@ -14,6 +15,7 @@ import { StoreDto } from 'shared';
 })
 export class StoreListComponent implements OnInit {
   private storeService = inject(StoreService);
+  private storeContext = inject(StoreContextService);
   private router = inject(Router);
 
   stores = signal<StoreDto[]>([]);
@@ -44,6 +46,7 @@ export class StoreListComponent implements OnInit {
     this.storeService.deleteStore(storeId).subscribe({
       next: () => {
         this.stores.update(stores => stores.filter(s => s.id !== storeId));
+        this.storeContext.refresh();
       },
       error: (err) => {
         alert(`Failed to delete store: ${err.message}`);

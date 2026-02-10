@@ -17,8 +17,13 @@
       <h1 class="text-2xl font-bold text-white">Qaflaty</h1>
     </div>
 
+    <!-- Store Switcher -->
+    <div class="mt-4">
+      <app-store-switcher></app-store-switcher>
+    </div>
+
     <!-- Navigation -->
-    <nav class="mt-6 px-3">
+    <nav class="px-3">
       @for (item of navigationItems; track item.route) {
         <a
           [routerLink]="item.route"

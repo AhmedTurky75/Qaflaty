@@ -5,6 +5,7 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductService } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { ImageUploadComponent, ImageItem } from '../components/image-upload/image-upload.component';
+import { StoreContextService } from '../../../core/services/store-context.service';
 import { CategoryDto, ProductStatus, Currency } from 'shared';
 
 @Component({
@@ -20,6 +21,7 @@ export class ProductFormComponent implements OnInit {
   private categoryService = inject(CategoryService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private storeContext = inject(StoreContextService);
 
   productForm: FormGroup;
   loading = signal(false);
@@ -77,7 +79,7 @@ export class ProductFormComponent implements OnInit {
   }
 
   loadCategories(): void {
-    const storeId = localStorage.getItem('currentStoreId') || '';
+    const storeId = this.storeContext.currentStoreId() || '';
     if (!storeId) return;
 
     this.categoryService.getCategories(storeId).subscribe({
@@ -134,7 +136,7 @@ export class ProductFormComponent implements OnInit {
       return;
     }
 
-    const storeId = localStorage.getItem('currentStoreId') || '';
+    const storeId = this.storeContext.currentStoreId() || '';
     if (!storeId) {
       this.error.set('Please select a store first');
       return;

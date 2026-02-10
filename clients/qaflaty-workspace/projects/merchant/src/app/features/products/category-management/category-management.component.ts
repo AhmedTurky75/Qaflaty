@@ -1,9 +1,10 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { CategoryService } from '../services/category.service';
 import { CategoryTreeComponent } from '../components/category-tree/category-tree.component';
+import { StoreContextService } from '../../../core/services/store-context.service';
 import { CategoryTreeDto, CategoryDto } from 'shared';
 
 @Component({
@@ -16,6 +17,7 @@ import { CategoryTreeDto, CategoryDto } from 'shared';
 export class CategoryManagementComponent implements OnInit {
   private categoryService = inject(CategoryService);
   private fb = inject(FormBuilder);
+  private storeContext = inject(StoreContextService);
 
   categories = signal<CategoryTreeDto[]>([]);
   flatCategories = signal<CategoryDto[]>([]);
@@ -49,7 +51,7 @@ export class CategoryManagementComponent implements OnInit {
   }
 
   loadCategories(): void {
-    const storeId = localStorage.getItem('currentStoreId') || '';
+    const storeId = this.storeContext.currentStoreId() || '';
     if (!storeId) {
       this.error.set('Please select a store first');
       this.loading.set(false);
@@ -123,7 +125,7 @@ export class CategoryManagementComponent implements OnInit {
       return;
     }
 
-    const storeId = localStorage.getItem('currentStoreId') || '';
+    const storeId = this.storeContext.currentStoreId() || '';
     if (!storeId) {
       this.error.set('Please select a store first');
       return;

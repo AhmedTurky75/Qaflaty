@@ -1,10 +1,11 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ProductService, ProductFilters } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { ProductCardComponent } from '../components/product-card/product-card.component';
+import { StoreContextService } from '../../../core/services/store-context.service';
 import { ProductDto, CategoryDto, ProductStatus } from 'shared';
 
 @Component({
@@ -18,6 +19,7 @@ export class ProductListComponent implements OnInit {
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
   private router = inject(Router);
+  private storeContext = inject(StoreContextService);
 
   products = signal<ProductDto[]>([]);
   categories = signal<CategoryDto[]>([]);
@@ -47,18 +49,23 @@ export class ProductListComponent implements OnInit {
   // View mode
   viewMode = signal<'grid' | 'list'>('grid');
 
+  constructor() {
+    effect(() => {
+      const storeId = this.storeContext.currentStoreId();
+      if (storeId) {
+        this.loadCategories();
+        this.loadProducts();
+      }
+    });
+  }
+
   ngOnInit(): void {
-    this.loadCategories();
-    this.loadProducts();
+    // Initial load handled by the effect
   }
 
   loadCategories(): void {
-    // For now, we'll use a hardcoded store ID. In a real app, this would come from a store context/service
-    const storeId = localStorage.getItem('currentStoreId') || '';
-    if (!storeId) {
-      console.warn('No store selected');
-      return;
-    }
+    const storeId = this.storeContext.currentStoreId();
+    if (!storeId) return;
 
     this.categoryService.getCategories(storeId).subscribe({
       next: (categories) => {
@@ -71,7 +78,7 @@ export class ProductListComponent implements OnInit {
   }
 
   loadProducts(): void {
-    const storeId = localStorage.getItem('currentStoreId') || '';
+    const storeId = this.storeContext.currentStoreId();
     if (!storeId) {
       this.error.set('Please select a store first');
       this.loading.set(false);

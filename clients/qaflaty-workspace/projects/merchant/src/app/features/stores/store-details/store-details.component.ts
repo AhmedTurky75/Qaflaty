@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { StoreService } from '../services/store.service';
 import { ColorPickerComponent } from '../components/color-picker/color-picker.component';
+import { StoreContextService } from '../../../core/services/store-context.service';
 import { StoreDto, Currency } from 'shared';
 
 @Component({
@@ -17,6 +18,7 @@ export class StoreDetailsComponent implements OnInit {
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private storeService = inject(StoreService);
+  private storeContext = inject(StoreContextService);
 
   store = signal<StoreDto | null>(null);
   loading = signal(true);
@@ -82,6 +84,7 @@ export class StoreDetailsComponent implements OnInit {
     this.storeService.updateStore(this.store()!.id, this.generalForm.value).subscribe({
       next: (updatedStore) => {
         this.store.set(updatedStore);
+        this.storeContext.refresh();
         this.saving.set(false);
         alert('Store information updated successfully!');
       },
@@ -100,6 +103,7 @@ export class StoreDetailsComponent implements OnInit {
       next: () => {
         const current = this.store()!;
         this.store.set({ ...current, branding: { ...current.branding, ...this.brandingForm.value } });
+        this.storeContext.refresh();
         this.saving.set(false);
         alert('Branding updated successfully!');
       },

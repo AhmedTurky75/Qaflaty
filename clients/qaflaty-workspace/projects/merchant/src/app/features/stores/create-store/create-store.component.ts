@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { StoreService } from '../services/store.service';
 import { SlugInputComponent } from '../components/slug-input/slug-input.component';
+import { StoreContextService } from '../../../core/services/store-context.service';
 
 @Component({
   selector: 'app-create-store',
@@ -15,6 +16,7 @@ import { SlugInputComponent } from '../components/slug-input/slug-input.componen
 export class CreateStoreComponent {
   private fb = inject(FormBuilder);
   private storeService = inject(StoreService);
+  private storeContext = inject(StoreContextService);
   private router = inject(Router);
 
   createForm: FormGroup;
@@ -49,6 +51,8 @@ export class CreateStoreComponent {
 
     this.storeService.createStore(this.createForm.value).subscribe({
       next: (store) => {
+        this.storeContext.refresh();
+        this.storeContext.selectStore(store.id);
         this.router.navigate(['/stores', store.id]);
       },
       error: (err) => {

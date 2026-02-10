@@ -1,22 +1,29 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
+import { StoreContextService } from '../../../core/services/store-context.service';
+import { StoreSwitcherComponent } from '../store-switcher/store-switcher.component';
 
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet],
+  imports: [CommonModule, RouterLink, RouterOutlet, StoreSwitcherComponent],
   templateUrl: './shell.component.html',
   styleUrls: ['./shell.component.scss']
 })
-export class ShellComponent {
+export class ShellComponent implements OnInit {
   private authService = inject(AuthService);
   private router = inject(Router);
+  private storeContext = inject(StoreContextService);
 
   currentMerchant$ = this.authService.currentMerchant$;
   sidebarOpen = signal(false);
   userMenuOpen = signal(false);
+
+  ngOnInit(): void {
+    this.storeContext.initialize();
+  }
 
   navigationItems = [
     { name: 'Dashboard', icon: 'home', route: '/dashboard' },
