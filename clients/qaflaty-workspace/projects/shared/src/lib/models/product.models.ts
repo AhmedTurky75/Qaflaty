@@ -1,34 +1,30 @@
 import { Money } from './store.models';
 
+export interface ProductListDto {
+  id: string;
+  slug: string;
+  name: string;
+  price: number;
+  quantity: number;
+  status: string;
+  firstImageUrl?: string;
+}
+
 export interface ProductDto {
   id: string;
-  storeId: string;
-  categoryId?: string;
-  name: string;
   slug: string;
+  name: string;
   description?: string;
-  pricing: ProductPricing;
-  inventory: ProductInventory;
-  status: ProductStatus;
-  images: ProductImage[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface ProductPricing {
-  price: Money;
-  compareAtPrice?: Money;
-  hasDiscount: boolean;
-  discountPercentage: number;
-  discountAmount: Money;
-}
-
-export interface ProductInventory {
+  price: number;
+  compareAtPrice?: number;
   quantity: number;
   sku?: string;
-  trackInventory: boolean;
-  inStock: boolean;
-  lowStock: boolean;
+  trackInventory?: boolean;
+  status: string;
+  categoryId?: string;
+  images?: ProductImage[];
+  firstImageUrl?: string;
+  createdAt?: string;
 }
 
 export interface ProductImage {

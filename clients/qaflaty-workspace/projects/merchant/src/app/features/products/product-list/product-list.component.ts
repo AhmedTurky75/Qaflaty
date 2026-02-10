@@ -6,7 +6,7 @@ import { ProductService, ProductFilters } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { ProductCardComponent } from '../components/product-card/product-card.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
-import { ProductDto, CategoryDto, ProductStatus } from 'shared';
+import {  CategoryDto, ProductDto, ProductStatus } from 'shared';
 
 @Component({
   selector: 'app-product-list',
@@ -150,13 +150,14 @@ export class ProductListComponent implements OnInit {
     if (!product) return;
 
     const storeId = this.storeContext.currentStoreId() || '';
-    const action$ = product.status === ProductStatus.Active
+    const isActive = product.status === 'Active';
+    const action$ = isActive
       ? this.productService.deactivateProduct(storeId, productId)
       : this.productService.activateProduct(storeId, productId);
 
     action$.subscribe({
       next: () => {
-        const newStatus = product.status === ProductStatus.Active ? ProductStatus.Inactive : ProductStatus.Active;
+        const newStatus = isActive ? 'Inactive' : 'Active';
         this.products.update(products =>
           products.map(p => p.id === productId ? { ...p, status: newStatus } : p)
         );

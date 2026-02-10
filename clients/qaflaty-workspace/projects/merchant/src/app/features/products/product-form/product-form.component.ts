@@ -102,16 +102,16 @@ export class ProductFormComponent implements OnInit {
           slug: product.slug,
           description: product.description,
           categoryId: product.categoryId || '',
-          price: product.pricing.price.amount,
-          currency: product.pricing.price.currency,
-          compareAtPrice: product.pricing.compareAtPrice?.amount || null,
-          quantity: product.inventory.quantity,
-          sku: product.inventory.sku,
-          trackInventory: product.inventory.trackInventory,
+          price: product.price,
+          currency: 'SAR',
+          compareAtPrice: product.compareAtPrice || null,
+          quantity: product.quantity,
+          sku: product.sku,
+          trackInventory: product.trackInventory,
           status: product.status
         });
 
-        this.images.set(product.images.map(img => ({
+        this.images.set((product.images || []).map(img => ({
           id: img.id,
           url: img.url,
           altText: img.altText,
