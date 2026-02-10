@@ -99,7 +99,7 @@ public class StoresController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateDeliverySettings(Guid id, [FromBody] UpdateDeliverySettingsRequest request, CancellationToken cancellationToken)
     {
-        var command = new UpdateDeliverySettingsCommand(id, request.DeliveryFee, request.FreeDeliveryThreshold);
+        var command = new UpdateDeliverySettingsCommand(id, request.DeliveryFee.Amount, request.FreeDeliveryThreshold?.Amount);
         var result = await Sender.Send(command, cancellationToken);
 
         if (result.IsFailure)
@@ -155,8 +155,10 @@ public record UpdateStoreBrandingRequest(
     string? LogoUrl,
     string PrimaryColor);
 
+public record MoneyRequest(decimal Amount, string Currency = "SAR");
+
 public record UpdateDeliverySettingsRequest(
-    decimal DeliveryFee,
-    decimal? FreeDeliveryThreshold);
+    MoneyRequest DeliveryFee,
+    MoneyRequest? FreeDeliveryThreshold);
 
 public record CheckSlugAvailabilityRequest(string Slug);
