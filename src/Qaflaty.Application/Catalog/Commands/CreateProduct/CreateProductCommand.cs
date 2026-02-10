@@ -13,5 +13,6 @@ public record CreateProductCommand(
     int Quantity,
     string? Sku,
     bool TrackInventory,
-    Guid? CategoryId
+    Guid? CategoryId,
+    string? Status
 ) : ICommand<ProductDto>;

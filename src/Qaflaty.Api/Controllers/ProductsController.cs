@@ -60,7 +60,8 @@ public class ProductsController : ApiController
             request.Quantity,
             request.Sku,
             request.TrackInventory,
-            request.CategoryId);
+            request.CategoryId,
+            request.Status);
 
         var result = await Sender.Send(command, cancellationToken);
 
@@ -166,7 +167,8 @@ public record CreateProductRequest(
     int Quantity,
     string? Sku,
     bool TrackInventory,
-    Guid? CategoryId);
+    Guid? CategoryId,
+    string? Status);
 
 public record UpdateProductRequest(
     string Name,

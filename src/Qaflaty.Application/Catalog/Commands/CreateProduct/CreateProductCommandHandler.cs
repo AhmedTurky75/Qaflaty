@@ -2,6 +2,7 @@ using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
+using Qaflaty.Domain.Catalog.Enums;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Catalog.ValueObjects;
 using Qaflaty.Domain.Common.Errors;
@@ -88,6 +89,15 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
         // Update additional info
         CategoryId? categoryId = request.CategoryId.HasValue ? new CategoryId(request.CategoryId.Value) : null;
         product.UpdateInfo(nameResult.Value, request.Description, categoryId);
+
+        // Set status if provided
+        if (!string.IsNullOrEmpty(request.Status) && Enum.TryParse<ProductStatus>(request.Status, true, out var status))
+        {
+            if (status == ProductStatus.Active)
+                product.Activate();
+            else if (status == ProductStatus.Inactive)
+                product.Deactivate();
+        }
 
         await _productRepository.AddAsync(product, cancellationToken);
 
