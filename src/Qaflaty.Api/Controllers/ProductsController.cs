@@ -55,8 +55,8 @@ public class ProductsController : ApiController
             request.Name,
             request.Slug,
             request.Description,
-            request.Price,
-            request.CompareAtPrice,
+            request.Price.Amount,
+            request.CompareAtPrice?.Amount,
             request.Quantity,
             request.Sku,
             request.TrackInventory,
@@ -91,7 +91,7 @@ public class ProductsController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateProductPricing(Guid storeId, Guid id, [FromBody] UpdateProductPricingRequest request, CancellationToken cancellationToken)
     {
-        var command = new UpdateProductPricingCommand(id, request.Price, request.CompareAtPrice);
+        var command = new UpdateProductPricingCommand(id, request.Price.Amount, request.CompareAtPrice?.Amount);
         var result = await Sender.Send(command, cancellationToken);
 
         if (result.IsFailure)
@@ -155,12 +155,14 @@ public class ProductsController : ApiController
     }
 }
 
+public record MoneyInput(decimal Amount, string Currency = "SAR");
+
 public record CreateProductRequest(
     string Name,
     string Slug,
     string? Description,
-    decimal Price,
-    decimal? CompareAtPrice,
+    MoneyInput Price,
+    MoneyInput? CompareAtPrice,
     int Quantity,
     string? Sku,
     bool TrackInventory,
@@ -173,8 +175,8 @@ public record UpdateProductRequest(
     Guid? CategoryId);
 
 public record UpdateProductPricingRequest(
-    decimal Price,
-    decimal? CompareAtPrice);
+    MoneyInput Price,
+    MoneyInput? CompareAtPrice);
 
 public record UpdateProductInventoryRequest(
     int Quantity,
