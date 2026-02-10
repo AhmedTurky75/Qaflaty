@@ -21,7 +21,7 @@ public sealed class RefreshToken : Entity<Guid>
     {
         return new RefreshToken
         {
-            Id = Guid.NewGuid(),
+            Id = Guid.Empty,
             MerchantId = merchantId,
             Token = token,
             ExpiresAt = expiresAt,
