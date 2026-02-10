@@ -97,8 +97,9 @@ export class StoreDetailsComponent implements OnInit {
 
     this.saving.set(true);
     this.storeService.updateBranding(this.store()!.id, this.brandingForm.value).subscribe({
-      next: (updatedStore) => {
-        this.store.set(updatedStore);
+      next: () => {
+        const current = this.store()!;
+        this.store.set({ ...current, branding: { ...current.branding, ...this.brandingForm.value } });
         this.saving.set(false);
         alert('Branding updated successfully!');
       },
@@ -126,8 +127,15 @@ export class StoreDetailsComponent implements OnInit {
 
     this.saving.set(true);
     this.storeService.updateDeliverySettings(this.store()!.id, request).subscribe({
-      next: (updatedStore) => {
-        this.store.set(updatedStore);
+      next: () => {
+        const current = this.store()!;
+        this.store.set({
+          ...current,
+          deliverySettings: {
+            deliveryFee: request.deliveryFee,
+            freeDeliveryThreshold: request.freeDeliveryThreshold ?? undefined
+          }
+        });
         this.saving.set(false);
         alert('Delivery settings updated successfully!');
       },

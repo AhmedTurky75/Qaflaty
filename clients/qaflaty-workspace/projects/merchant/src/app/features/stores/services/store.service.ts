@@ -33,12 +33,12 @@ export class StoreService {
     return this.http.put<StoreDto>(`${this.API_URL}/${id}`, request);
   }
 
-  updateBranding(id: string, request: UpdateBrandingRequest): Observable<StoreDto> {
-    return this.http.put<StoreDto>(`${this.API_URL}/${id}/branding`, request);
+  updateBranding(id: string, request: UpdateBrandingRequest): Observable<void> {
+    return this.http.put<void>(`${this.API_URL}/${id}/branding`, request);
   }
 
-  updateDeliverySettings(id: string, request: UpdateDeliverySettingsRequest): Observable<StoreDto> {
-    return this.http.put<StoreDto>(`${this.API_URL}/${id}/delivery`, request);
+  updateDeliverySettings(id: string, request: UpdateDeliverySettingsRequest): Observable<void> {
+    return this.http.put<void>(`${this.API_URL}/${id}/delivery`, request);
   }
 
   deleteStore(id: string): Observable<void> {
