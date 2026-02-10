@@ -69,10 +69,12 @@ export class App implements OnInit {
     this.storeService.detectAndLoadStore().subscribe({
       next: (store) => {
         // Set delivery settings in cart service
-        this.cartService.setDeliverySettings(
-          store.deliverySettings.deliveryFee,
-          store.deliverySettings.freeDeliveryThreshold
-        );
+        if (store.deliverySettings) {
+          this.cartService.setDeliverySettings(
+            store.deliverySettings.deliveryFee,
+            store.deliverySettings.freeDeliveryThreshold
+          );
+        }
       },
       error: (error) => {
         console.error('Failed to load store:', error);

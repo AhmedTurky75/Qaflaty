@@ -39,10 +39,10 @@ public record StoreListDto(
 
 public record StorePublicDto(
     Guid Id,
+    string Slug,
     string Name,
     string? Description,
-    string? LogoUrl,
-    string PrimaryColor,
-    decimal DeliveryFee,
-    decimal? FreeDeliveryThreshold
+    StoreBrandingDto Branding,
+    string Status,
+    DeliverySettingsDto DeliverySettings
 );

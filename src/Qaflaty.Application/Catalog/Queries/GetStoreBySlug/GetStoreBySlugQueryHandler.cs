@@ -27,11 +27,17 @@ public class GetStoreBySlugQueryHandler : IQueryHandler<GetStoreBySlugQuery, Sto
 
         return new StorePublicDto(
             store.Id.Value,
+            store.Slug.Value,
             store.Name.Value,
             store.Description,
-            store.Branding.LogoUrl,
-            store.Branding.PrimaryColor,
-            store.DeliverySettings.DeliveryFee.Amount,
-            store.DeliverySettings.FreeDeliveryThreshold?.Amount);
+            new StoreBrandingDto(
+                store.Branding.LogoUrl,
+                store.Branding.PrimaryColor),
+            store.Status.ToString(),
+            new DeliverySettingsDto(
+                new MoneyDto(store.DeliverySettings.DeliveryFee.Amount, store.DeliverySettings.DeliveryFee.Currency.ToString()),
+                store.DeliverySettings.FreeDeliveryThreshold != null
+                    ? new MoneyDto(store.DeliverySettings.FreeDeliveryThreshold.Amount, store.DeliverySettings.FreeDeliveryThreshold.Currency.ToString())
+                    : null));
     }
 }

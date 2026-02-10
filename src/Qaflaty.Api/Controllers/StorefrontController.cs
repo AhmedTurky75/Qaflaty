@@ -29,12 +29,18 @@ public class StorefrontController : ApiController
         var store = _tenantContext.CurrentStore;
         var storeDto = new StorePublicDto(
             Id: store.Id.Value,
+            Slug: store.Slug.Value,
             Name: store.Name.Value,
             Description: store.Description,
-            LogoUrl: store.Branding.LogoUrl,
-            PrimaryColor: store.Branding.PrimaryColor,
-            DeliveryFee: store.DeliverySettings.DeliveryFee.Amount,
-            FreeDeliveryThreshold: store.DeliverySettings.FreeDeliveryThreshold?.Amount);
+            Branding: new StoreBrandingDto(
+                store.Branding.LogoUrl,
+                store.Branding.PrimaryColor),
+            Status: store.Status.ToString(),
+            DeliverySettings: new DeliverySettingsDto(
+                new MoneyDto(store.DeliverySettings.DeliveryFee.Amount, store.DeliverySettings.DeliveryFee.Currency.ToString()),
+                store.DeliverySettings.FreeDeliveryThreshold != null
+                    ? new MoneyDto(store.DeliverySettings.FreeDeliveryThreshold.Amount, store.DeliverySettings.FreeDeliveryThreshold.Currency.ToString())
+                    : null));
 
         return Ok(storeDto);
     }
