@@ -35,6 +35,7 @@ export class ProductListComponent implements OnInit {
   totalProducts = signal(0);
   totalPages = computed(() => Math.ceil(this.totalProducts() / this.pageSize()));
 
+  Math = Math;
   ProductStatus = ProductStatus;
   productStatusOptions = [
     { value: '', label: 'All Status' },

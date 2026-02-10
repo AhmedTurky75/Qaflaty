@@ -1,0 +1,226 @@
+@if (loading()) {
+  <div class="min-h-screen bg-gray-50 py-8">
+    <div class="container mx-auto px-4">
+      <div class="animate-pulse">
+        <div class="bg-gray-300 h-8 w-48 mb-8 rounded"></div>
+        <div class="grid md:grid-cols-2 gap-8">
+          <div class="bg-gray-300 h-96 rounded"></div>
+          <div class="space-y-4">
+            <div class="bg-gray-300 h-8 rounded"></div>
+            <div class="bg-gray-300 h-6 rounded w-1/3"></div>
+            <div class="bg-gray-300 h-24 rounded"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+} @else if (product()) {
+  <div class="min-h-screen bg-gray-50 py-8">
+    <div class="container mx-auto px-4">
+      <!-- Breadcrumb -->
+      <nav class="mb-8 text-sm">
+        <ol class="flex items-center space-x-2">
+          <li>
+            <a [routerLink]="['/']" class="text-gray-600 hover:text-primary">Home</a>
+          </li>
+          <li class="text-gray-400">/</li>
+          <li>
+            <a [routerLink]="['/products']" class="text-gray-600 hover:text-primary">Products</a>
+          </li>
+          <li class="text-gray-400">/</li>
+          <li class="text-gray-900 font-medium">{{ product()!.name }}</li>
+        </ol>
+      </nav>
+
+      <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+        <!-- Product Images -->
+        <div class="space-y-4">
+          <!-- Main Image -->
+          <div class="relative aspect-square bg-white rounded-lg shadow-lg overflow-hidden">
+            @if (product()!.images.length > 0) {
+              <img
+                [src]="selectedImage().url"
+                [alt]="selectedImage().altText || product()!.name"
+                class="w-full h-full object-contain"
+              >
+            } @else {
+              <div class="w-full h-full flex items-center justify-center bg-gray-100">
+                <svg class="w-32 h-32 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            }
+
+            <!-- Discount Badge -->
+            @if (product()!.pricing.hasDiscount) {
+              <div class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
+                -{{ product()!.pricing.discountPercentage }}% OFF
+              </div>
+            }
+          </div>
+
+          <!-- Thumbnail Gallery -->
+          @if (product()!.images.length > 1) {
+            <div class="grid grid-cols-4 gap-4">
+              @for (image of product()!.images; track image.id) {
+                <button
+                  (click)="selectImage(image)"
+                  [class.ring-2]="selectedImage().id === image.id"
+                  [class.ring-primary]="selectedImage().id === image.id"
+                  class="aspect-square bg-white rounded-lg overflow-hidden hover:opacity-75 transition-opacity"
+                >
+                  <img
+                    [src]="image.url"
+                    [alt]="image.altText || product()!.name"
+                    class="w-full h-full object-cover"
+                  >
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Product Info -->
+        <div class="space-y-6">
+          <!-- Title and Price -->
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ product()!.name }}</h1>
+
+            <div class="flex items-baseline gap-3 mb-4">
+              <span class="text-4xl font-bold text-gray-900">
+                {{ product()!.pricing.price.amount.toFixed(2) }} {{ product()!.pricing.price.currency }}
+              </span>
+              @if (product()!.pricing.compareAtPrice) {
+                <span class="text-xl text-gray-500 line-through">
+                  {{ product()!.pricing.compareAtPrice!.amount.toFixed(2) }} {{ product()!.pricing.compareAtPrice!.currency }}
+                </span>
+              }
+            </div>
+
+            @if (product()!.pricing.hasDiscount) {
+              <p class="text-green-600 font-semibold">
+                You save {{ product()!.pricing.discountAmount!.amount.toFixed(2) }} {{ product()!.pricing.discountAmount!.currency }}
+              </p>
+            }
+          </div>
+
+          <!-- Stock Status -->
+          <div>
+            @if (product()!.inventory.inStock) {
+              <div class="flex items-center gap-2 text-green-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                </svg>
+                <span class="font-medium">In Stock</span>
+              </div>
+              @if (product()!.inventory.lowStock) {
+                <p class="text-orange-500 text-sm mt-1">
+                  Only {{ product()!.inventory.quantity }} left in stock!
+                </p>
+              }
+            } @else {
+              <div class="flex items-center gap-2 text-red-600">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                </svg>
+                <span class="font-medium">Out of Stock</span>
+              </div>
+            }
+          </div>
+
+          <!-- Description -->
+          @if (product()!.description) {
+            <div class="border-t pt-6">
+              <h2 class="text-lg font-semibold mb-3">Description</h2>
+              <p class="text-gray-600 whitespace-pre-line">{{ product()!.description }}</p>
+            </div>
+          }
+
+          <!-- Add to Cart -->
+          @if (product()!.inventory.inStock) {
+            <div class="border-t pt-6 space-y-4">
+              <div class="flex items-center gap-4">
+                <label class="font-medium">Quantity:</label>
+                <div class="flex items-center border rounded-lg">
+                  <button
+                    (click)="decreaseQuantity()"
+                    [disabled]="quantity() <= 1"
+                    class="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <input
+                    type="number"
+                    [(ngModel)]="quantity"
+                    [min]="1"
+                    [max]="product()!.inventory.quantity"
+                    class="w-16 text-center border-x py-2 focus:outline-none"
+                  >
+                  <button
+                    (click)="increaseQuantity()"
+                    [disabled]="quantity() >= product()!.inventory.quantity"
+                    class="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                (click)="addToCart()"
+                [disabled]="addingToCart()"
+                class="w-full px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                @if (addingToCart()) {
+                  <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Adding...
+                } @else {
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Add to Cart
+                }
+              </button>
+
+              @if (showAddedMessage()) {
+                <div class="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
+                  <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                  </svg>
+                  <span class="text-green-800 font-medium">Added to cart successfully!</span>
+                </div>
+              }
+            </div>
+          }
+
+          <!-- SKU -->
+          @if (product()!.inventory.sku) {
+            <div class="text-sm text-gray-600 border-t pt-6">
+              SKU: {{ product()!.inventory.sku }}
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+} @else if (!loading()) {
+  <div class="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div class="text-center">
+      <h1 class="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
+      <p class="text-gray-600 mb-8">The product you're looking for doesn't exist or has been removed.</p>
+      <a
+        [routerLink]="['/products']"
+        class="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
+      >
+        Browse All Products
+      </a>
+    </div>
+  </div>
+}

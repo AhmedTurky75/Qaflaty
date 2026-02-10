@@ -4,13 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { OrderService, OrderFilters } from '../services/order.service';
 import { OrderCardComponent } from '../components/order-card/order-card.component';
-import { StatusBadgeComponent } from '../components/status-badge/status-badge.component';
 import { OrderDto, OrderStatus } from 'shared';
 
 @Component({
   selector: 'app-order-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, OrderCardComponent, StatusBadgeComponent],
+  imports: [CommonModule, FormsModule, OrderCardComponent],
   templateUrl: './order-list.component.html',
   styleUrls: ['./order-list.component.scss']
 })

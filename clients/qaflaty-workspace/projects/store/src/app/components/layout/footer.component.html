@@ -1,0 +1,62 @@
+<footer class="bg-gray-50 border-t mt-auto">
+  <div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <!-- Store Info -->
+      <div>
+        <h3 class="font-semibold text-lg mb-4" [style.color]="store()?.branding?.primaryColor">
+          {{ store()?.name }}
+        </h3>
+        @if (store()?.description) {
+          <p class="text-gray-600 text-sm mb-4">
+            {{ store()!.description }}
+          </p>
+        }
+      </div>
+
+      <!-- Quick Links -->
+      <div>
+        <h3 class="font-semibold text-lg mb-4">Quick Links</h3>
+        <ul class="space-y-2 text-sm">
+          <li>
+            <a [routerLink]="['/']" class="text-gray-600 hover:text-primary transition-colors">
+              Home
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="['/products']" class="text-gray-600 hover:text-primary transition-colors">
+              Products
+            </a>
+          </li>
+          <li>
+            <a [routerLink]="['/track-order']" class="text-gray-600 hover:text-primary transition-colors">
+              Track Order
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Delivery Info -->
+      <div>
+        <h3 class="font-semibold text-lg mb-4">Delivery</h3>
+        <div class="text-sm text-gray-600 space-y-2">
+          <p>
+            Delivery Fee: {{ store()?.deliverySettings?.deliveryFee?.amount }} {{ store()?.deliverySettings?.deliveryFee?.currency }}
+          </p>
+          @if (store()?.deliverySettings?.freeDeliveryThreshold) {
+            <p>
+              Free delivery on orders above {{ store()!.deliverySettings.freeDeliveryThreshold!.amount }} {{ store()!.deliverySettings.freeDeliveryThreshold!.currency }}
+            </p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Copyright -->
+    <div class="mt-8 pt-8 border-t text-center text-sm text-gray-500">
+      <p>&copy; {{ currentYear }} {{ store()?.name }}. All rights reserved.</p>
+      <p class="mt-2">
+        Powered by <a href="https://qaflaty.com" target="_blank" class="text-primary hover:underline">Qaflaty</a>
+      </p>
+    </div>
+  </div>
+</footer>

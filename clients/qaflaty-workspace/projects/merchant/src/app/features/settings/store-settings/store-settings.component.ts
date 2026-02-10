@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { StoreService } from '../../stores/services/store.service';
-import { StoreListDto } from 'shared';
+import { StoreDto } from 'shared';
 
 @Component({
   selector: 'app-store-settings',
@@ -14,7 +14,7 @@ export class StoreSettingsComponent implements OnInit {
   private storeService = inject(StoreService);
   private router = inject(Router);
 
-  stores = signal<StoreListDto[]>([]);
+  stores = signal<StoreDto[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
 
@@ -24,7 +24,7 @@ export class StoreSettingsComponent implements OnInit {
 
   private loadStores(): void {
     this.loading.set(true);
-    this.storeService.getStores().subscribe({
+    this.storeService.getMyStores().subscribe({
       next: (stores) => {
         this.stores.set(stores);
         this.loading.set(false);

@@ -1,0 +1,143 @@
+<header class="bg-white shadow-sm sticky top-0 z-50">
+  <div class="container mx-auto px-4">
+    <!-- Top bar -->
+    <div class="flex items-center justify-between py-4">
+      <!-- Logo and Store Name -->
+      <a [routerLink]="['/']" class="flex items-center space-x-3">
+        @if (store()?.branding?.logoUrl) {
+          <img [src]="store()!.branding.logoUrl" [alt]="store()!.name" class="h-10 w-10 object-contain">
+        }
+        <span class="text-2xl font-bold" [style.color]="store()?.branding?.primaryColor">
+          {{ store()?.name }}
+        </span>
+      </a>
+
+      <!-- Search Bar (Desktop) -->
+      <div class="hidden md:flex flex-1 max-w-2xl mx-8">
+        <div class="relative w-full">
+          <input
+            type="text"
+            [(ngModel)]="searchQuery"
+            (keyup.enter)="onSearch()"
+            placeholder="Search products..."
+            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+          >
+          <button
+            (click)="onSearch()"
+            class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-primary"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Cart Icon -->
+      <button
+        (click)="toggleCart()"
+        class="relative p-2 text-gray-600 hover:text-primary transition-colors"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+        @if (itemCount() > 0) {
+          <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+            {{ itemCount() }}
+          </span>
+        }
+      </button>
+
+      <!-- Mobile Menu Button -->
+      <button
+        (click)="toggleMobileMenu()"
+        class="md:hidden p-2 text-gray-600 hover:text-primary"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Categories Navigation (Desktop) -->
+    @if (categories().length > 0) {
+      <nav class="hidden md:block border-t">
+        <ul class="flex space-x-6 py-3">
+          <li>
+            <a
+              [routerLink]="['/products']"
+              routerLinkActive="text-primary font-semibold"
+              [routerLinkActiveOptions]="{exact: true}"
+              class="text-gray-600 hover:text-primary transition-colors"
+            >
+              All Products
+            </a>
+          </li>
+          @for (category of categories(); track category.id) {
+            <li>
+              <a
+                [routerLink]="['/products']"
+                [queryParams]="{category: category.id}"
+                class="text-gray-600 hover:text-primary transition-colors"
+              >
+                {{ category.name }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+    }
+
+    <!-- Mobile Search -->
+    <div class="md:hidden pb-4">
+      <div class="relative">
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (keyup.enter)="onSearch()"
+          placeholder="Search products..."
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+        <button
+          (click)="onSearch()"
+          class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile Menu -->
+  @if (showMobileMenu()) {
+    <div class="md:hidden border-t bg-white">
+      <nav class="container mx-auto px-4 py-4">
+        <ul class="space-y-3">
+          <li>
+            <a
+              [routerLink]="['/products']"
+              (click)="toggleMobileMenu()"
+              class="block text-gray-600 hover:text-primary transition-colors py-2"
+            >
+              All Products
+            </a>
+          </li>
+          @for (category of categories(); track category.id) {
+            <li>
+              <a
+                [routerLink]="['/products']"
+                [queryParams]="{category: category.id}"
+                (click)="toggleMobileMenu()"
+                class="block text-gray-600 hover:text-primary transition-colors py-2"
+              >
+                {{ category.name }}
+              </a>
+            </li>
+          }
+        </ul>
+      </nav>
+    </div>
+  }
+</header>

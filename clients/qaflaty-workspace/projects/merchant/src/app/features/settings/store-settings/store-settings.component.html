@@ -84,8 +84,8 @@
                 <div class="flex-1 min-w-0">
                   <div class="flex items-center space-x-3">
                     <div class="flex-shrink-0">
-                      @if (store.logoUrl) {
-                        <img [src]="store.logoUrl" [alt]="store.name" class="h-10 w-10 rounded-md object-cover">
+                      @if (store.branding.logoUrl) {
+                        <img [src]="store.branding.logoUrl" [alt]="store.name" class="h-10 w-10 rounded-md object-cover">
                       } @else {
                         <div class="h-10 w-10 rounded-md bg-gray-200 flex items-center justify-center">
                           <svg class="h-6 w-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
