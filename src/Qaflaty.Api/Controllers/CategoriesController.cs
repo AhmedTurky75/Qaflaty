@@ -64,7 +64,7 @@ public class CategoriesController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateCategory(Guid storeId, Guid id, [FromBody] UpdateCategoryRequest request, CancellationToken cancellationToken)
     {
-        var command = new UpdateCategoryCommand(id, request.Name);
+        var command = new UpdateCategoryCommand(id, request.Name, request.ParentId);
         var result = await Sender.Send(command, cancellationToken);
         return HandleResult(result);
     }
@@ -111,7 +111,7 @@ public record CreateCategoryRequest(
     Guid? ParentId,
     int SortOrder = 0);
 
-public record UpdateCategoryRequest(string Name);
+public record UpdateCategoryRequest(string Name, Guid? ParentId);
 
 public record ReorderCategoriesRequest(List<CategoryOrderItemRequest> Items);
 

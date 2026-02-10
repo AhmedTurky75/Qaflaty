@@ -142,7 +142,8 @@ export class CategoryManagementComponent implements OnInit {
     if (this.isEditMode() && this.editingCategoryId()) {
       // Update existing category
       this.categoryService.updateCategory(storeId, this.editingCategoryId()!, {
-        name: categoryData.name
+        name: categoryData.name,
+        parentId: categoryData.parentId || null
       }).subscribe({
         next: () => {
           this.showCategoryForm.set(false);

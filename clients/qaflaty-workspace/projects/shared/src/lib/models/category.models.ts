@@ -20,4 +20,5 @@ export interface CreateCategoryRequest {
 
 export interface UpdateCategoryRequest {
   name: string;
+  parentId?: string | null;
 }
