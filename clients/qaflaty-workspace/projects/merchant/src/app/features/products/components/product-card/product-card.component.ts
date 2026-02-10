@@ -40,7 +40,7 @@ export class ProductCardComponent {
     }
   }
 
-  getImageUrl(): string {
-    return this.product.firstImageUrl || '/assets/images/no-image.svg';
+  get hasImage(): boolean {
+    return !!this.product.firstImageUrl;
   }
 }
