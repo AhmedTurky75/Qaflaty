@@ -109,7 +109,8 @@ export class CategoryManagementComponent implements OnInit {
   }
 
   onDeleteCategory(category: CategoryTreeDto): void {
-    this.categoryService.deleteCategory(category.id).subscribe({
+    const storeId = this.storeContext.currentStoreId() || '';
+    this.categoryService.deleteCategory(storeId, category.id).subscribe({
       next: () => {
         this.loadCategories();
       },
@@ -140,7 +141,7 @@ export class CategoryManagementComponent implements OnInit {
 
     if (this.isEditMode() && this.editingCategoryId()) {
       // Update existing category
-      this.categoryService.updateCategory(this.editingCategoryId()!, {
+      this.categoryService.updateCategory(storeId, this.editingCategoryId()!, {
         name: categoryData.name
       }).subscribe({
         next: () => {

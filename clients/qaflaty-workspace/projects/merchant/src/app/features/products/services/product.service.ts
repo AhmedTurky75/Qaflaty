@@ -20,7 +20,7 @@ export interface ProductFilters {
 }
 
 export interface PaginatedProducts {
-  products: ProductDto[];
+  items: ProductDto[];
   total: number;
   page: number;
   limit: number;
@@ -32,10 +32,14 @@ export interface PaginatedProducts {
 })
 export class ProductService {
   private http = inject(HttpClient);
-  private readonly API_URL = `${environment.apiUrl}/products`;
+  private readonly BASE_URL = environment.apiUrl;
+
+  private storeUrl(storeId: string): string {
+    return `${this.BASE_URL}/stores/${storeId}/products`;
+  }
 
   getProducts(storeId: string, filters?: ProductFilters): Observable<PaginatedProducts> {
-    let params = new HttpParams().set('storeId', storeId);
+    let params = new HttpParams();
 
     if (filters?.search) {
       params = params.set('search', filters.search);
@@ -53,35 +57,35 @@ export class ProductService {
       params = params.set('limit', filters.limit.toString());
     }
 
-    return this.http.get<PaginatedProducts>(this.API_URL, { params });
+    return this.http.get<PaginatedProducts>(this.storeUrl(storeId), { params });
   }
 
-  getProductById(id: string): Observable<ProductDto> {
-    return this.http.get<ProductDto>(`${this.API_URL}/${id}`);
+  getProductById(storeId: string, id: string): Observable<ProductDto> {
+    return this.http.get<ProductDto>(`${this.storeUrl(storeId)}/${id}`);
   }
 
   createProduct(storeId: string, request: CreateProductRequest): Observable<ProductDto> {
-    return this.http.post<ProductDto>(this.API_URL, { ...request, storeId });
+    return this.http.post<ProductDto>(this.storeUrl(storeId), request);
   }
 
-  updateProduct(id: string, request: UpdateProductRequest): Observable<ProductDto> {
-    return this.http.put<ProductDto>(`${this.API_URL}/${id}`, request);
+  updateProduct(storeId: string, id: string, request: UpdateProductRequest): Observable<ProductDto> {
+    return this.http.put<ProductDto>(`${this.storeUrl(storeId)}/${id}`, request);
   }
 
-  updateProductPricing(id: string, request: UpdateProductPricingRequest): Observable<ProductDto> {
-    return this.http.put<ProductDto>(`${this.API_URL}/${id}/pricing`, request);
+  updateProductPricing(storeId: string, id: string, request: UpdateProductPricingRequest): Observable<ProductDto> {
+    return this.http.put<ProductDto>(`${this.storeUrl(storeId)}/${id}/pricing`, request);
   }
 
-  updateProductInventory(id: string, request: UpdateProductInventoryRequest): Observable<ProductDto> {
-    return this.http.put<ProductDto>(`${this.API_URL}/${id}/inventory`, request);
+  updateProductInventory(storeId: string, id: string, request: UpdateProductInventoryRequest): Observable<ProductDto> {
+    return this.http.put<ProductDto>(`${this.storeUrl(storeId)}/${id}/inventory`, request);
   }
 
-  updateProductStatus(id: string, status: ProductStatus): Observable<ProductDto> {
-    return this.http.patch<ProductDto>(`${this.API_URL}/${id}/status`, { status });
+  updateProductStatus(storeId: string, id: string, status: ProductStatus): Observable<ProductDto> {
+    return this.http.patch<ProductDto>(`${this.storeUrl(storeId)}/${id}/status`, { status });
   }
 
-  deleteProduct(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${id}`);
+  deleteProduct(storeId: string, id: string): Observable<void> {
+    return this.http.delete<void>(`${this.storeUrl(storeId)}/${id}`);
   }
 
   generateSlug(name: string): string {

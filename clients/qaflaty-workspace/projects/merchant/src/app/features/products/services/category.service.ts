@@ -14,36 +14,38 @@ import {
 })
 export class CategoryService {
   private http = inject(HttpClient);
-  private readonly API_URL = `${environment.apiUrl}/categories`;
+  private readonly BASE_URL = environment.apiUrl;
+
+  private storeUrl(storeId: string): string {
+    return `${this.BASE_URL}/stores/${storeId}/categories`;
+  }
 
   getCategories(storeId: string): Observable<CategoryDto[]> {
-    const params = new HttpParams().set('storeId', storeId);
-    return this.http.get<CategoryDto[]>(this.API_URL, { params });
+    return this.http.get<CategoryDto[]>(this.storeUrl(storeId));
   }
 
   getCategoryTree(storeId: string): Observable<CategoryTreeDto[]> {
-    const params = new HttpParams().set('storeId', storeId);
-    return this.http.get<CategoryTreeDto[]>(`${this.API_URL}/tree`, { params });
+    return this.http.get<CategoryTreeDto[]>(`${this.storeUrl(storeId)}/tree`);
   }
 
-  getCategoryById(id: string): Observable<CategoryDto> {
-    return this.http.get<CategoryDto>(`${this.API_URL}/${id}`);
+  getCategoryById(storeId: string, id: string): Observable<CategoryDto> {
+    return this.http.get<CategoryDto>(`${this.storeUrl(storeId)}/${id}`);
   }
 
   createCategory(storeId: string, request: CreateCategoryRequest): Observable<CategoryDto> {
-    return this.http.post<CategoryDto>(this.API_URL, { ...request, storeId });
+    return this.http.post<CategoryDto>(this.storeUrl(storeId), request);
   }
 
-  updateCategory(id: string, request: UpdateCategoryRequest): Observable<CategoryDto> {
-    return this.http.put<CategoryDto>(`${this.API_URL}/${id}`, request);
+  updateCategory(storeId: string, id: string, request: UpdateCategoryRequest): Observable<CategoryDto> {
+    return this.http.put<CategoryDto>(`${this.storeUrl(storeId)}/${id}`, request);
   }
 
-  updateCategorySortOrder(id: string, sortOrder: number): Observable<CategoryDto> {
-    return this.http.patch<CategoryDto>(`${this.API_URL}/${id}/sort`, { sortOrder });
+  updateCategorySortOrder(storeId: string, id: string, sortOrder: number): Observable<CategoryDto> {
+    return this.http.patch<CategoryDto>(`${this.storeUrl(storeId)}/${id}/sort`, { sortOrder });
   }
 
-  deleteCategory(id: string): Observable<void> {
-    return this.http.delete<void>(`${this.API_URL}/${id}`);
+  deleteCategory(storeId: string, id: string): Observable<void> {
+    return this.http.delete<void>(`${this.storeUrl(storeId)}/${id}`);
   }
 
   generateSlug(name: string): string {

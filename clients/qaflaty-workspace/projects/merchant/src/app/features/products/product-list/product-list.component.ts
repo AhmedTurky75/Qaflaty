@@ -105,7 +105,7 @@ export class ProductListComponent implements OnInit {
 
     this.productService.getProducts(storeId, filters).subscribe({
       next: (response) => {
-        this.products.set(response.products);
+        this.products.set(response.items);
         this.totalProducts.set(response.total);
         this.loading.set(false);
       },
@@ -133,7 +133,8 @@ export class ProductListComponent implements OnInit {
   }
 
   onDeleteProduct(productId: string): void {
-    this.productService.deleteProduct(productId).subscribe({
+    const storeId = this.storeContext.currentStoreId() || '';
+    this.productService.deleteProduct(storeId, productId).subscribe({
       next: () => {
         this.products.update(products => products.filter(p => p.id !== productId));
         this.totalProducts.update(total => total - 1);
@@ -150,7 +151,8 @@ export class ProductListComponent implements OnInit {
 
     const newStatus = product.status === ProductStatus.Active ? ProductStatus.Inactive : ProductStatus.Active;
 
-    this.productService.updateProductStatus(productId, newStatus).subscribe({
+    const storeId = this.storeContext.currentStoreId() || '';
+    this.productService.updateProductStatus(storeId, productId, newStatus).subscribe({
       next: (updatedProduct) => {
         this.products.update(products =>
           products.map(p => p.id === productId ? updatedProduct : p)

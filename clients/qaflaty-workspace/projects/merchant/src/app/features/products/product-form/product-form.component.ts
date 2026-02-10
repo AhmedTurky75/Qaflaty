@@ -93,8 +93,9 @@ export class ProductFormComponent implements OnInit {
   }
 
   loadProduct(id: string): void {
+    const storeId = this.storeContext.currentStoreId() || '';
     this.loading.set(true);
-    this.productService.getProductById(id).subscribe({
+    this.productService.getProductById(storeId, id).subscribe({
       next: (product) => {
         this.productForm.patchValue({
           name: product.name,
@@ -167,27 +168,27 @@ export class ProductFormComponent implements OnInit {
 
     if (this.isEditMode() && this.productId) {
       // Update existing product
-      this.productService.updateProduct(this.productId, {
+      this.productService.updateProduct(storeId, this.productId, {
         name: productData.name,
         description: productData.description,
         categoryId: productData.categoryId
       }).subscribe({
         next: (product) => {
           // Update pricing
-          this.productService.updateProductPricing(product.id, {
+          this.productService.updateProductPricing(storeId, product.id, {
             price: productData.price,
             compareAtPrice: productData.compareAtPrice
           }).subscribe({
             next: () => {
               // Update inventory
-              this.productService.updateProductInventory(product.id, {
+              this.productService.updateProductInventory(storeId, product.id, {
                 quantity: productData.quantity,
                 sku: productData.sku,
                 trackInventory: productData.trackInventory
               }).subscribe({
                 next: () => {
                   // Update status
-                  this.productService.updateProductStatus(product.id, productData.status).subscribe({
+                  this.productService.updateProductStatus(storeId, product.id, productData.status).subscribe({
                     next: () => {
                       this.router.navigate(['/products']);
                     },
