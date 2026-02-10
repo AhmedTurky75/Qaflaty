@@ -1,12 +1,37 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Application.Common.Exceptions;
+using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Catalog.Queries.GetStoreById;
 
 public class GetStoreByIdQueryHandler : IQueryHandler<GetStoreByIdQuery, StoreDto>
 {
-    public Task<StoreDto> Handle(GetStoreByIdQuery request, CancellationToken cancellationToken)
+    private readonly IStoreRepository _storeRepository;
+
+    public GetStoreByIdQueryHandler(IStoreRepository storeRepository)
     {
-        throw new NotImplementedException("GetStoreByIdQueryHandler will be implemented in a later phase");
+        _storeRepository = storeRepository;
+    }
+
+    public async Task<StoreDto> Handle(GetStoreByIdQuery request, CancellationToken cancellationToken)
+    {
+        var store = await _storeRepository.GetByIdAsync(StoreId.From(request.StoreId), cancellationToken);
+        if (store == null)
+            throw new NotFoundException("Store", request.StoreId);
+
+        return new StoreDto(
+            store.Id.Value,
+            store.Slug.Value,
+            store.Name.Value,
+            store.Description,
+            store.Branding.LogoUrl,
+            store.Branding.PrimaryColor,
+            store.Status.ToString(),
+            store.DeliverySettings.DeliveryFee.Amount,
+            store.DeliverySettings.FreeDeliveryThreshold?.Amount,
+            store.CustomDomain,
+            store.CreatedAt);
     }
 }
