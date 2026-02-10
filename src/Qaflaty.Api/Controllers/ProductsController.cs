@@ -6,8 +6,6 @@ using Qaflaty.Application.Catalog.Commands.DeleteProduct;
 using Qaflaty.Application.Catalog.Commands.ActivateProduct;
 using Qaflaty.Application.Catalog.Commands.DeactivateProduct;
 using Qaflaty.Application.Catalog.Commands.UpdateProduct;
-using Qaflaty.Application.Catalog.Commands.UpdateProductInventory;
-using Qaflaty.Application.Catalog.Commands.UpdateProductPricing;
 using Qaflaty.Application.Catalog.Queries.GetProductById;
 using Qaflaty.Application.Catalog.Queries.GetProducts;
 
@@ -81,45 +79,21 @@ public class ProductsController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateProduct(Guid storeId, Guid id, [FromBody] UpdateProductRequest request, CancellationToken cancellationToken)
     {
-        var command = new UpdateProductCommand(id, request.Name, request.Slug, request.Description, request.CategoryId);
+        var command = new UpdateProductCommand(
+            id,
+            request.Name,
+            request.Slug,
+            request.Description,
+            request.Price.Amount,
+            request.CompareAtPrice?.Amount,
+            request.Quantity,
+            request.Sku,
+            request.TrackInventory,
+            request.CategoryId,
+            request.Status);
+
         var result = await Sender.Send(command, cancellationToken);
         return HandleResult(result);
-    }
-
-    [HttpPut("{id:guid}/pricing")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateProductPricing(Guid storeId, Guid id, [FromBody] UpdateProductPricingRequest request, CancellationToken cancellationToken)
-    {
-        var command = new UpdateProductPricingCommand(id, request.Price.Amount, request.CompareAtPrice?.Amount);
-        var result = await Sender.Send(command, cancellationToken);
-
-        if (result.IsFailure)
-        {
-            return HandleResult(result);
-        }
-
-        return NoContent();
-    }
-
-    [HttpPut("{id:guid}/inventory")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> UpdateProductInventory(Guid storeId, Guid id, [FromBody] UpdateProductInventoryRequest request, CancellationToken cancellationToken)
-    {
-        var command = new UpdateProductInventoryCommand(id, request.Quantity, request.Sku, request.TrackInventory);
-        var result = await Sender.Send(command, cancellationToken);
-
-        if (result.IsFailure)
-        {
-            return HandleResult(result);
-        }
-
-        return NoContent();
     }
 
     [HttpDelete("{id:guid}")]
@@ -188,13 +162,10 @@ public record UpdateProductRequest(
     string Name,
     string Slug,
     string? Description,
-    Guid? CategoryId);
-
-public record UpdateProductPricingRequest(
     MoneyInput Price,
-    MoneyInput? CompareAtPrice);
-
-public record UpdateProductInventoryRequest(
+    MoneyInput? CompareAtPrice,
     int Quantity,
     string? Sku,
-    bool TrackInventory);
+    bool TrackInventory,
+    Guid? CategoryId,
+    string? Status);

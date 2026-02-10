@@ -55,16 +55,11 @@ export interface UpdateProductRequest {
   name: string;
   slug: string;
   description?: string;
-  categoryId?: string;
-}
-
-export interface UpdateProductPricingRequest {
   price: Money;
   compareAtPrice?: Money;
-}
-
-export interface UpdateProductInventoryRequest {
   quantity: number;
   sku?: string;
   trackInventory: boolean;
+  categoryId?: string;
+  status?: string;
 }

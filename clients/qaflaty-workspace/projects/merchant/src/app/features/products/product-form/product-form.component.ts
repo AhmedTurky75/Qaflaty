@@ -168,58 +168,9 @@ export class ProductFormComponent implements OnInit {
 
     if (this.isEditMode() && this.productId) {
       // Update existing product
-      this.productService.updateProduct(storeId, this.productId, {
-        name: productData.name,
-        slug: productData.slug,
-        description: productData.description,
-        categoryId: productData.categoryId
-      }).subscribe({
-        next: (product) => {
-          // Update pricing
-          this.productService.updateProductPricing(storeId, product.id, {
-            price: productData.price,
-            compareAtPrice: productData.compareAtPrice
-          }).subscribe({
-            next: () => {
-              // Update inventory
-              this.productService.updateProductInventory(storeId, product.id, {
-                quantity: productData.quantity,
-                sku: productData.sku,
-                trackInventory: productData.trackInventory
-              }).subscribe({
-                next: () => {
-                  // Update status
-                  const statusAction$ = productData.status === ProductStatus.Active
-                    ? this.productService.activateProduct(storeId, product.id)
-                    : productData.status === ProductStatus.Inactive
-                      ? this.productService.deactivateProduct(storeId, product.id)
-                      : null;
-
-                  if (statusAction$) {
-                    statusAction$.subscribe({
-                      next: () => {
-                        this.router.navigate(['/products']);
-                      },
-                      error: (err) => {
-                        this.error.set(err.message || 'Failed to update product status');
-                        this.loading.set(false);
-                      }
-                    });
-                  } else {
-                    this.router.navigate(['/products']);
-                  }
-                },
-                error: (err) => {
-                  this.error.set(err.message || 'Failed to update product inventory');
-                  this.loading.set(false);
-                }
-              });
-            },
-            error: (err) => {
-              this.error.set(err.message || 'Failed to update product pricing');
-              this.loading.set(false);
-            }
-          });
+      this.productService.updateProduct(storeId, this.productId, productData).subscribe({
+        next: () => {
+          this.router.navigate(['/products']);
         },
         error: (err) => {
           this.error.set(err.message || 'Failed to update product');

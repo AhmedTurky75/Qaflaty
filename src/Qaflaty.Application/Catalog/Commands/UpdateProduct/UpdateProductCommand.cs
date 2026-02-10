@@ -8,5 +8,11 @@ public record UpdateProductCommand(
     string Name,
     string Slug,
     string? Description,
-    Guid? CategoryId
+    decimal Price,
+    decimal? CompareAtPrice,
+    int Quantity,
+    string? Sku,
+    bool TrackInventory,
+    Guid? CategoryId,
+    string? Status
 ) : ICommand<ProductDto>;

@@ -6,8 +6,6 @@ import {
   ProductDto,
   CreateProductRequest,
   UpdateProductRequest,
-  UpdateProductPricingRequest,
-  UpdateProductInventoryRequest,
   ProductStatus
 } from 'shared';
 
@@ -70,14 +68,6 @@ export class ProductService {
 
   updateProduct(storeId: string, id: string, request: UpdateProductRequest): Observable<ProductDto> {
     return this.http.put<ProductDto>(`${this.storeUrl(storeId)}/${id}`, request);
-  }
-
-  updateProductPricing(storeId: string, id: string, request: UpdateProductPricingRequest): Observable<ProductDto> {
-    return this.http.put<ProductDto>(`${this.storeUrl(storeId)}/${id}/pricing`, request);
-  }
-
-  updateProductInventory(storeId: string, id: string, request: UpdateProductInventoryRequest): Observable<ProductDto> {
-    return this.http.put<ProductDto>(`${this.storeUrl(storeId)}/${id}/inventory`, request);
   }
 
   activateProduct(storeId: string, id: string): Observable<void> {
