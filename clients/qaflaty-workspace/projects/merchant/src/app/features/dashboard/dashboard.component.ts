@@ -1,8 +1,8 @@
-import { Component, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { StoreService } from '../stores/services/store.service';
+import { StoreContextService } from '../../core/services/store-context.service';
 import { DashboardService, DashboardStats, SalesChartData, TopProduct, RecentOrderSummary } from './services/dashboard.service';
 import { StatsCardComponent } from './components/stats-card/stats-card.component';
 import { SalesChartComponent } from './components/sales-chart/sales-chart.component';
@@ -24,43 +24,26 @@ import { QuickActionsComponent } from './components/quick-actions/quick-actions.
   ],
   templateUrl: './dashboard.component.html'
 })
-export class DashboardComponent implements OnInit {
-  private storeService = inject(StoreService);
+export class DashboardComponent {
+  private storeContext = inject(StoreContextService);
   private dashboardService = inject(DashboardService);
 
   loading = signal(true);
   error = signal<string | null>(null);
-  selectedStore = signal<string | null>(null);
   stats = signal<DashboardStats | null>(null);
   salesData = signal<SalesChartData[]>([]);
   recentOrders = signal<RecentOrderSummary[]>([]);
   topProducts = signal<TopProduct[]>([]);
   chartPeriod = signal<7 | 30>(7);
 
-  ngOnInit(): void {
-    this.loadStoreAndDashboard();
-  }
+  selectedStore = this.storeContext.currentStoreId;
 
-  private loadStoreAndDashboard(): void {
-    this.loading.set(true);
-    this.error.set(null);
-
-    // First, get the merchant's stores
-    this.storeService.getMyStores().subscribe({
-      next: (stores) => {
-        if (stores && stores.length > 0) {
-          // Use the first store by default
-          const storeId = stores[0].id;
-          this.selectedStore.set(storeId);
-          this.loadDashboardData(storeId);
-        } else {
-          this.loading.set(false);
-          this.selectedStore.set(null);
-        }
-      },
-      error: (err) => {
-        console.error('Failed to load stores:', err);
-        this.error.set('Failed to load stores. Please try again.');
+  constructor() {
+    effect(() => {
+      const storeId = this.storeContext.currentStoreId();
+      if (storeId) {
+        this.loadDashboardData(storeId);
+      } else {
         this.loading.set(false);
       }
     });
@@ -73,15 +56,17 @@ export class DashboardComponent implements OnInit {
     // Load all dashboard data in parallel
     forkJoin({
       stats: this.dashboardService.getDashboardStats(storeId),
-      salesData: this.dashboardService.getSalesChartData(storeId, this.chartPeriod()),
+      //Question : Why we don't have api for salesData? should we add it?
+      //salesData: this.dashboardService.getSalesChartData(storeId, this.chartPeriod()),
       recentOrders: this.dashboardService.getRecentOrders(storeId, 10),
-      topProducts: this.dashboardService.getTopProducts(storeId, 5)
+      //Questrion : Why we don't have api for topProducts? should we add it?
+      //topProducts: this.dashboardService.getTopProducts(storeId, 5)
     }).subscribe({
       next: (data) => {
         this.stats.set(data.stats);
-        this.salesData.set(data.salesData);
+        //this.salesData.set(data.salesData);
         this.recentOrders.set(data.recentOrders);
-        this.topProducts.set(data.topProducts);
+        //this.topProducts.set(data.topProducts);
         this.loading.set(false);
       },
       error: (err) => {
