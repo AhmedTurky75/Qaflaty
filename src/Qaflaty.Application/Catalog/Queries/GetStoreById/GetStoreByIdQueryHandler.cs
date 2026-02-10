@@ -23,6 +23,7 @@ public class GetStoreByIdQueryHandler : IQueryHandler<GetStoreByIdQuery, StoreDt
 
         return new StoreDto(
             store.Id.Value,
+            store.MerchantId.Value,
             store.Slug.Value,
             store.Name.Value,
             store.Description,
@@ -34,6 +35,7 @@ public class GetStoreByIdQueryHandler : IQueryHandler<GetStoreByIdQuery, StoreDt
                     ? new MoneyDto(store.DeliverySettings.FreeDeliveryThreshold.Amount)
                     : null),
             store.CustomDomain,
-            store.CreatedAt);
+            store.CreatedAt,
+            store.UpdatedAt);
     }
 }

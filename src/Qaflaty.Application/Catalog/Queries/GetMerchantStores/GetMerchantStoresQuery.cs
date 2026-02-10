@@ -3,4 +3,4 @@ using Qaflaty.Application.Common.CQRS;
 
 namespace Qaflaty.Application.Catalog.Queries.GetMerchantStores;
 
-public record GetMerchantStoresQuery : IQuery<List<StoreListDto>>;
+public record GetMerchantStoresQuery : IQuery<List<StoreDto>>;

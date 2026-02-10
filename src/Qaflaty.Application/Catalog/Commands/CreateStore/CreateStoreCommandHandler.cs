@@ -88,6 +88,7 @@ public class CreateStoreCommandHandler : ICommandHandler<CreateStoreCommand, Sto
 
         var dto = new StoreDto(
             store.Id.Value,
+            store.MerchantId.Value,
             store.Slug.Value,
             store.Name.Value,
             store.Description,
@@ -99,7 +100,8 @@ public class CreateStoreCommandHandler : ICommandHandler<CreateStoreCommand, Sto
                     ? new MoneyDto(store.DeliverySettings.FreeDeliveryThreshold.Amount)
                     : null),
             store.CustomDomain,
-            store.CreatedAt);
+            store.CreatedAt,
+            store.UpdatedAt);
 
         return Result.Success(dto);
     }

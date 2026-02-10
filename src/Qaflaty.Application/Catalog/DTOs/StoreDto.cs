@@ -2,6 +2,7 @@ namespace Qaflaty.Application.Catalog.DTOs;
 
 public record StoreDto(
     Guid Id,
+    Guid MerchantId,
     string Slug,
     string Name,
     string? Description,
@@ -9,7 +10,8 @@ public record StoreDto(
     string Status,
     DeliverySettingsDto DeliverySettings,
     string? CustomDomain,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    DateTime UpdatedAt
 );
 
 public record StoreBrandingDto(
