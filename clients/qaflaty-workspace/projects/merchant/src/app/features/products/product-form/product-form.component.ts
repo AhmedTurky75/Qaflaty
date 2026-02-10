@@ -188,15 +188,25 @@ export class ProductFormComponent implements OnInit {
               }).subscribe({
                 next: () => {
                   // Update status
-                  this.productService.updateProductStatus(storeId, product.id, productData.status).subscribe({
-                    next: () => {
-                      this.router.navigate(['/products']);
-                    },
-                    error: (err) => {
-                      this.error.set(err.message || 'Failed to update product status');
-                      this.loading.set(false);
-                    }
-                  });
+                  const statusAction$ = productData.status === ProductStatus.Active
+                    ? this.productService.activateProduct(storeId, product.id)
+                    : productData.status === ProductStatus.Inactive
+                      ? this.productService.deactivateProduct(storeId, product.id)
+                      : null;
+
+                  if (statusAction$) {
+                    statusAction$.subscribe({
+                      next: () => {
+                        this.router.navigate(['/products']);
+                      },
+                      error: (err) => {
+                        this.error.set(err.message || 'Failed to update product status');
+                        this.loading.set(false);
+                      }
+                    });
+                  } else {
+                    this.router.navigate(['/products']);
+                  }
                 },
                 error: (err) => {
                   this.error.set(err.message || 'Failed to update product inventory');

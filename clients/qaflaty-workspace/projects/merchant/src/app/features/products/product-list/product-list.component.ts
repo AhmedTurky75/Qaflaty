@@ -149,13 +149,16 @@ export class ProductListComponent implements OnInit {
     const product = this.products().find(p => p.id === productId);
     if (!product) return;
 
-    const newStatus = product.status === ProductStatus.Active ? ProductStatus.Inactive : ProductStatus.Active;
-
     const storeId = this.storeContext.currentStoreId() || '';
-    this.productService.updateProductStatus(storeId, productId, newStatus).subscribe({
-      next: (updatedProduct) => {
+    const action$ = product.status === ProductStatus.Active
+      ? this.productService.deactivateProduct(storeId, productId)
+      : this.productService.activateProduct(storeId, productId);
+
+    action$.subscribe({
+      next: () => {
+        const newStatus = product.status === ProductStatus.Active ? ProductStatus.Inactive : ProductStatus.Active;
         this.products.update(products =>
-          products.map(p => p.id === productId ? updatedProduct : p)
+          products.map(p => p.id === productId ? { ...p, status: newStatus } : p)
         );
       },
       error: (err) => {

@@ -80,8 +80,12 @@ export class ProductService {
     return this.http.put<ProductDto>(`${this.storeUrl(storeId)}/${id}/inventory`, request);
   }
 
-  updateProductStatus(storeId: string, id: string, status: ProductStatus): Observable<ProductDto> {
-    return this.http.patch<ProductDto>(`${this.storeUrl(storeId)}/${id}/status`, { status });
+  activateProduct(storeId: string, id: string): Observable<void> {
+    return this.http.patch<void>(`${this.storeUrl(storeId)}/${id}/activate`, {});
+  }
+
+  deactivateProduct(storeId: string, id: string): Observable<void> {
+    return this.http.patch<void>(`${this.storeUrl(storeId)}/${id}/deactivate`, {});
   }
 
   deleteProduct(storeId: string, id: string): Observable<void> {

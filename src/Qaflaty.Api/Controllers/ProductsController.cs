@@ -3,7 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
 using Qaflaty.Application.Catalog.Commands.CreateProduct;
 using Qaflaty.Application.Catalog.Commands.DeleteProduct;
-using Qaflaty.Application.Catalog.Commands.ToggleProductStatus;
+using Qaflaty.Application.Catalog.Commands.ActivateProduct;
+using Qaflaty.Application.Catalog.Commands.DeactivateProduct;
 using Qaflaty.Application.Catalog.Commands.UpdateProduct;
 using Qaflaty.Application.Catalog.Commands.UpdateProductInventory;
 using Qaflaty.Application.Catalog.Commands.UpdateProductPricing;
@@ -138,19 +139,32 @@ public class ProductsController : ApiController
         return NoContent();
     }
 
-    [HttpPatch("{id:guid}/toggle-status")]
+    [HttpPatch("{id:guid}/activate")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> ToggleProductStatus(Guid storeId, Guid id, CancellationToken cancellationToken)
+    public async Task<IActionResult> ActivateProduct(Guid storeId, Guid id, CancellationToken cancellationToken)
     {
-        var command = new ToggleProductStatusCommand(id);
+        var command = new ActivateProductCommand(id);
         var result = await Sender.Send(command, cancellationToken);
 
         if (result.IsFailure)
-        {
             return HandleResult(result);
-        }
+
+        return NoContent();
+    }
+
+    [HttpPatch("{id:guid}/deactivate")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeactivateProduct(Guid storeId, Guid id, CancellationToken cancellationToken)
+    {
+        var command = new DeactivateProductCommand(id);
+        var result = await Sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+            return HandleResult(result);
 
         return NoContent();
     }
