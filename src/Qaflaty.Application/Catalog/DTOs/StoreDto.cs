@@ -5,13 +5,26 @@ public record StoreDto(
     string Slug,
     string Name,
     string? Description,
-    string? LogoUrl,
-    string PrimaryColor,
+    StoreBrandingDto Branding,
     string Status,
-    decimal DeliveryFee,
-    decimal? FreeDeliveryThreshold,
+    DeliverySettingsDto DeliverySettings,
     string? CustomDomain,
     DateTime CreatedAt
+);
+
+public record StoreBrandingDto(
+    string? LogoUrl,
+    string PrimaryColor
+);
+
+public record MoneyDto(
+    decimal Amount,
+    string Currency = "SAR"
+);
+
+public record DeliverySettingsDto(
+    MoneyDto DeliveryFee,
+    MoneyDto? FreeDeliveryThreshold
 );
 
 public record StoreListDto(

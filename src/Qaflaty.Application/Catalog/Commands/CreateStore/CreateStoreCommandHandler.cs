@@ -91,11 +91,13 @@ public class CreateStoreCommandHandler : ICommandHandler<CreateStoreCommand, Sto
             store.Slug.Value,
             store.Name.Value,
             store.Description,
-            store.Branding.LogoUrl,
-            store.Branding.PrimaryColor,
+            new StoreBrandingDto(store.Branding.LogoUrl, store.Branding.PrimaryColor),
             store.Status.ToString(),
-            store.DeliverySettings.DeliveryFee.Amount,
-            store.DeliverySettings.FreeDeliveryThreshold?.Amount,
+            new DeliverySettingsDto(
+                new MoneyDto(store.DeliverySettings.DeliveryFee.Amount),
+                store.DeliverySettings.FreeDeliveryThreshold != null
+                    ? new MoneyDto(store.DeliverySettings.FreeDeliveryThreshold.Amount)
+                    : null),
             store.CustomDomain,
             store.CreatedAt);
 
