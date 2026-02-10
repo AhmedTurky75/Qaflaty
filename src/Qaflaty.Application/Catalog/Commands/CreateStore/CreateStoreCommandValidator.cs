@@ -15,8 +15,8 @@ public class CreateStoreCommandValidator : AbstractValidator<CreateStoreCommand>
             .MaximumLength(100).WithMessage("Name must not exceed 100 characters");
 
         RuleFor(x => x.PrimaryColor)
-            .NotEmpty().WithMessage("Primary color is required")
-            .Matches(@"^#[0-9A-Fa-f]{6}$").WithMessage("Primary color must be a valid hex color");
+            .Matches(@"^#[0-9A-Fa-f]{6}$").WithMessage("Primary color must be a valid hex color")
+            .When(x => !string.IsNullOrEmpty(x.PrimaryColor));
 
         RuleFor(x => x.DeliveryFee)
             .GreaterThanOrEqualTo(0).WithMessage("Delivery fee must be non-negative");

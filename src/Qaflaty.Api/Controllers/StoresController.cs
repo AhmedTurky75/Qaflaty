@@ -141,11 +141,11 @@ public class StoresController : ApiController
 public record CreateStoreRequest(
     string Slug,
     string Name,
-    string? Description,
-    string? LogoUrl,
-    string PrimaryColor,
-    decimal DeliveryFee,
-    decimal? FreeDeliveryThreshold);
+    string? Description = null,
+    string? LogoUrl = null,
+    string PrimaryColor = "#4F46E5",
+    decimal DeliveryFee = 0,
+    decimal? FreeDeliveryThreshold = null);
 
 public record UpdateStoreRequest(
     string Name,
