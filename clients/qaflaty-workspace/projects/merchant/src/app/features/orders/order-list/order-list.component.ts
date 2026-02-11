@@ -79,7 +79,7 @@ export class OrderListComponent implements OnInit {
 
     this.orderService.getOrders(storeId, filters).subscribe({
       next: (response) => {
-        this.orders.set(response.orders);
+        this.orders.set(response.items);
         this.totalOrders.set(response.total);
         this.loading.set(false);
       },

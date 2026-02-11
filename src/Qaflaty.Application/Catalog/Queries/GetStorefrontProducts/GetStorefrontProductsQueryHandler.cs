@@ -1,10 +1,11 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
 using Qaflaty.Application.Common.Models;
 using Qaflaty.Domain.Catalog.Enums;
+using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Catalog.ValueObjects;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Catalog.Queries.GetStorefrontProducts;
@@ -22,15 +23,15 @@ public class GetStorefrontProductsQueryHandler : IQueryHandler<GetStorefrontProd
         _productRepository = productRepository;
     }
 
-    public async Task<PaginatedList<ProductPublicDto>> Handle(GetStorefrontProductsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedList<ProductPublicDto>>> Handle(GetStorefrontProductsQuery request, CancellationToken cancellationToken)
     {
         var slugResult = StoreSlug.Create(request.StoreSlug);
         if (slugResult.IsFailure)
-            throw new NotFoundException("Store", request.StoreSlug);
+            return Result.Failure<PaginatedList<ProductPublicDto>>(CatalogErrors.StoreNotFound);
 
         var store = await _storeRepository.GetBySlugAsync(slugResult.Value, cancellationToken);
         if (store == null)
-            throw new NotFoundException("Store", request.StoreSlug);
+            return Result.Failure<PaginatedList<ProductPublicDto>>(CatalogErrors.StoreNotFound);
 
         var products = await _productRepository.GetByStoreIdAsync(store.Id, cancellationToken);
 
@@ -54,6 +55,6 @@ public class GetStorefrontProductsQueryHandler : IQueryHandler<GetStorefrontProd
             p.Images.Select(i => new ProductImageDto(i.Id, i.Url, i.AltText, i.SortOrder)).ToList()
         ));
 
-        return PaginatedList<ProductPublicDto>.Create(dtos, request.PageNumber, request.PageSize);
+        return Result.Success(PaginatedList<ProductPublicDto>.Create(dtos, request.PageNumber, request.PageSize));
     }
 }

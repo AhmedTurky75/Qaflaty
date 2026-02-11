@@ -3,6 +3,7 @@ using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.Models;
 using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Catalog.Queries.GetProducts;
@@ -23,13 +24,13 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Paginated
         _currentUserService = currentUserService;
     }
 
-    public async Task<PaginatedList<ProductListDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<PaginatedList<ProductListDto>>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
     {
         // Verify store ownership
         var storeId = new StoreId(request.StoreId);
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
         if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
-            throw new UnauthorizedAccessException("You don't have access to this store");
+            return Result.Failure<PaginatedList<ProductListDto>>(Error.Unauthorized);
 
         var products = await _productRepository.GetByStoreIdAsync(storeId, cancellationToken);
 
@@ -62,6 +63,6 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Paginated
             p.Images.FirstOrDefault()?.Url
         ));
 
-        return PaginatedList<ProductListDto>.Create(dtos, request.PageNumber, request.PageSize);
+        return Result.Success(PaginatedList<ProductListDto>.Create(dtos, request.PageNumber, request.PageSize));
     }
 }

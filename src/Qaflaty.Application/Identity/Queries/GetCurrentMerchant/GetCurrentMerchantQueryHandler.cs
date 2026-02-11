@@ -1,7 +1,8 @@
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Identity.DTOs;
+using Qaflaty.Domain.Common.Errors;
+using Qaflaty.Domain.Identity.Errors;
 using Qaflaty.Domain.Identity.Repositories;
 
 namespace Qaflaty.Application.Identity.Queries.GetCurrentMerchant;
@@ -19,21 +20,21 @@ public class GetCurrentMerchantQueryHandler : IQueryHandler<GetCurrentMerchantQu
         _currentUserService = currentUserService;
     }
 
-    public async Task<MerchantDto> Handle(GetCurrentMerchantQuery request, CancellationToken cancellationToken)
+    public async Task<Result<MerchantDto>> Handle(GetCurrentMerchantQuery request, CancellationToken cancellationToken)
     {
         if (_currentUserService.MerchantId == null)
-            throw new NotFoundException("Merchant", "current");
+            return Result.Failure<MerchantDto>(IdentityErrors.MerchantNotFound);
 
         var merchant = await _merchantRepository.GetByIdAsync(_currentUserService.MerchantId.Value, cancellationToken);
         if (merchant == null)
-            throw new NotFoundException("Merchant", _currentUserService.MerchantId.Value);
+            return Result.Failure<MerchantDto>(IdentityErrors.MerchantNotFound);
 
-        return new MerchantDto(
+        return Result.Success(new MerchantDto(
             merchant.Id.Value,
             merchant.Email.Value,
             merchant.FullName.Value,
             merchant.Phone?.Value,
             merchant.IsVerified,
-            merchant.CreatedAt);
+            merchant.CreatedAt));
     }
 }

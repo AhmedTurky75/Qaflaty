@@ -1,9 +1,10 @@
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Ordering.Errors;
 using Qaflaty.Domain.Ordering.Repositories;
 
 namespace Qaflaty.Application.Ordering.Queries.GetOrderById;
@@ -24,18 +25,18 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
         _currentUserService = currentUserService;
     }
 
-    public async Task<OrderDto> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<OrderDto>> Handle(GetOrderByIdQuery request, CancellationToken cancellationToken)
     {
         var orderId = new OrderId(request.OrderId);
         var order = await _orderRepository.GetByIdAsync(orderId, cancellationToken);
         if (order == null)
-            throw new NotFoundException("Order", request.OrderId);
+            return Result.Failure<OrderDto>(OrderingErrors.OrderNotFound);
 
         var store = await _storeRepository.GetByIdAsync(order.StoreId, cancellationToken);
         if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
-            throw new UnauthorizedAccessException("You don't have access to this order");
+            return Result.Failure<OrderDto>(Error.Unauthorized);
 
-        return new OrderDto(
+        return Result.Success(new OrderDto(
             order.Id.Value,
             order.StoreId.Value,
             order.CustomerId.Value,
@@ -72,6 +73,6 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
             )).ToList(),
             order.CreatedAt,
             order.UpdatedAt
-        );
+        ));
     }
 }

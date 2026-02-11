@@ -59,6 +59,6 @@ public class StorefrontOrdersController : ApiController
 
         var result = await Sender.Send(
             new TrackOrderQuery(_tenantContext.CurrentStoreId.Value.Value, orderNumber), ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 }

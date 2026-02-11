@@ -1,6 +1,7 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Catalog.ValueObjects;
+using Qaflaty.Domain.Common.Errors;
 
 namespace Qaflaty.Application.Catalog.Queries.CheckSlugAvailability;
 
@@ -13,12 +14,13 @@ public class CheckSlugAvailabilityQueryHandler : IQueryHandler<CheckSlugAvailabi
         _storeRepository = storeRepository;
     }
 
-    public async Task<bool> Handle(CheckSlugAvailabilityQuery request, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(CheckSlugAvailabilityQuery request, CancellationToken cancellationToken)
     {
         var slugResult = StoreSlug.Create(request.Slug);
         if (slugResult.IsFailure)
-            return false;
+            return Result.Success(false);
 
-        return await _storeRepository.IsSlugAvailableAsync(slugResult.Value, ct: cancellationToken);
+        var isAvailable = await _storeRepository.IsSlugAvailableAsync(slugResult.Value, ct: cancellationToken);
+        return Result.Success(isAvailable);
     }
 }

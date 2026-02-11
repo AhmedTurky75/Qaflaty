@@ -1,7 +1,8 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
+using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Catalog.Queries.GetProductById;
@@ -15,14 +16,14 @@ public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, Pro
         _productRepository = productRepository;
     }
 
-    public async Task<ProductDto> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ProductDto>> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
         var product = await _productRepository.GetByIdAsync(new ProductId(request.ProductId), cancellationToken);
 
         if (product is null)
-            throw new NotFoundException("Product", request.ProductId.ToString());
+            return Result.Failure<ProductDto>(CatalogErrors.ProductNotFound);
 
-        return new ProductDto(
+        return Result.Success(new ProductDto(
             product.Id.Value,
             product.Slug.Value,
             product.Name.Value,
@@ -40,6 +41,6 @@ public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, Pro
                 i.AltText,
                 i.SortOrder
             )).OrderBy(i => i.SortOrder).ToList(),
-            product.CreatedAt);
+            product.CreatedAt));
     }
 }

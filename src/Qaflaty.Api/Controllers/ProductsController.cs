@@ -29,7 +29,7 @@ public class ProductsController : ApiController
     {
         var query = new GetProductsQuery(storeId, searchTerm, categoryId, status, pageNumber, pageSize);
         var result = await Sender.Send(query, cancellationToken);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("{id:guid}")]
@@ -40,7 +40,7 @@ public class ProductsController : ApiController
     {
         var query = new GetProductByIdQuery(id);
         var result = await Sender.Send(query, cancellationToken);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpPost]

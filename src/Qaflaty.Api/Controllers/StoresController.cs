@@ -23,7 +23,7 @@ public class StoresController : ApiController
     {
         var query = new GetMerchantStoresQuery();
         var result = await Sender.Send(query, cancellationToken);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("{id:guid}")]
@@ -34,7 +34,7 @@ public class StoresController : ApiController
     {
         var query = new GetStoreByIdQuery(id);
         var result = await Sender.Send(query, cancellationToken);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpPost]
@@ -134,7 +134,7 @@ public class StoresController : ApiController
     {
         var query = new CheckSlugAvailabilityQuery(request.Slug);
         var result = await Sender.Send(query, cancellationToken);
-        return Ok(new { available = result });
+        return Ok(new { available = result.Value });
     }
 }
 

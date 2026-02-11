@@ -1,7 +1,8 @@
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
+using Qaflaty.Domain.Ordering.Errors;
 using Qaflaty.Domain.Ordering.Repositories;
 using Qaflaty.Domain.Ordering.ValueObjects;
 
@@ -16,18 +17,18 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
         _orderRepository = orderRepository;
     }
 
-    public async Task<OrderTrackingDto> Handle(TrackOrderQuery request, CancellationToken cancellationToken)
+    public async Task<Result<OrderTrackingDto>> Handle(TrackOrderQuery request, CancellationToken cancellationToken)
     {
         var orderNumberResult = OrderNumber.Parse(request.OrderNumber);
         if (orderNumberResult.IsFailure)
-            throw new NotFoundException("Order", request.OrderNumber);
+            return Result.Failure<OrderTrackingDto>(OrderingErrors.OrderNotFound);
 
         var storeId = new StoreId(request.StoreId);
         var order = await _orderRepository.GetByOrderNumberAsync(storeId, orderNumberResult.Value, cancellationToken);
         if (order == null)
-            throw new NotFoundException("Order", request.OrderNumber);
+            return Result.Failure<OrderTrackingDto>(OrderingErrors.OrderNotFound);
 
-        return new OrderTrackingDto(
+        return Result.Success(new OrderTrackingDto(
             order.OrderNumber.Value,
             order.Status.ToString(),
             order.Pricing.Total.Amount,
@@ -40,6 +41,6 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
                 s.Notes
             )).ToList(),
             order.CreatedAt
-        );
+        ));
     }
 }

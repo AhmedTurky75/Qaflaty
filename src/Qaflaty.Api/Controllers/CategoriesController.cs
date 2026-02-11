@@ -21,7 +21,7 @@ public class CategoriesController : ApiController
     {
         var query = new GetCategoriesQuery(storeId);
         var result = await Sender.Send(query, cancellationToken);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("tree")]
@@ -31,7 +31,7 @@ public class CategoriesController : ApiController
     {
         var query = new GetCategoryTreeQuery(storeId);
         var result = await Sender.Send(query, cancellationToken);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpPost]

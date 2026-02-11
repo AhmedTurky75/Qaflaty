@@ -23,21 +23,21 @@ public class CustomersController : ApiController
     {
         var query = new GetStoreCustomersQuery(storeId, search, page, pageSize);
         var result = await Sender.Send(query, ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetCustomerById(Guid id, CancellationToken ct)
     {
         var result = await Sender.Send(new GetCustomerByIdQuery(id), ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("{id:guid}/orders")]
     public async Task<IActionResult> GetCustomerOrders(Guid id, CancellationToken ct)
     {
         var result = await Sender.Send(new GetCustomerOrdersQuery(id), ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpPut("{id:guid}/notes")]

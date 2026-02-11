@@ -1,7 +1,8 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
+using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Catalog.Queries.GetCategoryTree;
@@ -19,13 +20,13 @@ public class GetCategoryTreeQueryHandler : IQueryHandler<GetCategoryTreeQuery, L
         _storeRepository = storeRepository;
     }
 
-    public async Task<List<CategoryTreeDto>> Handle(GetCategoryTreeQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<CategoryTreeDto>>> Handle(GetCategoryTreeQuery request, CancellationToken cancellationToken)
     {
         var storeId = new StoreId(request.StoreId);
 
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
         if (store == null)
-            throw new NotFoundException("Store", request.StoreId);
+            return Result.Failure<List<CategoryTreeDto>>(CatalogErrors.StoreNotFound);
 
         var categories = await _categoryRepository.GetByStoreIdAsync(storeId, cancellationToken);
 
@@ -33,7 +34,7 @@ public class GetCategoryTreeQueryHandler : IQueryHandler<GetCategoryTreeQuery, L
             .OrderBy(c => c.SortOrder)
             .ToLookup(c => c.ParentId?.Value);
 
-        return BuildTree(lookup, null);
+        return Result.Success(BuildTree(lookup, null));
     }
 
     private static List<CategoryTreeDto> BuildTree(ILookup<Guid?, Domain.Catalog.Aggregates.Category.Category> lookup, Guid? parentId)

@@ -1,6 +1,7 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Ordering.Enums;
@@ -24,13 +25,13 @@ public class GetOrderStatsQueryHandler : IQueryHandler<GetOrderStatsQuery, Order
         _currentUserService = currentUserService;
     }
 
-    public async Task<OrderStatsDto> Handle(GetOrderStatsQuery request, CancellationToken cancellationToken)
+    public async Task<Result<OrderStatsDto>> Handle(GetOrderStatsQuery request, CancellationToken cancellationToken)
     {
         var storeId = new StoreId(request.StoreId);
 
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
         if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
-            throw new UnauthorizedAccessException("You don't have access to this store");
+            return Result.Failure<OrderStatsDto>(Error.Unauthorized);
 
         var orders = await _orderRepository.GetByStoreIdAsync(storeId, cancellationToken);
 
@@ -48,7 +49,7 @@ public class GetOrderStatsQueryHandler : IQueryHandler<GetOrderStatsQuery, Order
             ? totalRevenue / deliveredOrdersList.Count
             : 0;
 
-        return new OrderStatsDto(
+        return Result.Success(new OrderStatsDto(
             totalOrders,
             pendingOrders,
             confirmedOrders,
@@ -58,6 +59,6 @@ public class GetOrderStatsQueryHandler : IQueryHandler<GetOrderStatsQuery, Order
             cancelledOrders,
             totalRevenue,
             averageOrderValue
-        );
+        ));
     }
 }

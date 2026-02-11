@@ -52,7 +52,7 @@ public class StorefrontController : ApiController
             return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
 
         var result = await Sender.Send(new GetCategoriesQuery(_tenantContext.CurrentStoreId.Value.Value), ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("products")]
@@ -68,7 +68,7 @@ public class StorefrontController : ApiController
             request.PageSize);
 
         var result = await Sender.Send(query, ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("products/{slug}")]
@@ -79,6 +79,6 @@ public class StorefrontController : ApiController
 
         var result = await Sender.Send(
             new GetProductBySlugQuery(_tenantContext.CurrentStoreId.Value.Value, slug), ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 }

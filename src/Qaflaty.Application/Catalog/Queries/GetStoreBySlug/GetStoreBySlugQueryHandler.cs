@@ -1,8 +1,9 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
+using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Catalog.ValueObjects;
+using Qaflaty.Domain.Common.Errors;
 
 namespace Qaflaty.Application.Catalog.Queries.GetStoreBySlug;
 
@@ -15,17 +16,17 @@ public class GetStoreBySlugQueryHandler : IQueryHandler<GetStoreBySlugQuery, Sto
         _storeRepository = storeRepository;
     }
 
-    public async Task<StorePublicDto> Handle(GetStoreBySlugQuery request, CancellationToken cancellationToken)
+    public async Task<Result<StorePublicDto>> Handle(GetStoreBySlugQuery request, CancellationToken cancellationToken)
     {
         var slugResult = StoreSlug.Create(request.Slug);
         if (slugResult.IsFailure)
-            throw new NotFoundException("Store", request.Slug);
+            return Result.Failure<StorePublicDto>(CatalogErrors.StoreNotFound);
 
         var store = await _storeRepository.GetBySlugAsync(slugResult.Value, cancellationToken);
         if (store == null)
-            throw new NotFoundException("Store", request.Slug);
+            return Result.Failure<StorePublicDto>(CatalogErrors.StoreNotFound);
 
-        return new StorePublicDto(
+        return Result.Success(new StorePublicDto(
             store.Id.Value,
             store.Slug.Value,
             store.Name.Value,
@@ -38,6 +39,6 @@ public class GetStoreBySlugQueryHandler : IQueryHandler<GetStoreBySlugQuery, Sto
                 new MoneyDto(store.DeliverySettings.DeliveryFee.Amount, store.DeliverySettings.DeliveryFee.Currency.ToString()),
                 store.DeliverySettings.FreeDeliveryThreshold != null
                     ? new MoneyDto(store.DeliverySettings.FreeDeliveryThreshold.Amount, store.DeliverySettings.FreeDeliveryThreshold.Currency.ToString())
-                    : null));
+                    : null)));
     }
 }

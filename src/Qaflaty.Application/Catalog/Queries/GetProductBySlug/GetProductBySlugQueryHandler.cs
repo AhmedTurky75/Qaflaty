@@ -1,9 +1,10 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
 using Qaflaty.Domain.Catalog.Enums;
+using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Catalog.ValueObjects;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Catalog.Queries.GetProductBySlug;
@@ -17,19 +18,19 @@ public class GetProductBySlugQueryHandler : IQueryHandler<GetProductBySlugQuery,
         _productRepository = productRepository;
     }
 
-    public async Task<ProductPublicDto> Handle(GetProductBySlugQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ProductPublicDto>> Handle(GetProductBySlugQuery request, CancellationToken cancellationToken)
     {
         var slugResult = ProductSlug.Create(request.Slug);
         if (slugResult.IsFailure)
-            throw new NotFoundException("Product", request.Slug);
+            return Result.Failure<ProductPublicDto>(CatalogErrors.ProductNotFound);
 
         var storeId = new StoreId(request.StoreId);
         var product = await _productRepository.GetBySlugAsync(storeId, slugResult.Value, cancellationToken);
 
         if (product == null || product.Status != ProductStatus.Active)
-            throw new NotFoundException("Product", request.Slug);
+            return Result.Failure<ProductPublicDto>(CatalogErrors.ProductNotFound);
 
-        return new ProductPublicDto(
+        return Result.Success(new ProductPublicDto(
             product.Id.Value,
             product.Slug.Value,
             product.Name.Value,
@@ -42,6 +43,6 @@ public class GetProductBySlugQueryHandler : IQueryHandler<GetProductBySlugQuery,
                 i.Url,
                 i.AltText,
                 i.SortOrder
-            )).OrderBy(i => i.SortOrder).ToList());
+            )).OrderBy(i => i.SortOrder).ToList()));
     }
 }

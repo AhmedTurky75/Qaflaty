@@ -69,7 +69,7 @@ public class AuthController : ApiController
     public async Task<IActionResult> GetCurrentMerchant(CancellationToken ct)
     {
         var result = await Sender.Send(new GetCurrentMerchantQuery(), ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [Authorize]

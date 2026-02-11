@@ -29,7 +29,7 @@ public class OrdersController : ApiController
     {
         var query = new GetStoreOrdersQuery(storeId, status, search, page, pageSize);
         var result = await Sender.Send(query, ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpGet("{id:guid}")]
@@ -37,7 +37,7 @@ public class OrdersController : ApiController
     {
         var query = new GetOrderByIdQuery(id);
         var result = await Sender.Send(query, ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 
     [HttpPatch("{id:guid}/confirm")]
@@ -92,7 +92,7 @@ public class OrdersController : ApiController
     public async Task<IActionResult> GetOrderStats([FromQuery] Guid storeId, CancellationToken ct)
     {
         var result = await Sender.Send(new GetOrderStatsQuery(storeId), ct);
-        return Ok(result);
+        return HandleResult(result);
     }
 }
 

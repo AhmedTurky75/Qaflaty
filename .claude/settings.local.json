@@ -137,7 +137,9 @@
       "Bash(ng generate:*)",
       "Bash(npm uninstall:*)",
       "Bash(ng build:*)",
-      "Bash(npx ng build:*)"
+      "Bash(npx ng build:*)",
+      "Bash(dir:*)",
+      "Bash(cd:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,7 +1,8 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
+using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Catalog.Queries.GetCategories;
@@ -22,18 +23,18 @@ public class GetCategoriesQueryHandler : IQueryHandler<GetCategoriesQuery, List<
         _productRepository = productRepository;
     }
 
-    public async Task<List<CategoryDto>> Handle(GetCategoriesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<CategoryDto>>> Handle(GetCategoriesQuery request, CancellationToken cancellationToken)
     {
         var storeId = new StoreId(request.StoreId);
 
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
         if (store == null)
-            throw new NotFoundException("Store", request.StoreId);
+            return Result.Failure<List<CategoryDto>>(CatalogErrors.StoreNotFound);
 
         var categories = await _categoryRepository.GetByStoreIdAsync(storeId, cancellationToken);
         var products = await _productRepository.GetByStoreIdAsync(storeId, cancellationToken);
 
-        return categories
+        var result = categories
             .OrderBy(c => c.SortOrder)
             .Select(c => new CategoryDto(
                 c.Id.Value,
@@ -43,5 +44,7 @@ public class GetCategoriesQueryHandler : IQueryHandler<GetCategoriesQuery, List<
                 c.SortOrder,
                 products.Count(p => p.CategoryId?.Value == c.Id.Value)
             )).ToList();
+
+        return Result.Success(result);
     }
 }

@@ -19,7 +19,7 @@ export interface OrderFilters {
 }
 
 export interface PaginatedOrders {
-  orders: OrderDto[];
+  items: OrderDto[];
   total: number;
   page: number;
   limit: number;

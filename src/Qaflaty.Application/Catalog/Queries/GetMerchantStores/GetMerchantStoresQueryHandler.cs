@@ -2,7 +2,7 @@ using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Domain.Catalog.Repositories;
-using Qaflaty.Domain.Identity.Errors;
+using Qaflaty.Domain.Common.Errors;
 
 namespace Qaflaty.Application.Catalog.Queries.GetMerchantStores;
 
@@ -19,14 +19,14 @@ public class GetMerchantStoresQueryHandler : IQueryHandler<GetMerchantStoresQuer
         _currentUserService = currentUserService;
     }
 
-    public async Task<List<StoreDto>> Handle(GetMerchantStoresQuery request, CancellationToken cancellationToken)
+    public async Task<Result<List<StoreDto>>> Handle(GetMerchantStoresQuery request, CancellationToken cancellationToken)
     {
         if (_currentUserService.MerchantId == null)
-            throw new UnauthorizedAccessException(IdentityErrors.MerchantNotFound.Message);
+            return Result.Failure<List<StoreDto>>(Error.Unauthorized);
 
         var stores = await _storeRepository.GetByMerchantIdAsync(_currentUserService.MerchantId.Value, cancellationToken);
 
-        return stores.Select(s => new StoreDto(
+        return Result.Success(stores.Select(s => new StoreDto(
             s.Id.Value,
             s.MerchantId.Value,
             s.Slug.Value,
@@ -42,6 +42,6 @@ public class GetMerchantStoresQueryHandler : IQueryHandler<GetMerchantStoresQuer
             s.CustomDomain,
             s.CreatedAt,
             s.UpdatedAt
-        )).ToList();
+        )).ToList());
     }
 }

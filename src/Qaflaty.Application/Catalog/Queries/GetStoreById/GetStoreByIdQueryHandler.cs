@@ -1,7 +1,8 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Common.Exceptions;
+using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Catalog.Queries.GetStoreById;
@@ -15,13 +16,13 @@ public class GetStoreByIdQueryHandler : IQueryHandler<GetStoreByIdQuery, StoreDt
         _storeRepository = storeRepository;
     }
 
-    public async Task<StoreDto> Handle(GetStoreByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<StoreDto>> Handle(GetStoreByIdQuery request, CancellationToken cancellationToken)
     {
         var store = await _storeRepository.GetByIdAsync(StoreId.From(request.StoreId), cancellationToken);
         if (store == null)
-            throw new NotFoundException("Store", request.StoreId);
+            return Result.Failure<StoreDto>(CatalogErrors.StoreNotFound);
 
-        return new StoreDto(
+        return Result.Success(new StoreDto(
             store.Id.Value,
             store.MerchantId.Value,
             store.Slug.Value,
@@ -36,6 +37,6 @@ public class GetStoreByIdQueryHandler : IQueryHandler<GetStoreByIdQuery, StoreDt
                     : null),
             store.CustomDomain,
             store.CreatedAt,
-            store.UpdatedAt);
+            store.UpdatedAt));
     }
 }
