@@ -8,6 +8,7 @@ using Qaflaty.Domain.Identity.Repositories;
 using Qaflaty.Domain.Identity.Services;
 using Qaflaty.Domain.Ordering.Repositories;
 using Qaflaty.Domain.Ordering.Services;
+using Qaflaty.Domain.Storefront.Repositories;
 using Qaflaty.Infrastructure.Persistence;
 using Qaflaty.Infrastructure.Persistence.Interceptors;
 using Qaflaty.Infrastructure.Persistence.Repositories;
@@ -51,6 +52,8 @@ public static class DependencyInjection
         services.AddScoped<IFaqItemRepository, FaqItemRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IWishlistRepository, WishlistRepository>();
+        services.AddScoped<ICartRepository, CartRepository>();
 
         // Identity Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();

@@ -268,16 +268,33 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
 - [ ] Update storefront product endpoints to include variant data (Phase 2.5)
 - [ ] Update `PlaceOrderCommandHandler` to support variant stock reservation (Phase 2.5)
 
-#### 2.3 Backend - Wishlist
-- [ ] Create `Wishlist` / `WishlistItem` entities
-- [ ] Create `IWishlistRepository` + implementation
-- [ ] Create `AddToWishlistCommand`, `RemoveFromWishlistCommand`
-- [ ] Create `GetCustomerWishlistQuery`
-- [ ] Add wishlist endpoints: `GET/POST/DELETE /api/storefront/wishlist`
+#### 2.3 Backend - Wishlist ✅ COMPLETE
+- [x] Create `WishlistId` and `CartId` identifiers
+- [x] Create `Wishlist` aggregate with `WishlistItem` entity
+- [x] Create `IWishlistRepository` interface + implementation
+- [x] Create `WishlistConfiguration` and `WishlistItemConfiguration` EF Core configs
+- [x] Create `AddToWishlistCommand` + Handler
+- [x] Create `RemoveFromWishlistCommand` + Handler
+- [x] Create `GetCustomerWishlistQuery` + Handler
+- [x] Create `WishlistDto` and `WishlistItemDto`
+- [x] Create `StorefrontWishlistController`
+- [x] Add wishlist endpoints:
+  - `GET /api/storefront/wishlist` - Get customer wishlist
+  - `POST /api/storefront/wishlist` - Add item to wishlist
+  - `DELETE /api/storefront/wishlist` - Remove item from wishlist
 
-#### 2.4 Backend - Cart Sync
-- [ ] Create `SyncCartCommand` + Handler (merge guest cart with server-side)
-- [ ] Add `POST /api/storefront/cart/sync` endpoint
+#### 2.4 Backend - Cart Sync ✅ COMPLETE
+- [x] Create `Cart` aggregate with `CartItem` entity
+- [x] Create `ICartRepository` interface + implementation
+- [x] Create `CartConfiguration` and `CartItemConfiguration` EF Core configs
+- [x] Create `SyncCartCommand` + Handler (merge guest cart with server-side cart)
+- [x] Create `GetCustomerCartQuery` + Handler
+- [x] Create `CartDto` and `CartItemDto`
+- [x] Create `StorefrontCartController`
+- [x] Add cart endpoints:
+  - `GET /api/storefront/cart` - Get customer cart
+  - `POST /api/storefront/cart/sync` - Sync guest cart on login
+- [x] Migration `AddWishlistAndCart` created and applied ✅
 
 #### 2.5 Frontend (Store) - Account Pages
 - [ ] Create `pages/account/login.component.ts`
@@ -318,19 +335,27 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
   - API Layer: 6 variant management endpoints in ProductsController ✅
   - Backward compatibility: Products without variants continue working ✅
 
-- ⏳ **Stage 3: Wishlist & Cart Sync Backend** - PENDING (Next)
-- ⏳ **Stage 4: Frontend Customer Auth** - PENDING
+- ✅ **Stage 3: Wishlist & Cart Sync Backend** - COMPLETE (100%)
+  - Domain Layer: Wishlist and Cart aggregates with item entities ✅
+  - Infrastructure: EF configurations, repositories, migration applied ✅
+  - Application Layer: 3 Commands, 2 Queries, 2 DTOs ✅
+  - API Layer: StorefrontWishlistController + StorefrontCartController ✅
+  - Cart Sync: MergeGuestCart logic for seamless login transition ✅
+
+- ⏳ **Stage 4: Frontend Customer Auth** - PENDING (Next)
 - ⏳ **Stage 5: Frontend Variants & Wishlist** - PENDING
 - ⏳ **Stage 6: Frontend Merchant Variant Management** - PENDING
 
 ### Build Status
 - ✅ .NET Backend: Builds with 0 errors, 0 warnings
-- ✅ Database: 2 migrations applied (`AddStoreCustomersAndAddresses`, `AddProductVariants`)
-- ✅ Tables Created: `store_customers`, `customer_refresh_tokens`, `product_variants`, `inventory_movements`
-- ✅ Indexes: SKU uniqueness, product_id, variant_id, created_at for efficient queries
-- ✅ Backend API: Customer auth + Product variants endpoints functional
-- ✅ Variant Management: Full CRUD for variant options and variants
-- ✅ Inventory Tracking: Complete audit trail with inventory movements
+- ✅ Database: 3 migrations applied (`AddStoreCustomersAndAddresses`, `AddProductVariants`, `AddWishlistAndCart`)
+- ✅ Tables Created:
+  - Identity: `store_customers`, `customer_refresh_tokens`
+  - Catalog: `product_variants`, `inventory_movements`
+  - Storefront: `wishlists`, `wishlist_items`, `carts`, `cart_items`
+- ✅ Indexes: Unique constraints on customer_id for carts/wishlists, composite indexes for efficient lookups
+- ✅ Backend API Complete: Customer auth ✅ | Product variants ✅ | Wishlist ✅ | Cart sync ✅
+- ✅ **Phase 2 Backend: 50% Complete (3/6 stages done)**
 - ⏳ Frontend: Ready to begin Stage 4
 
 ---

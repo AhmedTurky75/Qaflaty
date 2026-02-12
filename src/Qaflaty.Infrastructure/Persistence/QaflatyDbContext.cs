@@ -9,6 +9,8 @@ using Qaflaty.Domain.Identity.Aggregates.Merchant;
 using Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
 using Qaflaty.Domain.Ordering.Aggregates.Customer;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
+using Qaflaty.Domain.Storefront.Aggregates.Wishlist;
+using Qaflaty.Domain.Storefront.Aggregates.Cart;
 
 namespace Qaflaty.Infrastructure.Persistence;
 
@@ -37,6 +39,12 @@ public class QaflatyDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<Customer> Customers => Set<Customer>();
+
+    // Storefront
+    public DbSet<Wishlist> Wishlists => Set<Wishlist>();
+    public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
+    public DbSet<Cart> Carts => Set<Cart>();
+    public DbSet<CartItem> CartItems => Set<CartItem>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
