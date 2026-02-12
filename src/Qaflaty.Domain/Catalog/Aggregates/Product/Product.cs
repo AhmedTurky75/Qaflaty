@@ -5,6 +5,7 @@ using Qaflaty.Domain.Catalog.ValueObjects;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Common.Primitives;
+using Qaflaty.Domain.Common.ValueObjects;
 
 namespace Qaflaty.Domain.Catalog.Aggregates.Product;
 
@@ -23,6 +24,18 @@ public sealed class Product : AggregateRoot<ProductId>
 
     private readonly List<ProductImage> _images = [];
     public IReadOnlyList<ProductImage> Images => _images.AsReadOnly();
+
+    // Variant Support
+    private readonly List<VariantOption> _variantOptions = [];
+    public IReadOnlyList<VariantOption> VariantOptions => _variantOptions.AsReadOnly();
+
+    private readonly List<ProductVariant> _variants = [];
+    public IReadOnlyList<ProductVariant> Variants => _variants.AsReadOnly();
+
+    private readonly List<InventoryMovement> _inventoryMovements = [];
+    public IReadOnlyList<InventoryMovement> InventoryMovements => _inventoryMovements.AsReadOnly();
+
+    public bool HasVariants => _variantOptions.Count > 0;
 
     private Product() : base(ProductId.Empty) { }
 
@@ -150,5 +163,135 @@ public sealed class Product : AggregateRoot<ProductId>
             RaiseDomainEvent(new ProductStockChangedEvent(Id, oldQuantity, Inventory.Quantity));
         }
         return result;
+    }
+
+    // Variant Management
+    public Result AddVariantOption(VariantOption option)
+    {
+        // Check if option with same name already exists
+        if (_variantOptions.Any(vo => vo.Name.Equals(option.Name, StringComparison.OrdinalIgnoreCase)))
+            return Result.Failure(new Error("Product.VariantOptionExists",
+                $"Variant option '{option.Name}' already exists"));
+
+        _variantOptions.Add(option);
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result AddVariant(ProductVariant variant)
+    {
+        if (!HasVariants)
+            return Result.Failure(new Error("Product.NoVariantOptions",
+                "Cannot add variant. Product has no variant options defined"));
+
+        // Check if variant with same attributes already exists
+        var existingVariant = _variants.FirstOrDefault(v =>
+            v.Attributes.Count == variant.Attributes.Count &&
+            v.Attributes.All(kvp => variant.Attributes.TryGetValue(kvp.Key, out var value) &&
+                value.Equals(kvp.Value, StringComparison.OrdinalIgnoreCase)));
+
+        if (existingVariant != null)
+            return Result.Failure(new Error("Product.VariantExists",
+                "A variant with these attributes already exists"));
+
+        // Check if SKU already exists
+        if (_variants.Any(v => v.Sku.Equals(variant.Sku, StringComparison.OrdinalIgnoreCase)))
+            return Result.Failure(new Error("Product.SkuExists",
+                $"SKU '{variant.Sku}' already exists for another variant"));
+
+        _variants.Add(variant);
+
+        // Record initial inventory movement
+        var movement = InventoryMovement.Create(
+            Id,
+            variant.Id,
+            variant.Quantity,
+            variant.Quantity,
+            InventoryMovementType.Initial,
+            "Initial variant stock");
+
+        _inventoryMovements.Add(movement);
+
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateVariant(Guid variantId, string sku, Money? priceOverride, bool allowBackorder)
+    {
+        var variant = _variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant == null)
+            return Result.Failure(new Error("Product.VariantNotFound", "Variant not found"));
+
+        // Check if new SKU conflicts with other variants
+        if (_variants.Any(v => v.Id != variantId && v.Sku.Equals(sku, StringComparison.OrdinalIgnoreCase)))
+            return Result.Failure(new Error("Product.SkuExists",
+                $"SKU '{sku}' already exists for another variant"));
+
+        var result = variant.UpdateInfo(sku, priceOverride, allowBackorder);
+        if (result.IsFailure)
+            return result;
+
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result ReserveVariantStock(Guid variantId, int quantity)
+    {
+        var variant = _variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant == null)
+            return Result.Failure(new Error("Product.VariantNotFound", "Variant not found"));
+
+        var oldQuantity = variant.Quantity;
+        var result = variant.ReserveStock(quantity);
+        if (result.IsFailure)
+            return result;
+
+        // Record inventory movement
+        var movement = InventoryMovement.Create(
+            Id,
+            variantId,
+            -quantity,
+            variant.Quantity,
+            InventoryMovementType.Sale,
+            "Stock reserved for order");
+
+        _inventoryMovements.Add(movement);
+
+        // Check if stock is low (less than 10 units)
+        if (variant.Quantity < 10 && !variant.AllowBackorder)
+            RaiseDomainEvent(new VariantStockLowEvent(Id, variantId, variant.Sku, variant.Quantity, 10));
+
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result AdjustVariantInventory(Guid variantId, int quantityChange, InventoryMovementType type, string reason)
+    {
+        var variant = _variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant == null)
+            return Result.Failure(new Error("Product.VariantNotFound", "Variant not found"));
+
+        var result = variant.AdjustStock(quantityChange, reason);
+        if (result.IsFailure)
+            return result;
+
+        // Record inventory movement
+        var movement = InventoryMovement.Create(
+            Id,
+            variantId,
+            quantityChange,
+            variant.Quantity,
+            type,
+            reason);
+
+        _inventoryMovements.Add(movement);
+
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public ProductVariant? GetVariant(Guid variantId)
+    {
+        return _variants.FirstOrDefault(v => v.Id == variantId);
     }
 }

@@ -77,6 +77,28 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         // Access via backing field _images
         builder.Ignore(p => p.Images);
 
+        // Variant Options stored as JSONB
+        builder.OwnsMany(p => p.VariantOptions, variantOptions =>
+        {
+            variantOptions.ToJson("variant_options");
+            variantOptions.Property(vo => vo.Name).HasMaxLength(50);
+        });
+
+        // Variant relationships
+        builder.HasMany(p => p.Variants)
+            .WithOne()
+            .HasForeignKey(v => v.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Inventory movements
+        builder.HasMany(p => p.InventoryMovements)
+            .WithOne()
+            .HasForeignKey(im => im.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // HasVariants is a computed property in the domain model, not a database column
+        builder.Ignore(p => p.HasVariants);
+
         builder.Property(p => p.CreatedAt)
             .HasColumnName("created_at");
 

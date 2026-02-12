@@ -25,6 +25,8 @@ public class QaflatyDbContext : DbContext
     // Catalog
     public DbSet<Store> Stores => Set<Store>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();
+    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<StoreConfiguration> StoreConfigurations => Set<StoreConfiguration>();
     public DbSet<PageConfiguration> PageConfigurations => Set<PageConfiguration>();
