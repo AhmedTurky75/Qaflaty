@@ -25,5 +25,20 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
+    public StoreCustomerId? CustomerId
+    {
+        get
+        {
+            var customerIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("customer_id");
+            if (customerIdClaim != null && Guid.TryParse(customerIdClaim.Value, out var customerGuid))
+                return new StoreCustomerId(customerGuid);
+            return null;
+        }
+    }
+
     public bool IsAuthenticated => _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
+
+    public bool IsMerchant => MerchantId.HasValue;
+
+    public bool IsCustomer => CustomerId.HasValue;
 }

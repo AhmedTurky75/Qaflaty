@@ -63,7 +63,14 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("MerchantPolicy", policy =>
+        policy.RequireRole("merchant"));
+
+    options.AddPolicy("CustomerPolicy", policy =>
+        policy.RequireRole("customer"));
+});
 
 // Register Application and Infrastructure layers
 builder.Services.AddApplication();

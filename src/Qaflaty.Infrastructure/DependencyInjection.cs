@@ -42,6 +42,7 @@ public static class DependencyInjection
 
         // Repositories
         services.AddScoped<IMerchantRepository, MerchantRepository>();
+        services.AddScoped<IStoreCustomerRepository, StoreCustomerRepository>();
         services.AddScoped<IStoreRepository, StoreRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ICategoryRepository, CategoryRepository>();

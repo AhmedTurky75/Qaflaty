@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Domain.Common.Errors;
 
 namespace Qaflaty.Api.Common;
@@ -8,7 +9,10 @@ namespace Qaflaty.Api.Common;
 public abstract class ApiController : ControllerBase
 {
     private ISender? _sender;
+    private ICurrentUserService? _currentUserService;
+
     protected ISender Sender => _sender ??= HttpContext.RequestServices.GetRequiredService<ISender>();
+    protected ICurrentUserService CurrentUserService => _currentUserService ??= HttpContext.RequestServices.GetRequiredService<ICurrentUserService>();
 
     protected IActionResult HandleResult(Result result)
     {

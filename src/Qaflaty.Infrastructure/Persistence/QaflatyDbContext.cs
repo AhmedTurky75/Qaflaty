@@ -6,6 +6,7 @@ using Qaflaty.Domain.Catalog.Aggregates.Product;
 using Qaflaty.Domain.Catalog.Aggregates.Store;
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
 using Qaflaty.Domain.Identity.Aggregates.Merchant;
+using Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
 using Qaflaty.Domain.Ordering.Aggregates.Customer;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
 
@@ -18,6 +19,8 @@ public class QaflatyDbContext : DbContext
     // Identity
     public DbSet<Merchant> Merchants => Set<Merchant>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<StoreCustomer> StoreCustomers => Set<StoreCustomer>();
+    public DbSet<CustomerRefreshToken> CustomerRefreshTokens => Set<CustomerRefreshToken>();
 
     // Catalog
     public DbSet<Store> Stores => Set<Store>();
