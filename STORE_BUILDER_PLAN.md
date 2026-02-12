@@ -296,17 +296,21 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
   - `POST /api/storefront/cart/sync` - Sync guest cart on login
 - [x] Migration `AddWishlistAndCart` created and applied ✅
 
-#### 2.5 Frontend (Store) - Account Pages
-- [ ] Create `pages/account/login.component.ts`
-- [ ] Create `pages/account/register.component.ts`
-- [ ] Create `pages/account/profile.component.ts`
-- [ ] Create `pages/account/order-history.component.ts`
-- [ ] Create `pages/account/order-detail.component.ts`
-- [ ] Create `pages/account/wishlist.component.ts`
-- [ ] Create `pages/account/addresses.component.ts`
-- [ ] Create `account.routes.ts` lazy-loaded route children
-- [ ] Create `customer-auth.service.ts` (login, register, token management, signals)
-- [ ] Create `wishlist.service.ts`
+#### 2.5 Frontend (Store) - Account Pages ✅ COMPLETE
+- [x] Create `pages/account/login.component.ts`
+- [x] Create `pages/account/register.component.ts`
+- [x] Create `pages/account/profile.component.ts`
+- [x] Create `pages/account/order-history.component.ts`
+- [x] Create `pages/account/order-detail.component.ts`
+- [x] Create `pages/account/wishlist.component.ts`
+- [x] Create `pages/account/addresses.component.ts`
+- [x] Add account routes to `app.routes.ts` with guards (customerAuthGuard, guestGuard)
+- [x] Create `customer-auth.service.ts` (login, register, token management, signals, cart sync)
+- [x] Create `wishlist.service.ts`
+- [x] Create `customer-auth.guard.ts` (protects account routes)
+- [x] Create `guest.guard.ts` (prevents auth users from login/register)
+- [x] Create `customer-auth.interceptor.ts` (adds JWT token to requests)
+- [x] Register interceptor in `app.config.ts`
 
 #### 2.6 Frontend (Store) - Variant UI
 - [ ] Create variant selector component (color swatches, size buttons, dropdowns)
@@ -342,8 +346,15 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
   - API Layer: StorefrontWishlistController + StorefrontCartController ✅
   - Cart Sync: MergeGuestCart logic for seamless login transition ✅
 
-- ⏳ **Stage 4: Frontend Customer Auth** - PENDING (Next)
-- ⏳ **Stage 5: Frontend Variants & Wishlist** - PENDING
+- ✅ **Stage 4: Frontend Customer Auth** - COMPLETE (100%)
+  - Services: CustomerAuthService with cart sync, WishlistService with signal-based state ✅
+  - Guards: customerAuthGuard, guestGuard ✅
+  - Interceptor: customerAuthInterceptor registered in app config ✅
+  - Pages: Login, Register, Profile, Addresses, Order History, Order Detail, Wishlist ✅
+  - Routing: 7 account routes with proper guards ✅
+  - Forms: Reactive forms with validation for all components ✅
+
+- ⏳ **Stage 5: Frontend Variants & Wishlist** - PENDING (Next)
 - ⏳ **Stage 6: Frontend Merchant Variant Management** - PENDING
 
 ### Build Status
@@ -355,8 +366,9 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
   - Storefront: `wishlists`, `wishlist_items`, `carts`, `cart_items`
 - ✅ Indexes: Unique constraints on customer_id for carts/wishlists, composite indexes for efficient lookups
 - ✅ Backend API Complete: Customer auth ✅ | Product variants ✅ | Wishlist ✅ | Cart sync ✅
-- ✅ **Phase 2 Backend: 50% Complete (3/6 stages done)**
-- ⏳ Frontend: Ready to begin Stage 4
+- ✅ Frontend Customer Auth Complete: All account pages ✅ | Services ✅ | Guards ✅ | Interceptor ✅
+- ✅ **Phase 2 Progress: 67% Complete (4/6 stages done)**
+- ⏳ Next: Stage 5 (Frontend Variants & Wishlist UI)
 
 ---
 

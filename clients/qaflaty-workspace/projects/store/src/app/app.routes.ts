@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 import { featurePageGuard } from './guards/feature-page.guard';
+import { customerAuthGuard } from './guards/customer-auth.guard';
+import { guestGuard } from './guards/guest.guard';
 
 export const routes: Routes = [
   {
@@ -64,6 +66,42 @@ export const routes: Routes = [
   {
     path: 'pages/:slug',
     loadComponent: () => import('./pages/custom/custom-page.component').then(m => m.CustomPageComponent)
+  },
+  // Account routes
+  {
+    path: 'account/login',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./pages/account/login/login.component').then(m => m.LoginComponent)
+  },
+  {
+    path: 'account/register',
+    canActivate: [guestGuard],
+    loadComponent: () => import('./pages/account/register/register.component').then(m => m.RegisterComponent)
+  },
+  {
+    path: 'account/profile',
+    canActivate: [customerAuthGuard],
+    loadComponent: () => import('./pages/account/profile/profile.component').then(m => m.ProfileComponent)
+  },
+  {
+    path: 'account/addresses',
+    canActivate: [customerAuthGuard],
+    loadComponent: () => import('./pages/account/addresses/addresses.component').then(m => m.AddressesComponent)
+  },
+  {
+    path: 'account/orders',
+    canActivate: [customerAuthGuard],
+    loadComponent: () => import('./pages/account/order-history/order-history.component').then(m => m.OrderHistoryComponent)
+  },
+  {
+    path: 'account/orders/:id',
+    canActivate: [customerAuthGuard],
+    loadComponent: () => import('./pages/account/order-detail/order-detail.component').then(m => m.OrderDetailComponent)
+  },
+  {
+    path: 'account/wishlist',
+    canActivate: [customerAuthGuard],
+    loadComponent: () => import('./pages/account/wishlist/wishlist.component').then(m => m.WishlistComponent)
   },
   {
     path: 'not-found',
