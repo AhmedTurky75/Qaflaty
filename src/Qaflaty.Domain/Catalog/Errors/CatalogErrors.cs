@@ -51,4 +51,19 @@ public static class CatalogErrors
 
     public static readonly Error NameTooLong =
         new("Catalog.NameTooLong", "Name is too long");
+
+    public static readonly Error StoreConfigurationNotFound =
+        new("Catalog.StoreConfigurationNotFound", "Store configuration not found");
+
+    public static readonly Error StoreConfigurationAlreadyExists =
+        new("Catalog.StoreConfigurationAlreadyExists", "Store configuration already exists");
+
+    public static readonly Error PageConfigurationNotFound =
+        new("Catalog.PageConfigurationNotFound", "Page configuration not found");
+
+    public static readonly Error CannotDeleteSystemPage =
+        new("Catalog.CannotDeleteSystemPage", "Cannot delete a system page");
+
+    public static readonly Error FaqItemNotFound =
+        new("Catalog.FaqItemNotFound", "FAQ item not found");
 }

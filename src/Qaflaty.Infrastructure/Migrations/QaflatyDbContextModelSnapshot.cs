@@ -51,6 +51,134 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("categories", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.FaqItem.FaqItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsPublished")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_published");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "SortOrder");
+
+                    b.ToTable("faq_items", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ContentJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("content_json");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_enabled");
+
+                    b.Property<string>("PageType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("page_type");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("slug");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "Slug")
+                        .IsUnique();
+
+                    b.ToTable("page_configurations", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.SectionConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("ContentJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("content_json");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_enabled");
+
+                    b.Property<Guid>("PageConfigurationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("page_configuration_id");
+
+                    b.Property<string>("SectionType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("section_type");
+
+                    b.Property<string>("SettingsJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("settings_json");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<string>("VariantId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("variant_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageConfigurationId");
+
+                    b.ToTable("section_configurations", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Product.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -128,6 +256,64 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasFilter("custom_domain IS NOT NULL");
 
                     b.ToTable("stores", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration.StoreConfiguration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("FooterVariant")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("footer-standard")
+                        .HasColumnName("footer_variant");
+
+                    b.Property<string>("HeaderVariant")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("header-minimal")
+                        .HasColumnName("header_variant");
+
+                    b.Property<string>("ProductCardVariant")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("card-standard")
+                        .HasColumnName("product_card_variant");
+
+                    b.Property<string>("ProductGridVariant")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasDefaultValue("grid-standard")
+                        .HasColumnName("product_grid_variant");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId")
+                        .IsUnique();
+
+                    b.ToTable("store_configurations", (string)null);
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Identity.Aggregates.Merchant.Merchant", b =>
@@ -373,6 +559,194 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Slug")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.FaqItem.FaqItem", b =>
+                {
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.BilingualText", "Answer", b1 =>
+                        {
+                            b1.Property<Guid>("FaqItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(2000)
+                                .HasColumnType("character varying(2000)")
+                                .HasColumnName("answer_ar");
+
+                            b1.Property<string>("English")
+                                .IsRequired()
+                                .HasMaxLength(2000)
+                                .HasColumnType("character varying(2000)")
+                                .HasColumnName("answer_en");
+
+                            b1.HasKey("FaqItemId");
+
+                            b1.ToTable("faq_items");
+
+                            b1.WithOwner()
+                                .HasForeignKey("FaqItemId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.BilingualText", "Question", b1 =>
+                        {
+                            b1.Property<Guid>("FaqItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("question_ar");
+
+                            b1.Property<string>("English")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("question_en");
+
+                            b1.HasKey("FaqItemId");
+
+                            b1.ToTable("faq_items");
+
+                            b1.WithOwner()
+                                .HasForeignKey("FaqItemId");
+                        });
+
+                    b.Navigation("Answer")
+                        .IsRequired();
+
+                    b.Navigation("Question")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
+                {
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.BilingualText", "Title", b1 =>
+                        {
+                            b1.Property<Guid>("PageConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("title_ar");
+
+                            b1.Property<string>("English")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("title_en");
+
+                            b1.HasKey("PageConfigurationId");
+
+                            b1.ToTable("page_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PageConfigurationId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.PageSeoSettings", "SeoSettings", b1 =>
+                        {
+                            b1.Property<Guid>("PageConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<bool>("NoFollow")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("seo_no_follow");
+
+                            b1.Property<bool>("NoIndex")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("seo_no_index");
+
+                            b1.Property<string>("OgImageUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("seo_og_image_url");
+
+                            b1.HasKey("PageConfigurationId");
+
+                            b1.ToTable("page_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PageConfigurationId");
+
+                            b1.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.BilingualText", "MetaDescription", b2 =>
+                                {
+                                    b2.Property<Guid>("PageSeoSettingsPageConfigurationId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<string>("Arabic")
+                                        .IsRequired()
+                                        .HasMaxLength(500)
+                                        .HasColumnType("character varying(500)")
+                                        .HasColumnName("seo_description_ar");
+
+                                    b2.Property<string>("English")
+                                        .IsRequired()
+                                        .HasMaxLength(500)
+                                        .HasColumnType("character varying(500)")
+                                        .HasColumnName("seo_description_en");
+
+                                    b2.HasKey("PageSeoSettingsPageConfigurationId");
+
+                                    b2.ToTable("page_configurations");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("PageSeoSettingsPageConfigurationId");
+                                });
+
+                            b1.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.BilingualText", "MetaTitle", b2 =>
+                                {
+                                    b2.Property<Guid>("PageSeoSettingsPageConfigurationId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<string>("Arabic")
+                                        .IsRequired()
+                                        .HasMaxLength(200)
+                                        .HasColumnType("character varying(200)")
+                                        .HasColumnName("seo_title_ar");
+
+                                    b2.Property<string>("English")
+                                        .IsRequired()
+                                        .HasMaxLength(200)
+                                        .HasColumnType("character varying(200)")
+                                        .HasColumnName("seo_title_en");
+
+                                    b2.HasKey("PageSeoSettingsPageConfigurationId");
+
+                                    b2.ToTable("page_configurations");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("PageSeoSettingsPageConfigurationId");
+                                });
+
+                            b1.Navigation("MetaDescription")
+                                .IsRequired();
+
+                            b1.Navigation("MetaTitle")
+                                .IsRequired();
+                        });
+
+                    b.Navigation("SeoSettings")
+                        .IsRequired();
+
+                    b.Navigation("Title")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.SectionConfiguration", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", null)
+                        .WithMany("Sections")
+                        .HasForeignKey("PageConfigurationId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
@@ -658,6 +1032,291 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Slug")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration.StoreConfiguration", b =>
+                {
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.CommunicationSettings", "CommunicationSettings", b1 =>
+                        {
+                            b1.Property<Guid>("StoreConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<bool>("AiChatbotEnabled")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("comm_ai_chatbot_enabled");
+
+                            b1.Property<string>("AiChatbotName")
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)")
+                                .HasColumnName("comm_ai_chatbot_name");
+
+                            b1.Property<bool>("LiveChatEnabled")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("comm_live_chat_enabled");
+
+                            b1.Property<string>("WhatsAppDefaultMessage")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("comm_whatsapp_default_message");
+
+                            b1.Property<bool>("WhatsAppEnabled")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("comm_whatsapp_enabled");
+
+                            b1.Property<string>("WhatsAppNumber")
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("comm_whatsapp_number");
+
+                            b1.HasKey("StoreConfigurationId");
+
+                            b1.ToTable("store_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreConfigurationId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.CustomerAuthSettings", "CustomerAuthSettings", b1 =>
+                        {
+                            b1.Property<Guid>("StoreConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<bool>("AllowGuestCheckout")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true)
+                                .HasColumnName("auth_allow_guest_checkout");
+
+                            b1.Property<string>("Mode")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("auth_mode");
+
+                            b1.Property<bool>("RequireEmailVerification")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("auth_require_email_verification");
+
+                            b1.HasKey("StoreConfigurationId");
+
+                            b1.ToTable("store_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreConfigurationId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.FeatureToggles", "FeatureToggles", b1 =>
+                        {
+                            b1.Property<Guid>("StoreConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<bool>("Analytics")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("feat_analytics");
+
+                            b1.Property<bool>("Newsletter")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("feat_newsletter");
+
+                            b1.Property<bool>("ProductSearch")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true)
+                                .HasColumnName("feat_product_search");
+
+                            b1.Property<bool>("PromoCodes")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("feat_promo_codes");
+
+                            b1.Property<bool>("Reviews")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("feat_reviews");
+
+                            b1.Property<bool>("SocialLinks")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("feat_social_links");
+
+                            b1.Property<bool>("Wishlist")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("feat_wishlist");
+
+                            b1.HasKey("StoreConfigurationId");
+
+                            b1.ToTable("store_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreConfigurationId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.LocalizationSettings", "LocalizationSettings", b1 =>
+                        {
+                            b1.Property<Guid>("StoreConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("DefaultDirection")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(3)
+                                .HasColumnType("character varying(3)")
+                                .HasDefaultValue("rtl")
+                                .HasColumnName("loc_default_direction");
+
+                            b1.Property<string>("DefaultLanguage")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(5)
+                                .HasColumnType("character varying(5)")
+                                .HasDefaultValue("ar")
+                                .HasColumnName("loc_default_language");
+
+                            b1.Property<bool>("EnableBilingual")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true)
+                                .HasColumnName("loc_enable_bilingual");
+
+                            b1.HasKey("StoreConfigurationId");
+
+                            b1.ToTable("store_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreConfigurationId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.PageToggles", "PageToggles", b1 =>
+                        {
+                            b1.Property<Guid>("StoreConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<bool>("AboutPage")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true)
+                                .HasColumnName("page_about");
+
+                            b1.Property<bool>("CartPage")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true)
+                                .HasColumnName("page_cart");
+
+                            b1.Property<bool>("ContactPage")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(true)
+                                .HasColumnName("page_contact");
+
+                            b1.Property<bool>("FaqPage")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("page_faq");
+
+                            b1.Property<bool>("PrivacyPage")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("page_privacy");
+
+                            b1.Property<bool>("ShippingReturnsPage")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("page_shipping_returns");
+
+                            b1.Property<bool>("TermsPage")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("page_terms");
+
+                            b1.HasKey("StoreConfigurationId");
+
+                            b1.ToTable("store_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreConfigurationId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.SocialLinks", "SocialLinks", b1 =>
+                        {
+                            b1.Property<Guid>("StoreConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Facebook")
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("social_facebook");
+
+                            b1.Property<string>("Instagram")
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("social_instagram");
+
+                            b1.Property<string>("Snapchat")
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("social_snapchat");
+
+                            b1.Property<string>("TikTok")
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("social_tiktok");
+
+                            b1.Property<string>("Twitter")
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("social_twitter");
+
+                            b1.Property<string>("YouTube")
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("social_youtube");
+
+                            b1.HasKey("StoreConfigurationId");
+
+                            b1.ToTable("store_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreConfigurationId");
+                        });
+
+                    b.Navigation("CommunicationSettings")
+                        .IsRequired();
+
+                    b.Navigation("CustomerAuthSettings")
+                        .IsRequired();
+
+                    b.Navigation("FeatureToggles")
+                        .IsRequired();
+
+                    b.Navigation("LocalizationSettings")
+                        .IsRequired();
+
+                    b.Navigation("PageToggles")
+                        .IsRequired();
+
+                    b.Navigation("SocialLinks")
                         .IsRequired();
                 });
 
@@ -1191,6 +1850,11 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
+                {
+                    b.Navigation("Sections");
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Identity.Aggregates.Merchant.Merchant", b =>

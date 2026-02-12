@@ -57,6 +57,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/customers/customers.routes').then(m => m.CUSTOMER_ROUTES)
       },
       {
+        path: 'store-builder',
+        canActivate: [storeGuard],
+        loadChildren: () => import('./features/store-builder/store-builder.routes').then(m => m.STORE_BUILDER_ROUTES)
+      },
+      {
         path: 'settings',
         loadChildren: () => import('./features/settings/settings.routes').then(m => m.SETTINGS_ROUTES)
       }

@@ -1,32 +1,27 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { CommonModule } from '@angular/common';
-import { HeaderComponent } from './components/layout/header.component';
-import { FooterComponent } from './components/layout/footer.component';
+import { LayoutRendererComponent } from './components/layout/layout-renderer.component';
 import { CartSidebarComponent } from './components/shared/cart-sidebar.component';
 import { StoreService } from './services/store.service';
+import { ConfigService } from './services/config.service';
 import { ThemeService } from './services/theme.service';
 import { CartService } from './services/cart.service';
+import { I18nService } from './services/i18n.service';
+import { switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-root',
   imports: [
-    CommonModule,
     RouterOutlet,
-    HeaderComponent,
-    FooterComponent,
+    LayoutRendererComponent,
     CartSidebarComponent
   ],
   template: `
-    @if (storeService.currentStore()) {
-      <div class="flex flex-col min-h-screen">
-        <app-header></app-header>
-        <main class="flex-1">
-          <router-outlet></router-outlet>
-        </main>
-        <app-footer></app-footer>
-        <app-cart-sidebar></app-cart-sidebar>
-      </div>
+    @if (storeService.currentStore() && configService.isLoaded()) {
+      <app-layout-renderer>
+        <router-outlet />
+      </app-layout-renderer>
+      <app-cart-sidebar />
     } @else if (storeService.isLoading()) {
       <div class="flex items-center justify-center min-h-screen bg-gray-50">
         <div class="text-center">
@@ -47,10 +42,8 @@ import { CartService } from './services/cart.service';
           <p class="text-gray-600 mb-8">
             The store you're looking for doesn't exist or is currently unavailable.
           </p>
-          <a
-            href="https://qaflaty.com"
-            class="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-          >
+          <a href="https://qaflaty.com"
+            class="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
             Visit Qaflaty
           </a>
         </div>
@@ -61,21 +54,23 @@ import { CartService } from './services/cart.service';
 })
 export class App implements OnInit {
   storeService = inject(StoreService);
-  private themeService = inject(ThemeService); // Initialize theme service
-  private cartService = inject(CartService); // Initialize cart service
+  configService = inject(ConfigService);
+  private themeService = inject(ThemeService);
+  private cartService = inject(CartService);
+  private i18nService = inject(I18nService);
 
   ngOnInit() {
-    // Detect and load store from subdomain/domain
-    this.storeService.detectAndLoadStore().subscribe({
-      next: (store) => {
-        // Set delivery settings in cart service
+    this.storeService.detectAndLoadStore().pipe(
+      switchMap(store => {
         if (store.deliverySettings) {
           this.cartService.setDeliverySettings(
             store.deliverySettings.deliveryFee,
             store.deliverySettings.freeDeliveryThreshold
           );
         }
-      },
+        return this.configService.loadConfig();
+      })
+    ).subscribe({
       error: (error) => {
         console.error('Failed to load store:', error);
         this.storeService.error.set('Store not found');

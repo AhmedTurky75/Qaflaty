@@ -139,7 +139,8 @@
       "Bash(ng build:*)",
       "Bash(npx ng build:*)",
       "Bash(dir:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(powershell -Command \"Get-ChildItem -Path ''projects/store/src'' -Recurse -Filter ''*.ts'' | ForEach-Object { \\(Get-Content $_FullName\\) -replace \"\"from ''@qaflaty/shared''\"\", \"\"from ''shared''\"\" | Set-Content $_FullName }\")"
     ],
     "deny": [],
     "ask": []

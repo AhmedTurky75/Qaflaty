@@ -3,7 +3,10 @@ using Qaflaty.Api.Common;
 using Qaflaty.Api.Controllers.Requests;
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Catalog.Queries.GetCategories;
+using Qaflaty.Application.Catalog.Queries.GetCustomPage;
+using Qaflaty.Application.Catalog.Queries.GetFaqItems;
 using Qaflaty.Application.Catalog.Queries.GetProductBySlug;
+using Qaflaty.Application.Catalog.Queries.GetStorefrontConfig;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontProducts;
 using Qaflaty.Application.Common.Interfaces;
 
@@ -79,6 +82,39 @@ public class StorefrontController : ApiController
 
         var result = await Sender.Send(
             new GetProductBySlugQuery(_tenantContext.CurrentStoreId.Value.Value, slug), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("config")]
+    public async Task<IActionResult> GetStorefrontConfig(CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var result = await Sender.Send(
+            new GetStorefrontConfigQuery(_tenantContext.CurrentStoreId.Value.Value), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("pages/{slug}")]
+    public async Task<IActionResult> GetCustomPage(string slug, CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var result = await Sender.Send(
+            new GetCustomPageQuery(_tenantContext.CurrentStoreId.Value.Value, slug), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("faq")]
+    public async Task<IActionResult> GetFaqItems(CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var result = await Sender.Send(
+            new GetFaqItemsQuery(_tenantContext.CurrentStoreId.Value.Value, PublishedOnly: true), ct);
         return HandleResult(result);
     }
 }
