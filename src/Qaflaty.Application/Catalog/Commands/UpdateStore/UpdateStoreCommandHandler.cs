@@ -1,6 +1,7 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Catalog.ValueObjects;
 using Qaflaty.Domain.Common.Errors;
@@ -65,12 +66,12 @@ public sealed class UpdateStoreCommandHandler : ICommandHandler<UpdateStoreComma
             DeliverySettings: new DeliverySettingsDto(
                 DeliveryFee: new MoneyDto(
                     Amount: store.DeliverySettings.DeliveryFee.Amount,
-                    Currency: store.DeliverySettings.DeliveryFee.Currency
+                    Currency: store.DeliverySettings.DeliveryFee.Currency.ToString()
                 ),
                 FreeDeliveryThreshold: store.DeliverySettings.FreeDeliveryThreshold is not null
                     ? new MoneyDto(
                         Amount: store.DeliverySettings.FreeDeliveryThreshold.Amount,
-                        Currency: store.DeliverySettings.FreeDeliveryThreshold.Currency
+                        Currency: store.DeliverySettings.FreeDeliveryThreshold.Currency.ToString()
                     )
                     : null
             ),
