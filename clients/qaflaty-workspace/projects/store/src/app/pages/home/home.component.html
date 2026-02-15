@@ -98,14 +98,14 @@
                 }
 
                 <!-- Discount Badge -->
-                @if (product.pricing.hasDiscount) {
+                @if (product.pricing?.hasDiscount) {
                   <div class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                    -{{ product.pricing.discountPercentage }}%
+                    -{{ product.pricing?.discountPercentage }}%
                   </div>
                 }
 
                 <!-- Out of Stock Badge -->
-                @if (!product.inventory.inStock) {
+                @if (!product.inventory?.inStock) {
                   <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
                     <span class="bg-white text-gray-900 px-4 py-2 rounded-lg font-bold">
                       Out of Stock
@@ -119,16 +119,18 @@
                 <h3 class="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary transition-colors">
                   {{ product.name }}
                 </h3>
-                <div class="flex items-center gap-2">
-                  <span class="text-xl font-bold text-gray-900">
-                    {{ product.pricing.price.amount.toFixed(2) }} {{ product.pricing.price.currency }}
-                  </span>
-                  @if (product.pricing.compareAtPrice) {
-                    <span class="text-sm text-gray-500 line-through">
-                      {{ product.pricing.compareAtPrice.amount.toFixed(2) }} {{ product.pricing.compareAtPrice.currency }}
+                @if (product.pricing?.price) {
+                  <div class="flex items-center gap-2">
+                    <span class="text-xl font-bold text-gray-900">
+                      {{ product.pricing.price.amount.toFixed(2) }} {{ product.pricing.price.currency }}
                     </span>
-                  }
-                </div>
+                    @if (product.pricing.compareAtPrice) {
+                      <span class="text-sm text-gray-500 line-through">
+                        {{ product.pricing.compareAtPrice.amount.toFixed(2) }} {{ product.pricing.compareAtPrice.currency }}
+                      </span>
+                    }
+                  </div>
+                }
               </div>
             </a>
           }
