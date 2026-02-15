@@ -4,12 +4,13 @@ import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
-import { Product } from '../../models/product.model';
+import { Product, ProductVariant } from '../../models/product.model';
+import { VariantSelectorComponent } from '../../components/products/variant-selector.component';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.css']
 })
@@ -23,12 +24,68 @@ export class ProductDetailComponent {
   quantity = signal<number>(1);
   addingToCart = signal<boolean>(false);
   showAddedMessage = signal<boolean>(false);
+  selectedVariant = signal<ProductVariant | null>(null);
 
   selectedImage = computed(() => {
     const prod = this.product();
     return prod && prod.images.length > 0
       ? prod.images[0]
       : { id: '', url: '', sortOrder: 0 };
+  });
+
+  // Computed: effective price (variant price or base price)
+  effectivePrice = computed(() => {
+    const variant = this.selectedVariant();
+    const prod = this.product();
+    if (!prod) return null;
+
+    if (variant?.priceOverride) {
+      return variant.priceOverride;
+    }
+    return prod.pricing.price;
+  });
+
+  // Computed: effective stock (variant quantity or base quantity)
+  effectiveStock = computed(() => {
+    const variant = this.selectedVariant();
+    const prod = this.product();
+    if (!prod) return 0;
+
+    if (prod.hasVariants && variant) {
+      return variant.quantity;
+    }
+    return prod.inventory.quantity;
+  });
+
+  // Computed: is in stock (considers variant or base product)
+  isInStock = computed(() => {
+    const variant = this.selectedVariant();
+    const prod = this.product();
+    if (!prod) return false;
+
+    if (prod.hasVariants) {
+      if (!variant) return true; // No variant selected yet
+      return variant.inStock || variant.allowBackorder;
+    }
+    return prod.inventory.inStock;
+  });
+
+  // Computed: can add to cart
+  canAddToCart = computed(() => {
+    const prod = this.product();
+    if (!prod) return false;
+
+    if (prod.hasVariants) {
+      const variant = this.selectedVariant();
+      return variant !== null && (variant.inStock || variant.allowBackorder);
+    }
+    return prod.inventory.inStock;
+  });
+
+  // Computed: require variant selection message
+  requiresVariantSelection = computed(() => {
+    const prod = this.product();
+    return prod?.hasVariants && !this.selectedVariant();
   });
 
   ngOnInit() {
@@ -69,8 +126,8 @@ export class ProductDetailComponent {
   }
 
   increaseQuantity() {
-    const prod = this.product();
-    if (prod && this.quantity() < prod.inventory.quantity) {
+    const maxQty = this.effectiveStock();
+    if (this.quantity() < maxQty) {
       this.quantity.update(q => q + 1);
     }
   }
@@ -81,15 +138,27 @@ export class ProductDetailComponent {
     }
   }
 
+  onVariantSelected(variant: ProductVariant | null) {
+    this.selectedVariant.set(variant);
+    // Reset quantity when variant changes
+    this.quantity.set(1);
+  }
+
   addToCart() {
     const prod = this.product();
     if (!prod) return;
+
+    // If product has variants, require selection
+    if (prod.hasVariants && !this.selectedVariant()) {
+      return;
+    }
 
     this.addingToCart.set(true);
 
     // Simulate a brief delay for better UX
     setTimeout(() => {
-      this.cartService.addItem(prod, this.quantity());
+      const variant = this.selectedVariant();
+      this.cartService.addItem(prod, this.quantity(), variant || undefined);
       this.addingToCart.set(false);
       this.showAddedMessage.set(true);
 

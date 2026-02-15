@@ -5,13 +5,15 @@ import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductService } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { ImageUploadComponent, ImageItem } from '../components/image-upload/image-upload.component';
+import { VariantManagerComponent } from '../components/variant-manager/variant-manager.component';
+import { InventoryHistoryComponent } from '../components/inventory-history/inventory-history.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
 import { CategoryDto, ProductStatus, Currency } from 'shared';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, ImageUploadComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ImageUploadComponent, VariantManagerComponent, InventoryHistoryComponent],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss']
 })

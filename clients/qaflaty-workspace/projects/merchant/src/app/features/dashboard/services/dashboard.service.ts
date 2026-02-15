@@ -36,6 +36,16 @@ export interface RecentOrderSummary {
   createdAt: string;
 }
 
+export interface LowStockItem {
+  productId: string;
+  productName: string;
+  variantId?: string;
+  variantAttributes?: Record<string, string>;
+  sku: string;
+  quantity: number;
+  threshold: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -69,5 +79,12 @@ export class DashboardService {
     return this.http.get<{ items: RecentOrderSummary[] }>(`${this.API_URL}/recent-orders`, { params }).pipe(
       map(response => response.items)
     );
+  }
+
+  getLowStockItems(storeId: string, threshold: number = 10): Observable<LowStockItem[]> {
+    const params = new HttpParams()
+      .set('storeId', storeId)
+      .set('threshold', threshold.toString());
+    return this.http.get<LowStockItem[]>(`${this.API_URL}/low-stock`, { params });
   }
 }

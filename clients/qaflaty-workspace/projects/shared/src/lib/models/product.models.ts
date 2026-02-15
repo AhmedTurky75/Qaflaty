@@ -63,3 +63,78 @@ export interface UpdateProductRequest {
   categoryId?: string;
   status?: string;
 }
+
+// Variant DTOs
+export interface VariantOptionDto {
+  name: string;        // e.g., "Color", "Size"
+  values: string[];    // e.g., ["Red", "Blue", "Green"]
+}
+
+export interface ProductVariantDto {
+  id: string;
+  productId: string;
+  attributes: Record<string, string>;  // e.g., {"Color": "Red", "Size": "M"}
+  sku: string;
+  priceOverride?: number;
+  priceOverrideCurrency?: string;
+  quantity: number;
+  allowBackorder: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ProductWithVariantsDto {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  price: number;
+  currency: string;
+  hasVariants: boolean;
+  variantOptions: VariantOptionDto[];
+  variants: ProductVariantDto[];
+}
+
+export interface AddVariantOptionRequest {
+  name: string;
+  values: string[];
+}
+
+export interface AddProductVariantRequest {
+  attributes: Record<string, string>;
+  sku: string;
+  priceOverride?: Money;
+  quantity: number;
+  allowBackorder: boolean;
+}
+
+export interface UpdateProductVariantRequest {
+  sku: string;
+  priceOverride?: Money;
+  quantity: number;
+  allowBackorder: boolean;
+}
+
+export interface AdjustInventoryRequest {
+  quantityChange: number;
+  movementType: InventoryMovementType;
+  reason?: string;
+}
+
+export enum InventoryMovementType {
+  Adjustment = 'Adjustment',
+  Sale = 'Sale',
+  Return = 'Return',
+  Restock = 'Restock',
+  Damaged = 'Damaged'
+}
+
+export interface InventoryMovementDto {
+  id: string;
+  productId: string;
+  variantId?: string;
+  movementType: string;
+  quantity: number;
+  reason?: string;
+  createdAt: string;
+}

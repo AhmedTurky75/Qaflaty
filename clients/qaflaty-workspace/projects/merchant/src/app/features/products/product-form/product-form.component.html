@@ -258,6 +258,20 @@
             (imagesChange)="onImagesChange($event)"
           ></app-image-upload>
         </div>
+
+        <!-- Variants (only in edit mode) -->
+        @if (isEditMode() && productId) {
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <app-variant-manager [productId]="productId"></app-variant-manager>
+          </div>
+        }
+
+        <!-- Inventory History (only in edit mode) -->
+        @if (isEditMode() && productId) {
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <app-inventory-history [productId]="productId"></app-inventory-history>
+          </div>
+        }
       </div>
 
       <!-- Sidebar -->

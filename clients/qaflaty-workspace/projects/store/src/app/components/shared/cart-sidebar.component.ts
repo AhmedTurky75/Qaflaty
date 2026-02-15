@@ -35,11 +35,29 @@ export class CartSidebarComponent {
     this.isOpen.set(false);
   }
 
-  updateQuantity(productId: string, quantity: number) {
-    this.cartService.updateQuantity(productId, quantity);
+  updateQuantity(productId: string, quantity: number, variantId?: string) {
+    this.cartService.updateQuantity(productId, quantity, variantId);
   }
 
-  removeItem(productId: string) {
-    this.cartService.removeItem(productId);
+  removeItem(productId: string, variantId?: string) {
+    this.cartService.removeItem(productId, variantId);
+  }
+
+  /**
+   * Format variant attributes as a readable string
+   * e.g., {"Color": "Red", "Size": "M"} => "Color: Red, Size: M"
+   */
+  formatVariantAttributes(attributes?: Record<string, string>): string {
+    if (!attributes) return '';
+    return Object.entries(attributes)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(', ');
+  }
+
+  /**
+   * Generate a unique key for tracking items with variants
+   */
+  getItemTrackKey(item: { productId: string; variantId?: string }): string {
+    return item.variantId ? `${item.productId}:${item.variantId}` : item.productId;
   }
 }

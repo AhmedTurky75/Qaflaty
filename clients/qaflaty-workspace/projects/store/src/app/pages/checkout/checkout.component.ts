@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CartService } from '../../services/cart.service';
+import { getCartItemKey } from '../../models/cart.model';
 import { OrderService } from '../../services/order.service';
 import { StoreService } from '../../services/store.service';
 import { CreateOrderRequest, PaymentMethod } from '../../models/order.model';
@@ -54,6 +55,23 @@ export class CheckoutComponent {
     return !!(field && field.invalid && (field.dirty || field.touched));
   }
 
+  /**
+   * Generate a unique key for tracking cart items with variants
+   */
+  getItemKey(item: { productId: string; variantId?: string }): string {
+    return getCartItemKey(item.productId, item.variantId);
+  }
+
+  /**
+   * Format variant attributes as a readable string
+   */
+  formatVariantAttributes(attributes?: Record<string, string>): string {
+    if (!attributes) return '';
+    return Object.entries(attributes)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(', ');
+  }
+
   submitOrder() {
     if (this.checkoutForm.invalid) {
       Object.keys(this.checkoutForm.controls).forEach(key => {
@@ -81,7 +99,9 @@ export class CheckoutComponent {
       },
       items: this.cart().items.map(item => ({
         productId: item.productId,
-        quantity: item.quantity
+        quantity: item.quantity,
+        variantId: item.variantId,
+        variantAttributes: item.variantAttributes
       })),
       paymentMethod: formValue.paymentMethod as PaymentMethod,
       notes: formValue.notes || undefined

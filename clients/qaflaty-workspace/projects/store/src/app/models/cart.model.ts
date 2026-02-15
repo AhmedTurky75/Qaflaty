@@ -8,6 +8,17 @@ export interface CartItem {
   quantity: number;
   imageUrl?: string;
   maxQuantity: number;
+  // Variant support
+  variantId?: string;
+  variantAttributes?: Record<string, string>;  // e.g., {"Color": "Red", "Size": "M"}
+  variantSku?: string;
+}
+
+/**
+ * Generate a unique cart item key combining productId and variantId
+ */
+export function getCartItemKey(productId: string, variantId?: string): string {
+  return variantId ? `${productId}:${variantId}` : productId;
 }
 
 export interface Cart {

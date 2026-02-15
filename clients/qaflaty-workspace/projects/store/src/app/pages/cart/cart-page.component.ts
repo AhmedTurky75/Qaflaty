@@ -1,6 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CartService } from '../../services/cart.service';
+import { CartItem, getCartItemKey } from '../../models/cart.model';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 import { DecimalPipe } from '@angular/common';
 
@@ -30,7 +31,7 @@ import { DecimalPipe } from '@angular/common';
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Cart Items -->
             <div class="lg:col-span-2 space-y-4">
-              @for (item of cart.cart().items; track item.productId) {
+              @for (item of cart.cart().items; track getItemKey(item)) {
                 <div class="bg-white rounded-lg shadow-sm p-4 flex gap-4">
                   <!-- Product Image -->
                   <div class="flex-shrink-0 w-24 h-24 bg-gray-100 rounded-lg overflow-hidden">
@@ -48,6 +49,9 @@ import { DecimalPipe } from '@angular/common';
                   <!-- Product Details -->
                   <div class="flex-1 min-w-0">
                     <h3 class="text-lg font-semibold text-gray-900 mb-1">{{ item.productName }}</h3>
+                    @if (item.variantAttributes) {
+                      <p class="text-sm text-gray-500 mb-1">{{ formatVariantAttributes(item.variantAttributes) }}</p>
+                    }
                     <p class="text-[var(--primary-color)] font-semibold mb-2">
                       {{ item.unitPrice.amount | number: '1.2-2' }} {{ item.unitPrice.currency }}
                     </p>
@@ -56,7 +60,7 @@ import { DecimalPipe } from '@angular/common';
                       <!-- Quantity Controls -->
                       <div class="flex items-center border border-gray-300 rounded-lg">
                         <button
-                          (click)="decreaseQuantity(item.productId)"
+                          (click)="decreaseQuantity(item)"
                           [disabled]="item.quantity <= 1"
                           class="px-3 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -65,7 +69,7 @@ import { DecimalPipe } from '@angular/common';
                         </button>
                         <span class="px-4 py-1 text-gray-900 font-medium min-w-[3rem] text-center">{{ item.quantity }}</span>
                         <button
-                          (click)="increaseQuantity(item.productId)"
+                          (click)="increaseQuantity(item)"
                           [disabled]="item.quantity >= item.maxQuantity"
                           class="px-3 py-1 text-gray-600 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
                           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -83,7 +87,7 @@ import { DecimalPipe } from '@angular/common';
 
                   <!-- Remove Button -->
                   <button
-                    (click)="removeItem(item.productId)"
+                    (click)="removeItem(item)"
                     class="flex-shrink-0 p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors self-start">
                     <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -142,21 +146,28 @@ export class CartPageComponent {
     return TRANSLATIONS[lang]?.[key] ?? key;
   }
 
-  increaseQuantity(productId: string): void {
-    const item = this.cart.getItem(productId);
-    if (item) {
-      this.cart.updateQuantity(productId, item.quantity + 1);
+  getItemKey(item: CartItem): string {
+    return getCartItemKey(item.productId, item.variantId);
+  }
+
+  formatVariantAttributes(attributes?: Record<string, string>): string {
+    if (!attributes) return '';
+    return Object.entries(attributes)
+      .map(([key, value]) => `${key}: ${value}`)
+      .join(', ');
+  }
+
+  increaseQuantity(item: CartItem): void {
+    this.cart.updateQuantity(item.productId, item.quantity + 1, item.variantId);
+  }
+
+  decreaseQuantity(item: CartItem): void {
+    if (item.quantity > 1) {
+      this.cart.updateQuantity(item.productId, item.quantity - 1, item.variantId);
     }
   }
 
-  decreaseQuantity(productId: string): void {
-    const item = this.cart.getItem(productId);
-    if (item && item.quantity > 1) {
-      this.cart.updateQuantity(productId, item.quantity - 1);
-    }
-  }
-
-  removeItem(productId: string): void {
-    this.cart.removeItem(productId);
+  removeItem(item: CartItem): void {
+    this.cart.removeItem(item.productId, item.variantId);
   }
 }

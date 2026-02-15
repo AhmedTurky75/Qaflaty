@@ -13,6 +13,26 @@ export interface Product {
   images: ProductImage[];
   createdAt: string;
   updatedAt: string;
+  // Variant support
+  hasVariants?: boolean;
+  variantOptions?: VariantOption[];
+  variants?: ProductVariant[];
+}
+
+export interface VariantOption {
+  name: string;        // e.g., "Color", "Size"
+  values: string[];    // e.g., ["Red", "Blue", "Green"]
+}
+
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  attributes: Record<string, string>;  // e.g., {"Color": "Red", "Size": "M"}
+  sku: string;
+  priceOverride?: Money;
+  quantity: number;
+  allowBackorder: boolean;
+  inStock: boolean;
 }
 
 export interface ProductPricing {

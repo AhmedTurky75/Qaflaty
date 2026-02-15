@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, effect } from '@angular/core';
-import { Cart, CartItem } from '../models/cart.model';
-import { Product } from '../models/product.model';
+import { Cart, CartItem, getCartItemKey } from '../models/cart.model';
+import { Product, ProductVariant } from '../models/product.model';
 import { Money } from '../models/store.model';
 
 @Injectable({
@@ -72,17 +72,24 @@ export class CartService {
   }
 
   /**
-   * Add item to cart
+   * Add item to cart (with optional variant support)
    */
-  addItem(product: Product, quantity: number = 1): void {
+  addItem(product: Product, quantity: number = 1, variant?: ProductVariant): void {
     const items = [...this.cartItems()];
-    const existingIndex = items.findIndex(item => item.productId === product.id);
+    const itemKey = getCartItemKey(product.id, variant?.id);
+    const existingIndex = items.findIndex(item =>
+      getCartItemKey(item.productId, item.variantId) === itemKey
+    );
+
+    // Determine price and max quantity based on variant or base product
+    const unitPrice = variant?.priceOverride ?? product.pricing.price;
+    const maxQty = variant?.quantity ?? product.inventory.quantity;
 
     if (existingIndex >= 0) {
       // Update quantity
       const newQuantity = Math.min(
         items[existingIndex].quantity + quantity,
-        product.inventory.quantity
+        maxQty
       );
       items[existingIndex] = { ...items[existingIndex], quantity: newQuantity };
     } else {
@@ -91,10 +98,14 @@ export class CartService {
         productId: product.id,
         productName: product.name,
         productSlug: product.slug,
-        unitPrice: product.pricing.price,
-        quantity: Math.min(quantity, product.inventory.quantity),
+        unitPrice: unitPrice,
+        quantity: Math.min(quantity, maxQty),
         imageUrl: product.images[0]?.url,
-        maxQuantity: product.inventory.quantity
+        maxQuantity: maxQty,
+        // Variant fields
+        variantId: variant?.id,
+        variantAttributes: variant?.attributes,
+        variantSku: variant?.sku
       };
       items.push(newItem);
     }
@@ -103,11 +114,13 @@ export class CartService {
   }
 
   /**
-   * Update item quantity
+   * Update item quantity (supports variants via itemKey)
    */
-  updateQuantity(productId: string, quantity: number): void {
+  updateQuantity(productId: string, quantity: number, variantId?: string): void {
+    const targetKey = getCartItemKey(productId, variantId);
     const items = this.cartItems().map(item => {
-      if (item.productId === productId) {
+      const itemKey = getCartItemKey(item.productId, item.variantId);
+      if (itemKey === targetKey) {
         return {
           ...item,
           quantity: Math.min(Math.max(1, quantity), item.maxQuantity)
@@ -119,10 +132,13 @@ export class CartService {
   }
 
   /**
-   * Remove item from cart
+   * Remove item from cart (supports variants via itemKey)
    */
-  removeItem(productId: string): void {
-    const items = this.cartItems().filter(item => item.productId !== productId);
+  removeItem(productId: string, variantId?: string): void {
+    const targetKey = getCartItemKey(productId, variantId);
+    const items = this.cartItems().filter(item =>
+      getCartItemKey(item.productId, item.variantId) !== targetKey
+    );
     this.cartItems.set(items);
   }
 
@@ -134,17 +150,23 @@ export class CartService {
   }
 
   /**
-   * Get item by product ID
+   * Get item by product ID and optional variant ID
    */
-  getItem(productId: string): CartItem | undefined {
-    return this.cartItems().find(item => item.productId === productId);
+  getItem(productId: string, variantId?: string): CartItem | undefined {
+    const targetKey = getCartItemKey(productId, variantId);
+    return this.cartItems().find(item =>
+      getCartItemKey(item.productId, item.variantId) === targetKey
+    );
   }
 
   /**
-   * Check if product is in cart
+   * Check if product (with optional variant) is in cart
    */
-  hasItem(productId: string): boolean {
-    return this.cartItems().some(item => item.productId === productId);
+  hasItem(productId: string, variantId?: string): boolean {
+    const targetKey = getCartItemKey(productId, variantId);
+    return this.cartItems().some(item =>
+      getCartItemKey(item.productId, item.variantId) === targetKey
+    );
   }
 
   /**

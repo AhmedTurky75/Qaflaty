@@ -24,6 +24,8 @@ export interface DeliveryAddress {
 export interface OrderItemRequest {
   productId: string;
   quantity: number;
+  variantId?: string;
+  variantAttributes?: Record<string, string>;
 }
 
 export enum PaymentMethod {
@@ -56,6 +58,8 @@ export interface OrderItemDto {
   unitPrice: Money;
   quantity: number;
   total: Money;
+  variantId?: string;
+  variantAttributes?: Record<string, string>;
 }
 
 export interface OrderPricing {

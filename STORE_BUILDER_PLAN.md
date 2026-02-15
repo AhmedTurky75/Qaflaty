@@ -213,7 +213,7 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
 
 ---
 
-## Phase 2: Customer Auth + Cart + Product Variants ⏳ IN PROGRESS
+## Phase 2: Customer Auth + Cart + Product Variants ✅ COMPLETE
 
 ### TODO List
 
@@ -312,18 +312,18 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
 - [x] Create `customer-auth.interceptor.ts` (adds JWT token to requests)
 - [x] Register interceptor in `app.config.ts`
 
-#### 2.6 Frontend (Store) - Variant UI
-- [ ] Create variant selector component (color swatches, size buttons, dropdowns)
-- [ ] Update product detail page to use variant selector
-- [ ] Update cart items to show selected variant attributes
-- [ ] Update checkout to include variant info in order
+#### 2.6 Frontend (Store) - Variant UI ✅ COMPLETE
+- [x] Create variant selector component (color swatches, size buttons, dropdowns)
+- [x] Update product detail page to use variant selector
+- [x] Update cart items to show selected variant attributes
+- [x] Update checkout to include variant info in order
 
-#### 2.7 Frontend (Merchant) - Variant Management
-- [ ] Add variant management section to product form
-- [ ] Create variant option editor (define options like Color, Size)
-- [ ] Create variant grid/table for managing individual variant SKUs, prices, stock
-- [ ] Create inventory history view
-- [ ] Create low-stock alerts notification
+#### 2.7 Frontend (Merchant) - Variant Management ✅ COMPLETE
+- [x] Add variant management section to product form
+- [x] Create variant option editor (define options like Color, Size)
+- [x] Create variant grid/table for managing individual variant SKUs, prices, stock
+- [x] Create inventory history view
+- [x] Create low-stock alerts notification
 
 ### Phase 2 Progress Summary
 - ✅ **Stage 1: Customer Authentication Backend** - COMPLETE (100%)
@@ -354,8 +354,22 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
   - Routing: 7 account routes with proper guards ✅
   - Forms: Reactive forms with validation for all components ✅
 
-- ⏳ **Stage 5: Frontend Variants & Wishlist** - PENDING (Next)
-- ⏳ **Stage 6: Frontend Merchant Variant Management** - PENDING
+- ✅ **Stage 5: Frontend Variants & Wishlist UI** - COMPLETE (100%)
+  - Variant selector component with color swatches, size buttons, dropdowns ✅
+  - Product detail page updated with variant selection ✅
+  - Cart service updated to track variants (productId + variantId key) ✅
+  - Cart sidebar and cart page show variant attributes ✅
+  - Checkout includes variant info in order items ✅
+  - Shared library DTOs extended with variant types ✅
+
+- ✅ **Stage 6: Frontend Merchant Variant Management** - COMPLETE (100%)
+  - Variant manager component added to product form ✅
+  - Variant option editor (define Color, Size, etc. with values) ✅
+  - Variant grid/table for managing SKUs, prices, stock ✅
+  - Generate all variant combinations feature ✅
+  - Inventory adjustment modal with movement types ✅
+  - Inventory history component showing stock movements ✅
+  - Low-stock alerts component on merchant dashboard ✅
 
 ### Build Status
 - ✅ .NET Backend: Builds with 0 errors, 0 warnings
@@ -367,8 +381,11 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
 - ✅ Indexes: Unique constraints on customer_id for carts/wishlists, composite indexes for efficient lookups
 - ✅ Backend API Complete: Customer auth ✅ | Product variants ✅ | Wishlist ✅ | Cart sync ✅
 - ✅ Frontend Customer Auth Complete: All account pages ✅ | Services ✅ | Guards ✅ | Interceptor ✅
-- ✅ **Phase 2 Progress: 67% Complete (4/6 stages done)**
-- ⏳ Next: Stage 5 (Frontend Variants & Wishlist UI)
+- ✅ Frontend Variants Complete: Store variant UI ✅ | Merchant variant management ✅
+- ✅ Angular Shared Library: Builds successfully
+- ✅ Angular Store App: Builds successfully
+- ✅ Angular Merchant App: Builds successfully
+- ✅ **Phase 2 Progress: 100% Complete (6/6 stages done)**
 
 ---
 
