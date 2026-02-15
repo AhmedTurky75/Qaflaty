@@ -57,6 +57,20 @@ export const routes: Routes = [
         loadChildren: () => import('./features/customers/customers.routes').then(m => m.CUSTOMER_ROUTES)
       },
       {
+        path: 'chat',
+        canActivate: [storeGuard],
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./features/chat/chat-list.component').then(m => m.ChatListComponent)
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./features/chat/chat-detail.component').then(m => m.ChatDetailComponent)
+          }
+        ]
+      },
+      {
         path: 'store-builder',
         canActivate: [storeGuard],
         loadChildren: () => import('./features/store-builder/store-builder.routes').then(m => m.STORE_BUILDER_ROUTES)

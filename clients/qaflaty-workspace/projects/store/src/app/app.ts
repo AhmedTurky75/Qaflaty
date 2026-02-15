@@ -3,6 +3,7 @@ import { RouterOutlet } from '@angular/router';
 import { LayoutRendererComponent } from './components/layout/layout-renderer.component';
 import { CartSidebarComponent } from './components/shared/cart-sidebar.component';
 import { WhatsAppButtonComponent } from './components/shared/whatsapp-button.component';
+import { ChatWidgetComponent } from './components/chat/chat-widget.component';
 import { StoreService } from './services/store.service';
 import { ConfigService } from './services/config.service';
 import { ThemeService } from './services/theme.service';
@@ -16,7 +17,8 @@ import { switchMap } from 'rxjs';
     RouterOutlet,
     LayoutRendererComponent,
     CartSidebarComponent,
-    WhatsAppButtonComponent
+    WhatsAppButtonComponent,
+    ChatWidgetComponent
   ],
   template: `
     @if (storeService.currentStore() && configService.isLoaded()) {
@@ -25,6 +27,7 @@ import { switchMap } from 'rxjs';
       </app-layout-renderer>
       <app-cart-sidebar />
       <app-whatsapp-button variant="floating" position="bottom-right" />
+      <app-chat-widget />
     } @else if (storeService.isLoading()) {
       <div class="flex items-center justify-center min-h-screen bg-gray-50">
         <div class="text-center">

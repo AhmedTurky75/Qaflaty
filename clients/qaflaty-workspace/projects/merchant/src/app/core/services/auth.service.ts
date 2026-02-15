@@ -150,6 +150,10 @@ export class AuthService {
     return localStorage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
+  getCurrentMerchantId(): string | undefined {
+    return this.currentMerchantSubject.value?.id;
+  }
+
   private handleError(error: any): Observable<never> {
     console.error('Auth error:', error);
     return throwError(() => error);

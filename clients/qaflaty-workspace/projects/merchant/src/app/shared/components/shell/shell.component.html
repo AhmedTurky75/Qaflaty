@@ -28,7 +28,7 @@
         <a
           [routerLink]="item.route"
           routerLinkActive="bg-primary-50 text-primary-700"
-          class="flex items-center px-4 py-3 mb-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors"
+          class="flex items-center px-4 py-3 mb-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors relative"
           (click)="sidebarOpen.set(false)"
         >
           <span class="text-2xl mr-3">
@@ -38,10 +38,17 @@
               @case ('box') { 📦 }
               @case ('shopping-bag') { 🛍️ }
               @case ('users') { 👥 }
+              @case ('message-square') { 💬 }
+              @case ('layout') { 🎨 }
               @case ('settings') { ⚙️ }
             }
           </span>
-          <span class="font-medium">{{ item.name }}</span>
+          <span class="font-medium flex-1">{{ item.name }}</span>
+          @if (item.icon === 'message-square' && chatUnreadCount() > 0) {
+            <span class="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-red-500 rounded-full">
+              {{ chatUnreadCount() }}
+            </span>
+          }
         </a>
       }
     </nav>
