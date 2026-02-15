@@ -402,18 +402,21 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
 - [x] Add WhatsApp link to order confirmation page (with order support context)
 
 #### 3.2 Live Chat (Backend)
-- [ ] Create Communication bounded context folder structure
-- [ ] Create `ChatConversation` aggregate (storeId, customerId/guestSessionId, status, startedAt)
-- [ ] Create `ChatMessage` entity (conversationId, senderType [Customer/Merchant/Bot], content, sentAt, readAt)
-- [ ] Create `IChatRepository` + implementation
-- [ ] Create EF configs + migration (tables: `chat_conversations`, `chat_messages`)
-- [ ] Create `StartConversationCommand` + Handler
-- [ ] Create `SendChatMessageCommand` + Handler
-- [ ] Create `MarkMessagesAsReadCommand` + Handler
-- [ ] Create `CloseConversationCommand` + Handler
-- [ ] Create `GetConversationsQuery` (merchant) + Handler
-- [ ] Create `GetConversationMessagesQuery` + Handler
-- [ ] Create `GetActiveConversationQuery` (storefront) + Handler
+- [x] Create Communication bounded context folder structure
+- [x] Create `ChatConversation` aggregate (storeId, customerId/guestSessionId, status, startedAt)
+- [x] Create `ChatMessage` entity (conversationId, senderType [Customer/Merchant/Bot], content, sentAt, readAt)
+- [x] Create `IChatConversationRepository` + implementation
+- [x] Create EF configs (ChatConversationConfiguration, ChatMessageConfiguration)
+- [x] Create EF migration (tables: `chat_conversations`, `chat_messages`) ✅ Applied to database
+- [x] Create DTOs (ChatMessageDto, ChatConversationDto, ConversationSummaryDto, Request DTOs)
+- [x] Create `StartConversationCommand` + Handler + Validator
+- [x] Create `SendChatMessageCommand` + Handler + Validator
+- [x] Create `MarkMessagesAsReadCommand` + Handler + Validator
+- [x] Create `CloseConversationCommand` + Handler + Validator
+- [x] Create `GetConversationsQuery` (merchant) + Handler + Validator
+- [x] Create `GetConversationMessagesQuery` + Handler + Validator
+- [x] Create `GetActiveConversationQuery` (storefront) + Handler + Validator
+- [ ] Fix handlers to return Result<T> pattern (wrap responses with Result.Success())
 - [ ] Set up SignalR Hub `/hubs/chat`
 - [ ] Add chat API endpoints (storefront + merchant)
 

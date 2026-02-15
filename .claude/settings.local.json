@@ -143,7 +143,8 @@
       "Bash(powershell -Command \"Get-ChildItem -Path ''projects/store/src'' -Recurse -Filter ''*.ts'' | ForEach-Object { \\(Get-Content $_FullName\\) -replace \"\"from ''@qaflaty/shared''\"\", \"\"from ''shared''\"\" | Set-Content $_FullName }\")",
       "Bash(npm run build:shared:*)",
       "Bash(npm run:*)",
-      "Bash(findstr:*)"
+      "Bash(findstr:*)",
+      "Bash(dotnet ef database update:*)"
     ],
     "deny": [],
     "ask": []

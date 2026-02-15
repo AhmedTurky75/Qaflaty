@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Identity.Services;
 using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 using Qaflaty.Domain.Identity.Repositories;
 using Qaflaty.Domain.Identity.Services;
 using Qaflaty.Domain.Ordering.Repositories;
@@ -12,6 +13,7 @@ using Qaflaty.Domain.Storefront.Repositories;
 using Qaflaty.Infrastructure.Persistence;
 using Qaflaty.Infrastructure.Persistence.Interceptors;
 using Qaflaty.Infrastructure.Persistence.Repositories;
+using Qaflaty.Infrastructure.Persistence.Repositories.Communication;
 using Qaflaty.Infrastructure.Services.Common;
 using Qaflaty.Infrastructure.Services.Identity;
 using Qaflaty.Infrastructure.Services.Ordering;
@@ -54,6 +56,7 @@ public static class DependencyInjection
         services.AddScoped<ICustomerRepository, CustomerRepository>();
         services.AddScoped<IWishlistRepository, WishlistRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
+        services.AddScoped<IChatConversationRepository, ChatConversationRepository>();
 
         // Identity Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();
