@@ -38,8 +38,7 @@ public class PageConfigurationEntityConfiguration : IEntityTypeConfiguration<Pag
         });
 
         builder.Property(pc => pc.IsEnabled)
-            .HasColumnName("is_enabled")
-            .HasDefaultValue(true);
+            .HasColumnName("is_enabled");
 
         // PageSeoSettings - owned type
         builder.OwnsOne(pc => pc.SeoSettings, seo =>

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Qaflaty.Infrastructure.Persistence;
@@ -12,9 +13,11 @@ using Qaflaty.Infrastructure.Persistence;
 namespace Qaflaty.Infrastructure.Migrations
 {
     [DbContext(typeof(QaflatyDbContext))]
-    partial class QaflatyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260215221045_RemoveDefaultValuesFromConfigurations")]
+    partial class RemoveDefaultValuesFromConfigurations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
