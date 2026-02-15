@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Communication.DTOs;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 
@@ -14,7 +15,7 @@ public sealed class GetActiveConversationQueryHandler : IQueryHandler<GetActiveC
         _conversationRepository = conversationRepository;
     }
 
-    public async Task<ChatConversationDto?> Handle(GetActiveConversationQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ChatConversationDto?>> Handle(GetActiveConversationQuery request, CancellationToken cancellationToken)
     {
         var storeId = new StoreId(request.StoreId);
         ChatConversation? conversation = null;
@@ -33,10 +34,10 @@ public sealed class GetActiveConversationQueryHandler : IQueryHandler<GetActiveC
 
         if (conversation is null)
         {
-            return null;
+            return Result.Success<ChatConversationDto?>(null);
         }
 
-        return new ChatConversationDto
+        var result = new ChatConversationDto
         {
             Id = conversation.Id.Value,
             StoreId = conversation.StoreId.Value,
@@ -61,5 +62,7 @@ public sealed class GetActiveConversationQueryHandler : IQueryHandler<GetActiveC
                     ReadAt = m.ReadAt
                 }).ToList()
         };
+
+        return Result.Success<ChatConversationDto?>(result);
     }
 }

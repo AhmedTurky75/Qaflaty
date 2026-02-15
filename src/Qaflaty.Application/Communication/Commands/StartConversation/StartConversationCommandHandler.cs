@@ -1,6 +1,7 @@
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Communication.DTOs;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 using Qaflaty.Domain.Communication.Enums;
@@ -20,10 +21,10 @@ public sealed class StartConversationCommandHandler : ICommandHandler<StartConve
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ChatConversationDto> Handle(StartConversationCommand request, CancellationToken cancellationToken)
+    public async Task<Result<ChatConversationDto>> Handle(StartConversationCommand request, CancellationToken cancellationToken)
     {
         var storeId = new StoreId(request.StoreId);
-        var customerId = request.CustomerId.HasValue ? new StoreCustomerId(request.CustomerId.Value) : null;
+        StoreCustomerId? customerId = request.CustomerId.HasValue ? new StoreCustomerId(request.CustomerId.Value) : null;
 
         // Check if there's already an active conversation
         ChatConversation? conversation = null;
@@ -31,7 +32,7 @@ public sealed class StartConversationCommandHandler : ICommandHandler<StartConve
         if (customerId is not null)
         {
             conversation = await _conversationRepository.GetActiveConversationByCustomerIdAsync(
-                storeId, customerId, cancellationToken);
+                storeId, customerId.Value, cancellationToken);
         }
         else if (!string.IsNullOrWhiteSpace(request.GuestSessionId))
         {
@@ -56,7 +57,7 @@ public sealed class StartConversationCommandHandler : ICommandHandler<StartConve
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return MapToDto(conversation);
+        return Result.Success(MapToDto(conversation));
     }
 
     private static ChatConversationDto MapToDto(ChatConversation conversation)

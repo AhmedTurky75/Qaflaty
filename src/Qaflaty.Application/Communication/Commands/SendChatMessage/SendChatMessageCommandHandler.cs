@@ -1,6 +1,7 @@
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Communication.DTOs;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 
@@ -19,7 +20,7 @@ public sealed class SendChatMessageCommandHandler : ICommandHandler<SendChatMess
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<ChatMessageDto> Handle(SendChatMessageCommand request, CancellationToken cancellationToken)
+    public async Task<Result<ChatMessageDto>> Handle(SendChatMessageCommand request, CancellationToken cancellationToken)
     {
         var conversationId = new ChatConversationId(request.ConversationId);
 
@@ -31,7 +32,7 @@ public sealed class SendChatMessageCommandHandler : ICommandHandler<SendChatMess
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return new ChatMessageDto
+        return Result.Success(new ChatMessageDto
         {
             Id = message.Id.Value,
             ConversationId = message.ConversationId.Value,
@@ -40,6 +41,6 @@ public sealed class SendChatMessageCommandHandler : ICommandHandler<SendChatMess
             Content = message.Content,
             SentAt = message.SentAt,
             ReadAt = message.ReadAt
-        };
+        });
     }
 }

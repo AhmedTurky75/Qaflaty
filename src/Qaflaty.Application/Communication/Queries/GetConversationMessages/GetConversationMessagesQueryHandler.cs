@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Communication.DTOs;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 
@@ -14,14 +15,14 @@ public sealed class GetConversationMessagesQueryHandler : IQueryHandler<GetConve
         _conversationRepository = conversationRepository;
     }
 
-    public async Task<ChatConversationDto> Handle(GetConversationMessagesQuery request, CancellationToken cancellationToken)
+    public async Task<Result<ChatConversationDto>> Handle(GetConversationMessagesQuery request, CancellationToken cancellationToken)
     {
         var conversationId = new ChatConversationId(request.ConversationId);
 
         var conversation = await _conversationRepository.GetByIdAsync(conversationId, cancellationToken)
             ?? throw new InvalidOperationException($"Conversation with ID {request.ConversationId} not found");
 
-        return new ChatConversationDto
+        var result = new ChatConversationDto
         {
             Id = conversation.Id.Value,
             StoreId = conversation.StoreId.Value,
@@ -46,5 +47,7 @@ public sealed class GetConversationMessagesQueryHandler : IQueryHandler<GetConve
                     ReadAt = m.ReadAt
                 }).ToList()
         };
+
+        return Result.Success(result);
     }
 }

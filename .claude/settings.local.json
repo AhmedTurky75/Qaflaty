@@ -144,7 +144,8 @@
       "Bash(npm run build:shared:*)",
       "Bash(npm run:*)",
       "Bash(findstr:*)",
-      "Bash(dotnet ef database update:*)"
+      "Bash(dotnet ef database update:*)",
+      "Bash(dotnet list:*)"
     ],
     "deny": [],
     "ask": []

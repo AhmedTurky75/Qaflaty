@@ -416,8 +416,8 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
 - [x] Create `GetConversationsQuery` (merchant) + Handler + Validator
 - [x] Create `GetConversationMessagesQuery` + Handler + Validator
 - [x] Create `GetActiveConversationQuery` (storefront) + Handler + Validator
-- [ ] Fix handlers to return Result<T> pattern (wrap responses with Result.Success())
-- [ ] Set up SignalR Hub `/hubs/chat`
+- [x] Fix handlers to return Result<T> pattern (wrap responses with Result.Success()) ✅
+- [x] Set up SignalR Hub `/hubs/chat` ✅
 - [ ] Add chat API endpoints (storefront + merchant)
 
 #### 3.3 Live Chat (Frontend - Store)

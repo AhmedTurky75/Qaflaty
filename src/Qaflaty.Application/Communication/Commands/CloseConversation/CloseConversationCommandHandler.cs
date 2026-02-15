@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 
@@ -18,7 +19,7 @@ public sealed class CloseConversationCommandHandler : ICommandHandler<CloseConve
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(CloseConversationCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(CloseConversationCommand request, CancellationToken cancellationToken)
     {
         var conversationId = new ChatConversationId(request.ConversationId);
 
@@ -29,5 +30,7 @@ public sealed class CloseConversationCommandHandler : ICommandHandler<CloseConve
 
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 }

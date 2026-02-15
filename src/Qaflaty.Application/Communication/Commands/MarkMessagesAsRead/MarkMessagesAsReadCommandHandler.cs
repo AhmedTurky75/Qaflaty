@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 using Qaflaty.Domain.Communication.Enums;
@@ -19,7 +20,7 @@ public sealed class MarkMessagesAsReadCommandHandler : ICommandHandler<MarkMessa
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(MarkMessagesAsReadCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(MarkMessagesAsReadCommand request, CancellationToken cancellationToken)
     {
         var conversationId = new ChatConversationId(request.ConversationId);
 
@@ -39,5 +40,7 @@ public sealed class MarkMessagesAsReadCommandHandler : ICommandHandler<MarkMessa
 
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        return Result.Success();
     }
 }
