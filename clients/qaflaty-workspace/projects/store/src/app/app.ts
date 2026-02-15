@@ -2,6 +2,7 @@ import { Component, inject, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { LayoutRendererComponent } from './components/layout/layout-renderer.component';
 import { CartSidebarComponent } from './components/shared/cart-sidebar.component';
+import { WhatsAppButtonComponent } from './components/shared/whatsapp-button.component';
 import { StoreService } from './services/store.service';
 import { ConfigService } from './services/config.service';
 import { ThemeService } from './services/theme.service';
@@ -14,7 +15,8 @@ import { switchMap } from 'rxjs';
   imports: [
     RouterOutlet,
     LayoutRendererComponent,
-    CartSidebarComponent
+    CartSidebarComponent,
+    WhatsAppButtonComponent
   ],
   template: `
     @if (storeService.currentStore() && configService.isLoaded()) {
@@ -22,6 +24,7 @@ import { switchMap } from 'rxjs';
         <router-outlet />
       </app-layout-renderer>
       <app-cart-sidebar />
+      <app-whatsapp-button variant="floating" position="bottom-right" />
     } @else if (storeService.isLoading()) {
       <div class="flex items-center justify-center min-h-screen bg-gray-50">
         <div class="text-center">
