@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Ordering.Repositories;
 using Qaflaty.Domain.Ordering.Aggregates.Order.Events;
@@ -10,15 +11,18 @@ public class OrderCancelledEventHandler : INotificationHandler<OrderCancelledEve
 {
     private readonly IOrderRepository _orderRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<OrderCancelledEventHandler> _logger;
 
     public OrderCancelledEventHandler(
         IOrderRepository orderRepository,
         IProductRepository productRepository,
+        IUnitOfWork unitOfWork,
         ILogger<OrderCancelledEventHandler> logger)
     {
         _orderRepository = orderRepository;
         _productRepository = productRepository;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -64,5 +68,9 @@ public class OrderCancelledEventHandler : INotificationHandler<OrderCancelledEve
                 item.ProductId.Value,
                 item.Quantity);
         }
+
+        // IMPORTANT: Save changes to persist stock restoration
+        // Event handlers are NOT wrapped by UnitOfWorkBehavior, so we must save manually
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

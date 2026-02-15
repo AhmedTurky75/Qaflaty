@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Ordering.Aggregates.Order.Events;
 
@@ -8,13 +9,16 @@ namespace Qaflaty.Application.Ordering.EventHandlers;
 public class OrderPlacedEventHandler : INotificationHandler<OrderPlacedEvent>
 {
     private readonly IProductRepository _productRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<OrderPlacedEventHandler> _logger;
 
     public OrderPlacedEventHandler(
         IProductRepository productRepository,
+        IUnitOfWork unitOfWork,
         ILogger<OrderPlacedEventHandler> logger)
     {
         _productRepository = productRepository;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -54,5 +58,9 @@ public class OrderPlacedEventHandler : INotificationHandler<OrderPlacedEvent>
                 item.ProductId.Value,
                 item.Quantity);
         }
+
+        // IMPORTANT: Save changes to persist stock reductions
+        // Event handlers are NOT wrapped by UnitOfWorkBehavior, so we must save manually
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 }

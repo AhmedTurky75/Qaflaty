@@ -1,4 +1,5 @@
 using MediatR;
+using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 using Qaflaty.Domain.Catalog.Aggregates.Store.Events;
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
@@ -12,13 +13,16 @@ public class StoreCreatedSeedConfigHandler : INotificationHandler<StoreCreatedEv
 {
     private readonly IStoreConfigurationRepository _configRepo;
     private readonly IPageConfigurationRepository _pageRepo;
+    private readonly IUnitOfWork _unitOfWork;
 
     public StoreCreatedSeedConfigHandler(
         IStoreConfigurationRepository configRepo,
-        IPageConfigurationRepository pageRepo)
+        IPageConfigurationRepository pageRepo,
+        IUnitOfWork unitOfWork)
     {
         _configRepo = configRepo;
         _pageRepo = pageRepo;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task Handle(StoreCreatedEvent notification, CancellationToken cancellationToken)
@@ -31,6 +35,10 @@ public class StoreCreatedSeedConfigHandler : INotificationHandler<StoreCreatedEv
 
         // Seed default page configurations
         await SeedDefaultPages(notification.StoreId, cancellationToken);
+
+        // IMPORTANT: Save changes to persist the seeded data
+        // Event handlers are NOT wrapped by UnitOfWorkBehavior, so we must save manually
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
 
     private async Task SeedDefaultPages(Domain.Common.Identifiers.StoreId storeId, CancellationToken ct)
