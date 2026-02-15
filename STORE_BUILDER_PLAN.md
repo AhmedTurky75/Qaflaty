@@ -393,11 +393,13 @@ Qafilaty is a multi-tenant e-commerce SaaS platform (.NET 10 + Angular 20). Merc
 
 ### TODO List
 
-#### 3.1 WhatsApp Integration
-- [ ] Add WhatsApp config fields to `CommunicationSettings` (already in Phase 1 value object)
-- [ ] Create `whatsapp-button.component.ts` — Floating WhatsApp button
-- [ ] Add WhatsApp link to contact page, product detail, order confirmation
-- [ ] Generate `wa.me` links with pre-filled messages
+#### 3.1 WhatsApp Integration ✅ COMPLETE
+- [x] Add WhatsApp config fields to `CommunicationSettings` (already in Phase 1 value object)
+- [x] Create `whatsapp-button.component.ts` — Floating WhatsApp button (4 variants: floating, inline, icon, link)
+- [x] Create `whatsapp.service.ts` — Generate wa.me links with pre-filled messages
+- [x] Add WhatsApp link to contact page
+- [x] Add WhatsApp link to product detail page (with product inquiry context)
+- [x] Add WhatsApp link to order confirmation page (with order support context)
 
 #### 3.2 Live Chat (Backend)
 - [ ] Create Communication bounded context folder structure

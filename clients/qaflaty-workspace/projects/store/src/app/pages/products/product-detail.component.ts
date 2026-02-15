@@ -6,11 +6,13 @@ import { ProductService } from '../../services/product.service';
 import { CartService } from '../../services/cart.service';
 import { Product, ProductVariant } from '../../models/product.model';
 import { VariantSelectorComponent } from '../../components/products/variant-selector.component';
+import { WhatsAppButtonComponent } from '../../components/shared/whatsapp-button.component';
+import { WhatsAppService } from '../../services/whatsapp.service';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent],
+  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent, WhatsAppButtonComponent],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.css']
 })
@@ -18,6 +20,7 @@ export class ProductDetailComponent {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private route = inject(ActivatedRoute);
+  whatsAppService = inject(WhatsAppService);
 
   product = signal<Product | null>(null);
   loading = signal<boolean>(true);
@@ -86,6 +89,13 @@ export class ProductDetailComponent {
   requiresVariantSelection = computed(() => {
     const prod = this.product();
     return prod?.hasVariants && !this.selectedVariant();
+  });
+
+  // Computed: product URL for WhatsApp
+  productUrl = computed(() => {
+    const prod = this.product();
+    if (!prod) return '';
+    return window.location.href;
   });
 
   ngOnInit() {
