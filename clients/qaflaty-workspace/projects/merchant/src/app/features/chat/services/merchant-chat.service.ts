@@ -297,8 +297,7 @@ export class MerchantChatService {
     try {
       // Build connection URL with merchant token
       const token = this.authService.getAccessToken();
-      const hubUrl = `${this.apiUrl}/hubs/chat${token ? `?access_token=${token}` : ''}`;
-
+      const hubUrl = `${this.apiUrl.replace('/api', '') }/hubs/chat${token ? `?access_token=${token}` : ''}`;
       this.hubConnection = new signalR.HubConnectionBuilder()
         .withUrl(hubUrl)
         .withAutomaticReconnect()

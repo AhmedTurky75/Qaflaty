@@ -28,7 +28,7 @@ public sealed class GetConversationMessagesQueryHandler : IQueryHandler<GetConve
             StoreId = conversation.StoreId.Value,
             CustomerId = conversation.CustomerId?.Value,
             GuestSessionId = conversation.GuestSessionId,
-            Status = conversation.Status,
+            Status = conversation.Status.ToString(),
             StartedAt = conversation.StartedAt,
             ClosedAt = conversation.ClosedAt,
             LastMessageAt = conversation.LastMessageAt,

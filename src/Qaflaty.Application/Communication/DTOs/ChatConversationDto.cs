@@ -8,7 +8,7 @@ public sealed record ChatConversationDto
     public Guid StoreId { get; init; }
     public Guid? CustomerId { get; init; }
     public string? GuestSessionId { get; init; }
-    public ConversationStatus Status { get; init; }
+    public string Status { get; init; }
     public DateTime StartedAt { get; init; }
     public DateTime? ClosedAt { get; init; }
     public DateTime? LastMessageAt { get; init; }
