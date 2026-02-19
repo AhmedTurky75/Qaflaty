@@ -255,6 +255,7 @@
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Product Images</h2>
           <app-image-upload
             [images]="images()"
+            [storeId]="storeContext.currentStoreId() || ''"
             (imagesChange)="onImagesChange($event)"
           ></app-image-upload>
         </div>

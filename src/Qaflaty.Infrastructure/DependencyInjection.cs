@@ -17,6 +17,7 @@ using Qaflaty.Infrastructure.Persistence.Repositories.Communication;
 using Qaflaty.Infrastructure.Services.Common;
 using Qaflaty.Infrastructure.Services.Identity;
 using Qaflaty.Infrastructure.Services.Ordering;
+using Qaflaty.Application.Common.Interfaces;
 
 namespace Qaflaty.Infrastructure;
 
@@ -70,6 +71,7 @@ public static class DependencyInjection
         // Common Services
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<ITenantContext, TenantContext>();
+        services.AddScoped<IFileStorageService, LocalFileStorageService>();
 
         return services;
     }

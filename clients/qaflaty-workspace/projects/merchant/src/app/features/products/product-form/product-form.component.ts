@@ -23,7 +23,7 @@ export class ProductFormComponent implements OnInit {
   private categoryService = inject(CategoryService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private storeContext = inject(StoreContextService);
+  protected storeContext = inject(StoreContextService);
 
   productForm: FormGroup;
   loading = signal(false);

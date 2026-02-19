@@ -16,6 +16,17 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 
+// Increase request body size limit for image uploads (up to 10 × 5 MB + overhead)
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 55 * 1024 * 1024; // 55 MB
+});
+
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 55 * 1024 * 1024; // 55 MB
+});
+
 // Add services to the container
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -149,6 +160,8 @@ if (app.Environment.IsDevelopment())
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
 app.UseHttpsRedirection();
+
+app.UseStaticFiles();
 
 app.UseCors();
 

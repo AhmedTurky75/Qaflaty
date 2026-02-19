@@ -146,7 +146,8 @@
       "Bash(findstr:*)",
       "Bash(dotnet ef database update:*)",
       "Bash(dotnet list:*)",
-      "Bash(npx nx build:*)"
+      "Bash(npx nx build:*)",
+      "Bash(ls -la \"D:\\\\Projects\\\\Qafilaty\\\\src\"\" | grep -E \"^d \")"
     ],
     "deny": [],
     "ask": []
