@@ -39,7 +39,7 @@ public sealed class GetConversationsQueryHandler : IQueryHandler<GetConversation
                 {
                     Id = lastMsg.Id.Value,
                     ConversationId = lastMsg.ConversationId.Value,
-                    SenderType = lastMsg.SenderType,
+                    SenderType = lastMsg.SenderType.ToString(),
                     SenderId = lastMsg.SenderId,
                     Content = lastMsg.Content,
                     SentAt = lastMsg.SentAt,

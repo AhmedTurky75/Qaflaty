@@ -40,7 +40,7 @@ public sealed class GetConversationMessagesQueryHandler : IQueryHandler<GetConve
                 {
                     Id = m.Id.Value,
                     ConversationId = m.ConversationId.Value,
-                    SenderType = m.SenderType,
+                    SenderType = m.SenderType.ToString(),
                     SenderId = m.SenderId,
                     Content = m.Content,
                     SentAt = m.SentAt,

@@ -55,7 +55,7 @@ public sealed class GetActiveConversationQueryHandler : IQueryHandler<GetActiveC
                 {
                     Id = m.Id.Value,
                     ConversationId = m.ConversationId.Value,
-                    SenderType = m.SenderType,
+                    SenderType = m.SenderType.ToString(),
                     SenderId = m.SenderId,
                     Content = m.Content,
                     SentAt = m.SentAt,

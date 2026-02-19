@@ -36,7 +36,7 @@ public sealed class SendChatMessageCommandHandler : ICommandHandler<SendChatMess
         {
             Id = message.Id.Value,
             ConversationId = message.ConversationId.Value,
-            SenderType = message.SenderType,
+            SenderType = message.SenderType.ToString(),
             SenderId = message.SenderId,
             Content = message.Content,
             SentAt = message.SentAt,
