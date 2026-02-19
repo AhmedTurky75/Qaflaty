@@ -194,8 +194,8 @@ export class CustomerAuthService {
   }
 
   private async syncCart(): Promise<void> {
-    // Get guest cart from localStorage
-    const guestCartJson = localStorage.getItem('cart');
+    // Get guest cart from localStorage (CartService uses key 'qaflaty_cart')
+    const guestCartJson = localStorage.getItem('qaflaty_cart');
     if (!guestCartJson) return;
 
     try {

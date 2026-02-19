@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
+using Qaflaty.Application.Storefront.Commands.AddCartItem;
+using Qaflaty.Application.Storefront.Commands.ClearCart;
+using Qaflaty.Application.Storefront.Commands.RemoveCartItem;
 using Qaflaty.Application.Storefront.Commands.SyncCart;
+using Qaflaty.Application.Storefront.Commands.UpdateCartItemQuantity;
 using Qaflaty.Application.Storefront.Queries.GetCustomerCart;
 
 namespace Qaflaty.Api.Controllers;
@@ -11,38 +15,88 @@ namespace Qaflaty.Api.Controllers;
 public class StorefrontCartController : ApiController
 {
     [HttpGet]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetCart(CancellationToken ct)
     {
         var customerId = CurrentUserService.CustomerId;
-        if (customerId == null)
-            return Unauthorized();
+        if (customerId == null) return Unauthorized();
 
-        var query = new GetCustomerCartQuery(customerId.Value);
-        var result = await Sender.Send(query, ct);
+        var result = await Sender.Send(new GetCustomerCartQuery(customerId.Value), ct);
         return HandleResult(result);
     }
 
     [HttpPost("sync")]
-    [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> SyncCart([FromBody] SyncCartRequest request, CancellationToken ct)
     {
         var customerId = CurrentUserService.CustomerId;
-        if (customerId == null)
-            return Unauthorized();
+        if (customerId == null) return Unauthorized();
 
         var guestItems = request.GuestItems
             .Select(gi => new GuestCartItemDto(gi.ProductId, gi.VariantId, gi.Quantity))
             .ToList();
 
-        var command = new SyncCartCommand(customerId.Value, guestItems);
-        var result = await Sender.Send(command, ct);
+        var result = await Sender.Send(new SyncCartCommand(customerId.Value, guestItems), ct);
         return HandleResult(result);
+    }
+
+    [HttpPost("items")]
+    public async Task<IActionResult> AddItem([FromBody] CartItemRequest request, CancellationToken ct)
+    {
+        var customerId = CurrentUserService.CustomerId;
+        if (customerId == null) return Unauthorized();
+
+        var result = await Sender.Send(
+            new AddCartItemCommand(customerId.Value, request.ProductId, request.Quantity, request.VariantId), ct);
+
+        if (result.IsFailure) return HandleResult(result);
+        return NoContent();
+    }
+
+    [HttpPut("items/{productId:guid}")]
+    public async Task<IActionResult> UpdateItemQuantity(
+        Guid productId,
+        [FromBody] UpdateCartItemRequest request,
+        [FromQuery] Guid? variantId,
+        CancellationToken ct)
+    {
+        var customerId = CurrentUserService.CustomerId;
+        if (customerId == null) return Unauthorized();
+
+        var result = await Sender.Send(
+            new UpdateCartItemQuantityCommand(customerId.Value, productId, request.Quantity, variantId), ct);
+
+        if (result.IsFailure) return HandleResult(result);
+        return NoContent();
+    }
+
+    [HttpDelete("items/{productId:guid}")]
+    public async Task<IActionResult> RemoveItem(
+        Guid productId,
+        [FromQuery] Guid? variantId,
+        CancellationToken ct)
+    {
+        var customerId = CurrentUserService.CustomerId;
+        if (customerId == null) return Unauthorized();
+
+        var result = await Sender.Send(
+            new RemoveCartItemCommand(customerId.Value, productId, variantId), ct);
+
+        if (result.IsFailure) return HandleResult(result);
+        return NoContent();
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> ClearCart(CancellationToken ct)
+    {
+        var customerId = CurrentUserService.CustomerId;
+        if (customerId == null) return Unauthorized();
+
+        var result = await Sender.Send(new ClearCartCommand(customerId.Value), ct);
+        if (result.IsFailure) return HandleResult(result);
+        return NoContent();
     }
 }
 
 public record SyncCartRequest(List<SyncCartItemRequest> GuestItems);
 public record SyncCartItemRequest(Guid ProductId, Guid? VariantId, int Quantity);
+public record CartItemRequest(Guid ProductId, int Quantity, Guid? VariantId = null);
+public record UpdateCartItemRequest(int Quantity);

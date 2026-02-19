@@ -1,7 +1,9 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { Cart, CartItem, getCartItemKey } from '../models/cart.model';
 import { Product, ProductVariant } from '../models/product.model';
 import { Money } from '../models/store.model';
+import { CartApiService } from './cart-api.service';
+import { CustomerAuthService } from './customer-auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -12,6 +14,13 @@ export class CartService {
   private cartItems = signal<CartItem[]>([]);
   private deliveryFee = signal<Money>({ amount: 0, currency: 'SAR' });
   private freeDeliveryThreshold = signal<Money | null>(null);
+
+  private cartApi = inject(CartApiService);
+  private authService = inject(CustomerAuthService);
+
+  private get isLoggedIn(): boolean {
+    return this.authService.isAuthenticated();
+  }
 
   // Computed values
   itemCount = computed(() =>
@@ -72,7 +81,8 @@ export class CartService {
   }
 
   /**
-   * Add item to cart (with optional variant support)
+   * Add item to cart (with optional variant support).
+   * Also persists to server when the customer is logged in.
    */
   addItem(product: Product, quantity: number = 1, variant?: ProductVariant): void {
     const items = [...this.cartItems()];
@@ -81,28 +91,21 @@ export class CartService {
       getCartItemKey(item.productId, item.variantId) === itemKey
     );
 
-    // Determine price and max quantity based on variant or base product
     const unitPrice = variant?.priceOverride ?? { amount: product.price, currency: 'EGP' };
     const maxQty = variant?.quantity ?? 99;
 
     if (existingIndex >= 0) {
-      // Update quantity
-      const newQuantity = Math.min(
-        items[existingIndex].quantity + quantity,
-        maxQty
-      );
+      const newQuantity = Math.min(items[existingIndex].quantity + quantity, maxQty);
       items[existingIndex] = { ...items[existingIndex], quantity: newQuantity };
     } else {
-      // Add new item
       const newItem: CartItem = {
         productId: product.id,
         productName: product.name,
         productSlug: product.slug,
-        unitPrice: unitPrice,
+        unitPrice,
         quantity: Math.min(quantity, maxQty),
         imageUrl: product.images[0]?.url,
         maxQuantity: maxQty,
-        // Variant fields
         variantId: variant?.id,
         variantAttributes: variant?.attributes,
         variantSku: variant?.sku
@@ -111,28 +114,36 @@ export class CartService {
     }
 
     this.cartItems.set(items);
+
+    // Persist to server (fire-and-forget)
+    if (this.isLoggedIn) {
+      this.cartApi.addItem(product.id, quantity, variant?.id);
+    }
   }
 
   /**
-   * Update item quantity (supports variants via itemKey)
+   * Update item quantity (supports variants via itemKey).
+   * Also persists to server when the customer is logged in.
    */
   updateQuantity(productId: string, quantity: number, variantId?: string): void {
     const targetKey = getCartItemKey(productId, variantId);
     const items = this.cartItems().map(item => {
       const itemKey = getCartItemKey(item.productId, item.variantId);
       if (itemKey === targetKey) {
-        return {
-          ...item,
-          quantity: Math.min(Math.max(1, quantity), item.maxQuantity)
-        };
+        return { ...item, quantity: Math.min(Math.max(1, quantity), item.maxQuantity) };
       }
       return item;
     });
     this.cartItems.set(items);
+
+    if (this.isLoggedIn) {
+      this.cartApi.updateItemQuantity(productId, quantity, variantId);
+    }
   }
 
   /**
-   * Remove item from cart (supports variants via itemKey)
+   * Remove item from cart (supports variants via itemKey).
+   * Also persists to server when the customer is logged in.
    */
   removeItem(productId: string, variantId?: string): void {
     const targetKey = getCartItemKey(productId, variantId);
@@ -140,13 +151,22 @@ export class CartService {
       getCartItemKey(item.productId, item.variantId) !== targetKey
     );
     this.cartItems.set(items);
+
+    if (this.isLoggedIn) {
+      this.cartApi.removeItem(productId, variantId);
+    }
   }
 
   /**
-   * Clear cart
+   * Clear cart.
+   * Also clears on server when the customer is logged in.
    */
   clear(): void {
     this.cartItems.set([]);
+
+    if (this.isLoggedIn) {
+      this.cartApi.clearCart();
+    }
   }
 
   /**
