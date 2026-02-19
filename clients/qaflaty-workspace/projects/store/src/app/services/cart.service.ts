@@ -82,8 +82,8 @@ export class CartService {
     );
 
     // Determine price and max quantity based on variant or base product
-    const unitPrice = variant?.priceOverride ?? product.pricing.price;
-    const maxQty = variant?.quantity ?? product.inventory.quantity;
+    const unitPrice = variant?.priceOverride ?? { amount: product.price, currency: 'EGP' };
+    const maxQty = variant?.quantity ?? 99;
 
     if (existingIndex >= 0) {
       // Update quantity

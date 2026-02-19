@@ -137,14 +137,14 @@
                   }
 
                   <!-- Discount Badge -->
-                  @if (product.pricing.hasDiscount) {
+                  @if (product.compareAtPrice != null && product.compareAtPrice > product.price) {
                     <div class="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                      -{{ product.pricing.discountPercentage }}%
+                      -{{ (((product.compareAtPrice - product.price) / product.compareAtPrice) * 100).toFixed(0) }}%
                     </div>
                   }
 
                   <!-- Out of Stock Badge -->
-                  @if (!product.inventory.inStock) {
+                  @if (!product.inStock) {
                     <div class="absolute inset-0 bg-black/60 flex items-center justify-center">
                       <span class="bg-white text-gray-900 px-4 py-2 rounded-lg font-bold">
                         Out of Stock
@@ -160,17 +160,14 @@
                   </h3>
                   <div class="flex items-center gap-2">
                     <span class="text-xl font-bold text-gray-900">
-                      {{ product.pricing.price.amount.toFixed(2) }} {{ product.pricing.price.currency }}
+                      {{ product.price.toFixed(2) }} EGP
                     </span>
-                    @if (product.pricing.compareAtPrice) {
+                    @if (product.compareAtPrice != null && product.compareAtPrice > product.price) {
                       <span class="text-sm text-gray-500 line-through">
-                        {{ product.pricing.compareAtPrice.amount.toFixed(2) }} {{ product.pricing.compareAtPrice.currency }}
+                        {{ product.compareAtPrice.toFixed(2) }} EGP
                       </span>
                     }
                   </div>
-                  @if (product.inventory.lowStock && product.inventory.inStock) {
-                    <p class="text-xs text-orange-500 mt-2">Only {{ product.inventory.quantity }} left!</p>
-                  }
                 </div>
               </a>
             }

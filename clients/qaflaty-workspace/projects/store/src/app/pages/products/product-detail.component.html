@@ -52,9 +52,9 @@
             }
 
             <!-- Discount Badge -->
-            @if (product()!.pricing.hasDiscount) {
+            @if (product()!.compareAtPrice != null && product()!.compareAtPrice! > product()!.price) {
               <div class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                -{{ product()!.pricing.discountPercentage }}% OFF
+                -{{ (((product()!.compareAtPrice! - product()!.price) / product()!.compareAtPrice!) * 100) | number:'1.0-0' }}% OFF
               </div>
             }
           </div>
@@ -92,16 +92,16 @@
                   {{ effectivePrice()!.amount.toFixed(2) }} {{ effectivePrice()!.currency }}
                 </span>
               }
-              @if (product()!.pricing.compareAtPrice && !selectedVariant()?.priceOverride) {
+              @if (product()!.compareAtPrice != null && product()!.compareAtPrice! > product()!.price && !selectedVariant()?.priceOverride) {
                 <span class="text-xl text-gray-500 line-through">
-                  {{ product()!.pricing.compareAtPrice!.amount.toFixed(2) }} {{ product()!.pricing.compareAtPrice!.currency }}
+                  {{ product()!.compareAtPrice!.toFixed(2) }} EGP
                 </span>
               }
             </div>
 
-            @if (product()!.pricing.hasDiscount && !selectedVariant()?.priceOverride) {
+            @if (product()!.compareAtPrice != null && product()!.compareAtPrice! > product()!.price && !selectedVariant()?.priceOverride) {
               <p class="text-green-600 font-semibold">
-                You save {{ product()!.pricing.discountAmount!.amount.toFixed(2) }} {{ product()!.pricing.discountAmount!.currency }}
+                You save {{ (product()!.compareAtPrice! - product()!.price).toFixed(2) }} EGP
               </p>
             }
           </div>
@@ -112,7 +112,7 @@
               <app-variant-selector
                 [options]="product()!.variantOptions!"
                 [variants]="product()!.variants!"
-                [basePrice]="product()!.pricing.price"
+                [basePrice]="{ amount: product()!.price, currency: 'EGP' }"
                 (variantSelected)="onVariantSelected($event)"
               />
             </div>
@@ -120,20 +120,15 @@
 
           <!-- Stock Status -->
           <div>
-            @if (!product()!.hasVariants) {
+            @if (!(product()!.hasVariants)) {
               <!-- Non-variant product stock -->
-              @if (product()!.inventory.inStock) {
+              @if (product()!.inStock) {
                 <div class="flex items-center gap-2 text-green-600">
                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                   </svg>
                   <span class="font-medium">In Stock</span>
                 </div>
-                @if (product()!.inventory.lowStock) {
-                  <p class="text-orange-500 text-sm mt-1">
-                    Only {{ product()!.inventory.quantity }} left in stock!
-                  </p>
-                }
               } @else {
                 <div class="flex items-center gap-2 text-red-600">
                   <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -267,9 +262,9 @@
           }
 
           <!-- SKU -->
-          @if (product()!.inventory.sku) {
+          @if (selectedVariant()?.sku) {
             <div class="text-sm text-gray-600 border-t pt-6">
-              SKU: {{ product()!.inventory.sku }}
+              SKU: {{ selectedVariant()!.sku }}
             </div>
           }
         </div>

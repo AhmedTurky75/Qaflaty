@@ -145,7 +145,8 @@
       "Bash(npm run:*)",
       "Bash(findstr:*)",
       "Bash(dotnet ef database update:*)",
-      "Bash(dotnet list:*)"
+      "Bash(dotnet list:*)",
+      "Bash(npx nx build:*)"
     ],
     "deny": [],
     "ask": []

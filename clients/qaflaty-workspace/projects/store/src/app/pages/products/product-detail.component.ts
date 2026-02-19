@@ -45,7 +45,7 @@ export class ProductDetailComponent {
     if (variant?.priceOverride) {
       return variant.priceOverride;
     }
-    return prod.pricing.price;
+    return { amount: prod.price, currency: 'EGP' };
   });
 
   // Computed: effective stock (variant quantity or base quantity)
@@ -57,7 +57,7 @@ export class ProductDetailComponent {
     if (prod.hasVariants && variant) {
       return variant.quantity;
     }
-    return prod.inventory.quantity;
+    return 99;
   });
 
   // Computed: is in stock (considers variant or base product)
@@ -68,9 +68,9 @@ export class ProductDetailComponent {
 
     if (prod.hasVariants) {
       if (!variant) return true; // No variant selected yet
-      return variant.inStock || variant.allowBackorder;
+      return variant.inStock || (variant.allowBackorder ?? false);
     }
-    return prod.inventory.inStock;
+    return prod.inStock;
   });
 
   // Computed: can add to cart
@@ -80,15 +80,15 @@ export class ProductDetailComponent {
 
     if (prod.hasVariants) {
       const variant = this.selectedVariant();
-      return variant !== null && (variant.inStock || variant.allowBackorder);
+      return variant !== null && (variant.inStock || (variant.allowBackorder ?? false));
     }
-    return prod.inventory.inStock;
+    return prod.inStock;
   });
 
   // Computed: require variant selection message
   requiresVariantSelection = computed(() => {
     const prod = this.product();
-    return prod?.hasVariants && !this.selectedVariant();
+    return (prod?.hasVariants ?? false) && !this.selectedVariant();
   });
 
   // Computed: product URL for WhatsApp
@@ -159,7 +159,7 @@ export class ProductDetailComponent {
     if (!prod) return;
 
     // If product has variants, require selection
-    if (prod.hasVariants && !this.selectedVariant()) {
+    if ((prod.hasVariants ?? false) && !this.selectedVariant()) {
       return;
     }
 

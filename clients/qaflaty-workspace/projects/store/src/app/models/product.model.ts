@@ -1,54 +1,16 @@
-import { Money } from './store.model';
-
 export interface Product {
   id: string;
-  storeId: string;
-  categoryId?: string;
-  name: string;
   slug: string;
+  name: string;
   description?: string;
-  pricing: ProductPricing;
-  inventory: ProductInventory;
-  status: ProductStatus;
+  price: number;
+  compareAtPrice?: number | null;
+  inStock: boolean;
   images: ProductImage[];
-  createdAt: string;
-  updatedAt: string;
-  // Variant support
+  // Detail-only optional fields
   hasVariants?: boolean;
   variantOptions?: VariantOption[];
   variants?: ProductVariant[];
-}
-
-export interface VariantOption {
-  name: string;        // e.g., "Color", "Size"
-  values: string[];    // e.g., ["Red", "Blue", "Green"]
-}
-
-export interface ProductVariant {
-  id: string;
-  productId: string;
-  attributes: Record<string, string>;  // e.g., {"Color": "Red", "Size": "M"}
-  sku: string;
-  priceOverride?: Money;
-  quantity: number;
-  allowBackorder: boolean;
-  inStock: boolean;
-}
-
-export interface ProductPricing {
-  price: Money;
-  compareAtPrice?: Money;
-  hasDiscount: boolean;
-  discountPercentage?: number;
-  discountAmount?: Money;
-}
-
-export interface ProductInventory {
-  quantity: number;
-  sku?: string;
-  trackInventory: boolean;
-  inStock: boolean;
-  lowStock: boolean;
 }
 
 export interface ProductImage {
@@ -58,10 +20,20 @@ export interface ProductImage {
   sortOrder: number;
 }
 
-export enum ProductStatus {
-  Active = 'Active',
-  Inactive = 'Inactive',
-  Draft = 'Draft'
+export interface ProductVariant {
+  id: string;
+  productId: string;
+  attributes: Record<string, string>;
+  sku: string;
+  priceOverride?: { amount: number; currency: string };
+  quantity: number;
+  inStock: boolean;
+  allowBackorder?: boolean;
+}
+
+export interface VariantOption {
+  name: string;
+  values: string[];
 }
 
 export interface ProductFilter {
@@ -82,8 +54,9 @@ export enum ProductSortBy {
 
 export interface PaginatedProducts {
   items: Product[];
-  totalCount: number;
-  page: number;
-  pageSize: number;
+  pageNumber: number;
   totalPages: number;
+  totalCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }

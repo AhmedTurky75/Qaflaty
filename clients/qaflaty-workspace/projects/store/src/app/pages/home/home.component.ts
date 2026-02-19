@@ -4,13 +4,13 @@ import { RouterModule } from '@angular/router';
 import { StoreService } from '../../services/store.service';
 import { ProductService } from '../../services/product.service';
 import { CategoryService } from '../../services/category.service';
-import { Product } from '../../models/product.model';
 import { Category } from '../../models/category.model';
+import { ProductCardComponent } from '../../components/products/product-card.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, ProductCardComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
@@ -20,7 +20,7 @@ export class HomeComponent {
   private categoryService = inject(CategoryService);
 
   store = this.storeService.currentStore;
-  products = signal<Product[]>([]);
+  products = signal<any[]>([]);
   categories = signal<Category[]>([]);
   loading = signal<boolean>(true);
 

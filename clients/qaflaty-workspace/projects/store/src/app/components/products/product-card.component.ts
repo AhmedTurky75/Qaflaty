@@ -1,7 +1,6 @@
 import { Component, input, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CurrencyPipe } from '@angular/common';
-import { I18nService } from '../../services/i18n.service';
 import { FeatureService } from '../../services/feature.service';
 
 @Component({
@@ -17,7 +16,7 @@ import { FeatureService } from '../../services/feature.service';
             @if (product().images?.length > 0) {
               <img
                 [src]="product().images[0].url"
-                [alt]="i18n.getText(product().name)"
+                [alt]="product().name"
                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             } @else {
@@ -32,22 +31,22 @@ import { FeatureService } from '../../services/feature.service';
         <div class="p-4">
           <a [routerLink]="['/products', product().slug]" class="block">
             <h3 class="text-base font-semibold text-gray-800 mb-2 hover:text-[var(--primary-color)] transition-colors line-clamp-2">
-              {{ i18n.getText(product().name) }}
+              {{ product().name }}
             </h3>
           </a>
           <div class="mb-4">
-            @if (product().pricing?.salePrice && product().pricing.salePrice < product().pricing.regularPrice) {
+            @if (isOnSale()) {
               <div class="flex items-center gap-2">
                 <span class="text-lg font-bold text-[var(--primary-color)]">
-                  {{ product().pricing.salePrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
                 </span>
                 <span class="text-sm text-gray-400 line-through">
-                  {{ product().pricing.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}
                 </span>
               </div>
             } @else {
               <span class="text-lg font-bold text-gray-800">
-                {{ product().pricing?.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
               </span>
             }
           </div>
@@ -55,7 +54,7 @@ import { FeatureService } from '../../services/feature.service';
             class="w-full px-4 py-2 bg-[var(--primary-color)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition-colors duration-200"
             type="button"
           >
-            {{ i18n.currentLanguage() === 'ar' ? 'أضف إلى السلة' : 'Add to Cart' }}
+            Add to Cart
           </button>
         </div>
       </div>
@@ -71,7 +70,7 @@ import { FeatureService } from '../../services/feature.service';
           @if (product().images?.length > 0) {
             <img
               [src]="product().images[0].url"
-              [alt]="i18n.getText(product().name)"
+              [alt]="product().name"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           } @else {
@@ -83,25 +82,25 @@ import { FeatureService } from '../../services/feature.service';
           }
           <!-- Price overlay on hover -->
           <div class="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            @if (product().pricing?.salePrice && product().pricing.salePrice < product().pricing.regularPrice) {
+            @if (isOnSale()) {
               <div class="text-center">
                 <div class="text-xl font-bold text-white mb-1">
-                  {{ product().pricing.salePrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
                 </div>
                 <div class="text-sm text-white/70 line-through">
-                  {{ product().pricing.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}
                 </div>
               </div>
             } @else {
               <div class="text-xl font-bold text-white">
-                {{ product().pricing?.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
               </div>
             }
           </div>
         </div>
         <div class="p-3">
           <h3 class="text-sm font-medium text-gray-800 group-hover:text-[var(--primary-color)] transition-colors line-clamp-2">
-            {{ i18n.getText(product().name) }}
+            {{ product().name }}
           </h3>
         </div>
       </a>
@@ -115,7 +114,7 @@ import { FeatureService } from '../../services/feature.service';
             @if (product().images?.length > 0) {
               <img
                 [src]="product().images[0].url"
-                [alt]="i18n.getText(product().name)"
+                [alt]="product().name"
                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             } @else {
@@ -125,9 +124,9 @@ import { FeatureService } from '../../services/feature.service';
                 </svg>
               </div>
             }
-            @if (product().pricing?.salePrice && product().pricing.salePrice < product().pricing.regularPrice) {
+            @if (isOnSale()) {
               <span class="absolute top-2 start-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                -{{ Math.round((1 - product().pricing.salePrice / product().pricing.regularPrice) * 100) }}%
+                -{{ discountPct() }}%
               </span>
             }
           </div>
@@ -135,7 +134,7 @@ import { FeatureService } from '../../services/feature.service';
         <div class="p-4 flex flex-col flex-grow">
           <a [routerLink]="['/products', product().slug]" class="block">
             <h3 class="text-base font-semibold text-gray-800 mb-2 hover:text-[var(--primary-color)] transition-colors line-clamp-2">
-              {{ i18n.getText(product().name) }}
+              {{ product().name }}
             </h3>
           </a>
           <!-- Star Rating Placeholder -->
@@ -147,25 +146,25 @@ import { FeatureService } from '../../services/feature.service';
             }
             <span class="text-xs text-gray-500 ms-1">(0)</span>
           </div>
-          @if (product().shortDescription) {
+          @if (product().description) {
             <p class="text-sm text-gray-500 mb-3 line-clamp-2 flex-grow">
-              {{ i18n.getText(product().shortDescription) }}
+              {{ product().description }}
             </p>
           }
           <div class="mt-auto">
             <div class="mb-3">
-              @if (product().pricing?.salePrice && product().pricing.salePrice < product().pricing.regularPrice) {
+              @if (isOnSale()) {
                 <div class="flex items-center gap-2">
                   <span class="text-lg font-bold text-[var(--primary-color)]">
-                    {{ product().pricing.salePrice | currency:'EGP':'symbol':'1.2-2' }}
+                    {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
                   </span>
                   <span class="text-sm text-gray-400 line-through">
-                    {{ product().pricing.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                    {{ product().compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}
                   </span>
                 </div>
               } @else {
                 <span class="text-lg font-bold text-gray-800">
-                  {{ product().pricing?.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
                 </span>
               }
             </div>
@@ -173,7 +172,7 @@ import { FeatureService } from '../../services/feature.service';
               class="w-full px-4 py-2 bg-[var(--primary-color)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition-colors duration-200"
               type="button"
             >
-              {{ i18n.currentLanguage() === 'ar' ? 'أضف إلى السلة' : 'Add to Cart' }}
+              Add to Cart
             </button>
           </div>
         </div>
@@ -189,7 +188,7 @@ import { FeatureService } from '../../services/feature.service';
         @if (product().images?.length > 0) {
           <img
             [src]="product().images[0].url"
-            [alt]="i18n.getText(product().name)"
+            [alt]="product().name"
             class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         } @else {
@@ -205,21 +204,21 @@ import { FeatureService } from '../../services/feature.service';
         <div class="absolute inset-0 flex flex-col justify-end p-4">
           <div class="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
             <h3 class="text-base font-bold text-white mb-2 line-clamp-2">
-              {{ i18n.getText(product().name) }}
+              {{ product().name }}
             </h3>
             <div class="flex items-center justify-between">
-              @if (product().pricing?.salePrice && product().pricing.salePrice < product().pricing.regularPrice) {
+              @if (isOnSale()) {
                 <div class="flex items-center gap-2">
                   <span class="text-lg font-bold text-white">
-                    {{ product().pricing.salePrice | currency:'EGP':'symbol':'1.2-2' }}
+                    {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
                   </span>
                   <span class="text-sm text-white/60 line-through">
-                    {{ product().pricing.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                    {{ product().compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}
                   </span>
                 </div>
               } @else {
                 <span class="text-lg font-bold text-white">
-                  {{ product().pricing?.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
                 </span>
               }
               <!-- Cart icon on hover -->
@@ -231,11 +230,10 @@ import { FeatureService } from '../../services/feature.service';
                 </div>
               </div>
             </div>
-            @if (product().pricing?.salePrice && product().pricing.salePrice < product().pricing.regularPrice) {
+            @if (isOnSale()) {
               <div class="mt-2">
                 <span class="inline-block bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  {{ i18n.currentLanguage() === 'ar' ? 'خصم' : 'SALE' }}
-                  {{ Math.round((1 - product().pricing.salePrice / product().pricing.regularPrice) * 100) }}%
+                  SALE -{{ discountPct() }}%
                 </span>
               </div>
             }
@@ -248,9 +246,16 @@ import { FeatureService } from '../../services/feature.service';
 export class ProductCardComponent {
   product = input.required<any>();
 
-  protected i18n = inject(I18nService);
-  protected readonly Math = Math;
-
   private featureService = inject(FeatureService);
   variant = this.featureService.productCardVariant;
+
+  isOnSale(): boolean {
+    return this.product().compareAtPrice != null
+      && this.product().compareAtPrice > this.product().price;
+  }
+
+  discountPct(): number {
+    if (!this.isOnSale()) return 0;
+    return Math.round((1 - this.product().price / this.product().compareAtPrice) * 100);
+  }
 }
