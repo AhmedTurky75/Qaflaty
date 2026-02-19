@@ -291,6 +291,10 @@ export class ChatService {
         this.error.set(error);
       });
 
+      this.hubConnection.on('ConversationClosed', () => {
+        this.conversation.update(c => c ? { ...c, status: 'Closed' as const } : c);
+      });
+
       // Start connection
       await this.hubConnection.start();
 
@@ -328,13 +332,27 @@ export class ChatService {
   }
 
   /**
-   * Close current conversation
+   * Close current conversation UI (disconnect hub, clear state)
    */
   async closeConversation(): Promise<void> {
     await this.disconnectFromHub();
     this.conversation.set(null);
     this.messages.set([]);
     this.error.set(null);
+  }
+
+  /**
+   * Start a brand-new conversation, clearing the old closed one from view
+   */
+  async startNewConversation(): Promise<void> {
+    await this.disconnectFromHub();
+    // Generate a new guest session so the new conversation is not linked to the closed one
+    this.guestSessionId = this.generateGuestSessionId();
+    localStorage.setItem('chat_guest_session', this.guestSessionId);
+    this.conversation.set(null);
+    this.messages.set([]);
+    this.error.set(null);
+    await this.startConversation();
   }
 
   /**

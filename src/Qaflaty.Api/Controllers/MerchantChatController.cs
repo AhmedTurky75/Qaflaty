@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Communication.Commands.SendChatMessage;
 using Qaflaty.Application.Communication.Commands.MarkMessagesAsRead;
@@ -10,6 +11,7 @@ using Qaflaty.Application.Communication.Queries.GetConversations;
 using Qaflaty.Application.Communication.Queries.GetConversationMessages;
 using Qaflaty.Application.Communication.DTOs;
 using Qaflaty.Domain.Communication.Enums;
+using Qaflaty.Api.Hubs;
 
 namespace Qaflaty.Api.Controllers;
 
@@ -21,15 +23,18 @@ public class MerchantChatController : ControllerBase
     private readonly IMediator _mediator;
     private readonly ICurrentUserService _currentUserService;
     private readonly ILogger<MerchantChatController> _logger;
+    private readonly IHubContext<ChatHub> _hubContext;
 
     public MerchantChatController(
         IMediator mediator,
         ICurrentUserService currentUserService,
-        ILogger<MerchantChatController> logger)
+        ILogger<MerchantChatController> logger,
+        IHubContext<ChatHub> hubContext)
     {
         _mediator = mediator;
         _currentUserService = currentUserService;
         _logger = logger;
+        _hubContext = hubContext;
     }
 
     /// <summary>
@@ -162,6 +167,10 @@ public class MerchantChatController : ControllerBase
             _logger.LogWarning("Failed to close conversation {ConversationId}: {Error}", conversationId, result.Error.Message);
             return BadRequest(new { error = result.Error.Message });
         }
+
+        // Notify all clients in the conversation room (including customer) that it's closed
+        var roomName = $"conversation_{conversationId}";
+        await _hubContext.Clients.Group(roomName).SendAsync("ConversationClosed", conversationId, cancellationToken);
 
         return Ok(new { message = "Conversation closed successfully" });
     }

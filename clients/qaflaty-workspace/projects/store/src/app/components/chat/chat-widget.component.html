@@ -155,35 +155,58 @@
           }
         </div>
 
-        <!-- Chat Input -->
-        <div class="chat-input-container">
-          <form (submit)="sendMessage(); $event.preventDefault()" class="chat-form">
-            <input
-              type="text"
-              class="chat-input"
-              [placeholder]="i18n.isRtl() ? 'اكتب رسالتك...' : 'Type your message...'"
-              [(ngModel)]="messageInput"
-              (ngModelChange)="onInputChange()"
-              [disabled]="isSendingMessage()"
-              name="message"
-            />
+        <!-- Chat Input / Closed Banner -->
+        @if (chatService.conversation()?.status === 'Closed' || chatService.conversation()?.status === 'Archived') {
+          <div class="chat-closed-banner">
+            <p class="chat-closed-text">
+              {{ i18n.isRtl() ? 'تم إغلاق هذه المحادثة' : 'This conversation has been closed' }}
+            </p>
             <button
-              type="submit"
-              class="send-btn"
-              [disabled]="!messageInput().trim() || isSendingMessage()"
-              [attr.aria-label]="i18n.isRtl() ? 'إرسال' : 'Send'"
+              type="button"
+              class="new-conversation-btn"
+              (click)="startNewConversation()"
+              [disabled]="isLoadingConversation()"
             >
-              @if (isSendingMessage()) {
+              @if (isLoadingConversation()) {
                 <div class="btn-spinner"></div>
               } @else {
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
               }
+              {{ i18n.isRtl() ? 'بدء محادثة جديدة' : 'Start New Conversation' }}
             </button>
-          </form>
-        </div>
+          </div>
+        } @else {
+          <div class="chat-input-container">
+            <form (submit)="sendMessage(); $event.preventDefault()" class="chat-form">
+              <input
+                type="text"
+                class="chat-input"
+                [placeholder]="i18n.isRtl() ? 'اكتب رسالتك...' : 'Type your message...'"
+                [(ngModel)]="messageInput"
+                (ngModelChange)="onInputChange()"
+                [disabled]="isSendingMessage()"
+                name="message"
+              />
+              <button
+                type="submit"
+                class="send-btn"
+                [disabled]="!messageInput().trim() || isSendingMessage()"
+                [attr.aria-label]="i18n.isRtl() ? 'إرسال' : 'Send'"
+              >
+                @if (isSendingMessage()) {
+                  <div class="btn-spinner"></div>
+                } @else {
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                }
+              </button>
+            </form>
+          </div>
+        }
       </div>
     }
   </div>

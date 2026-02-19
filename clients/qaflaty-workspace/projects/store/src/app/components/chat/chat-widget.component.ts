@@ -91,6 +91,20 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   }
 
   /**
+   * Dismiss the closed conversation and start a fresh one
+   */
+  async startNewConversation() {
+    this.isLoadingConversation.set(true);
+    try {
+      await this.chatService.startNewConversation();
+    } catch (err) {
+      console.error('Failed to start new conversation:', err);
+    } finally {
+      this.isLoadingConversation.set(false);
+    }
+  }
+
+  /**
    * Send a message
    */
   async sendMessage() {

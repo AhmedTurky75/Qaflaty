@@ -64,6 +64,11 @@ public sealed class ChatConversation : AggregateRoot<ChatConversationId>
             throw new InvalidOperationException("Cannot add messages to archived conversations");
         }
 
+        if (Status == ConversationStatus.Closed)
+        {
+            throw new InvalidOperationException("Cannot add messages to a closed conversation. Start a new conversation instead.");
+        }
+
         var message = ChatMessage.Create(Id, senderType, senderId, content);
         _messages.Add(message);
         LastMessageAt = DateTime.UtcNow;
@@ -76,13 +81,6 @@ public sealed class ChatConversation : AggregateRoot<ChatConversationId>
         else if (senderType == MessageSenderType.Merchant)
         {
             UnreadCustomerMessages++;
-        }
-
-        // Reopen conversation if it was closed
-        if (Status == ConversationStatus.Closed)
-        {
-            Status = ConversationStatus.Active;
-            ClosedAt = null;
         }
 
         return message;
