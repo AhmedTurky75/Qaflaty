@@ -1,13 +1,13 @@
 import { Component, input, inject } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 import { I18nService } from '../../../services/i18n.service';
-import { CardMinimalComponent } from '../../products/card-minimal.component';
+import { ProductCardComponent } from '../../products/product-card.component';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-grid-compact',
   standalone: true,
-  imports: [CommonModule, CardMinimalComponent],
+  imports: [CommonModule, ProductCardComponent],
   template: `
     <section class="py-12 px-4 bg-white">
       <div class="max-w-7xl mx-auto">
@@ -29,7 +29,7 @@ import { CommonModule } from '@angular/common';
         @if (content?.products && content.products.length > 0) {
           <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             @for (product of content.products; track product.id) {
-              <app-card-minimal [product]="product" />
+              <app-product-card [product]="product" />
             }
           </div>
         } @else {

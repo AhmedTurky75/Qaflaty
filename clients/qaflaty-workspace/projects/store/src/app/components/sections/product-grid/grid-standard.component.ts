@@ -1,40 +1,58 @@
-import { Component, input, inject, signal, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Component, input, inject } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
-import { ProductService } from '../../../services/product.service';
+import { I18nService } from '../../../services/i18n.service';
+import { ProductCardComponent } from '../../products/product-card.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-grid-standard',
   standalone: true,
-  imports: [RouterLink],
+  imports: [CommonModule, ProductCardComponent],
   template: `
-    <div class="max-w-7xl mx-auto px-4 py-12">
-      <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">Featured Products</h2>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-        @for (product of products(); track product.id) {
-          <a [routerLink]="['/products', product.slug]" class="group block">
-            <div class="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-3">
-              @if (product.firstImageUrl) {
-                <img [src]="product.firstImageUrl" [alt]="product.name"
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-              }
-            </div>
-            <h3 class="text-sm font-medium text-gray-900 group-hover:text-[var(--primary-color)] transition-colors truncate">{{ product.name }}</h3>
-            <p class="text-sm font-semibold text-[var(--primary-color)] mt-1">{{ product.price }} SAR</p>
-          </a>
+    <section class="py-12 px-4 bg-white">
+      <div class="max-w-7xl mx-auto">
+        @if (content?.title) {
+          <div class="text-center mb-10">
+            <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+              {{ i18n.getText(content.title) }}
+            </h2>
+            @if (content.subtitle) {
+              <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                {{ i18n.getText(content.subtitle) }}
+              </p>
+            }
+          </div>
+        }
+
+        @if (content?.products && content.products.length > 0) {
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            @for (product of content.products; track product.id) {
+              <app-product-card [product]="product" />
+            }
+          </div>
+        } @else {
+          <div class="text-center py-12">
+            <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+            </svg>
+            <p class="text-gray-600">
+              {{ i18n.currentLanguage() === 'ar' ? 'لا توجد منتجات' : 'No products found' }}
+            </p>
+          </div>
         }
       </div>
-    </div>
+    </section>
   `
 })
-export class GridStandardComponent implements OnInit {
+export class GridStandardComponent {
   config = input.required<SectionConfigurationDto>();
-  private productService = inject(ProductService);
-  products = signal<any[]>([]);
+  i18n = inject(I18nService);
 
-  ngOnInit() {
-    this.productService.getProducts().subscribe(res => {
-      this.products.set(res.items?.slice(0, 8) || []);
-    });
+  get content(): any {
+    try {
+      return this.config().contentJson ? JSON.parse(this.config().contentJson!) : {};
+    } catch {
+      return {};
+    }
   }
 }
