@@ -52,8 +52,10 @@ import { StoreContextService } from '../../core/services/store-context.service';
                   <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
                     [class.bg-green-100]="conversation.status === 'Active'"
                     [class.text-green-800]="conversation.status === 'Active'"
-                    [class.bg-gray-100]="conversation.status !== 'Active'"
-                    [class.text-gray-800]="conversation.status !== 'Active'"
+                    [class.bg-yellow-100]="conversation.status === 'Archived'"
+                    [class.text-yellow-800]="conversation.status === 'Archived'"
+                    [class.bg-gray-100]="conversation.status === 'Closed'"
+                    [class.text-gray-800]="conversation.status === 'Closed'"
                   >
                     {{ conversation.status }}
                   </span>
@@ -69,6 +71,18 @@ import { StoreContextService } from '../../core/services/store-context.service';
                   class="px-4 py-2 text-sm font-medium text-red-700 bg-red-100 rounded-md hover:bg-red-200 transition-colors"
                 >
                   Close Conversation
+                </button>
+              }
+              @if (conversation.status === 'Closed') {
+                <button
+                  type="button"
+                  (click)="archiveConversation()"
+                  class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-colors flex items-center gap-1.5"
+                >
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                  Archive
                 </button>
               }
             </div>
@@ -189,7 +203,11 @@ import { StoreContextService } from '../../core/services/store-context.service';
           </div>
         } @else {
           <div class="bg-gray-100 border-t border-gray-200 p-4 text-center text-sm text-gray-600">
-            This conversation has been closed
+            @if (conversation.status === 'Archived') {
+              This conversation has been archived
+            } @else {
+              This conversation has been closed
+            }
           </div>
         }
       }
@@ -307,6 +325,19 @@ export class ChatDetailComponent implements OnInit, OnDestroy {
         await this.chatService.closeConversation(currentStore.id);
       } catch (err) {
         console.error('Failed to close conversation:', err);
+      }
+    }
+  }
+
+  async archiveConversation() {
+    const currentStore = this.storeContext.currentStore();
+    if (!currentStore) return;
+
+    if (confirm('Archive this conversation? It will be moved to the archive and no new messages can be added.')) {
+      try {
+        await this.chatService.archiveConversation(currentStore.id);
+      } catch (err) {
+        console.error('Failed to archive conversation:', err);
       }
     }
   }

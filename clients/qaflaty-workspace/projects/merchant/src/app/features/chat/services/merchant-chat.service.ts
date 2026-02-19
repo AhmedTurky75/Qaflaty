@@ -263,6 +263,37 @@ export class MerchantChatService {
   }
 
   /**
+   * Archive a closed conversation
+   */
+  async archiveConversation(storeId: string): Promise<void> {
+    const conv = this.activeConversation();
+    if (!conv) return;
+
+    try {
+      await firstValueFrom(
+        this.http.post(
+          `${this.apiUrl}/stores/${storeId}/chat/conversations/${conv.id}/archive`,
+          {}
+        )
+      );
+
+      // Update local state
+      this.activeConversation.update(c =>
+        c ? { ...c, status: 'Archived' as const } : c
+      );
+
+      this.conversations.update(convs =>
+        convs.map(c =>
+          c.id === conv.id ? { ...c, status: 'Archived' as const } : c
+        )
+      );
+    } catch (err: any) {
+      this.error.set(err?.error?.error || 'Failed to archive conversation');
+      throw err;
+    }
+  }
+
+  /**
    * Send typing indicator
    */
   async sendTypingIndicator(isTyping: boolean): Promise<void> {

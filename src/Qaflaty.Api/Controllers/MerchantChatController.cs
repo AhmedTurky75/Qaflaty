@@ -5,6 +5,7 @@ using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Communication.Commands.SendChatMessage;
 using Qaflaty.Application.Communication.Commands.MarkMessagesAsRead;
 using Qaflaty.Application.Communication.Commands.CloseConversation;
+using Qaflaty.Application.Communication.Commands.ArchiveConversation;
 using Qaflaty.Application.Communication.Queries.GetConversations;
 using Qaflaty.Application.Communication.Queries.GetConversationMessages;
 using Qaflaty.Application.Communication.DTOs;
@@ -163,6 +164,27 @@ public class MerchantChatController : ControllerBase
         }
 
         return Ok(new { message = "Conversation closed successfully" });
+    }
+
+    /// <summary>
+    /// Archive a closed conversation
+    /// </summary>
+    [HttpPost("conversations/{conversationId:guid}/archive")]
+    public async Task<IActionResult> ArchiveConversation(
+        Guid storeId,
+        Guid conversationId,
+        CancellationToken cancellationToken)
+    {
+        var command = new ArchiveConversationCommand(conversationId);
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            _logger.LogWarning("Failed to archive conversation {ConversationId}: {Error}", conversationId, result.Error.Message);
+            return BadRequest(new { error = result.Error.Message });
+        }
+
+        return Ok(new { message = "Conversation archived successfully" });
     }
 
     /// <summary>
