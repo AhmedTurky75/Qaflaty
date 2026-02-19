@@ -73,9 +73,13 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasColumnName("status")
             .HasConversion<string>();
 
-        // Images stored as JSON in PostgreSQL
-        // Access via backing field _images
-        builder.Ignore(p => p.Images);
+        // Images stored as JSONB in PostgreSQL
+        builder.OwnsMany(p => p.Images, images =>
+        {
+            images.ToJson("images");
+            images.Property(i => i.Url).HasMaxLength(2048);
+            images.Property(i => i.AltText).HasMaxLength(500);
+        });
 
         // Variant Options stored as JSONB
         builder.OwnsMany(p => p.VariantOptions, variantOptions =>

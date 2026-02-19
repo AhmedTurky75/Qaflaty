@@ -8,6 +8,7 @@ using Qaflaty.Domain.Catalog.ValueObjects;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Common.ValueObjects;
+using System.Linq;
 
 namespace Qaflaty.Application.Catalog.Commands.CreateProduct;
 
@@ -99,6 +100,16 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
                 product.Deactivate();
         }
 
+        // Add images
+        if (request.Images?.Count > 0)
+        {
+            foreach (var img in request.Images)
+            {
+                var image = ProductImage.Create(img.Url, img.AltText, img.SortOrder);
+                product.AddImage(image);
+            }
+        }
+
         await _productRepository.AddAsync(product, cancellationToken);
 
         var dto = new ProductDto(
@@ -113,7 +124,8 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
             product.Inventory.TrackInventory,
             product.Status.ToString(),
             product.CategoryId?.Value,
-            new List<ProductImageDto>(),
+            product.Images.Select(i => new ProductImageDto(i.Id, i.Url, i.AltText, i.SortOrder))
+                          .OrderBy(i => i.SortOrder).ToList(),
             product.CreatedAt);
 
         return Result.Success(dto);

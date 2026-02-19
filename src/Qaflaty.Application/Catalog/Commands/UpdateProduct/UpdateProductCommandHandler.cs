@@ -7,6 +7,7 @@ using Qaflaty.Domain.Catalog.ValueObjects;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Common.ValueObjects;
+using System.Linq;
 
 namespace Qaflaty.Application.Catalog.Commands.UpdateProduct;
 
@@ -90,6 +91,18 @@ public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand,
                 product.Activate();
             else if (status == ProductStatus.Inactive)
                 product.Deactivate();
+        }
+
+        // Replace images with the submitted list (preserves existing IDs when provided)
+        if (request.Images is not null)
+        {
+            var images = request.Images.Select(img =>
+                img.Id.HasValue
+                    ? ProductImage.Restore(img.Id.Value, img.Url, img.AltText, img.SortOrder)
+                    : ProductImage.Create(img.Url, img.AltText, img.SortOrder)
+            ).ToList();
+
+            product.SetImages(images);
         }
 
         _productRepository.Update(product);

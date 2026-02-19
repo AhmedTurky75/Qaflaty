@@ -165,7 +165,13 @@ export class ProductFormComponent implements OnInit {
       quantity: formValue.quantity,
       sku: formValue.sku || undefined,
       trackInventory: formValue.trackInventory,
-      status: formValue.status
+      status: formValue.status,
+      images: this.images().map(img => ({
+        id: img.id || undefined,
+        url: img.url,
+        altText: img.altText || undefined,
+        sortOrder: img.sortOrder
+      }))
     };
 
     if (this.isEditMode() && this.productId) {
@@ -181,7 +187,7 @@ export class ProductFormComponent implements OnInit {
       });
     } else {
       // Create new product
-      this.productService.createProduct(storeId, productData as any).subscribe({
+      this.productService.createProduct(storeId, productData).subscribe({
         next: (product) => {
           this.router.navigate(['/products']);
         },

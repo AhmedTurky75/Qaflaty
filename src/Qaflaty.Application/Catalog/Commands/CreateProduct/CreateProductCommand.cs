@@ -14,5 +14,6 @@ public record CreateProductCommand(
     string? Sku,
     bool TrackInventory,
     Guid? CategoryId,
-    string? Status
+    string? Status,
+    List<ProductImageInput>? Images
 ) : ICommand<ProductDto>;

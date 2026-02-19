@@ -40,8 +40,16 @@ export enum ProductStatus {
   Draft = 'Draft'
 }
 
+export interface ProductImageInput {
+  id?: string;
+  url: string;
+  altText?: string;
+  sortOrder: number;
+}
+
 export interface CreateProductRequest {
   name: string;
+  slug: string;
   description?: string;
   categoryId?: string;
   price: Money;
@@ -49,6 +57,8 @@ export interface CreateProductRequest {
   quantity: number;
   sku?: string;
   trackInventory: boolean;
+  status?: string;
+  images?: ProductImageInput[];
 }
 
 export interface UpdateProductRequest {
@@ -62,6 +72,7 @@ export interface UpdateProductRequest {
   trackInventory: boolean;
   categoryId?: string;
   status?: string;
+  images?: ProductImageInput[];
 }
 
 // Variant DTOs

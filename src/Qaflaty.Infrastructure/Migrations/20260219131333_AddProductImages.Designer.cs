@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Qaflaty.Infrastructure.Persistence;
@@ -12,9 +13,11 @@ using Qaflaty.Infrastructure.Persistence;
 namespace Qaflaty.Infrastructure.Migrations
 {
     [DbContext(typeof(QaflatyDbContext))]
-    partial class QaflatyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260219131333_AddProductImages")]
+    partial class AddProductImages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -914,7 +917,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("CategoryId");
 
-                            b1.ToTable("categories", (string)null);
+                            b1.ToTable("categories");
 
                             b1.WithOwner()
                                 .HasForeignKey("CategoryId");
@@ -933,7 +936,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("CategoryId");
 
-                            b1.ToTable("categories", (string)null);
+                            b1.ToTable("categories");
 
                             b1.WithOwner()
                                 .HasForeignKey("CategoryId");
@@ -967,7 +970,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("FaqItemId");
 
-                            b1.ToTable("faq_items", (string)null);
+                            b1.ToTable("faq_items");
 
                             b1.WithOwner()
                                 .HasForeignKey("FaqItemId");
@@ -992,7 +995,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("FaqItemId");
 
-                            b1.ToTable("faq_items", (string)null);
+                            b1.ToTable("faq_items");
 
                             b1.WithOwner()
                                 .HasForeignKey("FaqItemId");
@@ -1007,6 +1010,31 @@ namespace Qaflaty.Infrastructure.Migrations
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
                 {
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.BilingualText", "Title", b1 =>
+                        {
+                            b1.Property<Guid>("PageConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("title_ar");
+
+                            b1.Property<string>("English")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("title_en");
+
+                            b1.HasKey("PageConfigurationId");
+
+                            b1.ToTable("page_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PageConfigurationId");
+                        });
+
                     b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.PageSeoSettings", "SeoSettings", b1 =>
                         {
                             b1.Property<Guid>("PageConfigurationId")
@@ -1031,7 +1059,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("PageConfigurationId");
 
-                            b1.ToTable("page_configurations", (string)null);
+                            b1.ToTable("page_configurations");
 
                             b1.WithOwner()
                                 .HasForeignKey("PageConfigurationId");
@@ -1055,7 +1083,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("PageSeoSettingsPageConfigurationId");
 
-                                    b2.ToTable("page_configurations", (string)null);
+                                    b2.ToTable("page_configurations");
 
                                     b2.WithOwner()
                                         .HasForeignKey("PageSeoSettingsPageConfigurationId");
@@ -1080,7 +1108,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("PageSeoSettingsPageConfigurationId");
 
-                                    b2.ToTable("page_configurations", (string)null);
+                                    b2.ToTable("page_configurations");
 
                                     b2.WithOwner()
                                         .HasForeignKey("PageSeoSettingsPageConfigurationId");
@@ -1091,31 +1119,6 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.Navigation("MetaTitle")
                                 .IsRequired();
-                        });
-
-                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.BilingualText", "Title", b1 =>
-                        {
-                            b1.Property<Guid>("PageConfigurationId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Arabic")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("title_ar");
-
-                            b1.Property<string>("English")
-                                .IsRequired()
-                                .HasMaxLength(200)
-                                .HasColumnType("character varying(200)")
-                                .HasColumnName("title_en");
-
-                            b1.HasKey("PageConfigurationId");
-
-                            b1.ToTable("page_configurations", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("PageConfigurationId");
                         });
 
                     b.Navigation("SeoSettings")
@@ -1163,7 +1166,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("ProductId", "__synthesizedOrdinal");
 
-                            b1.ToTable("products", (string)null);
+                            b1.ToTable("products");
 
                             b1
                                 .ToJson("images")
@@ -1193,7 +1196,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("ProductId");
 
-                            b1.ToTable("products", (string)null);
+                            b1.ToTable("products");
 
                             b1.WithOwner()
                                 .HasForeignKey("ProductId");
@@ -1212,7 +1215,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("ProductId");
 
-                            b1.ToTable("products", (string)null);
+                            b1.ToTable("products");
 
                             b1.WithOwner()
                                 .HasForeignKey("ProductId");
@@ -1225,7 +1228,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("ProductId");
 
-                            b1.ToTable("products", (string)null);
+                            b1.ToTable("products");
 
                             b1.WithOwner()
                                 .HasForeignKey("ProductId");
@@ -1246,7 +1249,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("ProductPricingProductId");
 
-                                    b2.ToTable("products", (string)null);
+                                    b2.ToTable("products");
 
                                     b2.WithOwner()
                                         .HasForeignKey("ProductPricingProductId");
@@ -1268,7 +1271,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("ProductPricingProductId");
 
-                                    b2.ToTable("products", (string)null);
+                                    b2.ToTable("products");
 
                                     b2.WithOwner()
                                         .HasForeignKey("ProductPricingProductId");
@@ -1293,7 +1296,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("ProductId");
 
-                            b1.ToTable("products", (string)null);
+                            b1.ToTable("products");
 
                             b1.WithOwner()
                                 .HasForeignKey("ProductId");
@@ -1315,7 +1318,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("ProductId", "__synthesizedOrdinal");
 
-                            b1.ToTable("products", (string)null);
+                            b1.ToTable("products");
 
                             b1
                                 .ToJson("variant_options")
@@ -1366,7 +1369,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("ProductVariantId");
 
-                            b1.ToTable("product_variants", (string)null);
+                            b1.ToTable("product_variants");
 
                             b1.WithOwner()
                                 .HasForeignKey("ProductVariantId");
@@ -1377,32 +1380,6 @@ namespace Qaflaty.Infrastructure.Migrations
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Store.Store", b =>
                 {
-                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.StoreBranding", "Branding", b1 =>
-                        {
-                            b1.Property<Guid>("StoreId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("LogoUrl")
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)")
-                                .HasColumnName("logo_url");
-
-                            b1.Property<string>("PrimaryColor")
-                                .IsRequired()
-                                .ValueGeneratedOnAdd()
-                                .HasMaxLength(7)
-                                .HasColumnType("character varying(7)")
-                                .HasDefaultValue("#3B82F6")
-                                .HasColumnName("primary_color");
-
-                            b1.HasKey("StoreId");
-
-                            b1.ToTable("stores", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("StoreId");
-                        });
-
                     b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.DeliverySettings", "DeliverySettings", b1 =>
                         {
                             b1.Property<Guid>("StoreId")
@@ -1410,7 +1387,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("StoreId");
 
-                            b1.ToTable("stores", (string)null);
+                            b1.ToTable("stores");
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreId");
@@ -1431,7 +1408,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("DeliverySettingsStoreId");
 
-                                    b2.ToTable("stores", (string)null);
+                                    b2.ToTable("stores");
 
                                     b2.WithOwner()
                                         .HasForeignKey("DeliverySettingsStoreId");
@@ -1453,7 +1430,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("DeliverySettingsStoreId");
 
-                                    b2.ToTable("stores", (string)null);
+                                    b2.ToTable("stores");
 
                                     b2.WithOwner()
                                         .HasForeignKey("DeliverySettingsStoreId");
@@ -1463,6 +1440,32 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .IsRequired();
 
                             b1.Navigation("FreeDeliveryThreshold");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.StoreBranding", "Branding", b1 =>
+                        {
+                            b1.Property<Guid>("StoreId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("LogoUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("logo_url");
+
+                            b1.Property<string>("PrimaryColor")
+                                .IsRequired()
+                                .ValueGeneratedOnAdd()
+                                .HasMaxLength(7)
+                                .HasColumnType("character varying(7)")
+                                .HasDefaultValue("#3B82F6")
+                                .HasColumnName("primary_color");
+
+                            b1.HasKey("StoreId");
+
+                            b1.ToTable("stores");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreId");
                         });
 
                     b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.StoreName", "Name", b1 =>
@@ -1478,7 +1481,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("StoreId");
 
-                            b1.ToTable("stores", (string)null);
+                            b1.ToTable("stores");
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreId");
@@ -1500,7 +1503,7 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.HasIndex("Value")
                                 .IsUnique();
 
-                            b1.ToTable("stores", (string)null);
+                            b1.ToTable("stores");
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreId");
@@ -1555,7 +1558,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("StoreConfigurationId");
 
-                            b1.ToTable("store_configurations", (string)null);
+                            b1.ToTable("store_configurations");
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreConfigurationId");
@@ -1581,7 +1584,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("StoreConfigurationId");
 
-                            b1.ToTable("store_configurations", (string)null);
+                            b1.ToTable("store_configurations");
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreConfigurationId");
@@ -1622,7 +1625,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("StoreConfigurationId");
 
-                            b1.ToTable("store_configurations", (string)null);
+                            b1.ToTable("store_configurations");
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreConfigurationId");
@@ -1651,7 +1654,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("StoreConfigurationId");
 
-                            b1.ToTable("store_configurations", (string)null);
+                            b1.ToTable("store_configurations");
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreConfigurationId");
@@ -1692,7 +1695,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("StoreConfigurationId");
 
-                            b1.ToTable("store_configurations", (string)null);
+                            b1.ToTable("store_configurations");
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreConfigurationId");
@@ -1735,7 +1738,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("StoreConfigurationId");
 
-                            b1.ToTable("store_configurations", (string)null);
+                            b1.ToTable("store_configurations");
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreConfigurationId");
@@ -1778,7 +1781,7 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.HasIndex("Value")
                                 .IsUnique();
 
-                            b1.ToTable("merchants", (string)null);
+                            b1.ToTable("merchants");
 
                             b1.WithOwner()
                                 .HasForeignKey("MerchantId");
@@ -1797,7 +1800,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("MerchantId");
 
-                            b1.ToTable("merchants", (string)null);
+                            b1.ToTable("merchants");
 
                             b1.WithOwner()
                                 .HasForeignKey("MerchantId");
@@ -1816,7 +1819,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("MerchantId");
 
-                            b1.ToTable("merchants", (string)null);
+                            b1.ToTable("merchants");
 
                             b1.WithOwner()
                                 .HasForeignKey("MerchantId");
@@ -1835,7 +1838,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("MerchantId");
 
-                            b1.ToTable("merchants", (string)null);
+                            b1.ToTable("merchants");
 
                             b1.WithOwner()
                                 .HasForeignKey("MerchantId");
@@ -1873,6 +1876,85 @@ namespace Qaflaty.Infrastructure.Migrations
 
             modelBuilder.Entity("Qaflaty.Domain.Identity.Aggregates.StoreCustomer.StoreCustomer", b =>
                 {
+                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<Guid>("StoreCustomerId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("email");
+
+                            b1.HasKey("StoreCustomerId");
+
+                            b1.HasIndex("Value")
+                                .IsUnique();
+
+                            b1.ToTable("store_customers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreCustomerId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Identity.ValueObjects.PersonName", "FullName", b1 =>
+                        {
+                            b1.Property<Guid>("StoreCustomerId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("full_name");
+
+                            b1.HasKey("StoreCustomerId");
+
+                            b1.ToTable("store_customers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreCustomerId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Identity.ValueObjects.HashedPassword", "PasswordHash", b1 =>
+                        {
+                            b1.Property<Guid>("StoreCustomerId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("password_hash");
+
+                            b1.HasKey("StoreCustomerId");
+
+                            b1.ToTable("store_customers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreCustomerId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.PhoneNumber", "Phone", b1 =>
+                        {
+                            b1.Property<Guid>("StoreCustomerId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("phone");
+
+                            b1.HasKey("StoreCustomerId");
+
+                            b1.ToTable("store_customers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreCustomerId");
+                        });
+
                     b.OwnsMany("Qaflaty.Domain.Identity.ValueObjects.CustomerAddress", "Addresses", b1 =>
                         {
                             b1.Property<Guid>("StoreCustomerId");
@@ -1908,90 +1990,11 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("StoreCustomerId", "__synthesizedOrdinal");
 
-                            b1.ToTable("store_customers", (string)null);
+                            b1.ToTable("store_customers");
 
                             b1
                                 .ToJson("addresses")
                                 .HasColumnType("jsonb");
-
-                            b1.WithOwner()
-                                .HasForeignKey("StoreCustomerId");
-                        });
-
-                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Email", "Email", b1 =>
-                        {
-                            b1.Property<Guid>("StoreCustomerId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(255)
-                                .HasColumnType("character varying(255)")
-                                .HasColumnName("email");
-
-                            b1.HasKey("StoreCustomerId");
-
-                            b1.HasIndex("Value")
-                                .IsUnique();
-
-                            b1.ToTable("store_customers", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("StoreCustomerId");
-                        });
-
-                    b.OwnsOne("Qaflaty.Domain.Identity.ValueObjects.PersonName", "FullName", b1 =>
-                        {
-                            b1.Property<Guid>("StoreCustomerId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(100)
-                                .HasColumnType("character varying(100)")
-                                .HasColumnName("full_name");
-
-                            b1.HasKey("StoreCustomerId");
-
-                            b1.ToTable("store_customers", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("StoreCustomerId");
-                        });
-
-                    b.OwnsOne("Qaflaty.Domain.Identity.ValueObjects.HashedPassword", "PasswordHash", b1 =>
-                        {
-                            b1.Property<Guid>("StoreCustomerId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(500)
-                                .HasColumnType("character varying(500)")
-                                .HasColumnName("password_hash");
-
-                            b1.HasKey("StoreCustomerId");
-
-                            b1.ToTable("store_customers", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("StoreCustomerId");
-                        });
-
-                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.PhoneNumber", "Phone", b1 =>
-                        {
-                            b1.Property<Guid>("StoreCustomerId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)")
-                                .HasColumnName("phone");
-
-                            b1.HasKey("StoreCustomerId");
-
-                            b1.ToTable("store_customers", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("StoreCustomerId");
@@ -2053,7 +2056,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("CustomerId");
 
-                            b1.ToTable("customers", (string)null);
+                            b1.ToTable("customers");
 
                             b1.WithOwner()
                                 .HasForeignKey("CustomerId");
@@ -2066,7 +2069,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("CustomerId");
 
-                            b1.ToTable("customers", (string)null);
+                            b1.ToTable("customers");
 
                             b1.WithOwner()
                                 .HasForeignKey("CustomerId");
@@ -2084,7 +2087,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("CustomerContactCustomerId");
 
-                                    b2.ToTable("customers", (string)null);
+                                    b2.ToTable("customers");
 
                                     b2.WithOwner()
                                         .HasForeignKey("CustomerContactCustomerId");
@@ -2103,7 +2106,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("CustomerContactCustomerId");
 
-                                    b2.ToTable("customers", (string)null);
+                                    b2.ToTable("customers");
 
                                     b2.WithOwner()
                                         .HasForeignKey("CustomerContactCustomerId");
@@ -2122,7 +2125,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("CustomerContactCustomerId");
 
-                                    b2.ToTable("customers", (string)null);
+                                    b2.ToTable("customers");
 
                                     b2.WithOwner()
                                         .HasForeignKey("CustomerContactCustomerId");
@@ -2158,7 +2161,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("OrderId");
 
-                            b1.ToTable("orders", (string)null);
+                            b1.ToTable("orders");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");
@@ -2203,7 +2206,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                                     b2.HasKey("DeliveryInfoOrderId");
 
-                                    b2.ToTable("orders", (string)null);
+                                    b2.ToTable("orders");
 
                                     b2.WithOwner()
                                         .HasForeignKey("DeliveryInfoOrderId");
@@ -2230,7 +2233,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("OrderId");
 
-                            b1.ToTable("orders", (string)null);
+                            b1.ToTable("orders");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");
@@ -2251,10 +2254,98 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasIndex("Value");
 
-                            b1.ToTable("orders", (string)null);
+                            b1.ToTable("orders");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");
+                        });
+
+                    b.OwnsOne("Qaflaty.Domain.Ordering.ValueObjects.OrderPricing", "Pricing", b1 =>
+                        {
+                            b1.Property<Guid>("OrderId")
+                                .HasColumnType("uuid");
+
+                            b1.HasKey("OrderId");
+
+                            b1.ToTable("orders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId");
+
+                            b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "DeliveryFee", b2 =>
+                                {
+                                    b2.Property<Guid>("OrderPricingOrderId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasColumnType("decimal(18,2)")
+                                        .HasColumnName("delivery_fee");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .HasColumnType("text")
+                                        .HasColumnName("delivery_fee_currency");
+
+                                    b2.HasKey("OrderPricingOrderId");
+
+                                    b2.ToTable("orders");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("OrderPricingOrderId");
+                                });
+
+                            b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "Subtotal", b2 =>
+                                {
+                                    b2.Property<Guid>("OrderPricingOrderId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasColumnType("decimal(18,2)")
+                                        .HasColumnName("subtotal");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .HasColumnType("text")
+                                        .HasColumnName("subtotal_currency");
+
+                                    b2.HasKey("OrderPricingOrderId");
+
+                                    b2.ToTable("orders");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("OrderPricingOrderId");
+                                });
+
+                            b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "Total", b2 =>
+                                {
+                                    b2.Property<Guid>("OrderPricingOrderId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasColumnType("decimal(18,2)")
+                                        .HasColumnName("total");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .HasColumnType("text")
+                                        .HasColumnName("total_currency");
+
+                                    b2.HasKey("OrderPricingOrderId");
+
+                                    b2.ToTable("orders");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("OrderPricingOrderId");
+                                });
+
+                            b1.Navigation("DeliveryFee")
+                                .IsRequired();
+
+                            b1.Navigation("Subtotal")
+                                .IsRequired();
+
+                            b1.Navigation("Total")
+                                .IsRequired();
                         });
 
                     b.OwnsOne("Qaflaty.Domain.Ordering.ValueObjects.PaymentInfo", "Payment", b1 =>
@@ -2288,98 +2379,10 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("OrderId");
 
-                            b1.ToTable("orders", (string)null);
+                            b1.ToTable("orders");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderId");
-                        });
-
-                    b.OwnsOne("Qaflaty.Domain.Ordering.ValueObjects.OrderPricing", "Pricing", b1 =>
-                        {
-                            b1.Property<Guid>("OrderId")
-                                .HasColumnType("uuid");
-
-                            b1.HasKey("OrderId");
-
-                            b1.ToTable("orders", (string)null);
-
-                            b1.WithOwner()
-                                .HasForeignKey("OrderId");
-
-                            b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "DeliveryFee", b2 =>
-                                {
-                                    b2.Property<Guid>("OrderPricingOrderId")
-                                        .HasColumnType("uuid");
-
-                                    b2.Property<decimal>("Amount")
-                                        .HasColumnType("decimal(18,2)")
-                                        .HasColumnName("delivery_fee");
-
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("delivery_fee_currency");
-
-                                    b2.HasKey("OrderPricingOrderId");
-
-                                    b2.ToTable("orders", (string)null);
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("OrderPricingOrderId");
-                                });
-
-                            b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "Subtotal", b2 =>
-                                {
-                                    b2.Property<Guid>("OrderPricingOrderId")
-                                        .HasColumnType("uuid");
-
-                                    b2.Property<decimal>("Amount")
-                                        .HasColumnType("decimal(18,2)")
-                                        .HasColumnName("subtotal");
-
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("subtotal_currency");
-
-                                    b2.HasKey("OrderPricingOrderId");
-
-                                    b2.ToTable("orders", (string)null);
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("OrderPricingOrderId");
-                                });
-
-                            b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "Total", b2 =>
-                                {
-                                    b2.Property<Guid>("OrderPricingOrderId")
-                                        .HasColumnType("uuid");
-
-                                    b2.Property<decimal>("Amount")
-                                        .HasColumnType("decimal(18,2)")
-                                        .HasColumnName("total");
-
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("total_currency");
-
-                                    b2.HasKey("OrderPricingOrderId");
-
-                                    b2.ToTable("orders", (string)null);
-
-                                    b2.WithOwner()
-                                        .HasForeignKey("OrderPricingOrderId");
-                                });
-
-                            b1.Navigation("DeliveryFee")
-                                .IsRequired();
-
-                            b1.Navigation("Subtotal")
-                                .IsRequired();
-
-                            b1.Navigation("Total")
-                                .IsRequired();
                         });
 
                     b.Navigation("Delivery")
@@ -2422,7 +2425,7 @@ namespace Qaflaty.Infrastructure.Migrations
 
                             b1.HasKey("OrderItemId");
 
-                            b1.ToTable("order_items", (string)null);
+                            b1.ToTable("order_items");
 
                             b1.WithOwner()
                                 .HasForeignKey("OrderItemId");

@@ -43,3 +43,10 @@ public record ProductImageDto(
     string? AltText,
     int SortOrder
 );
+
+public record ProductImageInput(
+    Guid? Id,
+    string Url,
+    string? AltText,
+    int SortOrder
+);

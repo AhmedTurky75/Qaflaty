@@ -14,6 +14,7 @@ using Qaflaty.Application.Catalog.Queries.GetProductById;
 using Qaflaty.Application.Catalog.Queries.GetProducts;
 using Qaflaty.Application.Catalog.Queries.GetProductWithVariants;
 using Qaflaty.Application.Catalog.Queries.GetInventoryHistory;
+using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
 
@@ -57,6 +58,10 @@ public class ProductsController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> CreateProduct(Guid storeId, [FromBody] CreateProductRequest request, CancellationToken cancellationToken)
     {
+        var images = request.Images?
+            .Select(i => new ProductImageInput(i.Id, i.Url, i.AltText, i.SortOrder))
+            .ToList();
+
         var command = new CreateProductCommand(
             storeId,
             request.Name,
@@ -68,7 +73,8 @@ public class ProductsController : ApiController
             request.Sku,
             request.TrackInventory,
             request.CategoryId,
-            request.Status);
+            request.Status,
+            images);
 
         var result = await Sender.Send(command, cancellationToken);
 
@@ -87,6 +93,10 @@ public class ProductsController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateProduct(Guid storeId, Guid id, [FromBody] UpdateProductRequest request, CancellationToken cancellationToken)
     {
+        var updateImages = request.Images?
+            .Select(i => new ProductImageInput(i.Id, i.Url, i.AltText, i.SortOrder))
+            .ToList();
+
         var command = new UpdateProductCommand(
             id,
             request.Name,
@@ -98,7 +108,8 @@ public class ProductsController : ApiController
             request.Sku,
             request.TrackInventory,
             request.CategoryId,
-            request.Status);
+            request.Status,
+            updateImages);
 
         var result = await Sender.Send(command, cancellationToken);
         return HandleResult(result);
@@ -301,7 +312,8 @@ public record CreateProductRequest(
     string? Sku,
     bool TrackInventory,
     Guid? CategoryId,
-    string? Status);
+    string? Status,
+    List<ImageInputDto>? Images);
 
 public record UpdateProductRequest(
     string Name,
@@ -313,7 +325,10 @@ public record UpdateProductRequest(
     string? Sku,
     bool TrackInventory,
     Guid? CategoryId,
-    string? Status);
+    string? Status,
+    List<ImageInputDto>? Images);
+
+public record ImageInputDto(Guid? Id, string Url, string? AltText, int SortOrder);
 
 // Variant Management Requests
 public record AddVariantOptionRequest(

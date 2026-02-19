@@ -116,6 +116,14 @@ public sealed class Product : AggregateRoot<ProductId>
         return Result.Success();
     }
 
+    public Result SetImages(List<ProductImage> images)
+    {
+        _images.Clear();
+        _images.AddRange(images);
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
     public Result ReorderImages(List<Guid> imageIds)
     {
         for (int i = 0; i < imageIds.Count; i++)

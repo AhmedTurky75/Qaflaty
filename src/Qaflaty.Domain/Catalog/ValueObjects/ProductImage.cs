@@ -9,6 +9,8 @@ public sealed class ProductImage : ValueObject
     public string? AltText { get; }
     public int SortOrder { get; private set; }
 
+    private ProductImage() { Id = Guid.Empty; Url = string.Empty; } // required by EF Core JSON deserialization
+
     private ProductImage(Guid id, string url, string? altText, int sortOrder)
     {
         Id = id;
@@ -20,6 +22,11 @@ public sealed class ProductImage : ValueObject
     public static ProductImage Create(string url, string? altText = null, int sortOrder = 0)
     {
         return new ProductImage(Guid.NewGuid(), url, altText, sortOrder);
+    }
+
+    public static ProductImage Restore(Guid id, string url, string? altText, int sortOrder)
+    {
+        return new ProductImage(id, url, altText, sortOrder);
     }
 
     public void UpdateSortOrder(int sortOrder) => SortOrder = sortOrder;
