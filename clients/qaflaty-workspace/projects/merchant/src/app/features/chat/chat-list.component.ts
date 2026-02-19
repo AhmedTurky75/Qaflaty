@@ -111,7 +111,7 @@ import { StoreContextService } from '../../core/services/store-context.service';
                       <div class="flex items-center flex-1 min-w-0">
                         <!-- Avatar -->
                         <div class="flex-shrink-0">
-                          <div class="h-10 w-10 rounded-full bg-primary text-white flex items-center justify-center font-medium">
+                          <div class="h-10 w-10 rounded-full bg-primary-600 text-white flex items-center justify-center font-medium">
                             {{ getInitials(conversation) }}
                           </div>
                         </div>
