@@ -20,6 +20,14 @@ public class StoreCustomerRepository : IStoreCustomerRepository
             .Include(c => c.RefreshTokens)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
+    public async Task<List<StoreCustomer>> GetByIdsAsync(IEnumerable<StoreCustomerId> ids, CancellationToken ct = default)
+    {
+        var idValues = ids.Select(id => id.Value).ToList();
+        return await _context.StoreCustomers
+            .Where(c => idValues.Contains(c.Id.Value))
+            .ToListAsync(ct);
+    }
+
     public async Task<StoreCustomer?> GetByEmailAsync(Email email, CancellationToken ct = default)
         => await _context.StoreCustomers
             .Include(c => c.RefreshTokens)

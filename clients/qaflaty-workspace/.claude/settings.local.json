@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npx ng build:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(python:*)",
+      "Bash(node -e:*)"
     ]
   }
 }

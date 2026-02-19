@@ -7,6 +7,7 @@ namespace Qaflaty.Domain.Identity.Repositories;
 public interface IStoreCustomerRepository
 {
     Task<StoreCustomer?> GetByIdAsync(StoreCustomerId id, CancellationToken ct = default);
+    Task<List<StoreCustomer>> GetByIdsAsync(IEnumerable<StoreCustomerId> ids, CancellationToken ct = default);
     Task<StoreCustomer?> GetByEmailAsync(Email email, CancellationToken ct = default);
     Task<bool> ExistsByEmailAsync(Email email, CancellationToken ct = default);
     Task AddAsync(StoreCustomer customer, CancellationToken ct = default);

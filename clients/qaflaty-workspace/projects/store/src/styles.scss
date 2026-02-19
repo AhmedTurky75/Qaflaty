@@ -8,3 +8,21 @@
 body {
   @apply font-sans antialiased;
 }
+
+/* Primary color utilities — available to ALL components.
+   Values are overridden at runtime by ThemeService via CSS custom properties. */
+.bg-primary         { background-color: var(--primary-color); }
+.bg-primary-dark    { background-color: var(--primary-dark); }
+.bg-primary-light   { background-color: var(--primary-light); }
+.text-primary       { color: var(--primary-color); }
+.border-primary     { border-color: var(--primary-color); }
+.ring-primary       { --tw-ring-color: var(--primary-color); }
+
+.hover\:bg-primary:hover      { background-color: var(--primary-color); }
+.hover\:bg-primary-dark:hover { background-color: var(--primary-dark); }
+.hover\:text-primary:hover    { color: var(--primary-color); }
+.hover\:border-primary:hover  { border-color: var(--primary-color); }
+.focus\:ring-primary:focus    { --tw-ring-color: var(--primary-color); }
+
+.bg-primary\/10 { background-color: var(--primary-100); }
+.bg-primary\/5  { background-color: var(--primary-50); }

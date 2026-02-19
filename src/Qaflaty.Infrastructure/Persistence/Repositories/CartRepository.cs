@@ -19,6 +19,15 @@ public class CartRepository : ICartRepository
             .Include(c => c.Items)
             .FirstOrDefaultAsync(c => c.CustomerId == customerId, ct);
 
+    public async Task<List<Cart>> GetActiveCartsByStoreAsync(StoreId storeId, CancellationToken ct = default)
+        => await _context.Carts
+            .Include(c => c.Items)
+            .Where(c => c.Items.Any() &&
+                c.Items.Any(i => _context.Products
+                    .Any(p => p.Id == i.ProductId && p.StoreId == storeId)))
+            .OrderByDescending(c => c.UpdatedAt)
+            .ToListAsync(ct);
+
     public async Task AddAsync(Cart cart, CancellationToken ct = default)
         => await _context.Carts.AddAsync(cart, ct);
 

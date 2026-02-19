@@ -150,6 +150,8 @@
       "Bash(ls -la \"D:\\\\Projects\\\\Qafilaty\\\\src\"\" | grep -E \"^d \")"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+      "autoApprove": ["Bash", "Read"]
+
   }
 }

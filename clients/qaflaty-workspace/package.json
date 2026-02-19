@@ -4,6 +4,8 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
+    "start:store": "ng serve store -o",
+    "start:merchant": "ng serve merchant -o",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test"

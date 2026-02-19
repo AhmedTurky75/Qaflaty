@@ -1,12 +1,13 @@
-import { Component, input, inject } from '@angular/core';
-import { RouterLink } from '@angular/router';
-import { CurrencyPipe } from '@angular/common';
+import { Component, input, inject, computed } from '@angular/core';
+import { RouterLink, Router } from '@angular/router';
+import { CurrencyPipe, NgClass } from '@angular/common';
 import { FeatureService } from '../../services/feature.service';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [RouterLink, CurrencyPipe],
+  imports: [RouterLink, CurrencyPipe, NgClass],
   template: `
     <!-- ───────── STANDARD ───────── -->
     @if (variant() === 'card-standard') {
@@ -51,10 +52,12 @@ import { FeatureService } from '../../services/feature.service';
             }
           </div>
           <button
-            class="w-full px-4 py-2 bg-[var(--primary-color)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition-colors duration-200"
+            class="w-full px-4 py-2 text-white font-semibold rounded-lg transition-colors duration-200"
+            [ngClass]="isInCart() ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary-dark'"
             type="button"
+            (click)="addToCart($event)"
           >
-            Add to Cart
+            {{ isInCart() ? 'In Cart ✓' : (product().hasVariants ? 'Select Options' : 'Add to Cart') }}
           </button>
         </div>
       </div>
@@ -169,10 +172,12 @@ import { FeatureService } from '../../services/feature.service';
               }
             </div>
             <button
-              class="w-full px-4 py-2 bg-[var(--primary-color)] text-white font-semibold rounded-lg hover:bg-[var(--primary-dark)] transition-colors duration-200"
+              class="w-full px-4 py-2 text-white font-semibold rounded-lg transition-colors duration-200"
+              [ngClass]="isInCart() ? 'bg-green-600 hover:bg-green-700' : 'bg-primary hover:bg-primary-dark'"
               type="button"
+              (click)="addToCart($event)"
             >
-              Add to Cart
+              {{ isInCart() ? 'In Cart ✓' : (product().hasVariants ? 'Select Options' : 'Add to Cart') }}
             </button>
           </div>
         </div>
@@ -223,11 +228,22 @@ import { FeatureService } from '../../services/feature.service';
               }
               <!-- Cart icon on hover -->
               <div class="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <div class="w-9 h-9 bg-white rounded-full flex items-center justify-center text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition-colors">
-                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </div>
+                <button
+                  type="button"
+                  (click)="addToCart($event)"
+                  class="w-9 h-9 rounded-full flex items-center justify-center transition-colors"
+                  [ngClass]="isInCart() ? 'bg-green-500 text-white' : 'bg-white text-primary hover:bg-primary hover:text-white'"
+                >
+                  @if (isInCart()) {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  } @else {
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  }
+                </button>
               </div>
             </div>
             @if (isOnSale()) {
@@ -247,7 +263,23 @@ export class ProductCardComponent {
   product = input.required<any>();
 
   private featureService = inject(FeatureService);
+  private cartService = inject(CartService);
+  private router = inject(Router);
+
   variant = this.featureService.productCardVariant;
+  isInCart = computed(() => this.cartService.hasItem(this.product().id));
+
+  addToCart(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    const prod = this.product();
+    if (prod.hasVariants) {
+      this.router.navigate(['/products', prod.slug]);
+      return;
+    }
+    this.cartService.addItem(prod, 1);
+    window.dispatchEvent(new CustomEvent('toggle-cart'));
+  }
 
   isOnSale(): boolean {
     return this.product().compareAtPrice != null
