@@ -49,7 +49,6 @@ public class GetActiveCartsQueryHandler : IQueryHandler<GetActiveCartsQuery, Lis
             .Where(c => c.CustomerId.HasValue)
             .Select(c => c.CustomerId!.Value)
             .Distinct()
-            .Select(id => new StoreCustomerId(id))
             .ToList();
 
         var customers = await _storeCustomerRepository.GetByIdsAsync(customerIds, cancellationToken);

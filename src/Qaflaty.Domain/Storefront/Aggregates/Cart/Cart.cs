@@ -37,7 +37,7 @@ public sealed class Cart : AggregateRoot<CartId>
     public static Result<Cart> CreateForGuest(string guestId, StoreId storeId)
     {
         if (string.IsNullOrWhiteSpace(guestId))
-            return Result<Cart>.Failure(new Error("Cart.InvalidGuestId", "Guest ID cannot be empty"));
+            return Result.Failure<Cart>(new Error("Cart.InvalidGuestId", "Guest ID cannot be empty"));
 
         var cart = new Cart
         {
