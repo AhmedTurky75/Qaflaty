@@ -18,7 +18,9 @@ public class CartConfiguration : IEntityTypeConfiguration<Cart>
             .HasColumnName("id");
 
         builder.Property(c => c.CustomerId)
-            .HasConversion(id => id!.Value, value => new StoreCustomerId(value))
+            .HasConversion(
+                (StoreCustomerId? id) => id == null ? (Guid?)null : id.Value.Value,
+                (Guid? g) => g == null ? (StoreCustomerId?)null : new StoreCustomerId(g.Value))
             .HasColumnName("customer_id")
             .IsRequired(false);
 
@@ -28,7 +30,9 @@ public class CartConfiguration : IEntityTypeConfiguration<Cart>
             .IsRequired(false);
 
         builder.Property(c => c.StoreId)
-            .HasConversion(id => id!.Value, value => new StoreId(value))
+            .HasConversion(
+                (StoreId? id) => id == null ? (Guid?)null : id.Value.Value,
+                (Guid? g) => g == null ? (StoreId?)null : new StoreId(g.Value))
             .HasColumnName("store_id")
             .IsRequired(false);
 

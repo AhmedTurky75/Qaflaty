@@ -9,7 +9,7 @@
 ### Layer 2 — Infrastructure
 - [x] **2.1** Update `CartConfiguration` — nullable `customer_id`, filtered unique indexes, new columns
 - [x] **2.3** Implement new `CartRepository` methods — `GetByGuestIdAsync`, `DeleteExpiredGuestCartsAsync`, update `GetActiveCartsByStoreAsync`
-- [ ] **2.2** Generate migration (`AddGuestCartSupport`), inspect, then apply *(run last in this layer)*
+- [x] **2.2** Generate migration (`AddGuestCartSupport`), inspect, then apply *(run last in this layer)*
 
 ### Layer 3 — Application
 - [x] **3.1** Create `CartOwnerContext.cs` — discriminated union (`CustomerOwner` / `GuestOwner`)
