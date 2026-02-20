@@ -3,27 +3,27 @@
 ## Todo List
 
 ### Layer 1 — Domain
-- [ ] **1.1** Extend `Cart` aggregate — add `GuestId`, `StoreId`, `IsGuestCart`, `CreateForCustomer`, `CreateForGuest`
-- [ ] **1.2** Extend `ICartRepository` — add `GetByGuestIdAsync` and `DeleteExpiredGuestCartsAsync`
+- [x] **1.1** Extend `Cart` aggregate — add `GuestId`, `StoreId`, `IsGuestCart`, `CreateForCustomer`, `CreateForGuest`
+- [x] **1.2** Extend `ICartRepository` — add `GetByGuestIdAsync` and `DeleteExpiredGuestCartsAsync`
 
 ### Layer 2 — Infrastructure
-- [ ] **2.1** Update `CartConfiguration` — nullable `customer_id`, filtered unique indexes, new columns
-- [ ] **2.3** Implement new `CartRepository` methods — `GetByGuestIdAsync`, `DeleteExpiredGuestCartsAsync`, update `GetActiveCartsByStoreAsync`
+- [x] **2.1** Update `CartConfiguration` — nullable `customer_id`, filtered unique indexes, new columns
+- [x] **2.3** Implement new `CartRepository` methods — `GetByGuestIdAsync`, `DeleteExpiredGuestCartsAsync`, update `GetActiveCartsByStoreAsync`
 - [ ] **2.2** Generate migration (`AddGuestCartSupport`), inspect, then apply *(run last in this layer)*
 
 ### Layer 3 — Application
-- [ ] **3.1** Create `CartOwnerContext.cs` — discriminated union (`CustomerOwner` / `GuestOwner`)
-- [ ] **3.2** Update all 6 command/query records — replace `StoreCustomerId CustomerId` with `CartOwnerContext Owner`
-- [ ] **3.3** Create `CartOwnerResolver.cs` — shared `ResolveExistingCartAsync` / `ResolveOrCreateCartAsync` helper
-- [ ] **3.4** Update 5 simple handlers — use `CartOwnerResolver`; add max-qty and max-items guards in `AddCartItemCommandHandler`
-- [ ] **3.5** Update `SyncCartCommandHandler` — inject `ITenantContext`, merge + delete server-side guest cart by `GuestSessionId`
-- [ ] **3.6** Update `CartDto` — make `CustomerId` nullable, add `GuestId`; fix all construction sites
-- [ ] **3.7** Update `ActiveCartDto` + `GetActiveCartsQueryHandler` — null-safe `CustomerId` access (critical crash fix)
+- [x] **3.1** Create `CartOwnerContext.cs` — discriminated union (`CustomerOwner` / `GuestOwner`)
+- [x] **3.2** Update all 6 command/query records — replace `StoreCustomerId CustomerId` with `CartOwnerContext Owner`
+- [x] **3.3** Create `CartOwnerResolver.cs` — shared `ResolveExistingCartAsync` / `ResolveOrCreateCartAsync` helper
+- [x] **3.4** Update 5 simple handlers — use `CartOwnerResolver`; add max-qty and max-items guards in `AddCartItemCommandHandler`
+- [x] **3.5** Update `SyncCartCommandHandler` — inject `ITenantContext`, merge + delete server-side guest cart by `GuestSessionId`
+- [x] **3.6** Update `CartDto` — make `CustomerId` nullable, add `GuestId`; fix all construction sites
+- [x] **3.7** Update `ActiveCartDto` + `GetActiveCartsQueryHandler` — null-safe `CustomerId` access (critical crash fix)
 
 ### Layer 4 — API
-- [ ] **4.1** Create `GuestCartController` — unauthenticated, validates `X-Guest-Id`, 5 mirrored endpoints
-- [ ] **4.2** Update `StorefrontCartController` — wrap owner in `CartOwnerContext.CustomerOwner`, add `GuestSessionId` to sync request
-- [ ] **4.3** Create `GuestCartCleanupService` — `BackgroundService`, daily 30-day TTL cleanup; register in `DependencyInjection.cs`
+- [x] **4.1** Create `GuestCartController` — unauthenticated, validates `X-Guest-Id`, 5 mirrored endpoints
+- [x] **4.2** Update `StorefrontCartController` — wrap owner in `CartOwnerContext.CustomerOwner`, add `GuestSessionId` to sync request
+- [x] **4.3** Create `GuestCartCleanupService` — `BackgroundService`, daily 30-day TTL cleanup; register in `DependencyInjection.cs`
 
 ### Layer 5 — Frontend
 - [ ] **5.1** Create `GuestSessionService` — UUID generation + localStorage persistence

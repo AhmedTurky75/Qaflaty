@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Storefront.Repositories;
 
@@ -18,7 +19,7 @@ public class ClearCartCommandHandler : ICommandHandler<ClearCartCommand>
 
     public async Task<Result> Handle(ClearCartCommand request, CancellationToken cancellationToken)
     {
-        var cart = await _cartRepository.GetByCustomerIdAsync(request.CustomerId, cancellationToken);
+        var cart = await CartOwnerResolver.ResolveExistingCartAsync(request.Owner, _cartRepository, cancellationToken);
         if (cart == null) return Result.Success(); // Nothing to clear
 
         cart.ClearAll();

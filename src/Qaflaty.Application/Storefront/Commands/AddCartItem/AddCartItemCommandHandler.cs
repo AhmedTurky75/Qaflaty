@@ -1,8 +1,8 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
-using Qaflaty.Domain.Storefront.Aggregates.Cart;
 using Qaflaty.Domain.Storefront.Repositories;
 
 namespace Qaflaty.Application.Storefront.Commands.AddCartItem;
@@ -20,15 +20,13 @@ public class AddCartItemCommandHandler : ICommandHandler<AddCartItemCommand>
 
     public async Task<Result> Handle(AddCartItemCommand request, CancellationToken cancellationToken)
     {
-        var cart = await _cartRepository.GetByCustomerIdAsync(request.CustomerId, cancellationToken);
+        if (request.Quantity > 100)
+            return Result.Failure(new Error("Cart.QuantityTooHigh", "Quantity cannot exceed 100 per item"));
 
-        if (cart == null)
-        {
-            var createResult = Cart.Create(request.CustomerId);
-            if (createResult.IsFailure) return Result.Failure(createResult.Error);
-            cart = createResult.Value;
-            await _cartRepository.AddAsync(cart, cancellationToken);
-        }
+        var cart = await CartOwnerResolver.ResolveOrCreateCartAsync(request.Owner, _cartRepository, cancellationToken);
+
+        if (cart.Items.Count >= 50)
+            return Result.Failure(new Error("Cart.TooManyItems", "Cart cannot contain more than 50 distinct items"));
 
         var result = cart.AddItem(new ProductId(request.ProductId), request.Quantity, request.VariantId);
         if (result.IsFailure) return result;

@@ -6,7 +6,9 @@ namespace Qaflaty.Domain.Storefront.Aggregates.Cart;
 
 public sealed class Cart : AggregateRoot<CartId>
 {
-    public StoreCustomerId CustomerId { get; private set; }
+    public StoreCustomerId? CustomerId { get; private set; }
+    public string? GuestId { get; private set; }
+    public StoreId? StoreId { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -14,21 +16,43 @@ public sealed class Cart : AggregateRoot<CartId>
     public IReadOnlyList<CartItem> Items => _items.AsReadOnly();
 
     public int TotalItems => _items.Sum(i => i.Quantity);
+    public bool IsGuestCart => GuestId != null;
 
     private Cart() : base(CartId.Empty) { }
 
-    public static Result<Cart> Create(StoreCustomerId customerId)
+    public static Result<Cart> CreateForCustomer(StoreCustomerId customerId, StoreId? storeId = null)
     {
         var cart = new Cart
         {
             Id = CartId.New(),
             CustomerId = customerId,
+            StoreId = storeId,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
 
         return Result<Cart>.Success(cart);
     }
+
+    public static Result<Cart> CreateForGuest(string guestId, StoreId storeId)
+    {
+        if (string.IsNullOrWhiteSpace(guestId))
+            return Result<Cart>.Failure(new Error("Cart.InvalidGuestId", "Guest ID cannot be empty"));
+
+        var cart = new Cart
+        {
+            Id = CartId.New(),
+            GuestId = guestId,
+            StoreId = storeId,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        return Result<Cart>.Success(cart);
+    }
+
+    /// <summary>Keep for backward compatibility with existing callers.</summary>
+    public static Result<Cart> Create(StoreCustomerId customerId) => CreateForCustomer(customerId);
 
     public Result AddItem(ProductId productId, int quantity, Guid? variantId = null)
     {

@@ -2,7 +2,8 @@ namespace Qaflaty.Application.Storefront.DTOs;
 
 public record CartDto(
     Guid Id,
-    Guid CustomerId,
+    Guid? CustomerId,
+    string? GuestId,
     List<CartItemDto> Items,
     int TotalItems,
     DateTime CreatedAt,

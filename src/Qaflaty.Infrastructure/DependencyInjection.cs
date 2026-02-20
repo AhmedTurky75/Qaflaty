@@ -17,6 +17,7 @@ using Qaflaty.Infrastructure.Persistence.Repositories.Communication;
 using Qaflaty.Infrastructure.Services.Common;
 using Qaflaty.Infrastructure.Services.Identity;
 using Qaflaty.Infrastructure.Services.Ordering;
+using Qaflaty.Infrastructure.Services.Storefront;
 using Qaflaty.Application.Common.Interfaces;
 
 namespace Qaflaty.Infrastructure;
@@ -72,6 +73,9 @@ public static class DependencyInjection
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+
+        // Background Services
+        services.AddHostedService<GuestCartCleanupService>();
 
         return services;
     }

@@ -1,4 +1,5 @@
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Application.Storefront.DTOs;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Storefront.Repositories;
@@ -16,14 +17,15 @@ public class GetCustomerCartQueryHandler : IQueryHandler<GetCustomerCartQuery, C
 
     public async Task<Result<CartDto?>> Handle(GetCustomerCartQuery request, CancellationToken cancellationToken)
     {
-        var cart = await _cartRepository.GetByCustomerIdAsync(request.CustomerId, cancellationToken);
+        var cart = await CartOwnerResolver.ResolveExistingCartAsync(request.Owner, _cartRepository, cancellationToken);
 
         if (cart == null)
             return Result.Success<CartDto?>(null);
 
         var dto = new CartDto(
             cart.Id.Value,
-            cart.CustomerId.Value,
+            cart.CustomerId?.Value,
+            cart.GuestId,
             cart.Items.Select(i => new CartItemDto(
                 i.Id,
                 i.ProductId.Value,

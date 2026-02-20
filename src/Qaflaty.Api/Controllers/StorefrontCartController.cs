@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
+using Qaflaty.Application.Common;
 using Qaflaty.Application.Storefront.Commands.AddCartItem;
 using Qaflaty.Application.Storefront.Commands.ClearCart;
 using Qaflaty.Application.Storefront.Commands.RemoveCartItem;
@@ -20,7 +21,8 @@ public class StorefrontCartController : ApiController
         var customerId = CurrentUserService.CustomerId;
         if (customerId == null) return Unauthorized();
 
-        var result = await Sender.Send(new GetCustomerCartQuery(customerId.Value), ct);
+        var owner = new CartOwnerContext.CustomerOwner(customerId.Value);
+        var result = await Sender.Send(new GetCustomerCartQuery(owner), ct);
         return HandleResult(result);
     }
 
@@ -30,11 +32,12 @@ public class StorefrontCartController : ApiController
         var customerId = CurrentUserService.CustomerId;
         if (customerId == null) return Unauthorized();
 
+        var owner = new CartOwnerContext.CustomerOwner(customerId.Value);
         var guestItems = request.GuestItems
             .Select(gi => new GuestCartItemDto(gi.ProductId, gi.VariantId, gi.Quantity))
             .ToList();
 
-        var result = await Sender.Send(new SyncCartCommand(customerId.Value, guestItems), ct);
+        var result = await Sender.Send(new SyncCartCommand(owner, guestItems, request.GuestSessionId), ct);
         return HandleResult(result);
     }
 
@@ -44,8 +47,9 @@ public class StorefrontCartController : ApiController
         var customerId = CurrentUserService.CustomerId;
         if (customerId == null) return Unauthorized();
 
+        var owner = new CartOwnerContext.CustomerOwner(customerId.Value);
         var result = await Sender.Send(
-            new AddCartItemCommand(customerId.Value, request.ProductId, request.Quantity, request.VariantId), ct);
+            new AddCartItemCommand(owner, request.ProductId, request.Quantity, request.VariantId), ct);
 
         if (result.IsFailure) return HandleResult(result);
         return NoContent();
@@ -61,8 +65,9 @@ public class StorefrontCartController : ApiController
         var customerId = CurrentUserService.CustomerId;
         if (customerId == null) return Unauthorized();
 
+        var owner = new CartOwnerContext.CustomerOwner(customerId.Value);
         var result = await Sender.Send(
-            new UpdateCartItemQuantityCommand(customerId.Value, productId, request.Quantity, variantId), ct);
+            new UpdateCartItemQuantityCommand(owner, productId, request.Quantity, variantId), ct);
 
         if (result.IsFailure) return HandleResult(result);
         return NoContent();
@@ -77,8 +82,9 @@ public class StorefrontCartController : ApiController
         var customerId = CurrentUserService.CustomerId;
         if (customerId == null) return Unauthorized();
 
+        var owner = new CartOwnerContext.CustomerOwner(customerId.Value);
         var result = await Sender.Send(
-            new RemoveCartItemCommand(customerId.Value, productId, variantId), ct);
+            new RemoveCartItemCommand(owner, productId, variantId), ct);
 
         if (result.IsFailure) return HandleResult(result);
         return NoContent();
@@ -90,13 +96,14 @@ public class StorefrontCartController : ApiController
         var customerId = CurrentUserService.CustomerId;
         if (customerId == null) return Unauthorized();
 
-        var result = await Sender.Send(new ClearCartCommand(customerId.Value), ct);
+        var owner = new CartOwnerContext.CustomerOwner(customerId.Value);
+        var result = await Sender.Send(new ClearCartCommand(owner), ct);
         if (result.IsFailure) return HandleResult(result);
         return NoContent();
     }
 }
 
-public record SyncCartRequest(List<SyncCartItemRequest> GuestItems);
+public record SyncCartRequest(List<SyncCartItemRequest> GuestItems, string? GuestSessionId = null);
 public record SyncCartItemRequest(Guid ProductId, Guid? VariantId, int Quantity);
 public record CartItemRequest(Guid ProductId, int Quantity, Guid? VariantId = null);
 public record UpdateCartItemRequest(int Quantity);

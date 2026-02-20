@@ -44,8 +44,14 @@ public class GetActiveCartsQueryHandler : IQueryHandler<GetActiveCartsQuery, Lis
         if (carts.Count == 0)
             return Result.Success(new List<ActiveCartDto>());
 
-        // Load customers
-        var customerIds = carts.Select(c => c.CustomerId).Distinct().ToList();
+        // Load only authenticated customers (guest carts have no CustomerId)
+        var customerIds = carts
+            .Where(c => c.CustomerId.HasValue)
+            .Select(c => c.CustomerId!.Value)
+            .Distinct()
+            .Select(id => new StoreCustomerId(id))
+            .ToList();
+
         var customers = await _storeCustomerRepository.GetByIdsAsync(customerIds, cancellationToken);
         var customerLookup = customers.ToDictionary(c => c.Id.Value);
 
@@ -55,7 +61,7 @@ public class GetActiveCartsQueryHandler : IQueryHandler<GetActiveCartsQuery, Lis
 
         var result = carts.Select(cart =>
         {
-            customerLookup.TryGetValue(cart.CustomerId.Value, out var customer);
+            customerLookup.TryGetValue(cart.CustomerId?.Value ?? Guid.Empty, out var customer);
 
             var items = cart.Items.Select(item =>
             {
@@ -75,7 +81,8 @@ public class GetActiveCartsQueryHandler : IQueryHandler<GetActiveCartsQuery, Lis
 
             return new ActiveCartDto(
                 cart.Id.Value,
-                cart.CustomerId.Value,
+                cart.CustomerId?.Value,
+                cart.GuestId,
                 customer?.FullName.Value ?? "Guest",
                 customer?.Email.Value ?? "",
                 items,

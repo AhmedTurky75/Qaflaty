@@ -18,8 +18,19 @@ public class CartConfiguration : IEntityTypeConfiguration<Cart>
             .HasColumnName("id");
 
         builder.Property(c => c.CustomerId)
-            .HasConversion(id => id.Value, value => new StoreCustomerId(value))
-            .HasColumnName("customer_id");
+            .HasConversion(id => id!.Value, value => new StoreCustomerId(value))
+            .HasColumnName("customer_id")
+            .IsRequired(false);
+
+        builder.Property(c => c.GuestId)
+            .HasColumnName("guest_id")
+            .HasMaxLength(36)
+            .IsRequired(false);
+
+        builder.Property(c => c.StoreId)
+            .HasConversion(id => id!.Value, value => new StoreId(value))
+            .HasColumnName("store_id")
+            .IsRequired(false);
 
         builder.Property(c => c.CreatedAt)
             .HasColumnName("created_at");
@@ -33,8 +44,17 @@ public class CartConfiguration : IEntityTypeConfiguration<Cart>
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Ignore(c => c.TotalItems);
+        builder.Ignore(c => c.IsGuestCart);
         builder.Ignore(c => c.DomainEvents);
 
-        builder.HasIndex(c => c.CustomerId).IsUnique();
+        // One cart per authenticated customer
+        builder.HasIndex(c => c.CustomerId)
+            .IsUnique()
+            .HasFilter("customer_id IS NOT NULL");
+
+        // One cart per guest session per store
+        builder.HasIndex(c => new { c.GuestId, c.StoreId })
+            .IsUnique()
+            .HasFilter("guest_id IS NOT NULL");
     }
 }

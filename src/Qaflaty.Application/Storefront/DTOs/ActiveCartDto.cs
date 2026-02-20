@@ -2,7 +2,8 @@ namespace Qaflaty.Application.Storefront.DTOs;
 
 public record ActiveCartDto(
     Guid CartId,
-    Guid CustomerId,
+    Guid? CustomerId,
+    string? GuestId,
     string CustomerName,
     string CustomerEmail,
     List<ActiveCartItemDto> Items,

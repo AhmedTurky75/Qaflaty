@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Storefront.Repositories;
@@ -19,7 +20,10 @@ public class UpdateCartItemQuantityCommandHandler : ICommandHandler<UpdateCartIt
 
     public async Task<Result> Handle(UpdateCartItemQuantityCommand request, CancellationToken cancellationToken)
     {
-        var cart = await _cartRepository.GetByCustomerIdAsync(request.CustomerId, cancellationToken);
+        if (request.Quantity > 100)
+            return Result.Failure(new Error("Cart.QuantityTooHigh", "Quantity cannot exceed 100 per item"));
+
+        var cart = await CartOwnerResolver.ResolveExistingCartAsync(request.Owner, _cartRepository, cancellationToken);
         if (cart == null)
             return Result.Failure(new Error("Cart.NotFound", "Cart not found"));
 

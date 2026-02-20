@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Storefront.Repositories;
@@ -19,7 +20,7 @@ public class RemoveCartItemCommandHandler : ICommandHandler<RemoveCartItemComman
 
     public async Task<Result> Handle(RemoveCartItemCommand request, CancellationToken cancellationToken)
     {
-        var cart = await _cartRepository.GetByCustomerIdAsync(request.CustomerId, cancellationToken);
+        var cart = await CartOwnerResolver.ResolveExistingCartAsync(request.Owner, _cartRepository, cancellationToken);
         if (cart == null)
             return Result.Failure(new Error("Cart.NotFound", "Cart not found"));
 

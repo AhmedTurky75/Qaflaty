@@ -1,6 +1,6 @@
+using Qaflaty.Application.Common;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Storefront.DTOs;
-using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Storefront.Commands.SyncCart;
 
@@ -11,6 +11,7 @@ public record GuestCartItemDto(
 );
 
 public record SyncCartCommand(
-    StoreCustomerId CustomerId,
-    List<GuestCartItemDto> GuestItems
+    CartOwnerContext Owner,
+    List<GuestCartItemDto> GuestItems,
+    string? GuestSessionId = null
 ) : ICommand<CartDto>;
