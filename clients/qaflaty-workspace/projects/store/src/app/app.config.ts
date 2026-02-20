@@ -3,6 +3,7 @@ import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { routes } from './app.routes';
 import { storeHeaderInterceptor } from './interceptors/store-header.interceptor';
+import { guestCartInterceptor } from './interceptors/guest-cart.interceptor';
 import { customerAuthInterceptor } from './interceptors/customer-auth.interceptor';
 
 export const appConfig: ApplicationConfig = {
@@ -10,6 +11,6 @@ export const appConfig: ApplicationConfig = {
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptors([storeHeaderInterceptor, customerAuthInterceptor]))
+    provideHttpClient(withInterceptors([storeHeaderInterceptor, guestCartInterceptor, customerAuthInterceptor]))
   ]
 };

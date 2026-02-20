@@ -118,6 +118,8 @@ export class CartService {
     // Persist to server (fire-and-forget)
     if (this.isLoggedIn) {
       this.cartApi.addItem(product.id, quantity, variant?.id);
+    } else {
+      this.cartApi.addGuestItem(product.id, quantity, variant?.id);
     }
   }
 
@@ -138,6 +140,8 @@ export class CartService {
 
     if (this.isLoggedIn) {
       this.cartApi.updateItemQuantity(productId, quantity, variantId);
+    } else {
+      this.cartApi.updateGuestItemQuantity(productId, quantity, variantId);
     }
   }
 
@@ -154,6 +158,8 @@ export class CartService {
 
     if (this.isLoggedIn) {
       this.cartApi.removeItem(productId, variantId);
+    } else {
+      this.cartApi.removeGuestItem(productId, variantId);
     }
   }
 
@@ -166,6 +172,8 @@ export class CartService {
 
     if (this.isLoggedIn) {
       this.cartApi.clearCart();
+    } else {
+      this.cartApi.clearGuestCart();
     }
   }
 

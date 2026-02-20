@@ -13,8 +13,7 @@ import { ActiveCartsService, ActiveCart, ActiveCartItem } from './services/activ
         <div>
           <h1 class="text-2xl font-bold text-gray-900">Active Shopping Carts</h1>
           <p class="text-sm text-gray-500 mt-1">
-            Customers who added items but haven't completed their order yet.
-            Only authenticated customers are tracked.
+            Customers and anonymous guests who added items but haven't completed their order yet.
           </p>
         </div>
         <button
@@ -102,8 +101,13 @@ import { ActiveCartsService, ActiveCart, ActiveCartItem } from './services/activ
                     {{ initials(cart.customerName) }}
                   </div>
                   <div>
-                    <p class="font-semibold text-gray-900">{{ cart.customerName }}</p>
-                    <p class="text-sm text-gray-500">{{ cart.customerEmail }}</p>
+                    <div class="flex items-center gap-2">
+                      <p class="font-semibold text-gray-900">{{ cart.customerName }}</p>
+                      @if (cart.guestId) {
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Guest</span>
+                      }
+                    </div>
+                    <p class="text-sm text-gray-500">{{ cart.customerEmail || 'Anonymous' }}</p>
                   </div>
                 </div>
                 <div class="text-right">

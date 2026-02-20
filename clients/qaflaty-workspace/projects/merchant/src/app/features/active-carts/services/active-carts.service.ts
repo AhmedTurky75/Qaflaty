@@ -14,7 +14,8 @@ export interface ActiveCartItem {
 
 export interface ActiveCart {
   cartId: string;
-  customerId: string;
+  customerId: string | null;
+  guestId: string | null;
   customerName: string;
   customerEmail: string;
   items: ActiveCartItem[];

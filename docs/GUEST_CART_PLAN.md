@@ -26,13 +26,13 @@
 - [x] **4.3** Create `GuestCartCleanupService` — `BackgroundService`, daily 30-day TTL cleanup; register in `DependencyInjection.cs`
 
 ### Layer 5 — Frontend
-- [ ] **5.1** Create `GuestSessionService` — UUID generation + localStorage persistence
-- [ ] **5.2** Create `guestCartInterceptor` — adds `X-Guest-Id` header to `/storefront/guest-cart` requests
-- [ ] **5.3** Register `guestCartInterceptor` in `app.config.ts` (between store-header and customer-auth interceptors)
-- [ ] **5.4** Update `CartApiService` — add 4 guest methods targeting `/storefront/guest-cart`
-- [ ] **5.5** Update `CartService` — call guest API in `else` branch when not logged in
-- [ ] **5.6** Update `CustomerAuthService.syncCart()` — send `guestSessionId`, clear UUID post-sync, fix 2 pre-existing bugs
-- [ ] **5.7** Update merchant Active Carts UI — `guestId` field in interface, guest badge in template
+- [x] **5.1** Create `GuestSessionService` — UUID generation + localStorage persistence
+- [x] **5.2** Create `guestCartInterceptor` — adds `X-Guest-Id` header to `/storefront/guest-cart` requests
+- [x] **5.3** Register `guestCartInterceptor` in `app.config.ts` (between store-header and customer-auth interceptors)
+- [x] **5.4** Update `CartApiService` — add 4 guest methods targeting `/storefront/guest-cart`
+- [x] **5.5** Update `CartService` — call guest API in `else` branch when not logged in
+- [x] **5.6** Update `CustomerAuthService.syncCart()` — send `guestSessionId`, clear UUID post-sync, fix 2 pre-existing bugs
+- [x] **5.7** Update merchant Active Carts UI — `guestId` field in interface, guest badge in template
 
 ---
 

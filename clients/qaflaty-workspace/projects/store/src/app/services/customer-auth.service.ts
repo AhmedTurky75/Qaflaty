@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { catchError, tap, of } from 'rxjs';
+import { GuestSessionService } from './guest-session.service';
 
 export interface StoreCustomer {
   id: string;
@@ -50,6 +51,7 @@ export interface LoginCustomerRequest {
 export class CustomerAuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
+  private readonly guestSession = inject(GuestSessionService);
   private readonly apiUrl = `${environment.apiUrl}/storefront/auth`;
 
   // State signals
@@ -194,27 +196,30 @@ export class CustomerAuthService {
   }
 
   private async syncCart(): Promise<void> {
-    // Get guest cart from localStorage (CartService uses key 'qaflaty_cart')
+    // Fix: CartService stores the cart as a raw CartItem[] array (not { items: [...] })
     const guestCartJson = localStorage.getItem('qaflaty_cart');
-    if (!guestCartJson) return;
+    const guestSessionId = this.guestSession.getGuestId();
+
+    // Nothing to sync if both localStorage cart and server guest cart are absent
+    if (!guestCartJson && !guestSessionId) return;
 
     try {
-      const guestCart = JSON.parse(guestCartJson);
-      if (!guestCart.items || guestCart.items.length === 0) return;
+      const guestItems: any[] = guestCartJson ? JSON.parse(guestCartJson) : [];
 
-      // Call cart sync endpoint
       const syncRequest = {
-        guestItems: guestCart.items.map((item: any) => ({
+        guestItems: guestItems.map((item: any) => ({
           productId: item.productId,
-          variantId: item.variantId || null,
+          variantId: item.variantId ?? null,
           quantity: item.quantity
-        }))
+        })),
+        guestSessionId  // null if no server-side guest cart exists
       };
 
       await this.http.post(`${environment.apiUrl}/storefront/cart/sync`, syncRequest).toPromise();
 
-      // Clear guest cart from localStorage
-      localStorage.removeItem('cart');
+      // Clear local cart and invalidate the server-side guest UUID
+      localStorage.removeItem('qaflaty_cart');
+      this.guestSession.clearGuestId();
 
       console.log('Cart synced successfully');
     } catch (error) {
