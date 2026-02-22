@@ -47,6 +47,10 @@ public class CartConfiguration : IEntityTypeConfiguration<Cart>
             .HasForeignKey(i => i.CartId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Navigation(c => c.Items)
+            .HasField("_items")
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
         builder.Ignore(c => c.TotalItems);
         builder.Ignore(c => c.IsGuestCart);
         builder.Ignore(c => c.DomainEvents);

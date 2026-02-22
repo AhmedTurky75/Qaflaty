@@ -22,9 +22,8 @@ public class StoreCustomerRepository : IStoreCustomerRepository
 
     public async Task<List<StoreCustomer>> GetByIdsAsync(IEnumerable<StoreCustomerId> ids, CancellationToken ct = default)
     {
-        var idValues = ids.Select(id => id.Value).ToList();
         return await _context.StoreCustomers
-            .Where(c => idValues.Contains(c.Id.Value))
+            .Where(c => ids.Contains(c.Id))
             .ToListAsync(ct);
     }
 

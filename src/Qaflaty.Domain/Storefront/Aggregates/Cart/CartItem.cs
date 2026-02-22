@@ -18,7 +18,7 @@ public sealed class CartItem : Entity<Guid>
     {
         return new CartItem
         {
-            Id = Guid.NewGuid(),
+            //Id = Guid.NewGuid(),
             CartId = cartId,
             ProductId = productId,
             VariantId = variantId,

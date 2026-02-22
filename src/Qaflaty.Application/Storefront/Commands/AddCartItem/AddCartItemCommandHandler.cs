@@ -31,7 +31,6 @@ public class AddCartItemCommandHandler : ICommandHandler<AddCartItemCommand>
         var result = cart.AddItem(new ProductId(request.ProductId), request.Quantity, request.VariantId);
         if (result.IsFailure) return result;
 
-        _cartRepository.Update(cart);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Success();
     }
