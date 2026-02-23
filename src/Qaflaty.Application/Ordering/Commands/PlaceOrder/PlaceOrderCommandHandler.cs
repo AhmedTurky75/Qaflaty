@@ -1,16 +1,18 @@
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Common.ValueObjects;
 using Qaflaty.Domain.Identity.ValueObjects;
 using Qaflaty.Domain.Ordering.Aggregates.Customer;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
+using Qaflaty.Domain.Ordering.Errors;
 using Qaflaty.Domain.Ordering.Enums;
 using Qaflaty.Domain.Ordering.Repositories;
 using Qaflaty.Domain.Ordering.Services;
 using Qaflaty.Domain.Ordering.ValueObjects;
-using Qaflaty.Domain.Catalog.Repositories;
 
 namespace Qaflaty.Application.Ordering.Commands.PlaceOrder;
 
@@ -20,17 +22,23 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly ICustomerRepository _customerRepository;
     private readonly IStoreRepository _storeRepository;
     private readonly IOrderNumberGenerator _orderNumberGenerator;
+    private readonly IOrderOtpRepository _otpRepository;
+    private readonly IEmailService _emailService;
 
     public PlaceOrderCommandHandler(
         IOrderRepository orderRepository,
         ICustomerRepository customerRepository,
         IStoreRepository storeRepository,
-        IOrderNumberGenerator orderNumberGenerator)
+        IOrderNumberGenerator orderNumberGenerator,
+        IOrderOtpRepository otpRepository,
+        IEmailService emailService)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
         _storeRepository = storeRepository;
         _orderNumberGenerator = orderNumberGenerator;
+        _otpRepository = otpRepository;
+        _emailService = emailService;
     }
 
     public async Task<Result<OrderDto>> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -42,6 +50,14 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         if (store == null)
             return Result.Failure<OrderDto>(new Error("Order.StoreNotFound", "Store not found"));
 
+        // Validate email is present (required for OTP verification)
+        if (string.IsNullOrWhiteSpace(request.CustomerEmail))
+            return Result.Failure<OrderDto>(OrderingErrors.EmailRequired);
+
+        var emailResult = Email.Create(request.CustomerEmail);
+        if (emailResult.IsFailure)
+            return Result.Failure<OrderDto>(emailResult.Error);
+
         // Create customer contact value objects
         var nameResult = PersonName.Create(request.CustomerName);
         if (nameResult.IsFailure)
@@ -51,16 +67,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         if (phoneResult.IsFailure)
             return Result.Failure<OrderDto>(phoneResult.Error);
 
-        Email? email = null;
-        if (!string.IsNullOrWhiteSpace(request.CustomerEmail))
-        {
-            var emailResult = Email.Create(request.CustomerEmail);
-            if (emailResult.IsFailure)
-                return Result.Failure<OrderDto>(emailResult.Error);
-            email = emailResult.Value;
-        }
-
-        var contact = CustomerContact.Create(nameResult.Value, phoneResult.Value, email);
+        var contact = CustomerContact.Create(nameResult.Value, phoneResult.Value, emailResult.Value);
 
         // Create address
         var addressResult = Address.Create(
@@ -107,7 +114,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         // Create delivery info
         var deliveryInfo = DeliveryInfo.Create(addressResult.Value, request.DeliveryInstructions);
 
-        // Create order
+        // Create order (stays in Pending until OTP is verified)
         var orderResult = Order.Create(
             storeId,
             customer.Id,
@@ -139,15 +146,56 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
                 return Result.Failure<OrderDto>(addResult.Error);
         }
 
-        // Confirm order immediately (moves to Confirmed and raises OrderPlacedEvent)
-        var confirmResult = order.Confirm();
-        if (confirmResult.IsFailure)
-            return Result.Failure<OrderDto>(confirmResult.Error);
-
         await _orderRepository.AddAsync(order, cancellationToken);
+
+        // Generate OTP and send confirmation email
+        var otp = OrderOtp.Create(order.Id, emailResult.Value.Value);
+        await _otpRepository.AddAsync(otp, cancellationToken);
+
+        var storeName = store.Name.Value;
+        var htmlBody = BuildOtpEmail(storeName, order.OrderNumber.Value, otp.Code);
+
+        await _emailService.SendEmailAsync(
+            to: emailResult.Value.Value,
+            subject: $"Your order verification code - {order.OrderNumber.Value}",
+            htmlBody: htmlBody,
+            ct: cancellationToken);
 
         return Result.Success(MapToDto(order, customer));
     }
+
+    private static string BuildOtpEmail(string storeName, string orderNumber, string otpCode) => $"""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head><meta charset="UTF-8"><title>Order Verification</title></head>
+        <body style="margin:0;padding:0;background-color:#f4f4f4;font-family:Arial,sans-serif;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 0;">
+            <tr><td align="center">
+              <table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+                <tr><td style="background:#1a1a2e;padding:32px 40px;text-align:center;border-radius:8px 8px 0 0;">
+                  <h1 style="margin:0;color:#fff;font-size:24px;">{storeName}</h1>
+                </td></tr>
+                <tr><td style="padding:40px;">
+                  <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:20px;">Verify Your Order</h2>
+                  <p style="margin:0 0 8px;color:#555;font-size:15px;">Thank you for your order <strong>{orderNumber}</strong>!</p>
+                  <p style="margin:0 0 32px;color:#555;font-size:15px;">Enter the code below to confirm. It expires in <strong>{OrderOtp.ExpiryMinutes} minutes</strong>.</p>
+                  <table width="100%" cellpadding="0" cellspacing="0">
+                    <tr><td align="center" style="padding:24px;background:#f8f9fa;border-radius:8px;border:2px dashed #dee2e6;">
+                      <p style="margin:0 0 8px;color:#6c757d;font-size:13px;text-transform:uppercase;letter-spacing:1px;">Verification Code</p>
+                      <p style="margin:0;color:#1a1a2e;font-size:48px;font-weight:700;letter-spacing:12px;font-family:'Courier New',monospace;">{otpCode}</p>
+                    </td></tr>
+                  </table>
+                  <p style="margin:32px 0 0;color:#999;font-size:13px;">If you did not place this order, please ignore this email.</p>
+                </td></tr>
+                <tr><td style="padding:24px 40px;background:#f8f9fa;border-top:1px solid #e9ecef;text-align:center;border-radius:0 0 8px 8px;">
+                  <p style="margin:0;color:#aaa;font-size:12px;">&copy; {DateTime.UtcNow.Year} {storeName}. All rights reserved.</p>
+                </td></tr>
+              </table>
+            </td></tr>
+          </table>
+        </body>
+        </html>
+        """;
 
     private static OrderDto MapToDto(Order order, Customer customer) => new(
         order.Id.Value,

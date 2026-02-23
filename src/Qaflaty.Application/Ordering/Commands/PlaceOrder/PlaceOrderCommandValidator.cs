@@ -19,8 +19,8 @@ public class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderCommand>
             .Matches(@"^\+?[\d]{10,20}$").WithMessage("Phone must be between 10 and 20 digits");
 
         RuleFor(x => x.CustomerEmail)
-            .EmailAddress().WithMessage("Email must be a valid email address")
-            .When(x => !string.IsNullOrWhiteSpace(x.CustomerEmail));
+            .NotEmpty().WithMessage("Email is required to verify your order")
+            .EmailAddress().WithMessage("Email must be a valid email address");
 
         RuleFor(x => x.Street)
             .NotEmpty().WithMessage("Street is required");

@@ -26,6 +26,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/checkout/checkout.component').then(m => m.CheckoutComponent)
   },
   {
+    path: 'order-verify/:orderNumber',
+    loadComponent: () => import('./pages/orders/otp-verification.component').then(m => m.OtpVerificationComponent)
+  },
+  {
     path: 'order-confirmation/:orderNumber',
     loadComponent: () => import('./pages/orders/order-confirmation.component').then(m => m.OrderConfirmationComponent)
   },

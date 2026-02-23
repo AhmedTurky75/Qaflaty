@@ -18,7 +18,6 @@ using Qaflaty.Infrastructure.Services.Common;
 using Qaflaty.Infrastructure.Services.Identity;
 using Qaflaty.Infrastructure.Services.Ordering;
 using Qaflaty.Infrastructure.Services.Storefront;
-using Qaflaty.Application.Common.Interfaces;
 
 namespace Qaflaty.Infrastructure;
 
@@ -59,6 +58,7 @@ public static class DependencyInjection
         services.AddScoped<IWishlistRepository, WishlistRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IChatConversationRepository, ChatConversationRepository>();
+        services.AddScoped<IOrderOtpRepository, OrderOtpRepository>();
 
         // Identity Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -73,6 +73,7 @@ public static class DependencyInjection
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
+        services.AddScoped<IEmailService, SmtpEmailService>();
 
         // Background Services
         services.AddHostedService<GuestCartCleanupService>();

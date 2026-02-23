@@ -39,4 +39,25 @@ public static class OrderingErrors
 
     public static readonly Error InvalidOrderNumber =
         new("Ordering.InvalidOrderNumber", "Invalid order number format");
+
+    public static readonly Error EmailRequired =
+        new("Ordering.EmailRequired", "Email is required to confirm your order");
+
+    public static readonly Error OtpNotFound =
+        new("Ordering.OtpNotFound", "No active verification code found. Please request a new one");
+
+    public static readonly Error OtpExpired =
+        new("Ordering.OtpExpired", "Verification code has expired. Please request a new one");
+
+    public static readonly Error OtpMaxAttemptsReached =
+        new("Ordering.OtpMaxAttemptsReached", "Maximum attempts reached. Please request a new verification code");
+
+    public static readonly Error OtpInvalid =
+        new("Ordering.OtpInvalid", "Invalid verification code");
+
+    public static readonly Error OtpResendTooSoon =
+        new("Ordering.OtpResendTooSoon", "Please wait 60 seconds before requesting a new code");
+
+    public static readonly Error OrderNotPending =
+        new("Ordering.OrderNotPending", "Order is not in pending status");
 }

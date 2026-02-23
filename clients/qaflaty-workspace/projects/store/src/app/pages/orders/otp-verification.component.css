@@ -1,0 +1,9 @@
+/* OTP digit boxes */
+input[type="text"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input[type="text"]:focus {
+  box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb, 99, 102, 241), 0.15);
+}

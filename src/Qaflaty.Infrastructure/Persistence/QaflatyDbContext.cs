@@ -40,6 +40,7 @@ public class QaflatyDbContext : DbContext
     // Ordering
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
+    public DbSet<OrderOtp> OrderOtps => Set<OrderOtp>();
     public DbSet<Customer> Customers => Set<Customer>();
 
     // Storefront

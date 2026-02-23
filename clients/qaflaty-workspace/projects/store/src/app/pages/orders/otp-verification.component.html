@@ -1,0 +1,98 @@
+<div class="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4">
+  <div class="max-w-md w-full">
+    <!-- Card -->
+    <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
+      <!-- Icon -->
+      <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+        <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+      </div>
+
+      <h1 class="text-2xl font-bold text-gray-900 mb-2">Verify Your Order</h1>
+
+      <p class="text-gray-500 text-sm mb-2">
+        We sent a 6-digit verification code to
+      </p>
+      @if (email()) {
+        <p class="text-gray-800 font-medium text-sm mb-6">{{ email() }}</p>
+      } @else {
+        <p class="text-gray-800 font-medium text-sm mb-6">your email address</p>
+      }
+
+      <!-- OTP Digit Inputs -->
+      <div
+        class="flex justify-center gap-3 mb-6"
+        (paste)="onPaste($event)"
+      >
+        @for (digit of digits(); track $index; let i = $index) {
+          <input
+            #digitInput
+            type="text"
+            inputmode="numeric"
+            maxlength="1"
+            [value]="digit"
+            (input)="onInput(i, $event)"
+            (keydown)="onKeydown(i, $event)"
+            class="w-12 h-14 text-center text-xl font-bold border-2 rounded-xl focus:outline-none focus:border-primary transition-colors"
+            [class.border-gray-300]="!digit"
+            [class.border-primary]="!!digit"
+            [class.border-red-400]="!!errorMessage()"
+            autocomplete="one-time-code"
+          >
+        }
+      </div>
+
+      <!-- Error Message -->
+      @if (errorMessage()) {
+        <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p class="text-red-700 text-sm">{{ errorMessage() }}</p>
+        </div>
+      }
+
+      <!-- Verify Button -->
+      <button
+        (click)="verify()"
+        [disabled]="!isComplete || verifying()"
+        class="w-full py-3 px-6 bg-primary text-white font-semibold rounded-xl
+               hover:bg-primary-dark transition-colors
+               disabled:opacity-50 disabled:cursor-not-allowed
+               flex items-center justify-center gap-2 mb-4"
+      >
+        @if (verifying()) {
+          <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Verifying...
+        } @else {
+          Verify Order
+        }
+      </button>
+
+      <!-- Resend -->
+      <div class="text-sm text-gray-500">
+        Didn't receive the code?
+        @if (resendCooldown() > 0) {
+          <span class="text-gray-400 ml-1">Resend in {{ resendCooldown() }}s</span>
+        } @else {
+          <button
+            (click)="resend()"
+            [disabled]="resending()"
+            class="ml-1 text-primary font-medium hover:underline disabled:opacity-50"
+          >
+            {{ resending() ? 'Sending...' : 'Resend Code' }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Order number reference -->
+    @if (orderNumber()) {
+      <p class="text-center text-gray-400 text-xs mt-4">
+        Order {{ orderNumber() }}
+      </p>
+    }
+  </div>
+</div>
