@@ -34,7 +34,7 @@ export class CheckoutComponent {
       // Customer Info
       fullName: ['', [Validators.required, Validators.minLength(2)]],
       phone: ['', [Validators.required, Validators.pattern(/^(\+966|966|05)[0-9]{8,9}$/)]],
-      email: ['', [Validators.email]],
+      email: ['', [Validators.required, Validators.email]],
 
       // Delivery Address
       street: ['', [Validators.required]],
@@ -89,7 +89,7 @@ export class CheckoutComponent {
       customerInfo: {
         fullName: formValue.fullName,
         phone: formValue.phone,
-        email: formValue.email || undefined
+        email: formValue.email
       },
       deliveryAddress: {
         street: formValue.street,
@@ -112,8 +112,10 @@ export class CheckoutComponent {
         // Clear cart
         this.cartService.clear();
 
-        // Navigate to confirmation page
-        this.router.navigate(['/order-confirmation', response.orderNumber]);
+        // Navigate to OTP verification page (order stays Pending until verified)
+        this.router.navigate(['/order-verify', response.orderNumber], {
+          queryParams: { email: formValue.email }
+        });
       },
       error: (error) => {
         console.error('Failed to place order:', error);

@@ -11,17 +11,19 @@ export class OrderService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/storefront/orders`;
 
-  /**
-   * Place a new order
-   */
   placeOrder(request: CreateOrderRequest): Observable<OrderResponse> {
     return this.http.post<OrderResponse>(this.apiUrl, request);
   }
 
-  /**
-   * Track order by order number
-   */
   trackOrder(orderNumber: string): Observable<OrderTracking> {
     return this.http.get<OrderTracking>(`${this.apiUrl}/track/${orderNumber}`);
+  }
+
+  verifyOrderOtp(orderNumber: string, otpCode: string): Observable<OrderResponse> {
+    return this.http.post<OrderResponse>(`${this.apiUrl}/${orderNumber}/verify`, { otpCode });
+  }
+
+  resendOrderOtp(orderNumber: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${orderNumber}/resend-otp`, {});
   }
 }

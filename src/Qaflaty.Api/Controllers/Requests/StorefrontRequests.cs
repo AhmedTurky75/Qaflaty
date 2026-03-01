@@ -26,6 +26,8 @@ public record OrderItemRequest(
     int Quantity
 );
 
+public record VerifyOtpRequest(string OtpCode);
+
 public record GetProductsRequest(
     Guid? CategoryId,
     int PageNumber = 1,

@@ -3,6 +3,8 @@ using Qaflaty.Api.Common;
 using Qaflaty.Api.Controllers.Requests;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.Commands.PlaceOrder;
+using Qaflaty.Application.Ordering.Commands.SendOrderOtp;
+using Qaflaty.Application.Ordering.Commands.VerifyOrderOtp;
 using Qaflaty.Application.Ordering.Queries.TrackOrder;
 
 namespace Qaflaty.Api.Controllers;
@@ -48,6 +50,41 @@ public class StorefrontOrdersController : ApiController
             return CreatedAtAction(nameof(TrackOrder),
                 new { orderNumber = result.Value.OrderNumber }, result.Value);
 
+        return HandleResult(result);
+    }
+
+    [HttpPost("{orderNumber}/verify")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> VerifyOrderOtp(string orderNumber, [FromBody] VerifyOtpRequest request, CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var command = new VerifyOrderOtpCommand(
+            StoreId: _tenantContext.CurrentStoreId.Value.Value,
+            OrderNumber: orderNumber,
+            OtpCode: request.OtpCode);
+
+        var result = await Sender.Send(command, ct);
+        return HandleResult(result);
+    }
+
+    [HttpPost("{orderNumber}/resend-otp")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ResendOtp(string orderNumber, CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var command = new SendOrderOtpCommand(
+            StoreId: _tenantContext.CurrentStoreId.Value.Value,
+            OrderNumber: orderNumber);
+
+        var result = await Sender.Send(command, ct);
         return HandleResult(result);
     }
 

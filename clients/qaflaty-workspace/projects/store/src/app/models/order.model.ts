@@ -11,7 +11,7 @@ export interface CreateOrderRequest {
 export interface CustomerInfo {
   fullName: string;
   phone: string;
-  email?: string;
+  email: string;
 }
 
 export interface DeliveryAddress {
