@@ -1,29 +1,30 @@
 namespace Qaflaty.Api.Controllers.Requests;
 
 public record PlaceOrderRequest(
-    string CustomerName,
-    string CustomerPhone,
-    string? CustomerEmail,
+    CustomerInfoRequest CustomerInfo,
     AddressRequest DeliveryAddress,
-    string? DeliveryInstructions,
-    string? CustomerNotes,
     string PaymentMethod,
-    List<OrderItemRequest> Items
+    List<OrderItemRequest> Items,
+    string? Notes
+);
+
+public record CustomerInfoRequest(
+    string FullName,
+    string Phone,
+    string Email
 );
 
 public record AddressRequest(
     string Street,
     string City,
     string? District,
-    string? PostalCode,
-    string Country
+    string? AdditionalInstructions
 );
 
 public record OrderItemRequest(
     Guid ProductId,
-    string ProductName,
-    decimal UnitPrice,
-    int Quantity
+    int Quantity,
+    Guid? VariantId
 );
 
 public record VerifyOtpRequest(string OtpCode);

@@ -30,19 +30,17 @@ public class StorefrontOrdersController : ApiController
 
         var command = new PlaceOrderCommand(
             StoreId: _tenantContext.CurrentStoreId.Value.Value,
-            CustomerName: request.CustomerName,
-            CustomerPhone: request.CustomerPhone,
-            CustomerEmail: request.CustomerEmail,
+            CustomerName: request.CustomerInfo.FullName,
+            CustomerPhone: request.CustomerInfo.Phone,
+            CustomerEmail: request.CustomerInfo.Email,
             Street: request.DeliveryAddress.Street,
             City: request.DeliveryAddress.City,
             District: request.DeliveryAddress.District,
-            PostalCode: request.DeliveryAddress.PostalCode,
-            Country: request.DeliveryAddress.Country,
-            DeliveryInstructions: request.DeliveryInstructions,
-            CustomerNotes: request.CustomerNotes,
+            DeliveryInstructions: request.DeliveryAddress.AdditionalInstructions,
+            CustomerNotes: request.Notes,
             PaymentMethod: request.PaymentMethod,
             Items: request.Items.Select(item => new PlaceOrderItemDto(
-                item.ProductId, item.ProductName, item.UnitPrice, item.Quantity)).ToList());
+                item.ProductId, item.Quantity, item.VariantId)).ToList());
 
         var result = await Sender.Send(command, ct);
 

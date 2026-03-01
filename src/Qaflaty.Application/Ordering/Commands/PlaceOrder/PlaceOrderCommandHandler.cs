@@ -1,6 +1,7 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Domain.Catalog.Aggregates.Product;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
@@ -21,6 +22,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly IOrderRepository _orderRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IStoreRepository _storeRepository;
+    private readonly IProductRepository _productRepository;
     private readonly IOrderNumberGenerator _orderNumberGenerator;
     private readonly IOrderOtpRepository _otpRepository;
     private readonly IEmailService _emailService;
@@ -29,6 +31,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         IOrderRepository orderRepository,
         ICustomerRepository customerRepository,
         IStoreRepository storeRepository,
+        IProductRepository productRepository,
         IOrderNumberGenerator orderNumberGenerator,
         IOrderOtpRepository otpRepository,
         IEmailService emailService)
@@ -36,6 +39,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
         _storeRepository = storeRepository;
+        _productRepository = productRepository;
         _orderNumberGenerator = orderNumberGenerator;
         _otpRepository = otpRepository;
         _emailService = emailService;
@@ -73,9 +77,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         var addressResult = Address.Create(
             request.Street,
             request.City,
-            request.District,
-            request.PostalCode,
-            request.Country);
+            request.District);
 
         if (addressResult.IsFailure)
             return Result.Failure<OrderDto>(addressResult.Error);
@@ -129,17 +131,30 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
 
         var order = orderResult.Value;
 
-        // Add items
+        // Add items — name and price are resolved server-side from the catalog
         foreach (var item in request.Items)
         {
-            var priceResult = Money.Create(item.UnitPrice);
-            if (priceResult.IsFailure)
-                return Result.Failure<OrderDto>(priceResult.Error);
+            var product = await _productRepository.GetByIdAsync(new ProductId(item.ProductId), cancellationToken);
+            if (product == null || product.StoreId != storeId)
+                return Result.Failure<OrderDto>(new Error("Order.ProductNotFound",
+                    $"Product {item.ProductId} not found"));
+
+            // Use variant price override when a variant is specified; otherwise use base product price
+            Money unitPrice = product.Pricing.Price;
+            if (item.VariantId.HasValue)
+            {
+                var variant = product.GetVariant(item.VariantId.Value);
+                if (variant == null)
+                    return Result.Failure<OrderDto>(new Error("Order.VariantNotFound",
+                        $"Variant {item.VariantId} not found for product {item.ProductId}"));
+
+                unitPrice = variant.PriceOverride ?? product.Pricing.Price;
+            }
 
             var addResult = order.AddItem(
                 new ProductId(item.ProductId),
-                item.ProductName,
-                priceResult.Value,
+                product.Name.Value,
+                unitPrice,
                 item.Quantity);
 
             if (addResult.IsFailure)

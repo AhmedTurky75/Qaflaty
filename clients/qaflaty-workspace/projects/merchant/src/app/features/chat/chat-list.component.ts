@@ -192,9 +192,6 @@ export class ChatListComponent implements OnInit {
 
   async ngOnInit() {
     await this.loadConversations();
-
-    // Poll for new conversations every 30 seconds
-    setInterval(() => this.loadConversations(), 30000);
   }
 
   async loadConversations() {

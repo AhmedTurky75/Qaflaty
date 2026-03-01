@@ -28,9 +28,6 @@ public class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderCommand>
         RuleFor(x => x.City)
             .NotEmpty().WithMessage("City is required");
 
-        RuleFor(x => x.Country)
-            .NotEmpty().WithMessage("Country is required");
-
         RuleFor(x => x.PaymentMethod)
             .NotEmpty().WithMessage("Payment method is required")
             .Must(BeValidPaymentMethod).WithMessage("Payment method must be CashOnDelivery, Card, or Wallet");
@@ -42,12 +39,6 @@ public class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderCommand>
         {
             item.RuleFor(i => i.ProductId)
                 .NotEmpty().WithMessage("Product ID is required");
-
-            item.RuleFor(i => i.ProductName)
-                .NotEmpty().WithMessage("Product name is required");
-
-            item.RuleFor(i => i.UnitPrice)
-                .GreaterThan(0).WithMessage("Unit price must be greater than zero");
 
             item.RuleFor(i => i.Quantity)
                 .GreaterThan(0).WithMessage("Quantity must be greater than zero");

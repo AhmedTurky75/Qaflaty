@@ -5,21 +5,18 @@ namespace Qaflaty.Application.Ordering.Commands.PlaceOrder;
 
 public record PlaceOrderItemDto(
     Guid ProductId,
-    string ProductName,
-    decimal UnitPrice,
-    int Quantity
+    int Quantity,
+    Guid? VariantId
 );
 
 public record PlaceOrderCommand(
     Guid StoreId,
     string CustomerName,
     string CustomerPhone,
-    string? CustomerEmail,
+    string CustomerEmail,
     string Street,
     string City,
     string? District,
-    string? PostalCode,
-    string Country,
     string? DeliveryInstructions,
     string? CustomerNotes,
     string PaymentMethod,
