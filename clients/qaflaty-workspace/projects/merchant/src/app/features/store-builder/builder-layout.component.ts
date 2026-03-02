@@ -11,6 +11,7 @@ import {
   StoreConfigurationDto,
   PageConfigurationDto,
   SectionConfigurationDto,
+  PageSeoSettings,
   UpdateStoreConfigurationRequest,
   UpdatePageConfigurationRequest,
   CreateCustomPageRequest,
@@ -302,20 +303,35 @@ export class BuilderLayoutComponent implements OnInit {
     this.editingPage.set(null);
   }
 
-  onSaveSections(sections: SectionConfigurationDto[]): void {
+  onSaveSections(data: { sections: SectionConfigurationDto[]; seoSettings: PageSeoSettings }): void {
     const storeId = this.storeContext.currentStoreId();
     const page = this.editingPage();
     if (!storeId || !page) return;
 
-    const request: UpdateSectionsRequest = { sections };
+    const sectionsRequest: UpdateSectionsRequest = { sections: data.sections };
+    const pageRequest: UpdatePageConfigurationRequest = {
+      title: page.title,
+      slug: page.slug,
+      isEnabled: page.isEnabled,
+      seoSettings: data.seoSettings,
+      contentJson: page.contentJson
+    };
 
     this.saving.set(true);
-    this.builderService.updateSections(storeId, page.id, request).subscribe({
+    this.builderService.updateSections(storeId, page.id, sectionsRequest).subscribe({
       next: () => {
-        this.saving.set(false);
-        this.closePageEditor();
-        this.loadPages();
-        alert('Sections updated successfully!');
+        this.builderService.updatePage(storeId, page.id, pageRequest).subscribe({
+          next: () => {
+            this.saving.set(false);
+            this.closePageEditor();
+            this.loadPages();
+            alert('Page updated successfully!');
+          },
+          error: (err) => {
+            this.saving.set(false);
+            alert(`Failed to update page SEO: ${err.message}`);
+          }
+        });
       },
       error: (err) => {
         this.saving.set(false);

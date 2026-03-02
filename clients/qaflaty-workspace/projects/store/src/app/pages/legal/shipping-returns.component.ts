@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { ConfigService } from '../../services/config.service';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
+import { SeoService } from '../../services/seo.service';
 
 @Component({
   selector: 'app-shipping-returns',
@@ -19,7 +20,13 @@ import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 export class ShippingReturnsComponent implements OnInit {
   private configService = inject(ConfigService);
   private i18n = inject(I18nService);
+  private seo = inject(SeoService);
   page: any;
   t(key: string): string { return TRANSLATIONS[this.i18n.currentLanguage()]?.[key] ?? key; }
-  ngOnInit() { this.configService.getPageBySlug('shipping-returns').subscribe(p => this.page = p); }
+  ngOnInit() {
+    this.configService.getPageBySlug('shipping-returns').subscribe(p => {
+      this.page = p;
+      if (p?.seoSettings) this.seo.setPageSeo(p.seoSettings, p.title);
+    });
+  }
 }

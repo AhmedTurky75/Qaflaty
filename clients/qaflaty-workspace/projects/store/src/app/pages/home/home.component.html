@@ -1,14 +1,107 @@
 <div class="min-h-screen">
-  <!-- Hero Section -->
-  <section class="py-16 md:py-24" style="background: linear-gradient(to right, color-mix(in srgb, var(--primary-color) 10%, white), color-mix(in srgb, var(--primary-color) 5%, white))">
-    <div class="container mx-auto px-4">
-      <div class="max-w-3xl mx-auto text-center">
-        <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-          Welcome to {{ store()?.name }}
-        </h1>
-        @if (store()?.description) {
-          <p class="text-xl text-gray-600 mb-8">{{ store()!.description }}</p>
+  @if (homePageSections().length > 0) {
+    <!-- Dynamic sections from page config -->
+    <app-section-renderer [sections]="homePageSections()" />
+  } @else {
+    <!-- Fallback hardcoded layout -->
+
+    <!-- Hero Section -->
+    <section class="py-16 md:py-24" style="background: linear-gradient(to right, color-mix(in srgb, var(--primary-color) 10%, white), color-mix(in srgb, var(--primary-color) 5%, white))">
+      <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center">
+          <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+            Welcome to {{ store()?.name }}
+          </h1>
+          @if (store()?.description) {
+            <p class="text-xl text-gray-600 mb-8">{{ store()!.description }}</p>
+          }
+          <a
+            [routerLink]="['/products']"
+            class="inline-block px-8 py-4 text-white rounded-lg font-semibold text-lg transition-colors"
+            style="background-color: var(--primary-color)"
+            onmouseover="this.style.backgroundColor='var(--primary-dark)'"
+            onmouseout="this.style.backgroundColor='var(--primary-color)'"
+          >
+            Shop Now
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Categories Section -->
+    @if (categories().length > 0) {
+      <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-bold text-center mb-12">Shop by Category</h2>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            @for (category of categories(); track category.id) {
+              <a
+                [routerLink]="['/products']"
+                [queryParams]="{category: category.id}"
+                class="group p-6 border-2 border-gray-200 rounded-xl hover:shadow-lg transition-all text-center"
+                style="--hover-border: var(--primary-color)"
+              >
+                <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-gray-200 transition-colors">
+                  <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                  </svg>
+                </div>
+                <h3 class="font-semibold text-gray-900 transition-colors">{{ category.name }}</h3>
+              </a>
+            }
+          </div>
+        </div>
+      </section>
+    }
+
+    <!-- Featured Products Section -->
+    <section class="py-16 bg-gray-50">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between mb-12">
+          <h2 class="text-3xl font-bold">Featured Products</h2>
+          <a
+            [routerLink]="['/products']"
+            class="font-semibold flex items-center gap-2 transition-colors"
+            style="color: var(--primary-color)"
+          >
+            View All
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </a>
+        </div>
+
+        @if (loading()) {
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            @for (item of [1,2,3,4,5,6,7,8]; track item) {
+              <div class="animate-pulse">
+                <div class="bg-gray-300 aspect-square rounded-lg mb-4"></div>
+                <div class="bg-gray-300 h-4 rounded mb-2"></div>
+                <div class="bg-gray-300 h-4 rounded w-2/3"></div>
+              </div>
+            }
+          </div>
+        } @else if (products().length > 0) {
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            @for (product of products(); track product.id) {
+              <app-product-card [product]="product" />
+            }
+          </div>
+        } @else {
+          <div class="text-center py-12">
+            <p class="text-gray-500">No products available at the moment.</p>
+          </div>
         }
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="py-16 bg-gray-100">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-3xl font-bold mb-6">Ready to Shop?</h2>
+        <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+          Browse our complete collection and find exactly what you're looking for.
+        </p>
         <a
           [routerLink]="['/products']"
           class="inline-block px-8 py-4 text-white rounded-lg font-semibold text-lg transition-colors"
@@ -16,95 +109,9 @@
           onmouseover="this.style.backgroundColor='var(--primary-dark)'"
           onmouseout="this.style.backgroundColor='var(--primary-color)'"
         >
-          Shop Now
+          Explore All Products
         </a>
-      </div>
-    </div>
-  </section>
-
-  <!-- Categories Section -->
-  @if (categories().length > 0) {
-    <section class="py-16 bg-white">
-      <div class="container mx-auto px-4">
-        <h2 class="text-3xl font-bold text-center mb-12">Shop by Category</h2>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          @for (category of categories(); track category.id) {
-            <a
-              [routerLink]="['/products']"
-              [queryParams]="{category: category.id}"
-              class="group p-6 border-2 border-gray-200 rounded-xl hover:shadow-lg transition-all text-center"
-              style="--hover-border: var(--primary-color)"
-            >
-              <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center group-hover:bg-gray-200 transition-colors">
-                <svg class="w-8 h-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                </svg>
-              </div>
-              <h3 class="font-semibold text-gray-900 transition-colors">{{ category.name }}</h3>
-            </a>
-          }
-        </div>
       </div>
     </section>
   }
-
-  <!-- Featured Products Section -->
-  <section class="py-16 bg-gray-50">
-    <div class="container mx-auto px-4">
-      <div class="flex items-center justify-between mb-12">
-        <h2 class="text-3xl font-bold">Featured Products</h2>
-        <a
-          [routerLink]="['/products']"
-          class="font-semibold flex items-center gap-2 transition-colors"
-          style="color: var(--primary-color)"
-        >
-          View All
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </a>
-      </div>
-
-      @if (loading()) {
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          @for (item of [1,2,3,4,5,6,7,8]; track item) {
-            <div class="animate-pulse">
-              <div class="bg-gray-300 aspect-square rounded-lg mb-4"></div>
-              <div class="bg-gray-300 h-4 rounded mb-2"></div>
-              <div class="bg-gray-300 h-4 rounded w-2/3"></div>
-            </div>
-          }
-        </div>
-      } @else if (products().length > 0) {
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          @for (product of products(); track product.id) {
-            <app-product-card [product]="product" />
-          }
-        </div>
-      } @else {
-        <div class="text-center py-12">
-          <p class="text-gray-500">No products available at the moment.</p>
-        </div>
-      }
-    </div>
-  </section>
-
-  <!-- Call to Action -->
-  <section class="py-16 bg-gray-100">
-    <div class="container mx-auto px-4 text-center">
-      <h2 class="text-3xl font-bold mb-6">Ready to Shop?</h2>
-      <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-        Browse our complete collection and find exactly what you're looking for.
-      </p>
-      <a
-        [routerLink]="['/products']"
-        class="inline-block px-8 py-4 text-white rounded-lg font-semibold text-lg transition-colors"
-        style="background-color: var(--primary-color)"
-        onmouseover="this.style.backgroundColor='var(--primary-dark)'"
-        onmouseout="this.style.backgroundColor='var(--primary-color)'"
-      >
-        Explore All Products
-      </a>
-    </div>
-  </section>
 </div>

@@ -4,6 +4,7 @@ using Qaflaty.Api.Controllers.Requests;
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Catalog.Queries.GetCategories;
 using Qaflaty.Application.Catalog.Queries.GetCustomPage;
+using Qaflaty.Application.Catalog.Queries.GetStorefrontPages;
 using Qaflaty.Application.Catalog.Queries.GetFaqItems;
 using Qaflaty.Application.Catalog.Queries.GetProductBySlug;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontConfig;
@@ -93,6 +94,17 @@ public class StorefrontController : ApiController
 
         var result = await Sender.Send(
             new GetStorefrontConfigQuery(_tenantContext.CurrentStoreId.Value.Value), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("pages")]
+    public async Task<IActionResult> GetPages(CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var result = await Sender.Send(
+            new GetStorefrontPagesQuery(_tenantContext.CurrentStoreId.Value.Value), ct);
         return HandleResult(result);
     }
 
