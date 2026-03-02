@@ -24,6 +24,7 @@
       <!-- OTP Digit Inputs -->
       <div
         class="flex justify-center gap-3 mb-6"
+        dir="ltr"
         (paste)="onPaste($event)"
       >
         @for (digit of digits(); track $index; let i = $index) {
