@@ -4,7 +4,8 @@
       "Bash(npx ng build:*)",
       "Bash(dotnet build:*)",
       "Bash(python:*)",
-      "Bash(node -e:*)"
+      "Bash(node -e:*)",
+      "Bash(xargs grep -l \"cart\\\\|Cart\")"
     ]
   }
 }

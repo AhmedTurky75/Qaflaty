@@ -37,7 +37,16 @@ export class FeatureService {
   // Layout variants
   headerVariant = computed(() => this.config()?.headerVariant ?? 'header-minimal');
   footerVariant = computed(() => this.config()?.footerVariant ?? 'footer-standard');
-  productCardVariant = computed(() => this.config()?.productCardVariant ?? 'card-standard');
+  productCardVariant = computed(() => {
+    const variantMap: Record<string, string> = {
+      'Standard': 'card-standard',
+      'Compact':  'card-minimal',
+      'Detailed': 'card-detailed',
+      'WithHover': 'card-overlay',
+    };
+    const raw = this.config()?.productCardVariant;
+    return (raw && variantMap[raw]) ? variantMap[raw] : 'card-standard';
+  });
   productGridVariant = computed(() => this.config()?.productGridVariant ?? 'grid-standard');
 
   // Social Links

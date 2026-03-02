@@ -6,17 +6,20 @@ import { ProductService } from '../../services/product.service';
 import { CategoryService } from '../../services/category.service';
 import { Product, ProductFilter, ProductSortBy } from '../../models/product.model';
 import { Category } from '../../models/category.model';
+import { ProductCardComponent } from '../../components/products/product-card.component';
+import { FeatureService } from '../../services/feature.service';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, ProductCardComponent],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
 export class ProductListComponent {
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
+  private featureService = inject(FeatureService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 
