@@ -31,16 +31,35 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
         return Result.Success(new OrderTrackingDto(
             order.OrderNumber.Value,
             order.Status.ToString(),
-            order.Pricing.Total.Amount,
-            order.Payment.Method.ToString(),
-            order.Payment.Status.ToString(),
+            order.Items.Select(i => new TrackOrderItemDto(
+                i.ProductName,
+                new MoneyDto(i.UnitPrice.Amount, i.UnitPrice.Currency.ToString()),
+                i.Quantity,
+                new MoneyDto(i.Total.Amount, i.Total.Currency.ToString())
+            )).ToList(),
+            new OrderPricingDto(
+                new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
+                new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
+                new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString())
+            ),
+            new TrackOrderDeliveryDto(
+                order.Delivery.Address.ToSingleLine(),
+                order.Delivery.Instructions
+            ),
+            new TrackOrderPaymentDto(
+                order.Payment.Method.ToString(),
+                order.Payment.Status.ToString()
+            ),
             order.StatusHistory.Select(s => new OrderStatusChangeDto(
+                s.Id,
                 s.FromStatus.ToString(),
                 s.ToStatus.ToString(),
                 s.ChangedAt,
+                s.ChangedBy,
                 s.Notes
             )).ToList(),
-            order.CreatedAt
+            order.CreatedAt,
+            order.UpdatedAt
         ));
     }
 }

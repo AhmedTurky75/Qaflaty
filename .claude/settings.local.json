@@ -148,7 +148,8 @@
       "Bash(dotnet list:*)",
       "Bash(npx nx build:*)",
       "Bash(ls -la \"D:\\\\Projects\\\\Qafilaty\\\\src\"\" | grep -E \"^d \")",
-      "Bash(powershell.exe:*)"
+      "Bash(powershell.exe:*)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "ask": [],

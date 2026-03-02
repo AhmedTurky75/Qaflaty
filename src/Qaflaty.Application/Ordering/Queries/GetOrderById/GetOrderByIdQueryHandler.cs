@@ -42,33 +42,44 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
             order.CustomerId.Value,
             order.OrderNumber.Value,
             order.Status.ToString(),
-            order.Pricing.Subtotal.Amount,
-            order.Pricing.DeliveryFee.Amount,
-            order.Pricing.Total.Amount,
-            order.Payment.Method.ToString(),
-            order.Payment.Status.ToString(),
-            order.Payment.TransactionId,
-            order.Payment.PaidAt,
-            order.Delivery.Address.Street,
-            order.Delivery.Address.City,
-            order.Delivery.Address.District,
-            order.Delivery.Address.PostalCode,
-            order.Delivery.Address.Country,
-            order.Delivery.Instructions,
-            order.Notes.CustomerNotes,
-            order.Notes.MerchantNotes,
             order.Items.Select(i => new OrderItemDto(
                 i.Id.Value,
                 i.ProductId.Value,
                 i.ProductName,
-                i.UnitPrice.Amount,
+                new MoneyDto(i.UnitPrice.Amount, i.UnitPrice.Currency.ToString()),
                 i.Quantity,
-                i.Total.Amount
+                new MoneyDto(i.Total.Amount, i.Total.Currency.ToString())
             )).ToList(),
+            new OrderPricingDto(
+                new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
+                new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
+                new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString())
+            ),
+            new PaymentInfoDto(
+                order.Payment.Method.ToString(),
+                order.Payment.Status.ToString(),
+                order.Payment.TransactionId,
+                order.Payment.PaidAt,
+                order.Payment.FailureReason
+            ),
+            new DeliveryInfoDto(
+                new AddressDto(
+                    order.Delivery.Address.Street,
+                    order.Delivery.Address.City,
+                    order.Delivery.Address.District,
+                    order.Delivery.Address.PostalCode,
+                    order.Delivery.Address.Country,
+                    order.Delivery.Address.AdditionalInfo
+                ),
+                order.Delivery.Instructions
+            ),
+            new OrderNotesDto(order.Notes.CustomerNotes, order.Notes.MerchantNotes),
             order.StatusHistory.Select(s => new OrderStatusChangeDto(
+                s.Id,
                 s.FromStatus.ToString(),
                 s.ToStatus.ToString(),
                 s.ChangedAt,
+                s.ChangedBy,
                 s.Notes
             )).ToList(),
             order.CreatedAt,
