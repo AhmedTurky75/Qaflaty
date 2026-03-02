@@ -21,7 +21,7 @@ public sealed class OrderStatusChange : Entity<Guid>
     {
         return new OrderStatusChange
         {
-            Id = Guid.NewGuid(),
+            //Id = Guid.NewGuid(),
             FromStatus = fromStatus,
             ToStatus = toStatus,
             ChangedAt = DateTime.UtcNow,

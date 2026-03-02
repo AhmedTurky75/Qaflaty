@@ -44,7 +44,7 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
         if (otp.IsExpired())
         {
             otp.Invalidate();
-            _otpRepository.Update(otp);
+            //_otpRepository.Update(otp);
             return Result.Failure<OrderDto>(OrderingErrors.OtpExpired);
         }
 
@@ -52,7 +52,7 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
             return Result.Failure<OrderDto>(OrderingErrors.OtpMaxAttemptsReached);
 
         var isValid = otp.Verify(request.OtpCode);
-        _otpRepository.Update(otp);
+        //_otpRepository.Update(otp);
 
         if (!isValid)
         {
@@ -66,7 +66,7 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
         if (confirmResult.IsFailure)
             return Result.Failure<OrderDto>(confirmResult.Error);
 
-        _orderRepository.Update(order);
+        //_orderRepository.Update(order);
 
         return Result.Success(MapToDto(order));
     }
