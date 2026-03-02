@@ -122,9 +122,9 @@ import { DecimalPipe } from '@angular/common';
                   <span>{{ cart.cart().total.amount | number: '1.2-2' }} {{ cart.cart().total.currency }}</span>
                 </div>
 
-                <button class="w-full bg-[var(--primary-color)] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity mb-3">
+                <a routerLink="/checkout" class="block w-full text-center bg-[var(--primary-color)] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity mb-3">
                   {{ t('checkout') }}
-                </button>
+                </a>
 
                 <a routerLink="/products" class="block w-full text-center py-3 text-[var(--primary-color)] font-medium hover:underline">
                   {{ t('continue_shopping') }}
