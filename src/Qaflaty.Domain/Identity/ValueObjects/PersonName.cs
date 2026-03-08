@@ -6,23 +6,51 @@ namespace Qaflaty.Domain.Identity.ValueObjects;
 
 public sealed class PersonName : ValueObject
 {
-    public string Value { get; }
+    public string FirstName { get; }
+    public string LastName { get; }
+    public string FullName => $"{FirstName} {LastName}";
 
-    private PersonName(string value) => Value = value;
+    // Backward-compat alias
+    public string Value => FullName;
 
-    public static Result<PersonName> Create(string name)
+    private PersonName(string firstName, string lastName)
     {
-        if (string.IsNullOrWhiteSpace(name))
+        FirstName = firstName;
+        LastName = lastName;
+    }
+
+    public static Result<PersonName> Create(string firstName, string lastName)
+    {
+        if (string.IsNullOrWhiteSpace(firstName))
+            return Result.Failure<PersonName>(IdentityErrors.FirstNameRequired);
+
+        if (firstName.Trim().Length < 2 || firstName.Trim().Length > 50)
+            return Result.Failure<PersonName>(IdentityErrors.FirstNameInvalidLength);
+
+        if (string.IsNullOrWhiteSpace(lastName))
+            return Result.Failure<PersonName>(IdentityErrors.LastNameRequired);
+
+        if (lastName.Trim().Length < 2 || lastName.Trim().Length > 50)
+            return Result.Failure<PersonName>(IdentityErrors.LastNameInvalidLength);
+
+        return Result.Success(new PersonName(firstName.Trim(), lastName.Trim()));
+    }
+
+    // Overload for backward-compat — splits on first space
+    public static Result<PersonName> CreateFromFullName(string fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName))
             return Result.Failure<PersonName>(IdentityErrors.NameRequired);
 
-        if (name.Length < 2 || name.Length > 100)
-            return Result.Failure<PersonName>(IdentityErrors.NameInvalidLength);
-
-        return Result.Success(new PersonName(name.Trim()));
+        var parts = fullName.Trim().Split(' ', 2, StringSplitOptions.RemoveEmptyEntries);
+        var first = parts[0];
+        var last = parts.Length > 1 ? parts[1] : parts[0];
+        return Create(first, last);
     }
 
     protected override IEnumerable<object> GetEqualityComponents()
     {
-        yield return Value;
+        yield return FirstName;
+        yield return LastName;
     }
 }

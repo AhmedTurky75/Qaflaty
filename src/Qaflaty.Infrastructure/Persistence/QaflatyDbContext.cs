@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Qaflaty.Domain.Catalog.Aggregates.Category;
+using Qaflaty.Domain.Catalog.Aggregates.City;
+using Qaflaty.Domain.Catalog.Aggregates.Country;
 using Qaflaty.Domain.Catalog.Aggregates.FaqItem;
 using Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
@@ -7,6 +9,7 @@ using Qaflaty.Domain.Catalog.Aggregates.Store;
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 using Qaflaty.Domain.Communication.Entities;
+using Qaflaty.Domain.Identity.Aggregates.LoginOtp;
 using Qaflaty.Domain.Identity.Aggregates.Merchant;
 using Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
 using Qaflaty.Domain.Ordering.Aggregates.Customer;
@@ -25,6 +28,7 @@ public class QaflatyDbContext : DbContext
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<StoreCustomer> StoreCustomers => Set<StoreCustomer>();
     public DbSet<CustomerRefreshToken> CustomerRefreshTokens => Set<CustomerRefreshToken>();
+    public DbSet<LoginOtp> LoginOtps => Set<LoginOtp>();
 
     // Catalog
     public DbSet<Store> Stores => Set<Store>();
@@ -36,6 +40,8 @@ public class QaflatyDbContext : DbContext
     public DbSet<PageConfiguration> PageConfigurations => Set<PageConfiguration>();
     public DbSet<SectionConfiguration> SectionConfigurations => Set<SectionConfiguration>();
     public DbSet<FaqItem> FaqItems => Set<FaqItem>();
+    public DbSet<Country> Countries => Set<Country>();
+    public DbSet<City> Cities => Set<City>();
 
     // Ordering
     public DbSet<Order> Orders => Set<Order>();
@@ -57,5 +63,45 @@ public class QaflatyDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(QaflatyDbContext).Assembly);
+
+        // Seed Countries
+        modelBuilder.Entity<Country>().HasData(
+            Country.Create(1, "Saudi Arabia", "SA"),
+            Country.Create(2, "United Arab Emirates", "AE"),
+            Country.Create(3, "Kuwait", "KW"),
+            Country.Create(4, "Qatar", "QA"),
+            Country.Create(5, "Bahrain", "BH"),
+            Country.Create(6, "Oman", "OM")
+        );
+
+        // Seed Cities
+        modelBuilder.Entity<City>().HasData(
+            // Saudi Arabia
+            City.Create(1, 1, "Riyadh"),
+            City.Create(2, 1, "Jeddah"),
+            City.Create(3, 1, "Mecca"),
+            City.Create(4, 1, "Medina"),
+            City.Create(5, 1, "Dammam"),
+            City.Create(6, 1, "Khobar"),
+            // UAE
+            City.Create(7, 2, "Dubai"),
+            City.Create(8, 2, "Abu Dhabi"),
+            City.Create(9, 2, "Sharjah"),
+            City.Create(10, 2, "Ajman"),
+            // Kuwait
+            City.Create(11, 3, "Kuwait City"),
+            City.Create(12, 3, "Hawalli"),
+            City.Create(13, 3, "Salmiya"),
+            // Qatar
+            City.Create(14, 4, "Doha"),
+            City.Create(15, 4, "Al Wakrah"),
+            // Bahrain
+            City.Create(16, 5, "Manama"),
+            City.Create(17, 5, "Riffa"),
+            // Oman
+            City.Create(18, 6, "Muscat"),
+            City.Create(19, 6, "Salalah"),
+            City.Create(20, 6, "Sohar")
+        );
     }
 }

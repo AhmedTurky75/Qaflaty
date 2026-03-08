@@ -76,19 +76,23 @@ builder.Services.AddAuthentication(options =>
         ClockSkew = TimeSpan.Zero
     };
 
-    // Support JWT authentication for SignalR (from query string)
+    // Support JWT from query string (SignalR) and httpOnly cookies
     options.Events = new JwtBearerEvents
     {
         OnMessageReceived = context =>
         {
+            // SignalR: read from query string for the chat hub
             var accessToken = context.Request.Query["access_token"];
-            var path = context.HttpContext.Request.Path;
-
-            // If the request is for our SignalR hub
-            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs/chat"))
+            if (!string.IsNullOrEmpty(accessToken) &&
+                context.HttpContext.Request.Path.StartsWithSegments("/hubs/chat"))
             {
                 context.Token = accessToken;
+                return Task.CompletedTask;
             }
+
+            // httpOnly cookie authentication
+            if (context.Request.Cookies.TryGetValue("access_token", out var cookieToken))
+                context.Token = cookieToken;
 
             return Task.CompletedTask;
         }
@@ -102,6 +106,15 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("CustomerPolicy", policy =>
         policy.RequireRole("customer"));
+});
+
+// Antiforgery (CSRF protection)
+builder.Services.AddAntiforgery(opts =>
+{
+    opts.HeaderName = "X-XSRF-TOKEN";
+    opts.Cookie.Name = "XSRF-TOKEN";
+    opts.Cookie.HttpOnly = false;
+    opts.Cookie.SameSite = SameSiteMode.Strict;
 });
 
 // Register Application and Infrastructure layers

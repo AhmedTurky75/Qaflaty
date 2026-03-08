@@ -38,11 +38,26 @@ public class MerchantConfiguration : IEntityTypeConfiguration<Merchant>
 
         builder.OwnsOne(m => m.FullName, name =>
         {
-            name.Property(n => n.Value)
-                .HasColumnName("full_name")
-                .HasMaxLength(100)
+            name.Property(n => n.FirstName)
+                .HasColumnName("first_name")
+                .HasMaxLength(50)
                 .IsRequired();
+
+            name.Property(n => n.LastName)
+                .HasColumnName("last_name")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            name.Ignore(n => n.FullName);
+            name.Ignore(n => n.Value);
         });
+
+        builder.Property(m => m.Username)
+            .HasColumnName("username")
+            .HasMaxLength(50)
+            .IsRequired();
+
+        builder.HasIndex(m => m.Username).IsUnique();
 
         builder.OwnsOne(m => m.Phone, phone =>
         {

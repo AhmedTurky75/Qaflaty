@@ -22,7 +22,8 @@ public class UpdateCustomerProfileCommandHandler : ICommandHandler<UpdateCustome
         if (customer == null)
             return Result.Failure(new Error("StoreCustomer.NotFound", "Customer not found"));
 
-        var nameResult = PersonName.Create(request.FullName);
+        // Use CreateFromFullName for backward-compat with the existing FullName field on the command
+        var nameResult = PersonName.CreateFromFullName(request.FullName);
         if (nameResult.IsFailure)
             return Result.Failure(nameResult.Error);
 
@@ -35,7 +36,16 @@ public class UpdateCustomerProfileCommandHandler : ICommandHandler<UpdateCustome
             phone = phoneResult.Value;
         }
 
-        customer.UpdateProfile(nameResult.Value, phone);
+        PhoneNumber? secondaryPhone = null;
+        if (!string.IsNullOrWhiteSpace(request.SecondaryPhone))
+        {
+            var secondaryPhoneResult = PhoneNumber.Create(request.SecondaryPhone);
+            if (secondaryPhoneResult.IsFailure)
+                return Result.Failure(secondaryPhoneResult.Error);
+            secondaryPhone = secondaryPhoneResult.Value;
+        }
+
+        customer.UpdateProfile(nameResult.Value, phone, secondaryPhone: secondaryPhone);
         _customerRepository.Update(customer);
 
         return Result.Success();

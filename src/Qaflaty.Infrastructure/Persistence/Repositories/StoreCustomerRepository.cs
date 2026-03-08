@@ -35,6 +35,14 @@ public class StoreCustomerRepository : IStoreCustomerRepository
     public async Task<bool> ExistsByEmailAsync(Email email, CancellationToken ct = default)
         => await _context.StoreCustomers.AnyAsync(c => c.Email.Value == email.Value, ct);
 
+    public async Task<StoreCustomer?> GetByUsernameAsync(string username, CancellationToken ct = default)
+        => await _context.StoreCustomers
+            .Include(c => c.RefreshTokens)
+            .FirstOrDefaultAsync(c => c.Username == username, ct);
+
+    public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken ct = default)
+        => await _context.StoreCustomers.AnyAsync(c => c.Username == username, ct);
+
     public async Task AddAsync(StoreCustomer customer, CancellationToken ct = default)
         => await _context.StoreCustomers.AddAsync(customer, ct);
 

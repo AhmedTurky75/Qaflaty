@@ -28,7 +28,9 @@ public class CustomerAddressesController : ApiController
             request.State,
             request.PostalCode,
             request.Country,
-            request.IsDefault);
+            request.IsDefault,
+            request.Latitude,
+            request.Longitude);
 
         var result = await Sender.Send(command, ct);
 
@@ -65,4 +67,6 @@ public record AddAddressRequest(
     string State,
     string PostalCode,
     string Country,
-    bool IsDefault);
+    bool IsDefault,
+    decimal? Latitude = null,
+    decimal? Longitude = null);

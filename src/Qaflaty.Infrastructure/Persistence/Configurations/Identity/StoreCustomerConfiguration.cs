@@ -38,16 +38,38 @@ public class StoreCustomerConfiguration : IEntityTypeConfiguration<StoreCustomer
 
         builder.OwnsOne(c => c.FullName, name =>
         {
-            name.Property(n => n.Value)
-                .HasColumnName("full_name")
-                .HasMaxLength(100)
+            name.Property(n => n.FirstName)
+                .HasColumnName("first_name")
+                .HasMaxLength(50)
                 .IsRequired();
+
+            name.Property(n => n.LastName)
+                .HasColumnName("last_name")
+                .HasMaxLength(50)
+                .IsRequired();
+
+            name.Ignore(n => n.FullName);
+            name.Ignore(n => n.Value);
         });
+
+        builder.Property(c => c.Username)
+            .HasColumnName("username")
+            .HasMaxLength(50)
+            .IsRequired();
+
+        builder.HasIndex(c => c.Username).IsUnique();
 
         builder.OwnsOne(c => c.Phone, phone =>
         {
             phone.Property(p => p.Value)
                 .HasColumnName("phone")
+                .HasMaxLength(20);
+        });
+
+        builder.OwnsOne(c => c.SecondaryPhone, phone =>
+        {
+            phone.Property(p => p.Value)
+                .HasColumnName("secondary_phone")
                 .HasMaxLength(20);
         });
 
@@ -85,6 +107,12 @@ public class StoreCustomerConfiguration : IEntityTypeConfiguration<StoreCustomer
                 .HasMaxLength(100);
 
             addresses.Property(a => a.IsDefault);
+
+            addresses.Property(a => a.Latitude)
+                .HasColumnType("decimal(10, 7)");
+
+            addresses.Property(a => a.Longitude)
+                .HasColumnType("decimal(10, 7)");
         });
 
         builder.HasMany(c => c.RefreshTokens)

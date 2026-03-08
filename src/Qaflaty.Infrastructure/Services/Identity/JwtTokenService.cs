@@ -20,11 +20,10 @@ public class JwtTokenService : ITokenService
         _configuration = configuration;
     }
 
-    public string GenerateAccessToken(Merchant merchant)
+    // Role-specific merchant token (15 min by default)
+    public string GenerateMerchantAccessToken(Merchant merchant)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT Secret not configured")));
-
+        var key = GetSigningKey();
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -40,17 +39,16 @@ public class JwtTokenService : ITokenService
             issuer: _configuration["JwtSettings:Issuer"],
             audience: _configuration["JwtSettings:Audience"],
             claims: claims,
-            expires: GetAccessTokenExpiration(),
+            expires: GetMerchantAccessTokenExpiration(),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    // Role-specific customer token (60 min by default)
     public string GenerateCustomerAccessToken(StoreCustomer customer)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT Secret not configured")));
-
+        var key = GetSigningKey();
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -66,11 +64,27 @@ public class JwtTokenService : ITokenService
             issuer: _configuration["JwtSettings:Issuer"],
             audience: _configuration["JwtSettings:Audience"],
             claims: claims,
-            expires: GetAccessTokenExpiration(),
+            expires: GetCustomerAccessTokenExpiration(),
             signingCredentials: credentials);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+
+    public DateTime GetMerchantAccessTokenExpiration()
+    {
+        var minutes = int.Parse(_configuration["JwtSettings:MerchantAccessTokenExpirationMinutes"] ?? "15");
+        return DateTime.UtcNow.AddMinutes(minutes);
+    }
+
+    public DateTime GetCustomerAccessTokenExpiration()
+    {
+        var minutes = int.Parse(_configuration["JwtSettings:CustomerAccessTokenExpirationMinutes"] ?? "60");
+        return DateTime.UtcNow.AddMinutes(minutes);
+    }
+
+    // Legacy method — delegates to GenerateMerchantAccessToken
+    public string GenerateAccessToken(Merchant merchant)
+        => GenerateMerchantAccessToken(merchant);
 
     public string GenerateRefreshToken()
     {
@@ -80,11 +94,9 @@ public class JwtTokenService : ITokenService
         return Convert.ToBase64String(randomBytes);
     }
 
+    // Legacy method — returns merchant expiration for backward compat
     public DateTime GetAccessTokenExpiration()
-    {
-        var minutes = int.Parse(_configuration["JwtSettings:AccessTokenExpirationMinutes"] ?? "60");
-        return DateTime.UtcNow.AddMinutes(minutes);
-    }
+        => GetMerchantAccessTokenExpiration();
 
     public DateTime GetRefreshTokenExpiration()
     {
@@ -96,20 +108,9 @@ public class JwtTokenService : ITokenService
     {
         try
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                _configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT Secret not configured")));
-
+            var key = GetSigningKey();
             var tokenHandler = new JwtSecurityTokenHandler();
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = _configuration["JwtSettings:Issuer"],
-                ValidAudience = _configuration["JwtSettings:Audience"],
-                IssuerSigningKey = key
-            };
+            var validationParameters = GetValidationParameters(key);
 
             var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
             var merchantIdClaim = principal.FindFirst("merchant_id");
@@ -129,20 +130,9 @@ public class JwtTokenService : ITokenService
     {
         try
         {
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                _configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT Secret not configured")));
-
+            var key = GetSigningKey();
             var tokenHandler = new JwtSecurityTokenHandler();
-            var validationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = _configuration["JwtSettings:Issuer"],
-                ValidAudience = _configuration["JwtSettings:Audience"],
-                IssuerSigningKey = key
-            };
+            var validationParameters = GetValidationParameters(key);
 
             var principal = tokenHandler.ValidateToken(token, validationParameters, out _);
             var customerIdClaim = principal.FindFirst("customer_id");
@@ -157,4 +147,20 @@ public class JwtTokenService : ITokenService
             return null;
         }
     }
+
+    private SymmetricSecurityKey GetSigningKey()
+        => new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            _configuration["JwtSettings:SecretKey"] ?? throw new InvalidOperationException("JWT Secret not configured")));
+
+    private TokenValidationParameters GetValidationParameters(SymmetricSecurityKey key)
+        => new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = _configuration["JwtSettings:Issuer"],
+            ValidAudience = _configuration["JwtSettings:Audience"],
+            IssuerSigningKey = key
+        };
 }

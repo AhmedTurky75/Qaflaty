@@ -39,8 +39,13 @@ public class RegisterCommandHandler : ICommandHandler<RegisterCommand, AuthRespo
         if (emailExists)
             return Result.Failure<AuthResponse>(IdentityErrors.EmailAlreadyExists);
 
+        // Check if username already exists
+        var usernameExists = await _merchantRepository.ExistsByUsernameAsync(request.Username, cancellationToken);
+        if (usernameExists)
+            return Result.Failure<AuthResponse>(IdentityErrors.UsernameAlreadyExists);
+
         // Create PersonName value object
-        var nameResult = PersonName.Create(request.FullName);
+        var nameResult = PersonName.Create(request.FirstName, request.LastName);
         if (nameResult.IsFailure)
             return Result.Failure<AuthResponse>(nameResult.Error);
 
@@ -62,6 +67,7 @@ public class RegisterCommandHandler : ICommandHandler<RegisterCommand, AuthRespo
             emailResult.Value,
             hashedPassword,
             nameResult.Value,
+            request.Username,
             phone);
 
         if (merchantResult.IsFailure)
@@ -70,9 +76,9 @@ public class RegisterCommandHandler : ICommandHandler<RegisterCommand, AuthRespo
         var merchant = merchantResult.Value;
 
         // Generate tokens
-        var accessToken = _tokenService.GenerateAccessToken(merchant);
+        var accessToken = _tokenService.GenerateMerchantAccessToken(merchant);
         var refreshToken = _tokenService.GenerateRefreshToken();
-        var expiresAt = _tokenService.GetAccessTokenExpiration();
+        var expiresAt = _tokenService.GetMerchantAccessTokenExpiration();
         var refreshTokenExpiresAt = _tokenService.GetRefreshTokenExpiration();
 
         // Add refresh token to merchant
@@ -85,7 +91,10 @@ public class RegisterCommandHandler : ICommandHandler<RegisterCommand, AuthRespo
         var merchantDto = new MerchantDto(
             merchant.Id.Value,
             merchant.Email.Value,
-            merchant.FullName.Value,
+            merchant.FullName.FirstName,
+            merchant.FullName.LastName,
+            merchant.FullName.FullName,
+            merchant.Username,
             merchant.Phone?.Value,
             merchant.IsVerified,
             merchant.CreatedAt);

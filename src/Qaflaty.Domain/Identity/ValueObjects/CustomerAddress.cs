@@ -13,6 +13,8 @@ public sealed class CustomerAddress : ValueObject
     public string PostalCode { get; private init; } = string.Empty;
     public string Country { get; private init; } = string.Empty;
     public bool IsDefault { get; private set; }
+    public decimal? Latitude { get; private init; }
+    public decimal? Longitude { get; private init; }
 
     private CustomerAddress() { }
 
@@ -23,7 +25,9 @@ public sealed class CustomerAddress : ValueObject
         string state,
         string postalCode,
         string country,
-        bool isDefault = false)
+        bool isDefault = false,
+        decimal? latitude = null,
+        decimal? longitude = null)
     {
         if (string.IsNullOrWhiteSpace(label))
             return Result.Failure<CustomerAddress>(
@@ -49,7 +53,9 @@ public sealed class CustomerAddress : ValueObject
             State = state?.Trim() ?? string.Empty,
             PostalCode = postalCode?.Trim() ?? string.Empty,
             Country = country.Trim(),
-            IsDefault = isDefault
+            IsDefault = isDefault,
+            Latitude = latitude,
+            Longitude = longitude
         });
     }
 
@@ -64,5 +70,7 @@ public sealed class CustomerAddress : ValueObject
         yield return State;
         yield return PostalCode;
         yield return Country;
+        yield return Latitude;
+        yield return Longitude;
     }
 }

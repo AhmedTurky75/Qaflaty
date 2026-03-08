@@ -6,6 +6,8 @@ namespace Qaflaty.Application.Identity.Commands.Register;
 public record RegisterCommand(
     string Email,
     string Password,
-    string FullName,
+    string FirstName,
+    string LastName,
+    string Username,
     string? Phone
 ) : ICommand<AuthResponse>;

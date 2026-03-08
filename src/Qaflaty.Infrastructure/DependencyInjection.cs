@@ -64,6 +64,8 @@ public static class DependencyInjection
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<ICookieAuthService, CookieAuthService>();
+        services.AddScoped<ILoginOtpRepository, LoginOtpRepository>();
 
         // Ordering Services
         services.AddScoped<IOrderNumberGenerator, OrderNumberGenerator>();

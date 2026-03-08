@@ -6,6 +6,8 @@ namespace Qaflaty.Application.Identity.Commands.RegisterStoreCustomer;
 public record RegisterStoreCustomerCommand(
     string Email,
     string Password,
-    string FullName,
+    string FirstName,
+    string LastName,
+    string Username,
     string? Phone
 ) : ICommand<CustomerAuthResponse>;

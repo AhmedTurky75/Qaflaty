@@ -27,7 +27,9 @@ public class AddCustomerAddressCommandHandler : ICommandHandler<AddCustomerAddre
             request.State,
             request.PostalCode,
             request.Country,
-            request.IsDefault);
+            request.IsDefault,
+            request.Latitude,
+            request.Longitude);
 
         if (addressResult.IsFailure)
             return Result.Failure(addressResult.Error);

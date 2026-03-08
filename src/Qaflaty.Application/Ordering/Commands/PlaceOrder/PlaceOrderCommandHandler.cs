@@ -63,7 +63,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             return Result.Failure<OrderDto>(emailResult.Error);
 
         // Create customer contact value objects
-        var nameResult = PersonName.Create(request.CustomerName);
+        var nameResult = PersonName.CreateFromFullName(request.CustomerName);
         if (nameResult.IsFailure)
             return Result.Failure<OrderDto>(nameResult.Error);
 

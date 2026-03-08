@@ -43,9 +43,9 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthResponse>
             return Result.Failure<AuthResponse>(IdentityErrors.InvalidCredentials);
 
         // Generate tokens
-        var accessToken = _tokenService.GenerateAccessToken(merchant);
+        var accessToken = _tokenService.GenerateMerchantAccessToken(merchant);
         var refreshToken = _tokenService.GenerateRefreshToken();
-        var expiresAt = _tokenService.GetAccessTokenExpiration();
+        var expiresAt = _tokenService.GetMerchantAccessTokenExpiration();
         var refreshTokenExpiresAt = _tokenService.GetRefreshTokenExpiration();
 
         // Add refresh token to merchant
@@ -57,7 +57,10 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthResponse>
         var merchantDto = new MerchantDto(
             merchant.Id.Value,
             merchant.Email.Value,
-            merchant.FullName.Value,
+            merchant.FullName.FirstName,
+            merchant.FullName.LastName,
+            merchant.FullName.FullName,
+            merchant.Username,
             merchant.Phone?.Value,
             merchant.IsVerified,
             merchant.CreatedAt);

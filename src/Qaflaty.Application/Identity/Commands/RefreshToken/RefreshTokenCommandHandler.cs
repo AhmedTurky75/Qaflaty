@@ -36,9 +36,9 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
         merchant.RevokeRefreshToken(request.RefreshToken);
 
         // Generate new tokens
-        var accessToken = _tokenService.GenerateAccessToken(merchant);
+        var accessToken = _tokenService.GenerateMerchantAccessToken(merchant);
         var newRefreshToken = _tokenService.GenerateRefreshToken();
-        var expiresAt = _tokenService.GetAccessTokenExpiration();
+        var expiresAt = _tokenService.GetMerchantAccessTokenExpiration();
         var refreshTokenExpiresAt = _tokenService.GetRefreshTokenExpiration();
 
         // Add new refresh token
@@ -50,7 +50,10 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
         var merchantDto = new MerchantDto(
             merchant.Id.Value,
             merchant.Email.Value,
-            merchant.FullName.Value,
+            merchant.FullName.FirstName,
+            merchant.FullName.LastName,
+            merchant.FullName.FullName,
+            merchant.Username,
             merchant.Phone?.Value,
             merchant.IsVerified,
             merchant.CreatedAt);

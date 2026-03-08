@@ -32,7 +32,10 @@ public class GetCurrentMerchantQueryHandler : IQueryHandler<GetCurrentMerchantQu
         return Result.Success(new MerchantDto(
             merchant.Id.Value,
             merchant.Email.Value,
-            merchant.FullName.Value,
+            merchant.FullName.FirstName,
+            merchant.FullName.LastName,
+            merchant.FullName.FullName,
+            merchant.Username,
             merchant.Phone?.Value,
             merchant.IsVerified,
             merchant.CreatedAt));

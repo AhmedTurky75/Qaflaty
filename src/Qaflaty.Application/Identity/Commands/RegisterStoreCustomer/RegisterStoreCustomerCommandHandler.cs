@@ -39,8 +39,13 @@ public class RegisterStoreCustomerCommandHandler : ICommandHandler<RegisterStore
         if (emailExists)
             return Result.Failure<CustomerAuthResponse>(IdentityErrors.EmailAlreadyExists);
 
+        // Check if username already exists
+        var usernameExists = await _customerRepository.ExistsByUsernameAsync(request.Username, cancellationToken);
+        if (usernameExists)
+            return Result.Failure<CustomerAuthResponse>(IdentityErrors.UsernameAlreadyExists);
+
         // Create PersonName value object
-        var nameResult = PersonName.Create(request.FullName);
+        var nameResult = PersonName.Create(request.FirstName, request.LastName);
         if (nameResult.IsFailure)
             return Result.Failure<CustomerAuthResponse>(nameResult.Error);
 
@@ -62,6 +67,7 @@ public class RegisterStoreCustomerCommandHandler : ICommandHandler<RegisterStore
             emailResult.Value,
             hashedPassword,
             nameResult.Value,
+            request.Username,
             phone);
 
         if (customerResult.IsFailure)
@@ -72,7 +78,7 @@ public class RegisterStoreCustomerCommandHandler : ICommandHandler<RegisterStore
         // Generate tokens
         var accessToken = _tokenService.GenerateCustomerAccessToken(customer);
         var refreshToken = _tokenService.GenerateRefreshToken();
-        var expiresAt = _tokenService.GetAccessTokenExpiration();
+        var expiresAt = _tokenService.GetCustomerAccessTokenExpiration();
         var refreshTokenExpiresAt = _tokenService.GetRefreshTokenExpiration();
 
         // Add refresh token to customer
@@ -85,8 +91,12 @@ public class RegisterStoreCustomerCommandHandler : ICommandHandler<RegisterStore
         var customerDto = new StoreCustomerDto(
             customer.Id.Value,
             customer.Email.Value,
-            customer.FullName.Value,
+            customer.FullName.FirstName,
+            customer.FullName.LastName,
+            customer.FullName.FullName,
+            customer.Username,
             customer.Phone?.Value,
+            customer.SecondaryPhone?.Value,
             customer.IsVerified,
             customer.CreatedAt,
             customer.Addresses.Select(a => new CustomerAddressDto(

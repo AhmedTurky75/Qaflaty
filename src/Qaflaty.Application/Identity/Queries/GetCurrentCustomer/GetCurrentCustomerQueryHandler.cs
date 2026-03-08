@@ -31,8 +31,12 @@ public class GetCurrentCustomerQueryHandler : IQueryHandler<GetCurrentCustomerQu
         return Result.Success(new StoreCustomerDto(
             customer.Id.Value,
             customer.Email.Value,
-            customer.FullName.Value,
+            customer.FullName.FirstName,
+            customer.FullName.LastName,
+            customer.FullName.FullName,
+            customer.Username,
             customer.Phone?.Value,
+            customer.SecondaryPhone?.Value,
             customer.IsVerified,
             customer.CreatedAt,
             customer.Addresses.Select(a => new CustomerAddressDto(
@@ -42,6 +46,8 @@ public class GetCurrentCustomerQueryHandler : IQueryHandler<GetCurrentCustomerQu
                 a.State,
                 a.PostalCode,
                 a.Country,
-                a.IsDefault)).ToList()));
+                a.IsDefault,
+                a.Latitude,
+                a.Longitude)).ToList()));
     }
 }

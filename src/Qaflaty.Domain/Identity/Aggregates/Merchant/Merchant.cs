@@ -14,6 +14,7 @@ public sealed class Merchant : AggregateRoot<MerchantId>
     public Email Email { get; private set; } = null!;
     public HashedPassword PasswordHash { get; private set; } = null!;
     public PersonName FullName { get; private set; } = null!;
+    public string Username { get; private set; } = null!;
     public PhoneNumber? Phone { get; private set; }
     public bool IsVerified { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -31,6 +32,7 @@ public sealed class Merchant : AggregateRoot<MerchantId>
         Email email,
         HashedPassword passwordHash,
         PersonName fullName,
+        string username,
         PhoneNumber? phone = null)
     {
         var merchant = new Merchant
@@ -39,6 +41,7 @@ public sealed class Merchant : AggregateRoot<MerchantId>
             Email = email,
             PasswordHash = passwordHash,
             FullName = fullName,
+            Username = username,
             Phone = phone,
             IsVerified = false,
             CreatedAt = DateTime.UtcNow,
@@ -59,10 +62,12 @@ public sealed class Merchant : AggregateRoot<MerchantId>
         return Result.Success();
     }
 
-    public Result UpdateProfile(PersonName fullName, PhoneNumber? phone)
+    public Result UpdateProfile(PersonName fullName, PhoneNumber? phone, string? username = null)
     {
         FullName = fullName;
         Phone = phone;
+        if (username != null)
+            Username = username;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

@@ -45,7 +45,7 @@ public class LoginStoreCustomerCommandHandler : ICommandHandler<LoginStoreCustom
         // Generate tokens
         var accessToken = _tokenService.GenerateCustomerAccessToken(customer);
         var refreshToken = _tokenService.GenerateRefreshToken();
-        var expiresAt = _tokenService.GetAccessTokenExpiration();
+        var expiresAt = _tokenService.GetCustomerAccessTokenExpiration();
         var refreshTokenExpiresAt = _tokenService.GetRefreshTokenExpiration();
 
         // Add refresh token to customer
@@ -57,8 +57,12 @@ public class LoginStoreCustomerCommandHandler : ICommandHandler<LoginStoreCustom
         var customerDto = new StoreCustomerDto(
             customer.Id.Value,
             customer.Email.Value,
-            customer.FullName.Value,
+            customer.FullName.FirstName,
+            customer.FullName.LastName,
+            customer.FullName.FullName,
+            customer.Username,
             customer.Phone?.Value,
+            customer.SecondaryPhone?.Value,
             customer.IsVerified,
             customer.CreatedAt,
             customer.Addresses.Select(a => new CustomerAddressDto(

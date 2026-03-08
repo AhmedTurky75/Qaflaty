@@ -10,6 +10,8 @@ public interface IStoreCustomerRepository
     Task<List<StoreCustomer>> GetByIdsAsync(IEnumerable<StoreCustomerId> ids, CancellationToken ct = default);
     Task<StoreCustomer?> GetByEmailAsync(Email email, CancellationToken ct = default);
     Task<bool> ExistsByEmailAsync(Email email, CancellationToken ct = default);
+    Task<StoreCustomer?> GetByUsernameAsync(string username, CancellationToken ct = default);
+    Task<bool> ExistsByUsernameAsync(string username, CancellationToken ct = default);
     Task AddAsync(StoreCustomer customer, CancellationToken ct = default);
     void Update(StoreCustomer customer);
     Task<CustomerRefreshToken?> GetRefreshTokenAsync(string token, CancellationToken ct = default);

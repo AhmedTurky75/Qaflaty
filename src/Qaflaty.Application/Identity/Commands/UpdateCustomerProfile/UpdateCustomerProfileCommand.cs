@@ -6,5 +6,6 @@ namespace Qaflaty.Application.Identity.Commands.UpdateCustomerProfile;
 public record UpdateCustomerProfileCommand(
     StoreCustomerId CustomerId,
     string FullName,
-    string? Phone
+    string? Phone,
+    string? SecondaryPhone = null
 ) : ICommand;

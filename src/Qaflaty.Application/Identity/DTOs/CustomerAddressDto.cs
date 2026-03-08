@@ -7,5 +7,7 @@ public record CustomerAddressDto(
     string State,
     string PostalCode,
     string Country,
-    bool IsDefault
+    bool IsDefault,
+    decimal? Latitude = null,
+    decimal? Longitude = null
 );

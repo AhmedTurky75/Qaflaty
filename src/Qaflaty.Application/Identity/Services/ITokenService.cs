@@ -6,8 +6,14 @@ namespace Qaflaty.Application.Identity.Services;
 
 public interface ITokenService
 {
-    string GenerateAccessToken(Merchant merchant);
+    // Role-specific token generation (preferred)
+    string GenerateMerchantAccessToken(Merchant merchant);
     string GenerateCustomerAccessToken(StoreCustomer customer);
+    DateTime GetMerchantAccessTokenExpiration();
+    DateTime GetCustomerAccessTokenExpiration();
+
+    // Legacy methods kept for backward compatibility
+    string GenerateAccessToken(Merchant merchant);
     string GenerateRefreshToken();
     DateTime GetAccessTokenExpiration();
     DateTime GetRefreshTokenExpiration();

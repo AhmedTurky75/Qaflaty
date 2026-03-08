@@ -28,6 +28,14 @@ public class MerchantRepository : IMerchantRepository
     public async Task<bool> ExistsByEmailAsync(Email email, CancellationToken ct = default)
         => await _context.Merchants.AnyAsync(m => m.Email.Value == email.Value, ct);
 
+    public async Task<Merchant?> GetByUsernameAsync(string username, CancellationToken ct = default)
+        => await _context.Merchants
+            .Include(m => m.RefreshTokens)
+            .FirstOrDefaultAsync(m => m.Username == username, ct);
+
+    public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken ct = default)
+        => await _context.Merchants.AnyAsync(m => m.Username == username, ct);
+
     public async Task AddAsync(Merchant merchant, CancellationToken ct = default)
         => await _context.Merchants.AddAsync(merchant, ct);
 
