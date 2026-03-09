@@ -2,121 +2,116 @@
   <div class="sm:mx-auto sm:w-full sm:max-w-md">
     <h1 class="text-center text-3xl font-bold text-gray-900">Qaflaty</h1>
     <h2 class="mt-6 text-center text-2xl font-semibold text-gray-700">
-      Sign in to your account
+      @if (step() === 'credentials') { Sign in to your account }
+      @else { Enter verification code }
     </h2>
-    <p class="mt-2 text-center text-sm text-gray-600">
-      Or
-      <a routerLink="/auth/register" class="font-medium text-primary-600 hover:text-primary-500">
-        create a new account
-      </a>
-    </p>
   </div>
 
   <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
     <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-      <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
-        <!-- Email Field -->
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700">
-            Email address
-          </label>
-          <div class="mt-1">
-            <input
-              id="email"
-              type="email"
-              formControlName="email"
-              autocomplete="email"
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-              [class.border-red-300]="email?.invalid && email?.touched"
-            />
-          </div>
-          @if (email?.invalid && email?.touched) {
-            <p class="mt-2 text-sm text-red-600">
-              @if (email?.errors?.['required']) {
-                Email is required
-              } @else if (email?.errors?.['email']) {
-                Please enter a valid email address
-              }
-            </p>
-          }
-        </div>
 
-        <!-- Password Field -->
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700">
-            Password
-          </label>
-          <div class="mt-1 relative">
-            <input
-              id="password"
-              [type]="passwordVisible() ? 'text' : 'password'"
-              formControlName="password"
-              autocomplete="current-password"
-              class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-              [class.border-red-300]="password?.invalid && password?.touched"
-            />
-            <button
-              type="button"
-              (click)="togglePasswordVisibility()"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-            >
-              @if (passwordVisible()) {
+      <!-- Step 1: Credentials -->
+      @if (step() === 'credentials') {
+        <form [formGroup]="credentialsForm" (ngSubmit)="onSubmitCredentials()" class="space-y-6">
+          <div>
+            <label for="emailOrUsername" class="block text-sm font-medium text-gray-700">
+              Email or Username
+            </label>
+            <input id="emailOrUsername" type="text" formControlName="emailOrUsername" autocomplete="username"
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+              [class.border-red-300]="emailOrUsername?.invalid && emailOrUsername?.touched" />
+            @if (emailOrUsername?.invalid && emailOrUsername?.touched) {
+              <p class="mt-1 text-sm text-red-600">Email or username is required</p>
+            }
+          </div>
+
+          <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <div class="mt-1 relative">
+              <input id="password" [type]="passwordVisible() ? 'text' : 'password'"
+                formControlName="password" autocomplete="current-password"
+                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm pr-10"
+                [class.border-red-300]="password?.invalid && password?.touched" />
+              <button type="button" (click)="togglePasswordVisibility()"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  @if (passwordVisible()) {
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                  } @else {
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  }
                 </svg>
-              } @else {
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
+              </button>
+            </div>
+            @if (password?.invalid && password?.touched) {
+              <p class="mt-1 text-sm text-red-600">Password must be at least 8 characters</p>
+            }
+          </div>
+
+          @if (error()) {
+            <div class="rounded-md bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+          }
+
+          <button type="submit" [disabled]="loading()"
+            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50">
+            @if (loading()) { <span>Sending OTP...</span> } @else { Continue }
+          </button>
+
+          <p class="text-center text-sm text-gray-600">
+            Don't have an account?
+            <a routerLink="/auth/register" class="font-medium text-primary-600 hover:text-primary-500">Register</a>
+          </p>
+        </form>
+      }
+
+      <!-- Step 2: OTP -->
+      @if (step() === 'otp') {
+        <div class="space-y-6">
+          <p class="text-sm text-gray-600 text-center">
+            We sent a 6-digit code to <strong>{{ pendingEmail() }}</strong>.<br>
+            Enter it below to complete sign in.
+          </p>
+
+          <form [formGroup]="otpForm" (ngSubmit)="onSubmitOtp()" class="space-y-4">
+            <div>
+              <label for="otpCode" class="block text-sm font-medium text-gray-700 text-center">Verification Code</label>
+              <input id="otpCode" type="text" formControlName="otpCode" maxlength="6"
+                inputmode="numeric" autocomplete="one-time-code"
+                class="mt-1 block w-full text-center text-2xl tracking-widest px-3 py-3 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500"
+                [class.border-red-300]="otpCode?.invalid && otpCode?.touched" />
+              @if (otpCode?.invalid && otpCode?.touched) {
+                <p class="mt-1 text-sm text-red-600 text-center">Enter a valid 6-digit code</p>
               }
+            </div>
+
+            @if (error()) {
+              <div class="rounded-md bg-red-50 p-4 text-sm text-red-700 text-center">{{ error() }}</div>
+            }
+
+            <button type="submit" [disabled]="loading()"
+              class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50">
+              @if (loading()) { Verifying... } @else { Verify & Sign In }
             </button>
-          </div>
-          @if (password?.invalid && password?.touched) {
-            <p class="mt-2 text-sm text-red-600">
-              @if (password?.errors?.['required']) {
-                Password is required
-              } @else if (password?.errors?.['minlength']) {
-                Password must be at least 8 characters
-              }
-            </p>
-          }
-        </div>
+          </form>
 
-        <!-- Error Message -->
-        @if (error()) {
-          <div class="rounded-md bg-red-50 p-4">
-            <div class="flex">
-              <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                </svg>
-              </div>
-              <div class="ml-3">
-                <p class="text-sm font-medium text-red-800">{{ error() }}</p>
-              </div>
+          <div class="text-center space-y-2">
+            @if (resendCooldown() > 0) {
+              <p class="text-sm text-gray-500">Resend code in {{ resendCooldown() }}s</p>
+            } @else {
+              <button type="button" (click)="resendOtp()" class="text-sm text-primary-600 hover:text-primary-500">
+                Resend code
+              </button>
+            }
+            <div>
+              <button type="button" (click)="goBack()" class="text-sm text-gray-500 hover:text-gray-700">
+                ← Back
+              </button>
             </div>
           </div>
-        }
-
-        <!-- Submit Button -->
-        <div>
-          <button
-            type="submit"
-            [disabled]="loading()"
-            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            @if (loading()) {
-              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            } @else {
-              Sign in
-            }
-          </button>
         </div>
-      </form>
+      }
+
     </div>
   </div>
 </div>

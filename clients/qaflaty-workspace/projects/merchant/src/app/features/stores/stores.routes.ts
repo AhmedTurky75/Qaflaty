@@ -12,5 +12,9 @@ export const STORE_ROUTES: Routes = [
   {
     path: ':id',
     loadComponent: () => import('./store-details/store-details.component').then(m => m.StoreDetailsComponent)
+  },
+  {
+    path: 'team',
+    loadComponent: () => import('./team/team.component').then(m => m.TeamComponent)
   }
 ];

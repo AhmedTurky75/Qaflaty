@@ -1,121 +1,151 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CustomerAuthService } from '../../../services/customer-auth.service';
+
+type LoginStep = 'credentials' | 'otp';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
-    <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div>
-          <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            تسجيل الدخول
-          </h2>
-          <p class="mt-2 text-center text-sm text-gray-600">
-            أو
-            <a routerLink="/account/register" class="font-medium text-blue-600 hover:text-blue-500">
-              إنشاء حساب جديد
-            </a>
-          </p>
-        </div>
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
+  <div class="max-w-md w-full space-y-8">
 
-        <form class="mt-8 space-y-6" [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-          @if (errorMessage()) {
-            <div class="rounded-md bg-red-50 p-4">
-              <div class="flex">
-                <div class="ml-3">
-                  <h3 class="text-sm font-medium text-red-800">
-                    {{ errorMessage() }}
-                  </h3>
-                </div>
-              </div>
-            </div>
-          }
-
-          <div class="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label for="email" class="sr-only">البريد الإلكتروني</label>
-              <input
-                id="email"
-                type="email"
-                formControlName="email"
-                required
-                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="البريد الإلكتروني"
-              />
-              @if (loginForm.get('email')?.invalid && loginForm.get('email')?.touched) {
-                <p class="mt-1 text-sm text-red-600">يرجى إدخال بريد إلكتروني صحيح</p>
-              }
-            </div>
-            <div>
-              <label for="password" class="sr-only">كلمة المرور</label>
-              <input
-                id="password"
-                type="password"
-                formControlName="password"
-                required
-                class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-                placeholder="كلمة المرور"
-              />
-              @if (loginForm.get('password')?.invalid && loginForm.get('password')?.touched) {
-                <p class="mt-1 text-sm text-red-600">كلمة المرور مطلوبة</p>
-              }
-            </div>
-          </div>
-
-          <div>
-            <button
-              type="submit"
-              [disabled]="loginForm.invalid || isLoading()"
-              class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              @if (isLoading()) {
-                <span>جاري تسجيل الدخول...</span>
-              } @else {
-                <span>تسجيل الدخول</span>
-              }
-            </button>
-          </div>
-        </form>
+    <!-- Step 1: Credentials -->
+    @if (step() === 'credentials') {
+      <div>
+        <h2 class="text-center text-3xl font-extrabold text-gray-900">تسجيل الدخول</h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+          أو <a routerLink="/account/register" class="font-medium text-blue-600">إنشاء حساب جديد</a>
+        </p>
       </div>
-    </div>
+      <form [formGroup]="credentialsForm" (ngSubmit)="onSubmitCredentials()" class="mt-8 space-y-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">البريد الإلكتروني أو اسم المستخدم</label>
+            <input type="text" formControlName="emailOrUsername" autocomplete="username"
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+            @if (emailOrUsername?.invalid && emailOrUsername?.touched) {
+              <p class="text-sm text-red-600 mt-1">هذا الحقل مطلوب</p>
+            }
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">كلمة المرور</label>
+            <input type="password" formControlName="password" autocomplete="current-password"
+              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+            @if (password?.invalid && password?.touched) {
+              <p class="text-sm text-red-600 mt-1">8 أحرف على الأقل</p>
+            }
+          </div>
+        </div>
+        @if (errorMessage()) {
+          <div class="bg-red-50 text-red-700 p-3 rounded-md text-sm">{{ errorMessage() }}</div>
+        }
+        <button type="submit" [disabled]="loading()"
+          class="w-full py-2 px-4 border border-transparent rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 font-medium">
+          {{ loading() ? 'جارٍ الإرسال...' : 'متابعة' }}
+        </button>
+      </form>
+    }
+
+    <!-- Step 2: OTP -->
+    @if (step() === 'otp') {
+      <div class="text-center">
+        <h2 class="text-3xl font-extrabold text-gray-900">رمز التحقق</h2>
+        <p class="mt-2 text-sm text-gray-600">
+          تم إرسال رمز مكوّن من 6 أرقام إلى <strong>{{ pendingEmail() }}</strong>
+        </p>
+      </div>
+      <form [formGroup]="otpForm" (ngSubmit)="onSubmitOtp()" class="mt-8 space-y-6">
+        <div>
+          <input type="text" formControlName="otpCode" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+            class="block w-full text-center text-3xl tracking-widest py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        </div>
+        @if (errorMessage()) {
+          <div class="bg-red-50 text-red-700 p-3 rounded-md text-sm text-center">{{ errorMessage() }}</div>
+        }
+        <button type="submit" [disabled]="loading()"
+          class="w-full py-2 px-4 border border-transparent rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 font-medium">
+          {{ loading() ? 'جارٍ التحقق...' : 'تأكيد وتسجيل الدخول' }}
+        </button>
+        <div class="text-center space-y-2">
+          @if (resendCooldown() > 0) {
+            <p class="text-sm text-gray-500">إعادة الإرسال بعد {{ resendCooldown() }} ثانية</p>
+          } @else {
+            <button type="button" (click)="resendOtp()" class="text-sm text-blue-600 hover:text-blue-500">إعادة إرسال الرمز</button>
+          }
+          <div><button type="button" (click)="goBack()" class="text-sm text-gray-500">← رجوع</button></div>
+        </div>
+      </form>
+    }
+
+  </div>
+</div>
   `
 })
-export class LoginComponent {
-  private readonly fb = inject(FormBuilder);
-  private readonly authService = inject(CustomerAuthService);
-  private readonly router = inject(Router);
-  private readonly route = inject(ActivatedRoute);
+export class LoginComponent implements OnDestroy {
+  private fb = inject(FormBuilder);
+  private authService = inject(CustomerAuthService);
+  private router = inject(Router);
 
-  readonly isLoading = signal(false);
-  readonly errorMessage = signal<string | null>(null);
+  step = signal<LoginStep>('credentials');
+  loading = signal(false);
+  errorMessage = signal<string | null>(null);
+  pendingEmail = signal('');
+  resendCooldown = signal(0);
+  private timer: ReturnType<typeof setInterval> | null = null;
 
-  loginForm: FormGroup = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(6)]]
+  credentialsForm: FormGroup = this.fb.group({
+    emailOrUsername: ['', Validators.required],
+    password: ['', [Validators.required, Validators.minLength(8)]]
   });
 
-  onSubmit(): void {
-    if (this.loginForm.invalid) return;
+  otpForm: FormGroup = this.fb.group({
+    otpCode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
+  });
 
-    this.isLoading.set(true);
-    this.errorMessage.set(null);
-
-    const { email, password } = this.loginForm.value;
-
-    this.authService.login({ email, password }).subscribe({
-      next: () => {
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/account/profile';
-        this.router.navigate([returnUrl]);
-      },
-      error: (error) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(error.error?.message || 'فشل تسجيل الدخول. يرجى التحقق من بياناتك.');
-      }
+  onSubmitCredentials(): void {
+    if (this.credentialsForm.invalid) { this.credentialsForm.markAllAsTouched(); return; }
+    this.loading.set(true); this.errorMessage.set(null);
+    this.authService.initiateLogin(this.credentialsForm.value).subscribe({
+      next: (res) => { this.pendingEmail.set(res.email); this.step.set('otp'); this.startCooldown(); this.loading.set(false); },
+      error: (err) => { this.errorMessage.set(err.message || 'بيانات غير صحيحة'); this.loading.set(false); }
     });
   }
+
+  onSubmitOtp(): void {
+    if (this.otpForm.invalid) { this.otpForm.markAllAsTouched(); return; }
+    this.loading.set(true); this.errorMessage.set(null);
+    this.authService.verifyOtp(this.pendingEmail(), this.otpForm.value.otpCode).subscribe({
+      next: () => this.router.navigate(['/account/profile']),
+      error: (err) => { this.errorMessage.set(err.message || 'رمز غير صحيح'); this.loading.set(false); }
+    });
+  }
+
+  resendOtp(): void {
+    if (this.resendCooldown() > 0) return;
+    this.authService.resendOtp(this.pendingEmail()).subscribe({
+      next: () => this.startCooldown(),
+      error: (err) => this.errorMessage.set(err.message || 'فشل إعادة الإرسال')
+    });
+  }
+
+  goBack(): void { this.step.set('credentials'); this.otpForm.reset(); this.errorMessage.set(null); this.stopTimer(); }
+
+  private startCooldown(): void {
+    this.resendCooldown.set(60); this.stopTimer();
+    this.timer = setInterval(() => {
+      this.resendCooldown.update(v => { if (v <= 1) { this.stopTimer(); return 0; } return v - 1; });
+    }, 1000);
+  }
+
+  private stopTimer(): void { if (this.timer) { clearInterval(this.timer); this.timer = null; } }
+  ngOnDestroy(): void { this.stopTimer(); }
+
+  get emailOrUsername() { return this.credentialsForm.get('emailOrUsername'); }
+  get password() { return this.credentialsForm.get('password'); }
+  get otpCode() { return this.otpForm.get('otpCode'); }
 }

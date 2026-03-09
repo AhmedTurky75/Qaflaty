@@ -2,14 +2,18 @@ import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
-import { catchError, tap, of } from 'rxjs';
+import { catchError, tap, of, Observable } from 'rxjs';
 import { GuestSessionService } from './guest-session.service';
 
 export interface StoreCustomer {
   id: string;
   email: string;
+  firstName: string;
+  lastName: string;
+  username: string;
   fullName: string;
   phone?: string;
+  secondaryPhone?: string;
   isVerified: boolean;
   createdAt: string;
   addresses: CustomerAddress[];
@@ -22,208 +26,159 @@ export interface CustomerAddress {
   state: string;
   postalCode: string;
   country: string;
-  phoneNumber: string;
   isDefault: boolean;
-}
-
-export interface CustomerAuthResponse {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: string;
-  customer: StoreCustomer;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface RegisterCustomerRequest {
   email: string;
   password: string;
-  fullName: string;
+  firstName: string;
+  lastName: string;
+  username: string;
   phone?: string;
 }
 
 export interface LoginCustomerRequest {
-  email: string;
+  emailOrUsername: string;
   password: string;
 }
 
-@Injectable({
-  providedIn: 'root'
-})
+export interface InitiateLoginResponse {
+  email: string;
+}
+
+@Injectable({ providedIn: 'root' })
 export class CustomerAuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly guestSession = inject(GuestSessionService);
   private readonly apiUrl = `${environment.apiUrl}/storefront/auth`;
 
-  // State signals
-  private readonly _customer = signal<StoreCustomer | null>(null);
-  private readonly _accessToken = signal<string | null>(null);
-  private readonly _refreshToken = signal<string | null>(null);
-
-  // Public readonly signals
+  private readonly _customer = signal<StoreCustomer | null>(this.loadFromStorage());
   readonly customer = this._customer.asReadonly();
   readonly isAuthenticated = computed(() => this._customer() !== null);
-  readonly customerName = computed(() => this._customer()?.fullName ?? 'Guest');
+  readonly customerName = computed(() => {
+    const c = this._customer();
+    return c ? c.fullName || `${c.firstName} ${c.lastName}` : 'Guest';
+  });
   readonly customerEmail = computed(() => this._customer()?.email);
 
-  // Auto-save to localStorage
   private readonly saveEffect = effect(() => {
     const customer = this._customer();
-    const accessToken = this._accessToken();
-    const refreshToken = this._refreshToken();
-
-    if (customer && accessToken && refreshToken) {
+    if (customer) {
       localStorage.setItem('customer', JSON.stringify(customer));
-      localStorage.setItem('customer_access_token', accessToken);
-      localStorage.setItem('customer_refresh_token', refreshToken);
     } else {
       localStorage.removeItem('customer');
-      localStorage.removeItem('customer_access_token');
-      localStorage.removeItem('customer_refresh_token');
     }
   });
 
-  constructor() {
-    this.loadFromStorage();
+  private loadFromStorage(): StoreCustomer | null {
+    try {
+      const c = localStorage.getItem('customer');
+      return c ? JSON.parse(c) : null;
+    } catch { return null; }
   }
 
-  private loadFromStorage(): void {
-    const customer = localStorage.getItem('customer');
-    const accessToken = localStorage.getItem('customer_access_token');
-    const refreshToken = localStorage.getItem('customer_refresh_token');
-
-    if (customer && accessToken && refreshToken) {
-      this._customer.set(JSON.parse(customer));
-      this._accessToken.set(accessToken);
-      this._refreshToken.set(refreshToken);
-    }
+  /** Step 1: credentials → OTP sent */
+  initiateLogin(request: LoginCustomerRequest): Observable<InitiateLoginResponse> {
+    return this.http.post<InitiateLoginResponse>(`${this.apiUrl}/login`, request, { withCredentials: true });
   }
 
-  register(request: RegisterCustomerRequest) {
-    return this.http.post<CustomerAuthResponse>(`${this.apiUrl}/register`, request).pipe(
-      tap(response => this.handleAuthSuccess(response)),
-      catchError(error => {
-        console.error('Registration failed', error);
-        throw error;
+  /** Step 2: verify OTP → cookies set, customer returned */
+  verifyOtp(email: string, otpCode: string): Observable<StoreCustomer> {
+    return this.http.post<StoreCustomer>(
+      `${this.apiUrl}/verify-otp`,
+      { email, otpCode },
+      { withCredentials: true }
+    ).pipe(tap(customer => {
+      this._customer.set(customer);
+      this.syncCart();
+    }));
+  }
+
+  resendOtp(email: string): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/resend-otp`, { email }, { withCredentials: true });
+  }
+
+  register(request: RegisterCustomerRequest): Observable<StoreCustomer> {
+    return this.http.post<StoreCustomer>(`${this.apiUrl}/register`, request, { withCredentials: true }).pipe(
+      tap(customer => {
+        this._customer.set(customer);
+        this.syncCart();
       })
     );
   }
 
-  login(request: LoginCustomerRequest) {
-    return this.http.post<CustomerAuthResponse>(`${this.apiUrl}/login`, request).pipe(
-      tap(response => this.handleAuthSuccess(response)),
-      catchError(error => {
-        console.error('Login failed', error);
-        throw error;
-      })
-    );
+  refreshToken(): Observable<StoreCustomer> {
+    return this.http.post<StoreCustomer>(`${this.apiUrl}/refresh`, {}, { withCredentials: true })
+      .pipe(tap(c => this._customer.set(c)));
   }
 
   logout(): void {
+    this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true })
+      .subscribe({ complete: () => this.clearAuth(), error: () => this.clearAuth() });
+  }
+
+  getProfile(): Observable<StoreCustomer | null> {
+    return this.http.get<StoreCustomer>(`${this.apiUrl}/me`, { withCredentials: true }).pipe(
+      tap(c => this._customer.set(c)),
+      catchError(() => of(null))
+    );
+  }
+
+  updateProfile(profile: { fullName?: string; phone?: string; secondaryPhone?: string }): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/profile`, profile, { withCredentials: true }).pipe(
+      tap(() => {
+        const current = this._customer();
+        if (current) this._customer.set({ ...current, ...profile });
+      })
+    );
+  }
+
+  addAddress(address: Omit<CustomerAddress, 'isDefault'> & { isDefault?: boolean }): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/storefront/addresses`, address, { withCredentials: true }).pipe(
+      tap(() => this.getProfile().subscribe())
+    );
+  }
+
+  removeAddress(label: string): Observable<void> {
+    return this.http.delete<void>(
+      `${environment.apiUrl}/storefront/addresses/${encodeURIComponent(label)}`,
+      { withCredentials: true }
+    ).pipe(tap(() => this.getProfile().subscribe()));
+  }
+
+  getLocations(): { countries: () => Observable<any[]>; cities: (id: number) => Observable<any[]> } {
+    return {
+      countries: () => this.http.get<any[]>(`${environment.apiUrl}/storefront/locations/countries`),
+      cities: (countryId: number) => this.http.get<any[]>(`${environment.apiUrl}/storefront/locations/cities?countryId=${countryId}`)
+    };
+  }
+
+  private clearAuth(): void {
+    localStorage.removeItem('customer');
     this._customer.set(null);
-    this._accessToken.set(null);
-    this._refreshToken.set(null);
     this.router.navigate(['/']);
   }
 
-  getProfile() {
-    return this.http.get<StoreCustomer>(`${this.apiUrl}/me`).pipe(
-      tap(customer => this._customer.set(customer)),
-      catchError(error => {
-        console.error('Failed to fetch profile', error);
-        return of(null);
-      })
-    );
-  }
-
-  updateProfile(profile: { fullName: string; email: string; phone?: string }) {
-    return this.http.put(`${this.apiUrl}/profile`, profile).pipe(
-      tap(() => {
-        const current = this._customer();
-        if (current) {
-          this._customer.set({ ...current, ...profile });
-        }
-      })
-    );
-  }
-
-  addAddress(address: Omit<CustomerAddress, 'isDefault'> & { isDefault?: boolean }) {
-    return this.http.post(`${this.apiUrl}/addresses`, address).pipe(
-      tap(() => {
-        // Refresh customer profile to get updated addresses
-        this.getProfile().subscribe();
-      })
-    );
-  }
-
-  updateAddress(label: string, address: Omit<CustomerAddress, 'isDefault'> & { isDefault?: boolean }) {
-    return this.http.put(`${this.apiUrl}/addresses/${encodeURIComponent(label)}`, address).pipe(
-      tap(() => {
-        // Refresh customer profile to get updated addresses
-        this.getProfile().subscribe();
-      })
-    );
-  }
-
-  removeAddress(label: string) {
-    return this.http.delete(`${this.apiUrl}/addresses/${encodeURIComponent(label)}`).pipe(
-      tap(() => {
-        // Refresh customer profile to get updated addresses
-        this.getProfile().subscribe();
-      })
-    );
-  }
-
-  setDefaultAddress(label: string) {
-    return this.http.put(`${this.apiUrl}/addresses/${encodeURIComponent(label)}/set-default`, {}).pipe(
-      tap(() => {
-        // Refresh customer profile to get updated addresses
-        this.getProfile().subscribe();
-      })
-    );
-  }
-
-  getAccessToken(): string | null {
-    return this._accessToken();
-  }
-
-  private async handleAuthSuccess(response: CustomerAuthResponse): Promise<void> {
-    this._customer.set(response.customer);
-    this._accessToken.set(response.accessToken);
-    this._refreshToken.set(response.refreshToken);
-
-    // Sync cart after login
-    await this.syncCart();
-  }
-
-  private async syncCart(): Promise<void> {
-    // Fix: CartService stores the cart as a raw CartItem[] array (not { items: [...] })
+  private syncCart(): void {
     const guestCartJson = localStorage.getItem('qaflaty_cart');
     const guestSessionId = this.guestSession.getGuestId();
-
-    // Nothing to sync if both localStorage cart and server guest cart are absent
     if (!guestCartJson && !guestSessionId) return;
 
     try {
       const guestItems: any[] = guestCartJson ? JSON.parse(guestCartJson) : [];
-
       const syncRequest = {
         guestItems: guestItems.map((item: any) => ({
-          productId: item.productId,
-          variantId: item.variantId ?? null,
-          quantity: item.quantity
+          productId: item.productId, variantId: item.variantId ?? null, quantity: item.quantity
         })),
-        guestSessionId  // null if no server-side guest cart exists
+        guestSessionId
       };
-
-      await this.http.post(`${environment.apiUrl}/storefront/cart/sync`, syncRequest).toPromise();
-
-      // Clear local cart and invalidate the server-side guest UUID
+      this.http.post(`${environment.apiUrl}/storefront/cart/sync`, syncRequest, { withCredentials: true }).subscribe();
       localStorage.removeItem('qaflaty_cart');
       this.guestSession.clearGuestId();
-
-      console.log('Cart synced successfully');
-    } catch (error) {
-      console.error('Failed to sync cart', error);
-    }
+    } catch (e) { console.error('Failed to sync cart', e); }
   }
 }

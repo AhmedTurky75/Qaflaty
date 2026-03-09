@@ -1,161 +1,119 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, BehaviorSubject, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
-  AuthResponse,
+  MerchantDto,
   LoginRequest,
   RegisterRequest,
-  RefreshTokenRequest,
   ChangePasswordRequest,
-  UpdateProfileRequest,
-  MerchantDto
+  SelectStoreResult,
+  InitiateLoginResponse
 } from 'shared';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
 
-  private currentMerchantSubject = new BehaviorSubject<MerchantDto | null>(null);
-  public currentMerchant$ = this.currentMerchantSubject.asObservable();
+  // Signals for reactive state
+  currentMerchant = signal<MerchantDto | null>(this.loadStoredMerchant());
+  isAuthenticated = signal<boolean>(!!this.loadStoredMerchant());
+  storeId = signal<string | null>(localStorage.getItem('qaflaty_store_id'));
+  role = signal<string | null>(localStorage.getItem('qaflaty_role'));
+  permissions = signal<string[]>(JSON.parse(localStorage.getItem('qaflaty_permissions') || '[]'));
 
-  isAuthenticated = signal<boolean>(false);
-
-  private readonly TOKEN_KEY = 'qaflaty_access_token';
-  private readonly REFRESH_TOKEN_KEY = 'qaflaty_refresh_token';
   private readonly MERCHANT_KEY = 'qaflaty_merchant';
 
-  constructor() {
-    this.loadStoredAuth();
+  private loadStoredMerchant(): MerchantDto | null {
+    try {
+      const m = localStorage.getItem(this.MERCHANT_KEY);
+      return m ? JSON.parse(m) : null;
+    } catch { return null; }
   }
 
-  private loadStoredAuth(): void {
-    const token = this.getAccessToken();
-    const merchant = this.getStoredMerchant();
-
-    if (token && merchant) {
-      this.isAuthenticated.set(true);
-      this.currentMerchantSubject.next(merchant);
-    }
+  /** Step 1: credentials → OTP sent, returns email */
+  initiateLogin(request: LoginRequest): Observable<InitiateLoginResponse> {
+    return this.http.post<InitiateLoginResponse>(`${environment.apiUrl}/auth/login`, request, { withCredentials: true });
   }
 
-  register(request: RegisterRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/register`, request)
-      .pipe(
-        tap(response => this.handleAuthSuccess(response)),
-        catchError(error => this.handleError(error))
-      );
+  /** Step 2: verify OTP → cookies set, merchant returned */
+  verifyOtp(email: string, otpCode: string): Observable<MerchantDto> {
+    return this.http.post<MerchantDto>(
+      `${environment.apiUrl}/auth/verify-otp`,
+      { email, otpCode },
+      { withCredentials: true }
+    ).pipe(
+      tap(merchant => this.storeMerchant(merchant))
+    );
   }
 
-  login(request: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/login`, request)
-      .pipe(
-        tap(response => this.handleAuthSuccess(response)),
-        catchError(error => this.handleError(error))
-      );
+  resendOtp(email: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/resend-otp`, { email }, { withCredentials: true });
   }
 
-  refreshToken(): Observable<AuthResponse> {
-    const refreshToken = this.getRefreshToken();
-    if (!refreshToken) {
-      return throwError(() => new Error('No refresh token available'));
-    }
-
-    const request: RefreshTokenRequest = { refreshToken };
-    return this.http.post<AuthResponse>(`${environment.apiUrl}/auth/refresh`, request)
-      .pipe(
-        tap(response => this.handleAuthSuccess(response)),
-        catchError(error => {
-          this.logout();
-          return throwError(() => error);
-        })
-      );
+  register(request: RegisterRequest): Observable<MerchantDto> {
+    return this.http.post<MerchantDto>(`${environment.apiUrl}/auth/register`, request, { withCredentials: true })
+      .pipe(tap(merchant => this.storeMerchant(merchant)));
   }
 
-  changePassword(request: ChangePasswordRequest): Observable<void> {
-    return this.http.post<void>(`${environment.apiUrl}/auth/change-password`, request);
+  selectStore(storeId: string): Observable<SelectStoreResult> {
+    return this.http.post<SelectStoreResult>(
+      `${environment.apiUrl}/auth/select-store`,
+      { storeId },
+      { withCredentials: true }
+    ).pipe(
+      tap(result => {
+        this.storeId.set(result.storeId);
+        this.role.set(result.role);
+        this.permissions.set(result.permissions);
+        localStorage.setItem('qaflaty_store_id', result.storeId);
+        localStorage.setItem('qaflaty_role', result.role);
+        localStorage.setItem('qaflaty_permissions', JSON.stringify(result.permissions));
+      })
+    );
+  }
+
+  refreshToken(): Observable<MerchantDto> {
+    return this.http.post<MerchantDto>(`${environment.apiUrl}/auth/refresh`, {}, { withCredentials: true })
+      .pipe(tap(merchant => this.storeMerchant(merchant)));
   }
 
   logout(): void {
-    const refreshToken = this.getRefreshToken();
-    if (refreshToken) {
-      this.http.post(`${environment.apiUrl}/auth/logout`, { refreshToken })
-        .subscribe({
-          complete: () => this.clearAuth()
-        });
-    } else {
-      this.clearAuth();
-    }
+    this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true })
+      .subscribe({ complete: () => this.clearAuth(), error: () => this.clearAuth() });
   }
 
   getCurrentMerchant(): Observable<MerchantDto> {
-    return this.http.get<MerchantDto>(`${environment.apiUrl}/auth/me`)
-      .pipe(
-        tap(merchant => {
-          this.currentMerchantSubject.next(merchant);
-          this.storeMerchant(merchant);
-        })
-      );
+    return this.http.get<MerchantDto>(`${environment.apiUrl}/auth/me`, { withCredentials: true })
+      .pipe(tap(merchant => this.storeMerchant(merchant)));
   }
 
-  updateProfile(request: UpdateProfileRequest): Observable<MerchantDto> {
-    return this.http.put<MerchantDto>(`${environment.apiUrl}/auth/profile`, request)
-      .pipe(
-        tap(merchant => {
-          this.currentMerchantSubject.next(merchant);
-          this.storeMerchant(merchant);
-        })
-      );
+  changePassword(request: ChangePasswordRequest): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/auth/change-password`, request, { withCredentials: true });
   }
 
-  private handleAuthSuccess(response: AuthResponse): void {
-    this.storeTokens(response.accessToken, response.refreshToken);
-    this.storeMerchant(response.merchant);
-    this.currentMerchantSubject.next(response.merchant);
-    this.isAuthenticated.set(true);
-  }
-
-  private clearAuth(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(this.MERCHANT_KEY);
-    this.currentMerchantSubject.next(null);
-    this.isAuthenticated.set(false);
-    this.router.navigate(['/auth/login']);
-  }
-
-  private storeTokens(accessToken: string, refreshToken: string): void {
-    localStorage.setItem(this.TOKEN_KEY, accessToken);
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+  hasPermission(permission: string): boolean {
+    return this.permissions().includes(permission);
   }
 
   private storeMerchant(merchant: MerchantDto): void {
     localStorage.setItem(this.MERCHANT_KEY, JSON.stringify(merchant));
+    this.currentMerchant.set(merchant);
+    this.isAuthenticated.set(true);
   }
 
-  private getStoredMerchant(): MerchantDto | null {
-    const merchantJson = localStorage.getItem(this.MERCHANT_KEY);
-    return merchantJson ? JSON.parse(merchantJson) : null;
-  }
-
-  getAccessToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-  }
-
-  getCurrentMerchantId(): string | undefined {
-    return this.currentMerchantSubject.value?.id;
-  }
-
-  private handleError(error: any): Observable<never> {
-    console.error('Auth error:', error);
-    return throwError(() => error);
+  private clearAuth(): void {
+    localStorage.removeItem(this.MERCHANT_KEY);
+    localStorage.removeItem('qaflaty_store_id');
+    localStorage.removeItem('qaflaty_role');
+    localStorage.removeItem('qaflaty_permissions');
+    this.currentMerchant.set(null);
+    this.isAuthenticated.set(false);
+    this.storeId.set(null);
+    this.role.set(null);
+    this.permissions.set([]);
+    this.router.navigate(['/auth/login']);
   }
 }
