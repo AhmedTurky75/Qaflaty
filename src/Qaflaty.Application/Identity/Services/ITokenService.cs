@@ -1,6 +1,7 @@
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Identity.Aggregates.Merchant;
 using Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
+using Qaflaty.Domain.Identity.Enums;
 
 namespace Qaflaty.Application.Identity.Services;
 
@@ -8,6 +9,7 @@ public interface ITokenService
 {
     // Role-specific token generation (preferred)
     string GenerateMerchantAccessToken(Merchant merchant);
+    string GenerateMerchantAccessToken(Merchant merchant, StoreId? storeId, MerchantRole? role);
     string GenerateCustomerAccessToken(StoreCustomer customer);
     DateTime GetMerchantAccessTokenExpiration();
     DateTime GetCustomerAccessTokenExpiration();

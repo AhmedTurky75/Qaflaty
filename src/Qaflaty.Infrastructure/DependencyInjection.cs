@@ -59,6 +59,8 @@ public static class DependencyInjection
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IChatConversationRepository, ChatConversationRepository>();
         services.AddScoped<IOrderOtpRepository, OrderOtpRepository>();
+        services.AddScoped<ICountryRepository, CountryRepository>();
+        services.AddScoped<ICityRepository, CityRepository>();
 
         // Identity Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();

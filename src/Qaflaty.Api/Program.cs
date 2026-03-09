@@ -106,6 +106,15 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("CustomerPolicy", policy =>
         policy.RequireRole("customer"));
+
+    options.AddPolicy("OwnerPolicy", policy =>
+        policy.RequireRole("merchant").RequireClaim("role", "Owner"));
+
+    options.AddPolicy("AdminOrAbove", policy =>
+        policy.RequireRole("merchant").RequireClaim("role", "Owner", "Admin"));
+
+    options.AddPolicy("ManagerOrAbove", policy =>
+        policy.RequireRole("merchant").RequireClaim("role", "Owner", "Admin", "Manager"));
 });
 
 // Antiforgery (CSRF protection)

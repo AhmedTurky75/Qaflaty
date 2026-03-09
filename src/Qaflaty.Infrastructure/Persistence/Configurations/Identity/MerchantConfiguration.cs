@@ -81,6 +81,11 @@ public class MerchantConfiguration : IEntityTypeConfiguration<Merchant>
             .HasForeignKey(rt => rt.MerchantId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(m => m.StoreAssignments)
+            .WithOne()
+            .HasForeignKey(a => a.MerchantId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.Ignore(m => m.DomainEvents);
     }
 }

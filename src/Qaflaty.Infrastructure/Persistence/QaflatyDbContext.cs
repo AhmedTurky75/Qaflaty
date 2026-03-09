@@ -29,6 +29,7 @@ public class QaflatyDbContext : DbContext
     public DbSet<StoreCustomer> StoreCustomers => Set<StoreCustomer>();
     public DbSet<CustomerRefreshToken> CustomerRefreshTokens => Set<CustomerRefreshToken>();
     public DbSet<LoginOtp> LoginOtps => Set<LoginOtp>();
+    public DbSet<MerchantStoreAssignment> MerchantStoreAssignments => Set<MerchantStoreAssignment>();
 
     // Catalog
     public DbSet<Store> Stores => Set<Store>();

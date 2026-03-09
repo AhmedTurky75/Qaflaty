@@ -74,4 +74,14 @@ public static class IdentityErrors
 
     public static readonly Error CustomerNotFound =
         new("Identity.CustomerNotFound", "Customer not found");
+
+    // Store access & permission errors
+    public static readonly Error StoreAccessDenied =
+        new("Identity.StoreAccessDenied", "You do not have access to this store");
+
+    public static readonly Error InsufficientPermissions =
+        new("Identity.InsufficientPermissions", "You do not have permission to perform this action");
+
+    public static readonly Error AlreadyAssignedToStore =
+        new("Identity.AlreadyAssignedToStore", "Merchant is already assigned to this store");
 }

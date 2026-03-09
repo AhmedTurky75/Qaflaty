@@ -6,12 +6,13 @@ namespace Qaflaty.Domain.Identity.ValueObjects;
 
 public sealed class PersonName : ValueObject
 {
-    public string FirstName { get; }
-    public string LastName { get; }
+    public string FirstName { get; private set; } = string.Empty;
+    public string LastName { get; private set; } = string.Empty;
     public string FullName => $"{FirstName} {LastName}";
-
-    // Backward-compat alias
     public string Value => FullName;
+
+    // Parameterless constructor for EF Core
+    private PersonName() { }
 
     private PersonName(string firstName, string lastName)
     {

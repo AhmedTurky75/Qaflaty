@@ -14,4 +14,8 @@ public interface IMerchantRepository
     Task AddAsync(Merchant merchant, CancellationToken ct = default);
     void Update(Merchant merchant);
     Task<RefreshToken?> GetRefreshTokenAsync(string token, CancellationToken ct = default);
+    Task<List<MerchantStoreAssignment>> GetStoreAssignmentsAsync(MerchantId merchantId, CancellationToken ct = default);
+    Task<Merchant?> GetByIdWithAssignmentsAsync(MerchantId id, CancellationToken ct = default);
+    Task<List<Merchant>> GetByIdsAsync(IEnumerable<MerchantId> ids, CancellationToken ct = default);
+    Task<List<Merchant>> GetByStoreIdAsync(StoreId storeId, CancellationToken ct = default);
 }

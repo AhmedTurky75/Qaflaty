@@ -8,6 +8,8 @@ using Qaflaty.Application.Identity.Services;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Identity.Aggregates.Merchant;
 using Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
+using Qaflaty.Domain.Identity.Enums;
+using Qaflaty.Domain.Identity.Services;
 
 namespace Qaflaty.Infrastructure.Services.Identity;
 
@@ -39,6 +41,43 @@ public class JwtTokenService : ITokenService
             issuer: _configuration["JwtSettings:Issuer"],
             audience: _configuration["JwtSettings:Audience"],
             claims: claims,
+            expires: GetMerchantAccessTokenExpiration(),
+            signingCredentials: credentials);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    // Merchant token with store context (role + permissions)
+    public string GenerateMerchantAccessToken(Merchant merchant, StoreId? storeId, MerchantRole? role)
+    {
+        if (storeId == null || role == null)
+            return GenerateMerchantAccessToken(merchant);
+
+        var key = GetSigningKey();
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var permissions = RolePermissions.GetPermissions(role.Value);
+        var permissionNames = Enum.GetValues<MerchantPermission>()
+            .Where(p => p != MerchantPermission.None && permissions.HasFlag(p))
+            .Select(p => p.ToString())
+            .ToArray();
+
+        var claimsList = new List<Claim>
+        {
+            new Claim(JwtRegisteredClaimNames.Sub, merchant.Id.Value.ToString()),
+            new Claim(JwtRegisteredClaimNames.Email, merchant.Email.Value),
+            new Claim("merchant_id", merchant.Id.Value.ToString()),
+            new Claim(ClaimTypes.Role, "merchant"),
+            new Claim("store_id", storeId.Value.Value.ToString()),
+            new Claim("role", role.Value.ToString()),
+            new Claim("permissions", string.Join(",", permissionNames)),
+            new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: _configuration["JwtSettings:Issuer"],
+            audience: _configuration["JwtSettings:Audience"],
+            claims: claimsList,
             expires: GetMerchantAccessTokenExpiration(),
             signingCredentials: credentials);
 

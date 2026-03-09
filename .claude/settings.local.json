@@ -149,7 +149,9 @@
       "Bash(npx nx build:*)",
       "Bash(ls -la \"D:\\\\Projects\\\\Qafilaty\\\\src\"\" | grep -E \"^d \")",
       "Bash(powershell.exe:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(powershell:*)",
+      "Bash(\"D:/Projects/Qafilaty/src/Qaflaty.Api/Controllers/AuthController.cs\":*)"
     ],
     "deny": [],
     "ask": [],

@@ -36,6 +36,37 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
+    public StoreId? StoreId
+    {
+        get
+        {
+            var storeIdClaim = _httpContextAccessor.HttpContext?.User.FindFirst("store_id");
+            if (storeIdClaim != null && Guid.TryParse(storeIdClaim.Value, out var storeGuid))
+                return new StoreId(storeGuid);
+            return null;
+        }
+    }
+
+    public string? Role
+    {
+        get
+        {
+            var roleClaim = _httpContextAccessor.HttpContext?.User.FindFirst("role");
+            return roleClaim?.Value;
+        }
+    }
+
+    public string[]? Permissions
+    {
+        get
+        {
+            var permissionsClaim = _httpContextAccessor.HttpContext?.User.FindFirst("permissions");
+            if (permissionsClaim == null || string.IsNullOrWhiteSpace(permissionsClaim.Value))
+                return null;
+            return permissionsClaim.Value.Split(',', StringSplitOptions.RemoveEmptyEntries);
+        }
+    }
+
     public bool IsAuthenticated => _httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated ?? false;
 
     public bool IsMerchant => MerchantId.HasValue;

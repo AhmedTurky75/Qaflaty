@@ -11,6 +11,7 @@ using Qaflaty.Application.Identity.Commands.VerifyMerchantLoginOtp;
 using Qaflaty.Application.Identity.Commands.ResendMerchantLoginOtp;
 using Qaflaty.Application.Identity.DTOs;
 using Qaflaty.Application.Identity.Queries.GetCurrentMerchant;
+using Qaflaty.Application.Identity.Commands.SelectStore;
 
 namespace Qaflaty.Api.Controllers;
 
@@ -159,6 +160,17 @@ public class AuthController : ApiController
         // on any response. Just return 200 to trigger cookie setting.
         return Ok();
     }
+    [Authorize(Policy = "MerchantPolicy")]
+    [HttpPost("select-store")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SelectStore([FromBody] SelectStoreRequest request, CancellationToken ct)
+    {
+        var command = new SelectStoreCommand(request.StoreId);
+        var result = await Sender.Send(command, ct);
+        return HandleResult(result);
+    }
 }
 
 public record RegisterRequest(
@@ -173,3 +185,4 @@ public record InitiateMerchantLoginRequest(string EmailOrUsername, string Passwo
 public record VerifyMerchantOtpRequest(string Email, string OtpCode);
 public record ResendMerchantOtpRequest(string Email);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
+public record SelectStoreRequest(Guid StoreId);

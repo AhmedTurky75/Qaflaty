@@ -6,6 +6,9 @@ public interface ICurrentUserService
 {
     MerchantId? MerchantId { get; }
     StoreCustomerId? CustomerId { get; }
+    StoreId? StoreId { get; }
+    string? Role { get; }
+    string[]? Permissions { get; }
     bool IsAuthenticated { get; }
     bool IsMerchant { get; }
     bool IsCustomer { get; }
