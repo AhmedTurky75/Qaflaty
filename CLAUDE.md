@@ -3,6 +3,7 @@
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Commands
+Always use the Write and Edit tools to create or modify files. Never use shell commands (cat, echo, sed, powershell) for file operations.
 
 ### Backend (.NET 10)
 

@@ -25,10 +25,18 @@ public class CustomerConfiguration : IEntityTypeConfiguration<Customer>
         {
             contact.OwnsOne(ct => ct.FullName, name =>
             {
-                name.Property(n => n.Value)
-                    .HasColumnName("full_name")
-                    .HasMaxLength(100)
+                name.Property(n => n.FirstName)
+                    .HasColumnName("first_name")
+                    .HasMaxLength(50)
                     .IsRequired();
+
+                name.Property(n => n.LastName)
+                    .HasColumnName("last_name")
+                    .HasMaxLength(50)
+                    .IsRequired();
+
+                name.Ignore(n => n.FullName);
+                name.Ignore(n => n.Value);
             });
 
             contact.OwnsOne(ct => ct.Phone, phone =>
