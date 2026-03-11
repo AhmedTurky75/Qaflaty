@@ -8,8 +8,10 @@ import {
   LoginRequest,
   RegisterRequest,
   ChangePasswordRequest,
+  UpdateProfileRequest,
   SelectStoreResult,
-  InitiateLoginResponse
+  InitiateLoginResponse,
+  VerifyLoginResponse
 } from 'shared';
 
 @Injectable({ providedIn: 'root' })
@@ -38,14 +40,14 @@ export class AuthService {
     return this.http.post<InitiateLoginResponse>(`${environment.apiUrl}/auth/login`, request, { withCredentials: true });
   }
 
-  /** Step 2: verify OTP → cookies set, merchant returned */
-  verifyOtp(email: string, otpCode: string): Observable<MerchantDto> {
-    return this.http.post<MerchantDto>(
+  /** Step 2: verify OTP → cookies set, returns merchant + storeIds */
+  verifyOtp(email: string, otpCode: string): Observable<VerifyLoginResponse> {
+    return this.http.post<VerifyLoginResponse>(
       `${environment.apiUrl}/auth/verify-otp`,
       { email, otpCode },
       { withCredentials: true }
     ).pipe(
-      tap(merchant => this.storeMerchant(merchant))
+      tap(res => this.storeMerchant(res.merchant))
     );
   }
 
@@ -90,12 +92,27 @@ export class AuthService {
       .pipe(tap(merchant => this.storeMerchant(merchant)));
   }
 
+  updateProfile(request: UpdateProfileRequest): Observable<MerchantDto> {
+    return this.http.patch<MerchantDto>(`${environment.apiUrl}/auth/me`, request, { withCredentials: true })
+      .pipe(tap(merchant => this.storeMerchant(merchant)));
+  }
+
   changePassword(request: ChangePasswordRequest): Observable<void> {
     return this.http.post<void>(`${environment.apiUrl}/auth/change-password`, request, { withCredentials: true });
   }
 
   hasPermission(permission: string): boolean {
     return this.permissions().includes(permission);
+  }
+
+  /** Returns the current merchant's ID (for SignalR hub usage) */
+  getCurrentMerchantId(): string | null {
+    return this.currentMerchant()?.id ?? null;
+  }
+
+  /** Returns null since auth tokens are now in httpOnly cookies, not accessible to JS */
+  getAccessToken(): string | null {
+    return null;
   }
 
   private storeMerchant(merchant: MerchantDto): void {

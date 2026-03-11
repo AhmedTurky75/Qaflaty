@@ -22,6 +22,10 @@ public class CustomerRepository : ICustomerRepository
         => await _context.Customers
             .FirstOrDefaultAsync(c => c.StoreId == storeId && c.Contact.Phone.Value == phone.Value, ct);
 
+    public async Task<Customer?> GetByEmailAsync(StoreId storeId, string email, CancellationToken ct = default)
+        => await _context.Customers
+            .FirstOrDefaultAsync(c => c.StoreId == storeId && c.Contact.Email != null && c.Contact.Email.Value == email, ct);
+
     public async Task<IReadOnlyList<Customer>> GetByStoreIdAsync(StoreId storeId, CancellationToken ct = default)
         => await _context.Customers
             .Where(c => c.StoreId == storeId)

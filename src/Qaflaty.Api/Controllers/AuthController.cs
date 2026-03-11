@@ -12,6 +12,7 @@ using Qaflaty.Application.Identity.Commands.ResendMerchantLoginOtp;
 using Qaflaty.Application.Identity.DTOs;
 using Qaflaty.Application.Identity.Queries.GetCurrentMerchant;
 using Qaflaty.Application.Identity.Commands.SelectStore;
+using Qaflaty.Application.Identity.Commands.UpdateMerchantProfile;
 
 namespace Qaflaty.Api.Controllers;
 
@@ -66,7 +67,7 @@ public class AuthController : ApiController
         var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
         cookieService.SetAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
 
-        return Ok(result.Value.Merchant);
+        return Ok(new { merchant = result.Value.Merchant, storeIds = result.Value.StoreIds });
     }
 
     [HttpPost("resend-otp")]
@@ -137,6 +138,18 @@ public class AuthController : ApiController
     }
 
     [Authorize(Policy = "MerchantPolicy")]
+    [HttpPatch("me")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken ct)
+    {
+        var command = new UpdateMerchantProfileCommand(request.FirstName, request.LastName, request.Phone);
+        var result = await Sender.Send(command, ct);
+        return HandleResult(result);
+    }
+
+    [Authorize(Policy = "MerchantPolicy")]
     [HttpPost("change-password")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -186,3 +199,4 @@ public record VerifyMerchantOtpRequest(string Email, string OtpCode);
 public record ResendMerchantOtpRequest(string Email);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public record SelectStoreRequest(Guid StoreId);
+public record UpdateProfileRequest(string FirstName, string LastName, string? Phone);

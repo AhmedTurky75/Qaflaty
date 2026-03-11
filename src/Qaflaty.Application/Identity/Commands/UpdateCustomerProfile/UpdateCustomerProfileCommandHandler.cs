@@ -22,8 +22,7 @@ public class UpdateCustomerProfileCommandHandler : ICommandHandler<UpdateCustome
         if (customer == null)
             return Result.Failure(new Error("StoreCustomer.NotFound", "Customer not found"));
 
-        // Use CreateFromFullName for backward-compat with the existing FullName field on the command
-        var nameResult = PersonName.CreateFromFullName(request.FullName);
+        var nameResult = PersonName.Create(request.FirstName, request.LastName);
         if (nameResult.IsFailure)
             return Result.Failure(nameResult.Error);
 

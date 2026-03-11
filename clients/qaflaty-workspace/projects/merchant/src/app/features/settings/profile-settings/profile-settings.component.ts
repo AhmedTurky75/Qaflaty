@@ -2,7 +2,6 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
-import { MerchantDto } from 'shared';
 
 @Component({
   selector: 'app-profile-settings',
@@ -18,34 +17,24 @@ export class ProfileSettingsComponent implements OnInit {
   loading = signal(false);
   success = signal(false);
   error = signal<string | null>(null);
-  currentMerchant = signal<MerchantDto | null>(null);
 
   ngOnInit(): void {
-    this.initializeForm();
-    this.loadCurrentMerchant();
-  }
-
-  private initializeForm(): void {
     this.profileForm = this.fb.group({
-      fullName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      username: [{ value: '', disabled: true }],
       email: [{ value: '', disabled: true }],
       phone: ['', [Validators.pattern(/^[\d\s\-\+\(\)]+$/)]]
     });
-  }
 
-  private loadCurrentMerchant(): void {
-    this.authService.currentMerchant$.subscribe(merchant => {
-      if (merchant) {
-        this.currentMerchant.set(merchant);
-        this.profileForm.patchValue({
-          fullName: merchant.fullName,
-          email: merchant.email,
-          phone: merchant.phone || ''
-        });
-      } else {
-        this.authService.getCurrentMerchant().subscribe();
-      }
-    });
+    const m = this.authService.currentMerchant();
+    if (m) {
+      this.profileForm.patchValue({ firstName: m.firstName, lastName: m.lastName, username: m.username, email: m.email, phone: m.phone || '' });
+    } else {
+      this.authService.getCurrentMerchant().subscribe(loaded => {
+        this.profileForm.patchValue({ firstName: loaded.firstName, lastName: loaded.lastName, username: loaded.username, email: loaded.email, phone: loaded.phone || '' });
+      });
+    }
   }
 
   onSubmit(): void {
@@ -53,34 +42,28 @@ export class ProfileSettingsComponent implements OnInit {
       this.profileForm.markAllAsTouched();
       return;
     }
-
     this.loading.set(true);
     this.success.set(false);
     this.error.set(null);
 
-    const request = {
-      fullName: this.profileForm.get('fullName')?.value,
+    this.authService.updateProfile({
+      firstName: this.profileForm.get('firstName')!.value,
+      lastName: this.profileForm.get('lastName')!.value,
       phone: this.profileForm.get('phone')?.value || undefined
-    };
-
-    this.authService.updateProfile(request).subscribe({
+    }).subscribe({
       next: () => {
         this.success.set(true);
         this.loading.set(false);
         setTimeout(() => this.success.set(false), 5000);
       },
       error: (err) => {
-        this.error.set(err.error?.message || 'Failed to update profile. Please try again.');
+        this.error.set(err.error?.message || 'Failed to update profile.');
         this.loading.set(false);
       }
     });
   }
 
-  get fullName() {
-    return this.profileForm.get('fullName');
-  }
-
-  get phone() {
-    return this.profileForm.get('phone');
-  }
+  get firstName() { return this.profileForm.get('firstName'); }
+  get lastName() { return this.profileForm.get('lastName'); }
+  get phone() { return this.profileForm.get('phone'); }
 }

@@ -5,6 +5,7 @@ using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.Commands.PlaceOrder;
 using Qaflaty.Application.Ordering.Commands.SendOrderOtp;
 using Qaflaty.Application.Ordering.Commands.VerifyOrderOtp;
+using Qaflaty.Application.Ordering.Queries.GetMyOrders;
 using Qaflaty.Application.Ordering.Queries.TrackOrder;
 
 namespace Qaflaty.Api.Controllers;
@@ -18,6 +19,16 @@ public class StorefrontOrdersController : ApiController
     public StorefrontOrdersController(ITenantContext tenantContext)
     {
         _tenantContext = tenantContext;
+    }
+
+    [HttpGet]
+    [Microsoft.AspNetCore.Authorization.Authorize(Policy = "CustomerPolicy")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetMyOrders(CancellationToken ct)
+    {
+        var result = await Sender.Send(new GetMyOrdersQuery(), ct);
+        return HandleResult(result);
     }
 
     [HttpPost]

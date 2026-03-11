@@ -62,7 +62,8 @@ public class RefreshTokenCommandHandler : ICommandHandler<RefreshTokenCommand, A
             accessToken,
             newRefreshToken,
             expiresAt,
-            merchantDto);
+            merchantDto,
+            new List<Guid>());
 
         return Result.Success(response);
     }

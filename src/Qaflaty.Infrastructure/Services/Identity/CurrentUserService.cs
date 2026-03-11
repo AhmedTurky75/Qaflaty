@@ -47,6 +47,16 @@ public class CurrentUserService : ICurrentUserService
         }
     }
 
+    public string? Email
+    {
+        get
+        {
+            var emailClaim = _httpContextAccessor.HttpContext?.User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Email)
+                ?? _httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.Email);
+            return emailClaim?.Value;
+        }
+    }
+
     public string? Role
     {
         get

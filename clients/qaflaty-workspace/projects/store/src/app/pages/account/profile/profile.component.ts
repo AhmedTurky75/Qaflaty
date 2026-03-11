@@ -18,29 +18,15 @@ import { CustomerAuthService } from '../../../services/customer-auth.service';
             <p class="mt-1 text-sm text-gray-600">إدارة معلومات حسابك الشخصية</p>
           </div>
 
-          <!-- Success Message -->
           @if (successMessage()) {
             <div class="mx-6 mt-4 rounded-md bg-green-50 p-4">
-              <div class="flex">
-                <div class="ml-3">
-                  <p class="text-sm font-medium text-green-800">
-                    {{ successMessage() }}
-                  </p>
-                </div>
-              </div>
+              <p class="text-sm font-medium text-green-800">{{ successMessage() }}</p>
             </div>
           }
 
-          <!-- Error Message -->
           @if (errorMessage()) {
             <div class="mx-6 mt-4 rounded-md bg-red-50 p-4">
-              <div class="flex">
-                <div class="ml-3">
-                  <p class="text-sm font-medium text-red-800">
-                    {{ errorMessage() }}
-                  </p>
-                </div>
-              </div>
+              <p class="text-sm font-medium text-red-800">{{ errorMessage() }}</p>
             </div>
           }
 
@@ -48,9 +34,19 @@ import { CustomerAuthService } from '../../../services/customer-auth.service';
           @if (!isEditing()) {
             <div class="px-6 py-5">
               <dl class="space-y-4">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div>
+                    <dt class="text-sm font-medium text-gray-500">الاسم الأول</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ customer()?.firstName }}</dd>
+                  </div>
+                  <div>
+                    <dt class="text-sm font-medium text-gray-500">الاسم الأخير</dt>
+                    <dd class="mt-1 text-sm text-gray-900">{{ customer()?.lastName }}</dd>
+                  </div>
+                </div>
                 <div>
-                  <dt class="text-sm font-medium text-gray-500">الاسم الكامل</dt>
-                  <dd class="mt-1 text-sm text-gray-900">{{ customer()?.fullName }}</dd>
+                  <dt class="text-sm font-medium text-gray-500">اسم المستخدم</dt>
+                  <dd class="mt-1 text-sm text-gray-900">{{ customer()?.username }}</dd>
                 </div>
                 <div>
                   <dt class="text-sm font-medium text-gray-500">البريد الإلكتروني</dt>
@@ -61,29 +57,26 @@ import { CustomerAuthService } from '../../../services/customer-auth.service';
                   <dd class="mt-1 text-sm text-gray-900">{{ customer()?.phone || 'غير محدد' }}</dd>
                 </div>
                 <div>
+                  <dt class="text-sm font-medium text-gray-500">رقم هاتف إضافي</dt>
+                  <dd class="mt-1 text-sm text-gray-900">{{ customer()?.secondaryPhone || 'غير محدد' }}</dd>
+                </div>
+                <div>
                   <dt class="text-sm font-medium text-gray-500">تاريخ الانضمام</dt>
                   <dd class="mt-1 text-sm text-gray-900">{{ formatDate(customer()?.createdAt) }}</dd>
                 </div>
               </dl>
 
-              <div class="mt-6 flex gap-3">
-                <button
-                  type="button"
-                  (click)="startEditing()"
-                  class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
+              <div class="mt-6 flex flex-wrap gap-3">
+                <button type="button" (click)="startEditing()"
+                  class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                   تعديل الملف الشخصي
                 </button>
-                <a
-                  routerLink="/account/addresses"
-                  class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
+                <a routerLink="/account/addresses"
+                  class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                   إدارة العناوين
                 </a>
-                <a
-                  routerLink="/account/orders"
-                  class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
+                <a routerLink="/account/orders"
+                  class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                   طلباتي
                 </a>
               </div>
@@ -93,67 +86,63 @@ import { CustomerAuthService } from '../../../services/customer-auth.service';
           <!-- Edit Mode -->
           @if (isEditing()) {
             <form class="px-6 py-5 space-y-6" [formGroup]="profileForm" (ngSubmit)="onSubmit()">
-              <div>
-                <label for="fullName" class="block text-sm font-medium text-gray-700">
-                  الاسم الكامل
-                </label>
-                <input
-                  id="fullName"
-                  type="text"
-                  formControlName="fullName"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-                @if (profileForm.get('fullName')?.invalid && profileForm.get('fullName')?.touched) {
-                  <p class="mt-1 text-sm text-red-600">الاسم الكامل مطلوب (2-100 حرف)</p>
-                }
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label for="firstName" class="block text-sm font-medium text-gray-700">
+                    الاسم الأول <span class="text-red-500">*</span>
+                  </label>
+                  <input id="firstName" type="text" formControlName="firstName"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    [class.border-red-300]="profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched" />
+                  @if (profileForm.get('firstName')?.invalid && profileForm.get('firstName')?.touched) {
+                    <p class="mt-1 text-sm text-red-600">الاسم الأول مطلوب (2 أحرف على الأقل)</p>
+                  }
+                </div>
+                <div>
+                  <label for="lastName" class="block text-sm font-medium text-gray-700">
+                    الاسم الأخير <span class="text-red-500">*</span>
+                  </label>
+                  <input id="lastName" type="text" formControlName="lastName"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    [class.border-red-300]="profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched" />
+                  @if (profileForm.get('lastName')?.invalid && profileForm.get('lastName')?.touched) {
+                    <p class="mt-1 text-sm text-red-600">الاسم الأخير مطلوب (2 أحرف على الأقل)</p>
+                  }
+                </div>
               </div>
 
               <div>
-                <label for="email" class="block text-sm font-medium text-gray-700">
-                  البريد الإلكتروني
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  formControlName="email"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-                @if (profileForm.get('email')?.invalid && profileForm.get('email')?.touched) {
-                  <p class="mt-1 text-sm text-red-600">يرجى إدخال بريد إلكتروني صحيح</p>
-                }
+                <label for="username" class="block text-sm font-medium text-gray-700">اسم المستخدم</label>
+                <input id="username" type="text" formControlName="username"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 text-gray-500 cursor-not-allowed sm:text-sm" />
+                <p class="mt-1 text-xs text-gray-500">لا يمكن تغيير اسم المستخدم بعد التسجيل.</p>
               </div>
 
               <div>
-                <label for="phone" class="block text-sm font-medium text-gray-700">
-                  رقم الهاتف (اختياري)
-                </label>
-                <input
-                  id="phone"
-                  type="tel"
-                  formControlName="phone"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="05xxxxxxxx"
-                />
+                <label for="email" class="block text-sm font-medium text-gray-700">البريد الإلكتروني</label>
+                <input id="email" type="email" formControlName="email"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-50 text-gray-500 cursor-not-allowed sm:text-sm" />
+              </div>
+
+              <div>
+                <label for="phone" class="block text-sm font-medium text-gray-700">رقم الهاتف (اختياري)</label>
+                <input id="phone" type="tel" formControlName="phone" placeholder="05xxxxxxxx"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+              </div>
+
+              <div>
+                <label for="secondaryPhone" class="block text-sm font-medium text-gray-700">رقم هاتف إضافي (اختياري)</label>
+                <input id="secondaryPhone" type="tel" formControlName="secondaryPhone" placeholder="05xxxxxxxx"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
               </div>
 
               <div class="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  [disabled]="profileForm.invalid || isLoading()"
-                  class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  @if (isLoading()) {
-                    <span>جاري الحفظ...</span>
-                  } @else {
-                    <span>حفظ التغييرات</span>
-                  }
+                <button type="submit" [disabled]="profileForm.invalid || isLoading()"
+                  class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+                  @if (isLoading()) { <span>جاري الحفظ...</span> } @else { <span>حفظ التغييرات</span> }
                 </button>
-                <button
-                  type="button"
-                  (click)="cancelEditing()"
-                  [disabled]="isLoading()"
-                  class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-                >
+                <button type="button" (click)="cancelEditing()" [disabled]="isLoading()"
+                  class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50">
                   إلغاء
                 </button>
               </div>
@@ -164,14 +153,9 @@ import { CustomerAuthService } from '../../../services/customer-auth.service';
         <!-- Logout Section -->
         <div class="mt-6 bg-white shadow rounded-lg px-6 py-4">
           <h3 class="text-lg font-medium text-gray-900 mb-2">تسجيل الخروج</h3>
-          <p class="text-sm text-gray-600 mb-4">
-            تسجيل الخروج من حسابك على هذا الجهاز
-          </p>
-          <button
-            type="button"
-            (click)="logout()"
-            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-          >
+          <p class="text-sm text-gray-600 mb-4">تسجيل الخروج من حسابك على هذا الجهاز</p>
+          <button type="button" (click)="logout()"
+            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
             تسجيل الخروج
           </button>
         </div>
@@ -191,9 +175,12 @@ export class ProfileComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
 
   profileForm: FormGroup = this.fb.group({
-    fullName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-    email: ['', [Validators.required, Validators.email]],
-    phone: ['']
+    firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+    lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+    username: [{ value: '', disabled: true }],
+    email: [{ value: '', disabled: true }],
+    phone: [''],
+    secondaryPhone: ['']
   });
 
   ngOnInit(): void {
@@ -202,12 +189,13 @@ export class ProfileComponent implements OnInit {
       this.router.navigate(['/account/login']);
       return;
     }
-
-    // Initialize form with current customer data
     this.profileForm.patchValue({
-      fullName: customer.fullName,
+      firstName: customer.firstName,
+      lastName: customer.lastName,
+      username: customer.username,
       email: customer.email,
-      phone: customer.phone || ''
+      phone: customer.phone || '',
+      secondaryPhone: customer.secondaryPhone || ''
     });
   }
 
@@ -221,34 +209,29 @@ export class ProfileComponent implements OnInit {
     this.isEditing.set(false);
     this.successMessage.set(null);
     this.errorMessage.set(null);
-
-    // Reset form to current customer data
     const customer = this.customer();
     if (customer) {
       this.profileForm.patchValue({
-        fullName: customer.fullName,
-        email: customer.email,
-        phone: customer.phone || ''
+        firstName: customer.firstName,
+        lastName: customer.lastName,
+        phone: customer.phone || '',
+        secondaryPhone: customer.secondaryPhone || ''
       });
     }
   }
 
   onSubmit(): void {
     if (this.profileForm.invalid) return;
-
     this.isLoading.set(true);
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    const { fullName, email, phone } = this.profileForm.value;
-
-    this.authService.updateProfile({ fullName, email, phone }).subscribe({
+    const { firstName, lastName, phone, secondaryPhone } = this.profileForm.value;
+    this.authService.updateProfile({ firstName, lastName, phone: phone || undefined, secondaryPhone: secondaryPhone || undefined }).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.isEditing.set(false);
         this.successMessage.set('تم تحديث الملف الشخصي بنجاح');
-
-        // Clear success message after 3 seconds
         setTimeout(() => this.successMessage.set(null), 3000);
       },
       error: (error) => {
@@ -260,15 +243,10 @@ export class ProfileComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
-    this.router.navigate(['/']);
   }
 
   formatDate(date: string | undefined): string {
     if (!date) return '';
-    return new Date(date).toLocaleDateString('ar-SA', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return new Date(date).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' });
   }
 }

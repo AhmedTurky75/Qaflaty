@@ -8,6 +8,7 @@ public interface ICustomerRepository
 {
     Task<Customer?> GetByIdAsync(CustomerId id, CancellationToken ct = default);
     Task<Customer?> GetByPhoneAsync(StoreId storeId, PhoneNumber phone, CancellationToken ct = default);
+    Task<Customer?> GetByEmailAsync(StoreId storeId, string email, CancellationToken ct = default);
     Task<IReadOnlyList<Customer>> GetByStoreIdAsync(StoreId storeId, CancellationToken ct = default);
     Task AddAsync(Customer customer, CancellationToken ct = default);
     void Update(Customer customer);

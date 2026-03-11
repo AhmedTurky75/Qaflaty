@@ -72,8 +72,17 @@ export class LoginComponent implements OnDestroy {
     this.error.set(null);
 
     this.authService.verifyOtp(this.pendingEmail(), this.otpForm.value.otpCode).subscribe({
-      next: () => {
-        this.router.navigate(['/dashboard']);
+      next: (res) => {
+        if (res.storeIds.length === 0) {
+          this.router.navigate(['/stores/new']);
+        } else if (res.storeIds.length === 1) {
+          this.authService.selectStore(res.storeIds[0]).subscribe({
+            next: () => this.router.navigate(['/dashboard']),
+            error: () => this.router.navigate(['/auth/select-store'])
+          });
+        } else {
+          this.router.navigate(['/auth/select-store']);
+        }
       },
       error: (err) => {
         this.error.set(err.message || 'Invalid OTP code');

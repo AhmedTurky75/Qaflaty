@@ -19,7 +19,7 @@ export class ShellComponent implements OnInit {
   private storeContext = inject(StoreContextService);
   private chatService = inject(MerchantChatService);
 
-  currentMerchant$ = this.authService.currentMerchant$;
+  currentMerchant = this.authService.currentMerchant;
   sidebarOpen = signal(false);
   userMenuOpen = signal(false);
 

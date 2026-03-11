@@ -4,6 +4,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Router, RouterLink } from '@angular/router';
 import { CustomerAuthService, CustomerAddress } from '../../../services/customer-auth.service';
 
+interface LocationItem { id: number; name: string; }
+
 @Component({
   selector: 'app-addresses',
   standalone: true,
@@ -18,11 +20,8 @@ import { CustomerAuthService, CustomerAddress } from '../../../services/customer
               <h2 class="text-2xl font-bold text-gray-900">عناويني</h2>
               <p class="mt-1 text-sm text-gray-600">إدارة عناوين الشحن والتوصيل</p>
             </div>
-            <button
-              type="button"
-              (click)="openAddForm()"
-              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
+            <button type="button" (click)="openAddForm()"
+              class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
               <svg class="ml-2 -mr-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
               </svg>
@@ -31,39 +30,73 @@ import { CustomerAuthService, CustomerAddress } from '../../../services/customer
           </div>
         </div>
 
-        <!-- Success/Error Messages -->
         @if (successMessage()) {
           <div class="mb-4 rounded-md bg-green-50 p-4">
             <p class="text-sm font-medium text-green-800">{{ successMessage() }}</p>
           </div>
         }
-
         @if (errorMessage()) {
           <div class="mb-4 rounded-md bg-red-50 p-4">
             <p class="text-sm font-medium text-red-800">{{ errorMessage() }}</p>
           </div>
         }
 
-        <!-- Add/Edit Form -->
+        <!-- Add Form -->
         @if (showForm()) {
           <div class="mb-6 bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">
-              {{ editingAddress() ? 'تعديل العنوان' : 'إضافة عنوان جديد' }}
-            </h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">إضافة عنوان جديد</h3>
             <form [formGroup]="addressForm" (ngSubmit)="onSubmit()" class="space-y-4">
               <div>
                 <label for="label" class="block text-sm font-medium text-gray-700">
                   اسم العنوان <span class="text-red-500">*</span>
                 </label>
-                <input
-                  id="label"
-                  type="text"
-                  formControlName="label"
-                  placeholder="المنزل، العمل، إلخ"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
+                <input id="label" type="text" formControlName="label" placeholder="المنزل، العمل، إلخ"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                 @if (addressForm.get('label')?.invalid && addressForm.get('label')?.touched) {
                   <p class="mt-1 text-sm text-red-600">اسم العنوان مطلوب</p>
+                }
+              </div>
+
+              <!-- Country dropdown -->
+              <div>
+                <label for="countryId" class="block text-sm font-medium text-gray-700">
+                  الدولة <span class="text-red-500">*</span>
+                </label>
+                @if (countriesLoading()) {
+                  <p class="mt-1 text-sm text-gray-500">جاري التحميل...</p>
+                } @else {
+                  <select id="countryId" formControlName="countryId" (change)="onCountryChange()"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">اختر الدولة</option>
+                    @for (c of countries(); track c.id) {
+                      <option [value]="c.id">{{ c.name }}</option>
+                    }
+                  </select>
+                }
+                @if (addressForm.get('countryId')?.invalid && addressForm.get('countryId')?.touched) {
+                  <p class="mt-1 text-sm text-red-600">يرجى اختيار الدولة</p>
+                }
+              </div>
+
+              <!-- City dropdown -->
+              <div>
+                <label for="city" class="block text-sm font-medium text-gray-700">
+                  المدينة <span class="text-red-500">*</span>
+                </label>
+                @if (citiesLoading()) {
+                  <p class="mt-1 text-sm text-gray-500">جاري التحميل...</p>
+                } @else {
+                  <select id="city" formControlName="city"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    [attr.disabled]="cities().length === 0 ? true : null">
+                    <option value="">اختر المدينة</option>
+                    @for (c of cities(); track c.id) {
+                      <option [value]="c.name">{{ c.name }}</option>
+                    }
+                  </select>
+                }
+                @if (addressForm.get('city')?.invalid && addressForm.get('city')?.touched) {
+                  <p class="mt-1 text-sm text-red-600">يرجى اختيار المدينة</p>
                 }
               </div>
 
@@ -72,103 +105,39 @@ import { CustomerAuthService, CustomerAddress } from '../../../services/customer
                   <label for="street" class="block text-sm font-medium text-gray-700">
                     الشارع <span class="text-red-500">*</span>
                   </label>
-                  <input
-                    id="street"
-                    type="text"
-                    formControlName="street"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
+                  <input id="street" type="text" formControlName="street"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                  @if (addressForm.get('street')?.invalid && addressForm.get('street')?.touched) {
+                    <p class="mt-1 text-sm text-red-600">الشارع مطلوب</p>
+                  }
                 </div>
 
                 <div>
-                  <label for="city" class="block text-sm font-medium text-gray-700">
-                    المدينة <span class="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="city"
-                    type="text"
-                    formControlName="city"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
+                  <label for="state" class="block text-sm font-medium text-gray-700">المنطقة</label>
+                  <input id="state" type="text" formControlName="state"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                 </div>
 
                 <div>
-                  <label for="state" class="block text-sm font-medium text-gray-700">
-                    المنطقة <span class="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="state"
-                    type="text"
-                    formControlName="state"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
+                  <label for="postalCode" class="block text-sm font-medium text-gray-700">الرمز البريدي</label>
+                  <input id="postalCode" type="text" formControlName="postalCode"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
                 </div>
-
-                <div>
-                  <label for="postalCode" class="block text-sm font-medium text-gray-700">
-                    الرمز البريدي
-                  </label>
-                  <input
-                    id="postalCode"
-                    type="text"
-                    formControlName="postalCode"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label for="country" class="block text-sm font-medium text-gray-700">
-                  الدولة <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="country"
-                  type="text"
-                  formControlName="country"
-                  value="المملكة العربية السعودية"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-
-              <div>
-                <label for="phoneNumber" class="block text-sm font-medium text-gray-700">
-                  رقم الهاتف <span class="text-red-500">*</span>
-                </label>
-                <input
-                  id="phoneNumber"
-                  type="tel"
-                  formControlName="phoneNumber"
-                  placeholder="05xxxxxxxx"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
               </div>
 
               <div class="flex items-center">
-                <input
-                  id="isDefault"
-                  type="checkbox"
-                  formControlName="isDefault"
-                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                />
-                <label for="isDefault" class="mr-2 block text-sm text-gray-900">
-                  تعيين كعنوان افتراضي
-                </label>
+                <input id="isDefault" type="checkbox" formControlName="isDefault"
+                  class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded" />
+                <label for="isDefault" class="mr-2 block text-sm text-gray-900">تعيين كعنوان افتراضي</label>
               </div>
 
               <div class="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  [disabled]="addressForm.invalid || isLoading()"
-                  class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
+                <button type="submit" [disabled]="addressForm.invalid || isLoading()"
+                  class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
                   {{ isLoading() ? 'جاري الحفظ...' : 'حفظ العنوان' }}
                 </button>
-                <button
-                  type="button"
-                  (click)="cancelForm()"
-                  [disabled]="isLoading()"
-                  class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
+                <button type="button" (click)="cancelForm()" [disabled]="isLoading()"
+                  class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                   إلغاء
                 </button>
               </div>
@@ -186,11 +155,8 @@ import { CustomerAuthService, CustomerAddress } from '../../../services/customer
             <h3 class="mt-2 text-sm font-medium text-gray-900">لا توجد عناوين</h3>
             <p class="mt-1 text-sm text-gray-500">ابدأ بإضافة عنوان الشحن الخاص بك</p>
             <div class="mt-6">
-              <button
-                type="button"
-                (click)="openAddForm()"
-                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
+              <button type="button" (click)="openAddForm()"
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                 إضافة عنوان
               </button>
             </div>
@@ -207,36 +173,14 @@ import { CustomerAuthService, CustomerAddress } from '../../../services/customer
                 <h3 class="text-lg font-medium text-gray-900 mb-3">{{ address.label }}</h3>
                 <div class="text-sm text-gray-600 space-y-1">
                   <p>{{ address.street }}</p>
-                  <p>{{ address.city }}، {{ address.state }}</p>
-                  @if (address.postalCode) {
-                    <p>{{ address.postalCode }}</p>
-                  }
+                  <p>{{ address.city }}@if (address.state) {، {{ address.state }}}</p>
+                  @if (address.postalCode) { <p>{{ address.postalCode }}</p> }
                   <p>{{ address.country }}</p>
-                  <p class="mt-2">{{ address.phoneNumber }}</p>
                 </div>
                 <div class="mt-4 flex gap-2">
-                  <button
-                    type="button"
-                    (click)="editAddress(address)"
-                    class="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    تعديل
-                  </button>
-                  @if (!address.isDefault) {
-                    <button
-                      type="button"
-                      (click)="setAsDefault(address)"
-                      class="text-sm text-gray-600 hover:text-gray-800 font-medium"
-                    >
-                      تعيين كافتراضي
-                    </button>
-                  }
-                  @if (addresses().length > 1) {
-                    <button
-                      type="button"
-                      (click)="deleteAddress(address)"
-                      class="text-sm text-red-600 hover:text-red-800 font-medium"
-                    >
+                  @if (addresses().length > 1 || !address.isDefault) {
+                    <button type="button" (click)="deleteAddress(address)"
+                      class="text-sm text-red-600 hover:text-red-800 font-medium">
                       حذف
                     </button>
                   }
@@ -248,10 +192,7 @@ import { CustomerAuthService, CustomerAddress } from '../../../services/customer
 
         <!-- Back Link -->
         <div class="mt-6">
-          <a
-            routerLink="/account/profile"
-            class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-          >
+          <a routerLink="/account/profile" class="inline-flex items-center text-sm text-blue-600 hover:text-blue-800">
             <svg class="ml-1 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
@@ -266,23 +207,27 @@ export class AddressesComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(CustomerAuthService);
   private readonly router = inject(Router);
+  private readonly locations = this.authService.getLocations();
 
   readonly customer = this.authService.customer;
   readonly addresses = signal<CustomerAddress[]>([]);
   readonly showForm = signal(false);
-  readonly editingAddress = signal<CustomerAddress | null>(null);
   readonly isLoading = signal(false);
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
 
+  readonly countries = signal<LocationItem[]>([]);
+  readonly cities = signal<LocationItem[]>([]);
+  readonly countriesLoading = signal(false);
+  readonly citiesLoading = signal(false);
+
   addressForm: FormGroup = this.fb.group({
     label: ['', [Validators.required, Validators.maxLength(50)]],
+    countryId: ['', [Validators.required]],
+    city: ['', [Validators.required]],
     street: ['', [Validators.required, Validators.maxLength(200)]],
-    city: ['', [Validators.required, Validators.maxLength(100)]],
-    state: ['', [Validators.required, Validators.maxLength(100)]],
+    state: ['', [Validators.maxLength(100)]],
     postalCode: ['', [Validators.maxLength(20)]],
-    country: ['المملكة العربية السعودية', [Validators.required, Validators.maxLength(100)]],
-    phoneNumber: ['', [Validators.required, Validators.pattern(/^05\d{8}$/)]],
     isDefault: [false]
   });
 
@@ -292,77 +237,68 @@ export class AddressesComponent implements OnInit {
       this.router.navigate(['/account/login']);
       return;
     }
-
-    this.loadAddresses();
+    this.addresses.set(customer.addresses || []);
+    this.loadCountries();
   }
 
-  loadAddresses(): void {
-    const customer = this.customer();
-    if (customer) {
-      this.addresses.set(customer.addresses || []);
-    }
+  private loadCountries(): void {
+    this.countriesLoading.set(true);
+    this.locations.countries().subscribe({
+      next: (data) => { this.countries.set(data); this.countriesLoading.set(false); },
+      error: () => this.countriesLoading.set(false)
+    });
+  }
+
+  onCountryChange(): void {
+    const countryId = this.addressForm.get('countryId')?.value;
+    this.addressForm.patchValue({ city: '' });
+    this.cities.set([]);
+    if (!countryId) return;
+    this.citiesLoading.set(true);
+    this.locations.cities(Number(countryId)).subscribe({
+      next: (data) => { this.cities.set(data); this.citiesLoading.set(false); },
+      error: () => this.citiesLoading.set(false)
+    });
   }
 
   openAddForm(): void {
     this.showForm.set(true);
-    this.editingAddress.set(null);
-    this.addressForm.reset({ country: 'المملكة العربية السعودية', isDefault: false });
-    this.clearMessages();
-  }
-
-  editAddress(address: CustomerAddress): void {
-    this.showForm.set(true);
-    this.editingAddress.set(address);
-    this.addressForm.patchValue(address);
+    this.addressForm.reset({ isDefault: false });
+    this.cities.set([]);
     this.clearMessages();
   }
 
   cancelForm(): void {
     this.showForm.set(false);
-    this.editingAddress.set(null);
     this.addressForm.reset();
     this.clearMessages();
   }
 
   onSubmit(): void {
     if (this.addressForm.invalid) return;
-
     this.isLoading.set(true);
     this.clearMessages();
 
-    const addressData = this.addressForm.value;
-    const editing = this.editingAddress();
+    const v = this.addressForm.value;
+    const selectedCountry = this.countries().find(c => c.id === Number(v.countryId));
 
-    const request = editing
-      ? this.authService.updateAddress(editing.label, addressData)
-      : this.authService.addAddress(addressData);
-
-    request.subscribe({
+    this.authService.addAddress({
+      label: v.label,
+      street: v.street,
+      city: v.city,
+      state: v.state || '',
+      postalCode: v.postalCode || '',
+      country: selectedCountry?.name || '',
+      isDefault: v.isDefault
+    }).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.showForm.set(false);
-        this.editingAddress.set(null);
         this.addressForm.reset();
-        this.loadAddresses();
-        this.successMessage.set(editing ? 'تم تحديث العنوان بنجاح' : 'تم إضافة العنوان بنجاح');
-        setTimeout(() => this.clearMessages(), 3000);
-      },
-      error: (error) => {
-        this.isLoading.set(false);
-        this.errorMessage.set(error.error?.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
-      }
-    });
-  }
-
-  setAsDefault(address: CustomerAddress): void {
-    this.isLoading.set(true);
-    this.clearMessages();
-
-    this.authService.setDefaultAddress(address.label).subscribe({
-      next: () => {
-        this.isLoading.set(false);
-        this.loadAddresses();
-        this.successMessage.set('تم تعيين العنوان الافتراضي بنجاح');
+        this.authService.getProfile().subscribe(() => {
+          this.addresses.set(this.customer()?.addresses || []);
+        });
+        this.successMessage.set('تم إضافة العنوان بنجاح');
         setTimeout(() => this.clearMessages(), 3000);
       },
       error: (error) => {
@@ -373,17 +309,13 @@ export class AddressesComponent implements OnInit {
   }
 
   deleteAddress(address: CustomerAddress): void {
-    if (!confirm(`هل أنت متأكد من حذف عنوان "${address.label}"؟`)) {
-      return;
-    }
-
+    if (!confirm(`هل أنت متأكد من حذف عنوان "${address.label}"؟`)) return;
     this.isLoading.set(true);
     this.clearMessages();
-
     this.authService.removeAddress(address.label).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.loadAddresses();
+        this.addresses.set(this.addresses().filter(a => a.label !== address.label));
         this.successMessage.set('تم حذف العنوان بنجاح');
         setTimeout(() => this.clearMessages(), 3000);
       },

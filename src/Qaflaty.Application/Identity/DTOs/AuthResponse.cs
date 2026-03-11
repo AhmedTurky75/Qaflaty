@@ -4,5 +4,6 @@ public record AuthResponse(
     string AccessToken,
     string RefreshToken,
     DateTime ExpiresAt,
-    MerchantDto Merchant
+    MerchantDto Merchant,
+    List<Guid> StoreIds
 );

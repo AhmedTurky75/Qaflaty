@@ -29,7 +29,6 @@ public class VerifyMerchantLoginOtpCommandHandler : ICommandHandler<VerifyMercha
         VerifyMerchantLoginOtpCommand request,
         CancellationToken cancellationToken)
     {
-        // Get latest OTP for this email and purpose
         var otp = await _loginOtpRepository.GetLatestForEmailAsync(
             request.Email, LoginOtpPurpose.MerchantLogin, cancellationToken);
 
@@ -45,14 +44,12 @@ public class VerifyMerchantLoginOtpCommandHandler : ICommandHandler<VerifyMercha
         if (otp.IsMaxAttemptsReached())
             return Result.Failure<AuthResponse>(IdentityErrors.OtpMaxAttemptsReached);
 
-        // Verify code — this increments attempt count internally
         var isValid = otp.Verify(request.OtpCode);
         _loginOtpRepository.Update(otp);
 
         if (!isValid)
             return Result.Failure<AuthResponse>(IdentityErrors.OtpInvalid);
 
-        // Get merchant by email
         var emailResult = Email.Create(request.Email);
         if (emailResult.IsFailure)
             return Result.Failure<AuthResponse>(IdentityErrors.MerchantNotFound);
@@ -61,7 +58,6 @@ public class VerifyMerchantLoginOtpCommandHandler : ICommandHandler<VerifyMercha
         if (merchant == null)
             return Result.Failure<AuthResponse>(IdentityErrors.MerchantNotFound);
 
-        // Generate tokens
         var accessToken = _tokenService.GenerateMerchantAccessToken(merchant);
         var refreshToken = _tokenService.GenerateRefreshToken();
         var expiresAt = _tokenService.GetMerchantAccessTokenExpiration();
@@ -81,6 +77,9 @@ public class VerifyMerchantLoginOtpCommandHandler : ICommandHandler<VerifyMercha
             merchant.IsVerified,
             merchant.CreatedAt);
 
-        return Result.Success(new AuthResponse(accessToken, refreshToken, expiresAt, merchantDto));
+        var assignments = await _merchantRepository.GetStoreAssignmentsAsync(merchant.Id, cancellationToken);
+        var storeIds = assignments.Select(a => a.StoreId.Value).ToList();
+
+        return Result.Success(new AuthResponse(accessToken, refreshToken, expiresAt, merchantDto, storeIds));
     }
 }

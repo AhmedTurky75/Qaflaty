@@ -15,6 +15,11 @@ export interface InitiateLoginResponse {
   email: string;
 }
 
+export interface VerifyLoginResponse {
+  merchant: MerchantDto;
+  storeIds: string[];
+}
+
 export interface SelectStoreResult {
   storeId: string;
   role: string;

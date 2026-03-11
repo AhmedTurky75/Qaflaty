@@ -69,7 +69,8 @@ public class LoginCommandHandler : ICommandHandler<LoginCommand, AuthResponse>
             accessToken,
             refreshToken,
             expiresAt,
-            merchantDto);
+            merchantDto,
+            new List<Guid>());
 
         return Result.Success(response);
     }

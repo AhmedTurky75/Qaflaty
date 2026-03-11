@@ -103,7 +103,8 @@ public class RegisterCommandHandler : ICommandHandler<RegisterCommand, AuthRespo
             accessToken,
             refreshToken,
             expiresAt,
-            merchantDto);
+            merchantDto,
+            new List<Guid>());
 
         return Result.Success(response);
     }

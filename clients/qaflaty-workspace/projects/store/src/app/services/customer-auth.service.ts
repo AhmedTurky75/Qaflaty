@@ -128,11 +128,18 @@ export class CustomerAuthService {
     );
   }
 
-  updateProfile(profile: { fullName?: string; phone?: string; secondaryPhone?: string }): Observable<void> {
+  updateProfile(profile: { firstName: string; lastName: string; phone?: string; secondaryPhone?: string }): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/profile`, profile, { withCredentials: true }).pipe(
       tap(() => {
         const current = this._customer();
-        if (current) this._customer.set({ ...current, ...profile });
+        if (current) this._customer.set({
+          ...current,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          fullName: `${profile.firstName} ${profile.lastName}`,
+          phone: profile.phone,
+          secondaryPhone: profile.secondaryPhone
+        });
       })
     );
   }
@@ -148,6 +155,11 @@ export class CustomerAuthService {
       `${environment.apiUrl}/storefront/addresses/${encodeURIComponent(label)}`,
       { withCredentials: true }
     ).pipe(tap(() => this.getProfile().subscribe()));
+  }
+
+  /** Returns null since auth tokens are now in httpOnly cookies, not accessible to JS */
+  getAccessToken(): string | null {
+    return null;
   }
 
   getLocations(): { countries: () => Observable<any[]>; cities: (id: number) => Observable<any[]> } {
