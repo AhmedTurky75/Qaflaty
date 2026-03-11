@@ -10,16 +10,16 @@ public class CookieAuthService : ICookieAuthService
         var accessTokenOptions = new CookieOptions
         {
             HttpOnly = true,
-            SameSite = SameSiteMode.Strict,
-            Secure = isSecure,
+            SameSite = SameSiteMode.None,
+            Secure = true,
             Path = "/"
         };
 
         var refreshTokenOptions = new CookieOptions
         {
             HttpOnly = true,
-            SameSite = SameSiteMode.Strict,
-            Secure = isSecure,
+            SameSite = SameSiteMode.None,
+            Secure = true,
             Path = "/"
         };
 

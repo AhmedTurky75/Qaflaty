@@ -123,7 +123,7 @@ builder.Services.AddAntiforgery(opts =>
     opts.HeaderName = "X-XSRF-TOKEN";
     opts.Cookie.Name = "XSRF-TOKEN";
     opts.Cookie.HttpOnly = false;
-    opts.Cookie.SameSite = SameSiteMode.Strict;
+    opts.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 // Register Application and Infrastructure layers
