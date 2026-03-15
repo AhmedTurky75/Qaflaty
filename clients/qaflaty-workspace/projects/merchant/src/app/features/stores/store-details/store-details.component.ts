@@ -25,6 +25,7 @@ export class StoreDetailsComponent implements OnInit {
   saving = signal(false);
   error = signal<string | null>(null);
   activeTab = signal<'general' | 'branding' | 'delivery'>('general');
+  togglingMaintenance = signal(false);
 
   generalForm!: FormGroup;
   brandingForm!: FormGroup;
@@ -146,6 +147,23 @@ export class StoreDetailsComponent implements OnInit {
       error: (err) => {
         this.saving.set(false);
         alert(`Failed to update delivery settings: ${err.message}`);
+      }
+    });
+  }
+
+  toggleMaintenance(): void {
+    const store = this.store();
+    if (!store) return;
+    const enabled = store.status !== 'Maintenance';
+    this.togglingMaintenance.set(true);
+    this.storeService.setMaintenanceMode(store.id, enabled).subscribe({
+      next: () => {
+        this.store.set({ ...store, status: enabled ? 'Maintenance' as any : 'Active' as any });
+        this.togglingMaintenance.set(false);
+      },
+      error: (err) => {
+        this.togglingMaintenance.set(false);
+        alert(`Failed to update maintenance mode: ${err.message}`);
       }
     });
   }

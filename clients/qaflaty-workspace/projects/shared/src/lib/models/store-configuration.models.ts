@@ -119,6 +119,7 @@ export interface StorefrontConfigDto {
   footerVariant: string;
   productCardVariant: string;
   productGridVariant: string;
+  isUnderMaintenance: boolean;
 }
 
 export interface FaqItemDto {

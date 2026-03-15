@@ -15,6 +15,35 @@ export interface ChatMessage {
   readAt?: string;
 }
 
+export interface ChatCustomerAddress {
+  label: string;
+  street: string;
+  city: string;
+  country: string;
+  isDefault: boolean;
+}
+
+export interface ChatCustomerOrder {
+  orderNumber: string;
+  status: string;
+  total: number;
+  itemCount: number;
+  createdAt: string;
+}
+
+export interface ChatCustomerProfile {
+  customerId: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  secondaryPhone?: string;
+  isVerified: boolean;
+  memberSince: string;
+  addresses: ChatCustomerAddress[];
+  recentOrders: ChatCustomerOrder[];
+  cartItems: { productId: string; quantity: number; variantId?: string }[];
+}
+
 export interface ConversationSummary {
   id: string;
   storeId: string;
@@ -67,6 +96,7 @@ export class MerchantChatService {
   public conversations = signal<ConversationSummary[]>([]);
   public activeConversation = signal<ChatConversation | null>(null);
   public messages = signal<ChatMessage[]>([]);
+  public customerProfile = signal<ChatCustomerProfile | null>(null);
   public isConnected = signal(false);
   public isConnecting = signal(false);
   public isCustomerTyping = signal(false);
@@ -131,8 +161,14 @@ export class MerchantChatService {
 
       this.activeConversation.set(conversation);
       this.messages.set(conversation.messages);
+      this.customerProfile.set(null);
 
       await this.connectToHub();
+
+      // Load customer profile in background (no throw if guest)
+      if (conversation.customerId) {
+        this.loadCustomerProfile(storeId, conversationId).catch(() => {});
+      }
     } catch (err: any) {
       this.error.set(err?.error?.error || 'Failed to open conversation');
       throw err;
@@ -410,12 +446,29 @@ export class MerchantChatService {
   }
 
   /**
+   * Load customer profile for the current conversation
+   */
+  async loadCustomerProfile(storeId: string, conversationId: string): Promise<void> {
+    try {
+      const profile = await firstValueFrom(
+        this.http.get<ChatCustomerProfile>(
+          `${this.apiUrl}/stores/${storeId}/chat/conversations/${conversationId}/customer`
+        )
+      );
+      this.customerProfile.set(profile);
+    } catch {
+      this.customerProfile.set(null);
+    }
+  }
+
+  /**
    * Close active conversation UI (without closing the conversation itself)
    */
   async closeActiveConversation(): Promise<void> {
     await this.disconnectFromHub();
     this.activeConversation.set(null);
     this.messages.set([]);
+    this.customerProfile.set(null);
     this.error.set(null);
   }
 

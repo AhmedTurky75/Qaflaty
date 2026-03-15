@@ -32,6 +32,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
 // Add SignalR for real-time chat
@@ -101,20 +102,65 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization(options =>
 {
+    // Base role policies
     options.AddPolicy("MerchantPolicy", policy =>
         policy.RequireRole("merchant"));
 
     options.AddPolicy("CustomerPolicy", policy =>
         policy.RequireRole("customer"));
 
-    options.AddPolicy("OwnerPolicy", policy =>
-        policy.RequireRole("merchant").RequireClaim("role", "Owner"));
-
-    options.AddPolicy("AdminOrAbove", policy =>
-        policy.RequireRole("merchant").RequireClaim("role", "Owner", "Admin"));
+    // Merchant role hierarchy policies
+    options.AddPolicy("StaffOrAbove", policy =>
+        policy.RequireRole("merchant"));
 
     options.AddPolicy("ManagerOrAbove", policy =>
-        policy.RequireRole("merchant").RequireClaim("role", "Owner", "Admin", "Manager"));
+        policy.RequireRole("merchant")
+              .RequireClaim("role", "Owner", "Admin", "Manager"));
+
+    options.AddPolicy("AdminOrAbove", policy =>
+        policy.RequireRole("merchant")
+              .RequireClaim("role", "Owner", "Admin"));
+
+    options.AddPolicy("OwnerPolicy", policy =>
+        policy.RequireRole("merchant")
+              .RequireClaim("role", "Owner"));
+
+    // Permission-based policies
+    options.AddPolicy("CanManageProducts", policy =>
+        policy.RequireRole("merchant")
+              .RequireAssertion(ctx =>
+              {
+                  var perms = ctx.User.FindFirst("permissions")?.Value ?? "";
+                  return perms.Contains("ManageProducts");
+              }));
+
+    options.AddPolicy("CanManageOrders", policy =>
+        policy.RequireRole("merchant")
+              .RequireAssertion(ctx =>
+              {
+                  var perms = ctx.User.FindFirst("permissions")?.Value ?? "";
+                  return perms.Contains("ManageOrders");
+              }));
+
+    options.AddPolicy("CanManageCustomers", policy =>
+        policy.RequireRole("merchant")
+              .RequireAssertion(ctx =>
+              {
+                  var perms = ctx.User.FindFirst("permissions")?.Value ?? "";
+                  return perms.Contains("ManageCustomers");
+              }));
+
+    options.AddPolicy("CanManageStore", policy =>
+        policy.RequireRole("merchant")
+              .RequireAssertion(ctx =>
+              {
+                  var perms = ctx.User.FindFirst("permissions")?.Value ?? "";
+                  return perms.Contains("ManageStore");
+              }));
+
+    options.AddPolicy("CanManageUsers", policy =>
+        policy.RequireRole("merchant")
+              .RequireClaim("role", "Owner"));
 });
 
 // Antiforgery (CSRF protection)

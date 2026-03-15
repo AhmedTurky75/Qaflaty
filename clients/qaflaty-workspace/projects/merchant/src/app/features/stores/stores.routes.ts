@@ -10,11 +10,11 @@ export const STORE_ROUTES: Routes = [
     loadComponent: () => import('./create-store/create-store.component').then(m => m.CreateStoreComponent)
   },
   {
-    path: ':id',
-    loadComponent: () => import('./store-details/store-details.component').then(m => m.StoreDetailsComponent)
-  },
-  {
     path: 'team',
     loadComponent: () => import('./team/team.component').then(m => m.TeamComponent)
+  },
+  {
+    path: ':id',
+    loadComponent: () => import('./store-details/store-details.component').then(m => m.StoreDetailsComponent)
   }
 ];

@@ -68,7 +68,8 @@ public class GetStorefrontConfigQueryHandler : IQueryHandler<GetStorefrontConfig
             config.HeaderVariant,
             config.FooterVariant,
             config.ProductCardVariant,
-            config.ProductGridVariant);
+            config.ProductGridVariant,
+            store.Status == Qaflaty.Domain.Catalog.Enums.StoreStatus.Maintenance);
 
         return Result.Success(dto);
     }

@@ -9,6 +9,7 @@ using Qaflaty.Application.Communication.Commands.CloseConversation;
 using Qaflaty.Application.Communication.Commands.ArchiveConversation;
 using Qaflaty.Application.Communication.Queries.GetConversations;
 using Qaflaty.Application.Communication.Queries.GetConversationMessages;
+using Qaflaty.Application.Communication.Queries.GetChatCustomerProfile;
 using Qaflaty.Application.Communication.DTOs;
 using Qaflaty.Domain.Communication.Enums;
 using Qaflaty.Api.Hubs;
@@ -91,6 +92,27 @@ public class MerchantChatController : ControllerBase
                 conversationId);
             return Forbid();
         }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Get the customer profile for a conversation (name, addresses, orders, cart)
+    /// </summary>
+    [HttpGet("conversations/{conversationId:guid}/customer")]
+    public async Task<IActionResult> GetCustomerProfile(
+        Guid storeId,
+        Guid conversationId,
+        CancellationToken cancellationToken)
+    {
+        var query = new GetChatCustomerProfileQuery(conversationId);
+        var result = await _mediator.Send(query, cancellationToken);
+
+        if (result.IsFailure)
+            return BadRequest(new { error = result.Error.Message });
+
+        if (result.Value is null)
+            return NotFound(new { error = "No customer profile available for this conversation" });
 
         return Ok(result.Value);
     }

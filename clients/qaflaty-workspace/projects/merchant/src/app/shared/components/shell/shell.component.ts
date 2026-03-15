@@ -53,17 +53,25 @@ export class ShellComponent implements OnInit {
     }
   }
 
-  navigationItems = [
-    { name: 'Dashboard', icon: 'home', route: '/dashboard' },
-    { name: 'Stores', icon: 'store', route: '/stores' },
-    { name: 'Products', icon: 'box', route: '/products' },
-    { name: 'Orders', icon: 'shopping-bag', route: '/orders' },
-    { name: 'Active Carts', icon: 'cart', route: '/active-carts' },
-    { name: 'Customers', icon: 'users', route: '/customers' },
-    { name: 'Live Chat', icon: 'message-square', route: '/chat' },
-    { name: 'Store Builder', icon: 'layout', route: '/store-builder' },
-    { name: 'Settings', icon: 'settings', route: '/settings' }
-  ];
+  navigationItems = computed(() => {
+    const role = this.authService.role();
+    const isAdminOrAbove = role === 'Owner' || role === 'Admin';
+    const items = [
+      { name: 'Dashboard', icon: 'home', route: '/dashboard' },
+      { name: 'Stores', icon: 'store', route: '/stores' },
+      { name: 'Products', icon: 'box', route: '/products' },
+      { name: 'Orders', icon: 'shopping-bag', route: '/orders' },
+      { name: 'Active Carts', icon: 'cart', route: '/active-carts' },
+      { name: 'Customers', icon: 'users', route: '/customers' },
+      { name: 'Live Chat', icon: 'message-square', route: '/chat' },
+      { name: 'Store Builder', icon: 'layout', route: '/store-builder' },
+      { name: 'Settings', icon: 'settings', route: '/settings' }
+    ];
+    if (isAdminOrAbove) {
+      items.splice(2, 0, { name: 'Team', icon: 'team', route: '/stores/team' });
+    }
+    return items;
+  });
 
   toggleSidebar(): void {
     this.sidebarOpen.update(v => !v);

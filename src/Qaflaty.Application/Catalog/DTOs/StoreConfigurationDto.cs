@@ -54,5 +54,6 @@ public record StorefrontConfigDto(
     string HeaderVariant,
     string FooterVariant,
     string ProductCardVariant,
-    string ProductGridVariant
+    string ProductGridVariant,
+    bool IsUnderMaintenance
 );

@@ -24,7 +24,7 @@
 
     <!-- Navigation -->
     <nav class="px-3">
-      @for (item of navigationItems; track item.route) {
+      @for (item of navigationItems(); track item.route) {
         <a
           [routerLink]="item.route"
           routerLinkActive="bg-primary-50 text-primary-700"
@@ -41,6 +41,7 @@
               @case ('message-square') { 💬 }
               @case ('layout') { 🎨 }
               @case ('cart') { 🛒 }
+              @case ('team') { 👨‍💼 }
               @case ('settings') { ⚙️ }
             }
           </span>

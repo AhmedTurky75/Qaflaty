@@ -35,7 +35,8 @@ export enum Currency {
 export enum StoreStatus {
   Active = 'Active',
   Inactive = 'Inactive',
-  Suspended = 'Suspended'
+  Suspended = 'Suspended',
+  Maintenance = 'Maintenance'
 }
 
 export interface CreateStoreRequest {

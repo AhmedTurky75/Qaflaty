@@ -4,5 +4,6 @@ public enum StoreStatus
 {
     Active = 1,
     Inactive = 2,
-    Suspended = 3
+    Suspended = 3,
+    Maintenance = 4
 }

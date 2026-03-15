@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
 using Qaflaty.Application.Catalog.Commands.CreateStore;
 using Qaflaty.Application.Catalog.Commands.DeleteStore;
+using Qaflaty.Application.Catalog.Commands.SetMaintenanceMode;
 using Qaflaty.Application.Catalog.Commands.UpdateDeliverySettings;
 using Qaflaty.Application.Catalog.Commands.UpdateStore;
 using Qaflaty.Application.Catalog.Commands.UpdateStoreBranding;
@@ -127,6 +128,21 @@ public class StoresController : ApiController
         return NoContent();
     }
 
+    [HttpPatch("{id:guid}/maintenance")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> SetMaintenanceMode(Guid id, [FromBody] SetMaintenanceModeRequest request, CancellationToken cancellationToken)
+    {
+        var command = new SetMaintenanceModeCommand(id, request.Enabled);
+        var result = await Sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+            return HandleResult(result);
+
+        return NoContent();
+    }
+
     [HttpPost("check-slug")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -162,3 +178,5 @@ public record UpdateDeliverySettingsRequest(
     MoneyRequest? FreeDeliveryThreshold);
 
 public record CheckSlugAvailabilityRequest(string Slug);
+
+public record SetMaintenanceModeRequest(bool Enabled);

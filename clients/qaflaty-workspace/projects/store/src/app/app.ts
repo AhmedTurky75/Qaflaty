@@ -4,6 +4,7 @@ import { LayoutRendererComponent } from './components/layout/layout-renderer.com
 import { CartSidebarComponent } from './components/shared/cart-sidebar.component';
 import { WhatsAppButtonComponent } from './components/shared/whatsapp-button.component';
 import { ChatWidgetComponent } from './components/chat/chat-widget.component';
+import { StoreOfflineComponent } from './pages/store-offline/store-offline.component';
 import { StoreService } from './services/store.service';
 import { ConfigService } from './services/config.service';
 import { ThemeService } from './services/theme.service';
@@ -18,16 +19,21 @@ import { switchMap } from 'rxjs';
     LayoutRendererComponent,
     CartSidebarComponent,
     WhatsAppButtonComponent,
-    ChatWidgetComponent
+    ChatWidgetComponent,
+    StoreOfflineComponent
   ],
   template: `
     @if (storeService.currentStore() && configService.isLoaded()) {
-      <app-layout-renderer>
-        <router-outlet />
-      </app-layout-renderer>
-      <app-cart-sidebar />
-      <app-whatsapp-button variant="floating" position="bottom-right" />
-      <app-chat-widget />
+      @if (configService.config()?.isUnderMaintenance) {
+        <app-store-offline [maintenance]="true" />
+      } @else {
+        <app-layout-renderer>
+          <router-outlet />
+        </app-layout-renderer>
+        <app-cart-sidebar />
+        <app-whatsapp-button variant="floating" position="bottom-right" />
+        <app-chat-widget />
+      }
     } @else if (storeService.isLoading()) {
       <div class="flex items-center justify-center min-h-screen bg-gray-50">
         <div class="text-center">

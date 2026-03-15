@@ -95,4 +95,12 @@ public sealed class Store : AggregateRoot<StoreId>
         RaiseDomainEvent(new StoreUpdatedEvent(Id));
         return Result.Success();
     }
+
+    public Result SetMaintenance(bool enabled)
+    {
+        Status = enabled ? StoreStatus.Maintenance : StoreStatus.Active;
+        UpdatedAt = DateTime.UtcNow;
+        RaiseDomainEvent(new StoreUpdatedEvent(Id));
+        return Result.Success();
+    }
 }

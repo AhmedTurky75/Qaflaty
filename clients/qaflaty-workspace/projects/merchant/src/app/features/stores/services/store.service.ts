@@ -48,4 +48,8 @@ export class StoreService {
   checkSlugAvailability(slug: string): Observable<{ available: boolean }> {
     return this.http.post<{ available: boolean }>(`${this.API_URL}/check-slug`, { slug });
   }
+
+  setMaintenanceMode(id: string, enabled: boolean): Observable<void> {
+    return this.http.patch<void>(`${this.API_URL}/${id}/maintenance`, { enabled });
+  }
 }
