@@ -5,6 +5,7 @@ import { CartService } from '../../services/cart.service';
 import { FeatureService } from '../../services/feature.service';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 import { LanguageSwitcherComponent } from '../shared/language-switcher.component';
+import { CustomerAuthService } from '../../services/customer-auth.service';
 
 @Component({
   selector: 'app-header-minimal',
@@ -37,6 +38,17 @@ import { LanguageSwitcherComponent } from '../shared/language-switcher.component
 
         <div class="flex items-center gap-3">
           <app-language-switcher />
+          @if (features.authMode() === 'Required') {
+            @if (customerAuth.isAuthenticated()) {
+              <a routerLink="/account/profile" class="hidden md:flex items-center gap-1 text-sm font-medium text-gray-700 hover:text-[var(--primary-color)] transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                {{ t('my_account') }}
+              </a>
+            } @else {
+              <a routerLink="/account/login" class="hidden md:inline-flex text-sm font-medium text-gray-700 hover:text-[var(--primary-color)] transition-colors">{{ t('login') }}</a>
+              <a routerLink="/account/register" class="hidden md:inline-flex text-sm font-medium px-3 py-1.5 rounded-lg bg-[var(--primary-color)] text-white hover:opacity-90 transition-opacity">{{ t('register') }}</a>
+            }
+          }
           @if (features.isCartPageEnabled()) {
             <a routerLink="/cart" class="relative p-2 text-gray-700 hover:text-[var(--primary-color)] transition-colors">
               <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,6 +80,16 @@ import { LanguageSwitcherComponent } from '../shared/language-switcher.component
           @if (features.isContactPageEnabled()) {
             <a routerLink="/contact" (click)="mobileMenuOpen.set(false)" class="block py-2 text-gray-700">{{ t('contact') }}</a>
           }
+          @if (features.authMode() === 'Required') {
+            @if (customerAuth.isAuthenticated()) {
+              <a routerLink="/account/profile" (click)="mobileMenuOpen.set(false)" class="block py-2 text-gray-700">{{ t('my_account') }}</a>
+            } @else {
+              <div class="pt-2 border-t border-gray-100 flex gap-2">
+                <a routerLink="/account/login" (click)="mobileMenuOpen.set(false)" class="flex-1 text-center py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg">{{ t('login') }}</a>
+                <a routerLink="/account/register" (click)="mobileMenuOpen.set(false)" class="flex-1 text-center py-2 text-sm font-medium bg-[var(--primary-color)] text-white rounded-lg">{{ t('register') }}</a>
+              </div>
+            }
+          }
         </nav>
       }
     </header>
@@ -77,6 +99,7 @@ export class HeaderMinimalComponent {
   store = inject(StoreService);
   cart = inject(CartService);
   features = inject(FeatureService);
+  customerAuth = inject(CustomerAuthService);
   private i18n = inject(I18nService);
   mobileMenuOpen = signal(false);
 

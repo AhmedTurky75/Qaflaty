@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CustomerAuthService, CustomerAddress } from '../../../services/customer-auth.service';
+import { LocationPickerComponent, PickedLocation } from '../../../components/shared/location-picker.component';
 
 interface LocationItem { id: number; name: string; }
 
 @Component({
   selector: 'app-addresses',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, LocationPickerComponent],
   template: `
     <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div class="max-w-5xl mx-auto">
@@ -131,6 +132,18 @@ interface LocationItem { id: number; name: string; }
                 <label for="isDefault" class="mr-2 block text-sm text-gray-900">تعيين كعنوان افتراضي</label>
               </div>
 
+              <!-- Map Location Picker -->
+              <div class="pt-2">
+                <app-location-picker
+                  (locationPicked)="onLocationPicked($event)">
+                </app-location-picker>
+                @if (pickedLocation()) {
+                  <p class="mt-1 text-xs text-green-700 font-medium">
+                    ✓ تم تحديد الموقع على الخريطة
+                  </p>
+                }
+              </div>
+
               <div class="flex gap-3 pt-4">
                 <button type="submit" [disabled]="addressForm.invalid || isLoading()"
                   class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
@@ -176,6 +189,14 @@ interface LocationItem { id: number; name: string; }
                   <p>{{ address.city }}@if (address.state) {، {{ address.state }}}</p>
                   @if (address.postalCode) { <p>{{ address.postalCode }}</p> }
                   <p>{{ address.country }}</p>
+                  @if (address.latitude && address.longitude) {
+                    <p class="flex items-center gap-1 text-xs text-gray-400 mt-1">
+                      <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                      </svg>
+                      موقع محدد على الخريطة
+                    </p>
+                  }
                 </div>
                 <div class="mt-4 flex gap-2">
                   @if (addresses().length > 1 || !address.isDefault) {
@@ -215,6 +236,7 @@ export class AddressesComponent implements OnInit {
   readonly isLoading = signal(false);
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
+  readonly pickedLocation = signal<PickedLocation | null>(null);
 
   readonly countries = signal<LocationItem[]>([]);
   readonly cities = signal<LocationItem[]>([]);
@@ -261,16 +283,22 @@ export class AddressesComponent implements OnInit {
     });
   }
 
+  onLocationPicked(loc: PickedLocation | null): void {
+    this.pickedLocation.set(loc);
+  }
+
   openAddForm(): void {
     this.showForm.set(true);
     this.addressForm.reset({ isDefault: false });
     this.cities.set([]);
+    this.pickedLocation.set(null);
     this.clearMessages();
   }
 
   cancelForm(): void {
     this.showForm.set(false);
     this.addressForm.reset();
+    this.pickedLocation.set(null);
     this.clearMessages();
   }
 
@@ -282,6 +310,7 @@ export class AddressesComponent implements OnInit {
     const v = this.addressForm.value;
     const selectedCountry = this.countries().find(c => c.id === Number(v.countryId));
 
+    const loc = this.pickedLocation();
     this.authService.addAddress({
       label: v.label,
       street: v.street,
@@ -289,12 +318,15 @@ export class AddressesComponent implements OnInit {
       state: v.state || '',
       postalCode: v.postalCode || '',
       country: selectedCountry?.name || '',
-      isDefault: v.isDefault
+      isDefault: v.isDefault,
+      latitude: loc?.latitude,
+      longitude: loc?.longitude
     }).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.showForm.set(false);
         this.addressForm.reset();
+        this.pickedLocation.set(null);
         this.authService.getProfile().subscribe(() => {
           this.addresses.set(this.customer()?.addresses || []);
         });

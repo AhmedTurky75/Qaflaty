@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { featurePageGuard } from './guards/feature-page.guard';
 import { customerAuthGuard } from './guards/customer-auth.guard';
 import { guestGuard } from './guards/guest.guard';
+import { checkoutGuard } from './guards/checkout.guard';
 
 export const routes: Routes = [
   {
@@ -23,6 +24,7 @@ export const routes: Routes = [
   },
   {
     path: 'checkout',
+    canActivate: [checkoutGuard],
     loadComponent: () => import('./pages/checkout/checkout.component').then(m => m.CheckoutComponent)
   },
   {

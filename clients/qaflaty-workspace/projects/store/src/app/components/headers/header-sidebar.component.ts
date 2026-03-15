@@ -5,6 +5,7 @@ import { CartService } from '../../services/cart.service';
 import { FeatureService } from '../../services/feature.service';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 import { LanguageSwitcherComponent } from '../shared/language-switcher.component';
+import { CustomerAuthService } from '../../services/customer-auth.service';
 
 @Component({
   selector: 'app-header-sidebar',
@@ -122,7 +123,19 @@ import { LanguageSwitcherComponent } from '../shared/language-switcher.component
 
         <!-- Sidebar Footer -->
         <div class="p-4 border-t border-gray-200">
-          <!-- Contact info can be added when the Store model supports it -->
+          @if (features.authMode() === 'Required') {
+            @if (customerAuth.isAuthenticated()) {
+              <a routerLink="/account/profile" (click)="sidebarOpen.set(false)" class="flex items-center gap-2 px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-[var(--primary-color)] transition-colors">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                {{ t('my_account') }}
+              </a>
+            } @else {
+              <div class="flex gap-2">
+                <a routerLink="/account/login" (click)="sidebarOpen.set(false)" class="flex-1 text-center py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">{{ t('login') }}</a>
+                <a routerLink="/account/register" (click)="sidebarOpen.set(false)" class="flex-1 text-center py-2 text-sm font-medium bg-[var(--primary-color)] text-white rounded-lg hover:opacity-90 transition-opacity">{{ t('register') }}</a>
+              </div>
+            }
+          }
         </div>
       </div>
     </aside>
@@ -132,6 +145,7 @@ export class HeaderSidebarComponent {
   store = inject(StoreService);
   cart = inject(CartService);
   features = inject(FeatureService);
+  customerAuth = inject(CustomerAuthService);
   i18n = inject(I18nService);
   sidebarOpen = signal(false);
 

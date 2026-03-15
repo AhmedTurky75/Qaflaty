@@ -26,7 +26,7 @@ export class FeatureService {
   isCartPageEnabled = computed(() => this.config()?.pageToggles?.cartPage ?? true);
 
   // Auth
-  authMode = computed(() => this.config()?.customerAuthSettings?.mode ?? 'GuestOnly');
+  authMode = computed(() => this.config()?.customerAuthSettings?.mode ?? 'Optional');
   allowGuestCheckout = computed(() => this.config()?.customerAuthSettings?.allowGuestCheckout ?? true);
 
   // Communication

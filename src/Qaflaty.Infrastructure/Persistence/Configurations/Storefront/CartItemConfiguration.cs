@@ -15,7 +15,7 @@ public class CartItemConfiguration : IEntityTypeConfiguration<CartItem>
 
         builder.Property(i => i.Id)
             .HasColumnName("id")
-            .ValueGeneratedNever();
+            .ValueGeneratedOnAdd();
 
         builder.Property(i => i.CartId)
             .HasConversion(id => id.Value, value => new CartId(value))

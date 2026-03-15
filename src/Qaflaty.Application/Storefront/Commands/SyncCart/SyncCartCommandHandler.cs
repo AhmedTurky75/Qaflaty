@@ -55,8 +55,6 @@ public class SyncCartCommandHandler : ICommandHandler<SyncCartCommand, CartDto>
                 return Result.Failure<CartDto>(mergeResult.Error);
         }
 
-        _cartRepository.Update(cart);
-
         var dto = new CartDto(
             cart.Id.Value,
             cart.CustomerId?.Value,

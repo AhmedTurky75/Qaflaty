@@ -128,7 +128,8 @@
               }
             ],
             "styles": [
-              "projects/store/src/styles.scss"
+              "projects/store/src/styles.scss",
+              "node_modules/leaflet/dist/leaflet.css"
             ]
           },
           "configurations": {
