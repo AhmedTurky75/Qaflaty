@@ -34,6 +34,7 @@ public class GetMerchantStoresQueryHandler : IQueryHandler<GetMerchantStoresQuer
             s.Description,
             new StoreBrandingDto(s.Branding.LogoUrl, s.Branding.PrimaryColor),
             s.Status.ToString(),
+            s.Status == Domain.Catalog.Enums.StoreStatus.Maintenance,
             new DeliverySettingsDto(
                 new MoneyDto(s.DeliverySettings.DeliveryFee.Amount),
                 s.DeliverySettings.FreeDeliveryThreshold != null

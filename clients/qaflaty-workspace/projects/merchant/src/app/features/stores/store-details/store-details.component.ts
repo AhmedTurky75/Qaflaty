@@ -154,11 +154,15 @@ export class StoreDetailsComponent implements OnInit {
   toggleMaintenance(): void {
     const store = this.store();
     if (!store) return;
-    const enabled = store.status !== 'Maintenance';
+    const enabled = !store.isMaintenanceMode;
     this.togglingMaintenance.set(true);
     this.storeService.setMaintenanceMode(store.id, enabled).subscribe({
       next: () => {
-        this.store.set({ ...store, status: enabled ? 'Maintenance' as any : 'Active' as any });
+        this.store.set({
+          ...store,
+          isMaintenanceMode: enabled,
+          status: enabled ? 'Maintenance' as any : 'Active' as any
+        });
         this.togglingMaintenance.set(false);
       },
       error: (err) => {

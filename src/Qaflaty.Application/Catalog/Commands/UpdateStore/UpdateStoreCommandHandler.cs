@@ -63,6 +63,7 @@ public sealed class UpdateStoreCommandHandler : ICommandHandler<UpdateStoreComma
                 PrimaryColor: store.Branding.PrimaryColor
             ),
             Status: store.Status.ToString(),
+            IsMaintenanceMode: store.Status == Domain.Catalog.Enums.StoreStatus.Maintenance,
             DeliverySettings: new DeliverySettingsDto(
                 DeliveryFee: new MoneyDto(
                     Amount: store.DeliverySettings.DeliveryFee.Amount,

@@ -30,6 +30,7 @@ public class GetStoreByIdQueryHandler : IQueryHandler<GetStoreByIdQuery, StoreDt
             store.Description,
             new StoreBrandingDto(store.Branding.LogoUrl, store.Branding.PrimaryColor),
             store.Status.ToString(),
+            store.Status == Domain.Catalog.Enums.StoreStatus.Maintenance,
             new DeliverySettingsDto(
                 new MoneyDto(store.DeliverySettings.DeliveryFee.Amount),
                 store.DeliverySettings.FreeDeliveryThreshold != null

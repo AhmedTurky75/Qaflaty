@@ -8,6 +8,7 @@ public record StoreDto(
     string? Description,
     StoreBrandingDto Branding,
     string Status,
+    bool IsMaintenanceMode,
     DeliverySettingsDto DeliverySettings,
     string? CustomDomain,
     DateTime CreatedAt,

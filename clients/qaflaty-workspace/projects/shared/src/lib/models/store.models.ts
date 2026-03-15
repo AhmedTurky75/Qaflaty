@@ -7,6 +7,7 @@ export interface StoreDto {
   description?: string;
   branding: StoreBranding;
   status: StoreStatus;
+  isMaintenanceMode: boolean;
   deliverySettings: DeliverySettings;
   createdAt: string;
   updatedAt: string;
