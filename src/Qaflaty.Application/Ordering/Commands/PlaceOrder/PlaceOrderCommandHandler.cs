@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.DTOs;
@@ -26,6 +27,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly IOrderNumberGenerator _orderNumberGenerator;
     private readonly IOrderOtpRepository _otpRepository;
     private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
 
     public PlaceOrderCommandHandler(
         IOrderRepository orderRepository,
@@ -34,7 +36,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         IProductRepository productRepository,
         IOrderNumberGenerator orderNumberGenerator,
         IOrderOtpRepository otpRepository,
-        IEmailService emailService)
+        IEmailService emailService,
+        IConfiguration configuration)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
@@ -43,6 +46,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         _orderNumberGenerator = orderNumberGenerator;
         _otpRepository = otpRepository;
         _emailService = emailService;
+        _configuration = configuration;
     }
 
     public async Task<Result<OrderDto>> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -164,7 +168,10 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         await _orderRepository.AddAsync(order, cancellationToken);
 
         // Generate OTP and send confirmation email
-        var otp = OrderOtp.Create(order.Id, emailResult.Value.Value);
+        var mockCode = _configuration.GetValue<bool>("MockOtp:Enabled")
+            ? _configuration.GetValue<string>("MockOtp:Code")
+            : null;
+        var otp = OrderOtp.Create(order.Id, emailResult.Value.Value, mockCode);
         await _otpRepository.AddAsync(otp, cancellationToken);
 
         var storeName = store.Name.Value;

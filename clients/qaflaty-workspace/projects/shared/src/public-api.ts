@@ -4,3 +4,4 @@
 
 export * from './lib/shared';
 export * from './lib/models';
+export * from './lib/components/otp-digits-input/otp-digits-input.component';

@@ -1,7 +1,8 @@
-import { Component, inject, signal, OnDestroy } from '@angular/core';
+import { Component, inject, signal, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { OtpDigitsInputComponent } from 'shared';
 import { AuthService } from '../../../core/services/auth.service';
 
 type LoginStep = 'credentials' | 'otp';
@@ -9,11 +10,13 @@ type LoginStep = 'credentials' | 'otp';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, OtpDigitsInputComponent],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnDestroy {
+  @ViewChild('otpInput') otpInput?: OtpDigitsInputComponent;
+
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -23,18 +26,14 @@ export class LoginComponent implements OnDestroy {
   error = signal<string | null>(null);
   passwordVisible = signal(false);
   pendingEmail = signal<string>('');
+  currentCode = signal('');
 
-  // OTP resend cooldown
   resendCooldown = signal(0);
   private countdownTimer: ReturnType<typeof setInterval> | null = null;
 
   credentialsForm: FormGroup = this.fb.group({
     emailOrUsername: ['', [Validators.required]],
     password: ['', [Validators.required, Validators.minLength(8)]]
-  });
-
-  otpForm: FormGroup = this.fb.group({
-    otpCode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
   });
 
   togglePasswordVisibility(): void {
@@ -52,6 +51,7 @@ export class LoginComponent implements OnDestroy {
     this.authService.initiateLogin(this.credentialsForm.value).subscribe({
       next: (res) => {
         this.pendingEmail.set(res.email);
+        this.currentCode.set('');
         this.step.set('otp');
         this.startResendCooldown();
         this.loading.set(false);
@@ -64,14 +64,11 @@ export class LoginComponent implements OnDestroy {
   }
 
   onSubmitOtp(): void {
-    if (this.otpForm.invalid) {
-      this.otpForm.markAllAsTouched();
-      return;
-    }
+    if (this.currentCode().length !== 6 || this.loading()) return;
     this.loading.set(true);
     this.error.set(null);
 
-    this.authService.verifyOtp(this.pendingEmail(), this.otpForm.value.otpCode).subscribe({
+    this.authService.verifyOtp(this.pendingEmail(), this.currentCode()).subscribe({
       next: (res) => {
         if (res.storeIds.length === 0) {
           this.router.navigate(['/stores/new']);
@@ -87,6 +84,7 @@ export class LoginComponent implements OnDestroy {
       error: (err) => {
         this.error.set(err.message || 'Invalid OTP code');
         this.loading.set(false);
+        this.otpInput?.reset();
       }
     });
   }
@@ -94,14 +92,14 @@ export class LoginComponent implements OnDestroy {
   resendOtp(): void {
     if (this.resendCooldown() > 0) return;
     this.authService.resendOtp(this.pendingEmail()).subscribe({
-      next: () => this.startResendCooldown(),
+      next: () => { this.startResendCooldown(); this.otpInput?.reset(); },
       error: (err) => this.error.set(err.message || 'Failed to resend OTP')
     });
   }
 
   goBack(): void {
     this.step.set('credentials');
-    this.otpForm.reset();
+    this.currentCode.set('');
     this.error.set(null);
     this.stopCooldown();
   }
@@ -125,5 +123,4 @@ export class LoginComponent implements OnDestroy {
 
   get emailOrUsername() { return this.credentialsForm.get('emailOrUsername'); }
   get password() { return this.credentialsForm.get('password'); }
-  get otpCode() { return this.otpForm.get('otpCode'); }
 }

@@ -19,6 +19,12 @@ public class SmtpEmailService : IEmailService
 
     public async Task SendEmailAsync(string to, string subject, string htmlBody, CancellationToken ct = default)
     {
+        if (_configuration.GetValue<bool>("MockOtp:Enabled"))
+        {
+            _logger.LogInformation("[MockOtp] Skipping email to {To} — subject: '{Subject}'", to, subject);
+            return;
+        }
+
         var settings = _configuration.GetSection("EmailSettings");
         var smtpHost = settings["SmtpHost"] ?? throw new InvalidOperationException("EmailSettings:SmtpHost is not configured");
         var smtpPort = int.Parse(settings["SmtpPort"] ?? "587");

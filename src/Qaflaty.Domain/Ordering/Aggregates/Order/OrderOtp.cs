@@ -18,9 +18,9 @@ public sealed class OrderOtp
 
     private OrderOtp() { }
 
-    public static OrderOtp Create(OrderId orderId, string email)
+    public static OrderOtp Create(OrderId orderId, string email, string? codeOverride = null)
     {
-        var code = Random.Shared.Next(100_000, 1_000_000).ToString("D6");
+        var code = codeOverride ?? Random.Shared.Next(100_000, 1_000_000).ToString("D6");
         var now = DateTime.UtcNow;
 
         return new OrderOtp

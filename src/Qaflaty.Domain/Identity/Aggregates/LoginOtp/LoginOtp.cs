@@ -23,9 +23,9 @@ public sealed class LoginOtp
 
     private LoginOtp() { }
 
-    public static LoginOtp Create(string email, LoginOtpPurpose purpose)
+    public static LoginOtp Create(string email, LoginOtpPurpose purpose, string? codeOverride = null)
     {
-        var code = Random.Shared.Next(100_000, 1_000_000).ToString("D6");
+        var code = codeOverride ?? Random.Shared.Next(100_000, 1_000_000).ToString("D6");
         var now = DateTime.UtcNow;
 
         return new LoginOtp

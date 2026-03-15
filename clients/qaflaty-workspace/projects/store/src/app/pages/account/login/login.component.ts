@@ -1,7 +1,8 @@
-import { Component, inject, signal, OnDestroy } from '@angular/core';
+import { Component, inject, signal, ViewChild, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { OtpDigitsInputComponent } from 'shared';
 import { CustomerAuthService } from '../../../services/customer-auth.service';
 
 type LoginStep = 'credentials' | 'otp';
@@ -9,7 +10,7 @@ type LoginStep = 'credentials' | 'otp';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, OtpDigitsInputComponent],
   template: `
 <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
   <div class="max-w-md w-full space-y-8">
@@ -53,33 +54,67 @@ type LoginStep = 'credentials' | 'otp';
 
     <!-- Step 2: OTP -->
     @if (step() === 'otp') {
-      <div class="text-center">
-        <h2 class="text-3xl font-extrabold text-gray-900">رمز التحقق</h2>
-        <p class="mt-2 text-sm text-gray-600">
-          تم إرسال رمز مكوّن من 6 أرقام إلى <strong>{{ pendingEmail() }}</strong>
-        </p>
-      </div>
-      <form [formGroup]="otpForm" (ngSubmit)="onSubmitOtp()" class="mt-8 space-y-6">
-        <div>
-          <input type="text" formControlName="otpCode" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
-            class="block w-full text-center text-3xl tracking-widest py-3 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+      <div class="bg-white rounded-2xl shadow-lg p-8 text-center">
+        <div class="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
         </div>
+
+        <h2 class="text-2xl font-bold text-gray-900 mb-2">رمز التحقق</h2>
+        <p class="text-gray-500 text-sm mb-2">تم إرسال رمز مكوّن من 6 أرقام إلى</p>
+        <p class="text-gray-800 font-medium text-sm mb-6">{{ pendingEmail() }}</p>
+
+        <div class="mb-6">
+          <lib-otp-digits-input
+            #otpInput
+            [hasError]="!!errorMessage()"
+            [disabled]="loading()"
+            (codeChange)="currentCode.set($event)"
+          />
+        </div>
+
         @if (errorMessage()) {
-          <div class="bg-red-50 text-red-700 p-3 rounded-md text-sm text-center">{{ errorMessage() }}</div>
+          <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p class="text-red-700 text-sm">{{ errorMessage() }}</p>
+          </div>
         }
-        <button type="submit" [disabled]="loading()"
-          class="w-full py-2 px-4 border border-transparent rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 font-medium">
-          {{ loading() ? 'جارٍ التحقق...' : 'تأكيد وتسجيل الدخول' }}
-        </button>
-        <div class="text-center space-y-2">
-          @if (resendCooldown() > 0) {
-            <p class="text-sm text-gray-500">إعادة الإرسال بعد {{ resendCooldown() }} ثانية</p>
+
+        <button (click)="onSubmitOtp()" [disabled]="currentCode().length !== 6 || loading()"
+          class="w-full py-3 px-6 bg-blue-600 text-white font-semibold rounded-xl
+                 hover:bg-blue-700 transition-colors
+                 disabled:opacity-50 disabled:cursor-not-allowed
+                 flex items-center justify-center gap-2 mb-4">
+          @if (loading()) {
+            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            جارٍ التحقق...
           } @else {
-            <button type="button" (click)="resendOtp()" class="text-sm text-blue-600 hover:text-blue-500">إعادة إرسال الرمز</button>
+            تأكيد وتسجيل الدخول
           }
-          <div><button type="button" (click)="goBack()" class="text-sm text-gray-500">← رجوع</button></div>
+        </button>
+
+        <div class="text-sm text-gray-500">
+          لم تستلم الرمز؟
+          @if (resendCooldown() > 0) {
+            <span class="text-gray-400 mr-1">إعادة الإرسال بعد {{ resendCooldown() }} ثانية</span>
+          } @else {
+            <button type="button" (click)="resendOtp()"
+              class="mr-1 text-blue-600 font-medium hover:underline">
+              إعادة إرسال الرمز
+            </button>
+          }
         </div>
-      </form>
+
+        <div class="mt-3">
+          <button type="button" (click)="goBack()" class="text-sm text-gray-500 hover:text-gray-700">
+            → رجوع
+          </button>
+        </div>
+      </div>
     }
 
   </div>
@@ -87,6 +122,8 @@ type LoginStep = 'credentials' | 'otp';
   `
 })
 export class LoginComponent implements OnDestroy {
+  @ViewChild('otpInput') otpInput?: OtpDigitsInputComponent;
+
   private fb = inject(FormBuilder);
   private authService = inject(CustomerAuthService);
   private router = inject(Router);
@@ -95,6 +132,7 @@ export class LoginComponent implements OnDestroy {
   loading = signal(false);
   errorMessage = signal<string | null>(null);
   pendingEmail = signal('');
+  currentCode = signal('');
   resendCooldown = signal(0);
   private timer: ReturnType<typeof setInterval> | null = null;
 
@@ -103,40 +141,54 @@ export class LoginComponent implements OnDestroy {
     password: ['', [Validators.required, Validators.minLength(8)]]
   });
 
-  otpForm: FormGroup = this.fb.group({
-    otpCode: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]]
-  });
-
   onSubmitCredentials(): void {
     if (this.credentialsForm.invalid) { this.credentialsForm.markAllAsTouched(); return; }
-    this.loading.set(true); this.errorMessage.set(null);
+    this.loading.set(true);
+    this.errorMessage.set(null);
     this.authService.initiateLogin(this.credentialsForm.value).subscribe({
-      next: (res) => { this.pendingEmail.set(res.email); this.step.set('otp'); this.startCooldown(); this.loading.set(false); },
+      next: (res) => {
+        this.pendingEmail.set(res.email);
+        this.currentCode.set('');
+        this.step.set('otp');
+        this.startCooldown();
+        this.loading.set(false);
+      },
       error: (err) => { this.errorMessage.set(err.message || 'بيانات غير صحيحة'); this.loading.set(false); }
     });
   }
 
   onSubmitOtp(): void {
-    if (this.otpForm.invalid) { this.otpForm.markAllAsTouched(); return; }
-    this.loading.set(true); this.errorMessage.set(null);
-    this.authService.verifyOtp(this.pendingEmail(), this.otpForm.value.otpCode).subscribe({
+    if (this.currentCode().length !== 6 || this.loading()) return;
+    this.loading.set(true);
+    this.errorMessage.set(null);
+    this.authService.verifyOtp(this.pendingEmail(), this.currentCode()).subscribe({
       next: () => this.router.navigate(['/account/profile']),
-      error: (err) => { this.errorMessage.set(err.message || 'رمز غير صحيح'); this.loading.set(false); }
+      error: (err) => {
+        this.errorMessage.set(err.message || 'رمز غير صحيح');
+        this.loading.set(false);
+        this.otpInput?.reset();
+      }
     });
   }
 
   resendOtp(): void {
     if (this.resendCooldown() > 0) return;
     this.authService.resendOtp(this.pendingEmail()).subscribe({
-      next: () => this.startCooldown(),
+      next: () => { this.startCooldown(); this.otpInput?.reset(); },
       error: (err) => this.errorMessage.set(err.message || 'فشل إعادة الإرسال')
     });
   }
 
-  goBack(): void { this.step.set('credentials'); this.otpForm.reset(); this.errorMessage.set(null); this.stopTimer(); }
+  goBack(): void {
+    this.step.set('credentials');
+    this.currentCode.set('');
+    this.errorMessage.set(null);
+    this.stopTimer();
+  }
 
   private startCooldown(): void {
-    this.resendCooldown.set(60); this.stopTimer();
+    this.resendCooldown.set(60);
+    this.stopTimer();
     this.timer = setInterval(() => {
       this.resendCooldown.update(v => { if (v <= 1) { this.stopTimer(); return 0; } return v - 1; });
     }, 1000);
@@ -147,5 +199,4 @@ export class LoginComponent implements OnDestroy {
 
   get emailOrUsername() { return this.credentialsForm.get('emailOrUsername'); }
   get password() { return this.credentialsForm.get('password'); }
-  get otpCode() { return this.otpForm.get('otpCode'); }
 }

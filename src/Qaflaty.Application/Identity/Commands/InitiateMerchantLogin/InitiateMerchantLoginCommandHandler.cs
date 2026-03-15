@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Domain.Common.Errors;
@@ -15,17 +16,20 @@ public class InitiateMerchantLoginCommandHandler : ICommandHandler<InitiateMerch
     private readonly ILoginOtpRepository _loginOtpRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IEmailService _emailService;
+    private readonly IConfiguration _configuration;
 
     public InitiateMerchantLoginCommandHandler(
         IMerchantRepository merchantRepository,
         ILoginOtpRepository loginOtpRepository,
         IPasswordHasher passwordHasher,
-        IEmailService emailService)
+        IEmailService emailService,
+        IConfiguration configuration)
     {
         _merchantRepository = merchantRepository;
         _loginOtpRepository = loginOtpRepository;
         _passwordHasher = passwordHasher;
         _emailService = emailService;
+        _configuration = configuration;
     }
 
     public async Task<Result<InitiateLoginResponse>> Handle(
@@ -64,7 +68,10 @@ public class InitiateMerchantLoginCommandHandler : ICommandHandler<InitiateMerch
         }
 
         // Generate new LoginOtp
-        var otp = LoginOtp.Create(merchant.Email.Value, LoginOtpPurpose.MerchantLogin);
+        var mockCode = _configuration.GetValue<bool>("MockOtp:Enabled")
+            ? _configuration.GetValue<string>("MockOtp:Code")
+            : null;
+        var otp = LoginOtp.Create(merchant.Email.Value, LoginOtpPurpose.MerchantLogin, mockCode);
         await _loginOtpRepository.AddAsync(otp, cancellationToken);
 
         // Send email with the code
