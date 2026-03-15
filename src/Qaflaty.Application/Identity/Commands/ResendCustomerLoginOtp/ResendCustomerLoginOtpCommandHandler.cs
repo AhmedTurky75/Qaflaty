@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Domain.Common.Errors;
@@ -12,16 +11,16 @@ public class ResendCustomerLoginOtpCommandHandler : ICommandHandler<ResendCustom
 {
     private readonly ILoginOtpRepository _loginOtpRepository;
     private readonly IEmailService _emailService;
-    private readonly IConfiguration _configuration;
+    private readonly IOtpSettings _otpSettings;
 
     public ResendCustomerLoginOtpCommandHandler(
         ILoginOtpRepository loginOtpRepository,
         IEmailService emailService,
-        IConfiguration configuration)
+        IOtpSettings otpSettings)
     {
         _loginOtpRepository = loginOtpRepository;
         _emailService = emailService;
-        _configuration = configuration;
+        _otpSettings = otpSettings;
     }
 
     public async Task<Result> Handle(ResendCustomerLoginOtpCommand request, CancellationToken cancellationToken)
@@ -43,10 +42,7 @@ public class ResendCustomerLoginOtpCommandHandler : ICommandHandler<ResendCustom
         _loginOtpRepository.Update(otp);
 
         // Create new OTP
-        var mockCode = _configuration.GetValue<bool>("MockOtp:Enabled")
-            ? _configuration.GetValue<string>("MockOtp:Code")
-            : null;
-        var newOtp = LoginOtp.Create(request.Email, LoginOtpPurpose.CustomerLogin, mockCode);
+        var newOtp = LoginOtp.Create(request.Email, LoginOtpPurpose.CustomerLogin, _otpSettings.MockCode);
         await _loginOtpRepository.AddAsync(newOtp, cancellationToken);
 
         // Send email

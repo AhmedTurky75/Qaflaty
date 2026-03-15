@@ -78,6 +78,7 @@ public static class DependencyInjection
         services.AddScoped<ITenantContext, TenantContext>();
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IEmailService, SmtpEmailService>();
+        services.AddSingleton<IOtpSettings, OtpSettings>();
 
         // Background Services
         services.AddHostedService<GuestCartCleanupService>();

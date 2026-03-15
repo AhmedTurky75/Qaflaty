@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Domain.Catalog.Repositories;
@@ -17,20 +16,20 @@ public class SendOrderOtpCommandHandler : ICommandHandler<SendOrderOtpCommand>
     private readonly IOrderOtpRepository _otpRepository;
     private readonly IStoreRepository _storeRepository;
     private readonly IEmailService _emailService;
-    private readonly IConfiguration _configuration;
+    private readonly IOtpSettings _otpSettings;
 
     public SendOrderOtpCommandHandler(
         IOrderRepository orderRepository,
         IOrderOtpRepository otpRepository,
         IStoreRepository storeRepository,
         IEmailService emailService,
-        IConfiguration configuration)
+        IOtpSettings otpSettings)
     {
         _orderRepository = orderRepository;
         _otpRepository = otpRepository;
         _storeRepository = storeRepository;
         _emailService = emailService;
-        _configuration = configuration;
+        _otpSettings = otpSettings;
     }
 
     public async Task<Result> Handle(SendOrderOtpCommand request, CancellationToken cancellationToken)
@@ -69,10 +68,7 @@ public class SendOrderOtpCommandHandler : ICommandHandler<SendOrderOtpCommand>
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
         var storeName = store?.Name?.Value ?? "Qaflaty";
 
-        var mockCode = _configuration.GetValue<bool>("MockOtp:Enabled")
-            ? _configuration.GetValue<string>("MockOtp:Code")
-            : null;
-        var newOtp = OrderOtp.Create(order.Id, email, mockCode);
+        var newOtp = OrderOtp.Create(order.Id, email, _otpSettings.MockCode);
         await _otpRepository.AddAsync(newOtp, cancellationToken);
 
         var htmlBody = BuildOtpEmail(storeName, order.OrderNumber.Value, newOtp.Code);

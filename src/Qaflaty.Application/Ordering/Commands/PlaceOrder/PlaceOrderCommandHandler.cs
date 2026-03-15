@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Configuration;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.DTOs;
@@ -27,7 +26,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly IOrderNumberGenerator _orderNumberGenerator;
     private readonly IOrderOtpRepository _otpRepository;
     private readonly IEmailService _emailService;
-    private readonly IConfiguration _configuration;
+    private readonly IOtpSettings _otpSettings;
 
     public PlaceOrderCommandHandler(
         IOrderRepository orderRepository,
@@ -37,7 +36,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         IOrderNumberGenerator orderNumberGenerator,
         IOrderOtpRepository otpRepository,
         IEmailService emailService,
-        IConfiguration configuration)
+        IOtpSettings otpSettings)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
@@ -46,7 +45,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         _orderNumberGenerator = orderNumberGenerator;
         _otpRepository = otpRepository;
         _emailService = emailService;
-        _configuration = configuration;
+        _otpSettings = otpSettings;
     }
 
     public async Task<Result<OrderDto>> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -168,10 +167,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         await _orderRepository.AddAsync(order, cancellationToken);
 
         // Generate OTP and send confirmation email
-        var mockCode = _configuration.GetValue<bool>("MockOtp:Enabled")
-            ? _configuration.GetValue<string>("MockOtp:Code")
-            : null;
-        var otp = OrderOtp.Create(order.Id, emailResult.Value.Value, mockCode);
+        var otp = OrderOtp.Create(order.Id, emailResult.Value.Value, _otpSettings.MockCode);
         await _otpRepository.AddAsync(otp, cancellationToken);
 
         var storeName = store.Name.Value;
