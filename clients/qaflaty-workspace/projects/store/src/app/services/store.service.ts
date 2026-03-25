@@ -1,6 +1,6 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, BehaviorSubject, tap } from 'rxjs';
+import { Observable, BehaviorSubject, tap, catchError, throwError } from 'rxjs';
 import { Store } from '../models/store.model';
 import { environment } from '../../environments/environment';
 
@@ -14,6 +14,7 @@ export class StoreService {
   store$ = this.storeSubject.asObservable();
   currentStore = signal<Store | null>(null);
   isLoading = signal<boolean>(false);
+  isInactive = signal<boolean>(false);
   error = signal<string | null>(null);
 
   isStoreActive = computed(() => {
@@ -39,6 +40,13 @@ export class StoreService {
         this.currentStore.set(store);
         this.storeSubject.next(store);
         this.isLoading.set(false);
+      }),
+      catchError(err => {
+        this.isLoading.set(false);
+        if (err?.error?.error === 'Store.Inactive') {
+          this.isInactive.set(true);
+        }
+        return throwError(() => err);
       })
     );
   }

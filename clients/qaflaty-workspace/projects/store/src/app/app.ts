@@ -34,6 +34,8 @@ import { switchMap } from 'rxjs';
         <app-whatsapp-button variant="floating" position="bottom-right" />
         <app-chat-widget />
       }
+    } @else if (storeService.isInactive()) {
+      <app-store-offline [maintenance]="true" />
     } @else if (storeService.isLoading()) {
       <div class="flex items-center justify-center min-h-screen bg-gray-50">
         <div class="text-center">
