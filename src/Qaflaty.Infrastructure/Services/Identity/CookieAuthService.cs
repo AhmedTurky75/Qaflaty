@@ -29,7 +29,15 @@ public class CookieAuthService : ICookieAuthService
 
     public void ClearAuthCookies(HttpContext context)
     {
-        context.Response.Cookies.Delete("access_token");
-        context.Response.Cookies.Delete("refresh_token");
+        var clearOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            SameSite = SameSiteMode.None,
+            Secure = true,
+            Path = "/"
+        };
+
+        context.Response.Cookies.Delete("access_token", clearOptions);
+        context.Response.Cookies.Delete("refresh_token", clearOptions);
     }
 }
