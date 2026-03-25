@@ -36,7 +36,7 @@ import { switchMap } from 'rxjs';
       }
     } @else if (storeService.isInactive()) {
       <app-store-offline [maintenance]="true" />
-    } @else if (storeService.isLoading()) {
+    } @else if (!storeService.error()) {
       <div class="flex items-center justify-center min-h-screen bg-gray-50">
         <div class="text-center">
           <svg class="animate-spin h-16 w-16 text-primary mx-auto mb-4" fill="none" viewBox="0 0 24 24">
@@ -85,9 +85,12 @@ export class App implements OnInit {
         return this.configService.loadConfig();
       })
     ).subscribe({
+      next: () => this.storeService.isLoading.set(false),
       error: (error) => {
         console.error('Failed to load store:', error);
-        this.storeService.error.set('Store not found');
+        if (!this.storeService.isInactive()) {
+          this.storeService.error.set('Store not found');
+        }
       }
     });
   }

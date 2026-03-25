@@ -13,7 +13,7 @@ export class StoreService {
 
   store$ = this.storeSubject.asObservable();
   currentStore = signal<Store | null>(null);
-  isLoading = signal<boolean>(false);
+  isLoading = signal<boolean>(true);
   isInactive = signal<boolean>(false);
   error = signal<string | null>(null);
 
@@ -39,7 +39,7 @@ export class StoreService {
       tap(store => {
         this.currentStore.set(store);
         this.storeSubject.next(store);
-        this.isLoading.set(false);
+        // isLoading stays true until the full init chain (store + config) completes
       }),
       catchError(err => {
         this.isLoading.set(false);
