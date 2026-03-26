@@ -1,4 +1,4 @@
-import { Injectable, signal, computed, effect, inject } from '@angular/core';
+import { Injectable, signal, computed, effect, inject, Injector } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
@@ -54,6 +54,7 @@ export class CustomerAuthService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);
   private readonly guestSession = inject(GuestSessionService);
+  private readonly injector = inject(Injector);
   private readonly apiUrl = `${environment.apiUrl}/storefront/auth`;
 
   private readonly _customer = signal<StoreCustomer | null>(this.loadFromStorage());
@@ -95,6 +96,9 @@ export class CustomerAuthService {
     ).pipe(tap(customer => {
       this._customer.set(customer);
       this.syncCart();
+      import('./chat.service').then(({ ChatService }) => {
+        this.injector.get(ChatService).resetForCustomer();
+      });
     }));
   }
 
@@ -118,7 +122,18 @@ export class CustomerAuthService {
 
   logout(): void {
     this.http.post(`${this.apiUrl}/logout`, {}, { withCredentials: true })
-      .subscribe({ complete: () => this.clearAuth(), error: () => this.clearAuth() });
+      .subscribe({
+        complete: () => this.clearAuthAndResetChat(),
+        error: () => this.clearAuthAndResetChat()
+      });
+  }
+
+  private clearAuthAndResetChat(): void {
+    this.clearAuth();
+    // Lazy-resolve to avoid circular dependency (ChatService -> CustomerAuthService)
+    import('./chat.service').then(({ ChatService }) => {
+      this.injector.get(ChatService).resetForGuest();
+    });
   }
 
   getProfile(): Observable<StoreCustomer | null> {

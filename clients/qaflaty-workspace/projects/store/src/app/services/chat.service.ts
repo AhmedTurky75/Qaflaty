@@ -342,6 +342,28 @@ export class ChatService {
   }
 
   /**
+   * Called on customer logout: disconnect hub, clear state, then reload as guest
+   */
+  async resetForGuest(): Promise<void> {
+    await this.resetConversation();
+  }
+
+  /**
+   * Called on customer login: disconnect hub, clear state, then reload using auth cookie
+   */
+  async resetForCustomer(): Promise<void> {
+    await this.resetConversation();
+  }
+
+  private async resetConversation(): Promise<void> {
+    await this.disconnectFromHub();
+    this.conversation.set(null);
+    this.messages.set([]);
+    this.error.set(null);
+    await this.getActiveConversation();
+  }
+
+  /**
    * Start a brand-new conversation, clearing the old closed one from view
    */
   async startNewConversation(): Promise<void> {
