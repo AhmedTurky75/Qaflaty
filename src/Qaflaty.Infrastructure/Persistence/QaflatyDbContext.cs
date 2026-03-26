@@ -2,6 +2,8 @@ using Microsoft.EntityFrameworkCore;
 using Qaflaty.Domain.Catalog.Aggregates.Category;
 using Qaflaty.Domain.Catalog.Aggregates.City;
 using Qaflaty.Domain.Catalog.Aggregates.Country;
+using Qaflaty.Domain.Catalog.Aggregates.DeliveryZone;
+using Qaflaty.Domain.Catalog.Aggregates.District;
 using Qaflaty.Domain.Catalog.Aggregates.FaqItem;
 using Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
@@ -43,6 +45,9 @@ public class QaflatyDbContext : DbContext
     public DbSet<FaqItem> FaqItems => Set<FaqItem>();
     public DbSet<Country> Countries => Set<Country>();
     public DbSet<City> Cities => Set<City>();
+    public DbSet<District> Districts => Set<District>();
+    public DbSet<DeliveryZone> DeliveryZones => Set<DeliveryZone>();
+    public DbSet<ProductPropertyDefinition> ProductPropertyDefinitions => Set<ProductPropertyDefinition>();
 
     // Ordering
     public DbSet<Order> Orders => Set<Order>();

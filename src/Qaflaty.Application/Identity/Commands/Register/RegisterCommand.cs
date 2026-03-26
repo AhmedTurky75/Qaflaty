@@ -9,5 +9,6 @@ public record RegisterCommand(
     string FirstName,
     string LastName,
     string Username,
-    string? Phone
+    string? Phone,
+    string? PhoneCountryCode = null
 ) : ICommand<AuthResponse>;

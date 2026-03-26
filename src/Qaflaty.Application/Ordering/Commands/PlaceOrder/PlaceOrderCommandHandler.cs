@@ -70,7 +70,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         if (nameResult.IsFailure)
             return Result.Failure<OrderDto>(nameResult.Error);
 
-        var phoneResult = PhoneNumber.Create(request.CustomerPhone);
+        var phoneResult = PhoneNumber.Create(request.CustomerPhone, request.CustomerPhoneCountryCode);
         if (phoneResult.IsFailure)
             return Result.Failure<OrderDto>(phoneResult.Error);
 

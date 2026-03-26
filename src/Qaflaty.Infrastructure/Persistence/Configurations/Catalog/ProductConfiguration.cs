@@ -100,6 +100,12 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             .HasForeignKey(im => im.ProductId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        // Property values
+        builder.HasMany(p => p.PropertyValues)
+            .WithOne()
+            .HasForeignKey(v => v.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         // HasVariants is a computed property in the domain model, not a database column
         builder.Ignore(p => p.HasVariants);
 

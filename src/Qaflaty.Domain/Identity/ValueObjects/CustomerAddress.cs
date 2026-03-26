@@ -14,6 +14,8 @@ public sealed class CustomerAddress
     public bool IsDefault { get; private set; }
     public decimal Latitude { get; private set; }
     public decimal Longitude { get; private set; }
+    public bool IsDeleted { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
 
     private CustomerAddress() { }
 
@@ -95,4 +97,10 @@ public sealed class CustomerAddress
 
     public void SetAsDefault() => IsDefault = true;
     public void UnsetAsDefault() => IsDefault = false;
+
+    public void SoftDelete()
+    {
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
+    }
 }

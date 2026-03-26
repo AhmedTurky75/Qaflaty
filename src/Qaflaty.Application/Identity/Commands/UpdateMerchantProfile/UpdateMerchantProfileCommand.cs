@@ -6,5 +6,6 @@ namespace Qaflaty.Application.Identity.Commands.UpdateMerchantProfile;
 public record UpdateMerchantProfileCommand(
     string FirstName,
     string LastName,
-    string? Phone
+    string? Phone,
+    string? PhoneCountryCode = null
 ) : ICommand<MerchantDto>;

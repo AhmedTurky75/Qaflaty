@@ -17,7 +17,12 @@ public record StoreDto(
 
 public record StoreBrandingDto(
     string? LogoUrl,
-    string PrimaryColor
+    string PrimaryColor,
+    string? SecondaryLogoUrl = null,
+    string? FaviconUrl = null,
+    string? AppleTouchIconUrl = null,
+    string? OgImageUrl = null,
+    string? SecondaryColor = null
 );
 
 public record MoneyDto(

@@ -13,6 +13,7 @@ public record PlaceOrderCommand(
     Guid StoreId,
     string CustomerName,
     string CustomerPhone,
+    string CustomerPhoneCountryCode,
     string CustomerEmail,
     string Street,
     string City,

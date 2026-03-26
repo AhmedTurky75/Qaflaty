@@ -39,7 +39,8 @@ public class GetStoreConfigurationQueryHandler : IQueryHandler<GetStoreConfigura
         new CustomerAuthSettingsDto(
             config.CustomerAuthSettings.Mode.ToString(),
             config.CustomerAuthSettings.AllowGuestCheckout,
-            config.CustomerAuthSettings.RequireEmailVerification),
+            config.CustomerAuthSettings.RequireEmailVerification,
+            config.CustomerAuthSettings.RequireOtpOnPlaceOrder),
         new CommunicationSettingsDto(
             config.CommunicationSettings.WhatsAppEnabled, config.CommunicationSettings.WhatsAppNumber,
             config.CommunicationSettings.WhatsAppDefaultMessage, config.CommunicationSettings.LiveChatEnabled,

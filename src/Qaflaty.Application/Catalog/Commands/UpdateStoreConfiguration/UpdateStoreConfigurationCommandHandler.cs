@@ -58,7 +58,8 @@ public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStor
         var customerAuthSettings = CustomerAuthSettings.Create(
             authMode,
             request.CustomerAuthSettings.AllowGuestCheckout,
-            request.CustomerAuthSettings.RequireEmailVerification);
+            request.CustomerAuthSettings.RequireEmailVerification,
+            request.CustomerAuthSettings.RequireOtpOnPlaceOrder);
         configuration.UpdateCustomerAuthSettings(customerAuthSettings);
 
         // Update CommunicationSettings
@@ -125,7 +126,8 @@ public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStor
             new CustomerAuthSettingsDto(
                 config.CustomerAuthSettings.Mode.ToString(),
                 config.CustomerAuthSettings.AllowGuestCheckout,
-                config.CustomerAuthSettings.RequireEmailVerification),
+                config.CustomerAuthSettings.RequireEmailVerification,
+                config.CustomerAuthSettings.RequireOtpOnPlaceOrder),
             new CommunicationSettingsDto(
                 config.CommunicationSettings.WhatsAppEnabled,
                 config.CommunicationSettings.WhatsAppNumber,

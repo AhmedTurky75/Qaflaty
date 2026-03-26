@@ -53,7 +53,7 @@ public class RegisterCommandHandler : ICommandHandler<RegisterCommand, AuthRespo
         PhoneNumber? phone = null;
         if (!string.IsNullOrWhiteSpace(request.Phone))
         {
-            var phoneResult = PhoneNumber.Create(request.Phone);
+            var phoneResult = PhoneNumber.Create(request.Phone, request.PhoneCountryCode ?? "SA");
             if (phoneResult.IsFailure)
                 return Result.Failure<AuthResponse>(phoneResult.Error);
             phone = phoneResult.Value;

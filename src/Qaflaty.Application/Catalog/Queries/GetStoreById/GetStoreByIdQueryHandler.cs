@@ -28,7 +28,10 @@ public class GetStoreByIdQueryHandler : IQueryHandler<GetStoreByIdQuery, StoreDt
             store.Slug.Value,
             store.Name.Value,
             store.Description,
-            new StoreBrandingDto(store.Branding.LogoUrl, store.Branding.PrimaryColor),
+            new StoreBrandingDto(store.Branding.LogoUrl, store.Branding.PrimaryColor,
+                store.Branding.SecondaryLogoUrl, store.Branding.FaviconUrl,
+                store.Branding.AppleTouchIconUrl, store.Branding.OgImageUrl,
+                store.Branding.SecondaryColor),
             store.Status.ToString(),
             store.Status == Domain.Catalog.Enums.StoreStatus.Maintenance,
             new DeliverySettingsDto(

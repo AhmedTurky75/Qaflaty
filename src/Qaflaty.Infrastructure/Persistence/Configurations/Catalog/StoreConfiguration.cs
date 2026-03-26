@@ -51,12 +51,38 @@ public class StoreConfiguration : IEntityTypeConfiguration<Store>
         {
             branding.Property(b => b.LogoUrl)
                 .HasColumnName("logo_url")
-                .HasMaxLength(500);
+                .HasMaxLength(500)
+                .IsRequired(false);
+
+            branding.Property(b => b.SecondaryLogoUrl)
+                .HasColumnName("secondary_logo_url")
+                .HasMaxLength(500)
+                .IsRequired(false);
+
+            branding.Property(b => b.FaviconUrl)
+                .HasColumnName("favicon_url")
+                .HasMaxLength(500)
+                .IsRequired(false);
+
+            branding.Property(b => b.AppleTouchIconUrl)
+                .HasColumnName("apple_touch_icon_url")
+                .HasMaxLength(500)
+                .IsRequired(false);
+
+            branding.Property(b => b.OgImageUrl)
+                .HasColumnName("og_image_url")
+                .HasMaxLength(500)
+                .IsRequired(false);
 
             branding.Property(b => b.PrimaryColor)
                 .HasColumnName("primary_color")
                 .HasMaxLength(7)
                 .HasDefaultValue("#3B82F6");
+
+            branding.Property(b => b.SecondaryColor)
+                .HasColumnName("secondary_color")
+                .HasMaxLength(7)
+                .IsRequired(false);
         });
 
         builder.Property(s => s.Status)

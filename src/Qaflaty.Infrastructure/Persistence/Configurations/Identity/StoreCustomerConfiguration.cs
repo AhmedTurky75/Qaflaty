@@ -63,14 +63,24 @@ public class StoreCustomerConfiguration : IEntityTypeConfiguration<StoreCustomer
         {
             phone.Property(p => p.Value)
                 .HasColumnName("phone")
-                .HasMaxLength(20);
+                .HasMaxLength(25);
+
+            phone.Property(p => p.CountryCode)
+                .HasColumnName("phone_country_code")
+                .HasMaxLength(2)
+                .IsRequired(false);
         });
 
         builder.OwnsOne(c => c.SecondaryPhone, phone =>
         {
             phone.Property(p => p.Value)
                 .HasColumnName("secondary_phone")
-                .HasMaxLength(20);
+                .HasMaxLength(25);
+
+            phone.Property(p => p.CountryCode)
+                .HasColumnName("secondary_phone_country_code")
+                .HasMaxLength(2)
+                .IsRequired(false);
         });
 
         builder.Property(c => c.IsVerified)
@@ -134,6 +144,14 @@ public class StoreCustomerConfiguration : IEntityTypeConfiguration<StoreCustomer
                 .HasColumnName("longitude")
                 .HasColumnType("decimal(10,7)")
                 .IsRequired();
+
+            addresses.Property(a => a.IsDeleted)
+                .HasColumnName("is_deleted")
+                .HasDefaultValue(false);
+
+            addresses.Property(a => a.DeletedAt)
+                .HasColumnName("deleted_at")
+                .IsRequired(false);
         });
 
         builder.HasMany(c => c.RefreshTokens)

@@ -29,7 +29,7 @@ public class UpdateCustomerProfileCommandHandler : ICommandHandler<UpdateCustome
         PhoneNumber? phone = null;
         if (!string.IsNullOrWhiteSpace(request.Phone))
         {
-            var phoneResult = PhoneNumber.Create(request.Phone);
+            var phoneResult = PhoneNumber.Create(request.Phone, request.PhoneCountryCode ?? "SA");
             if (phoneResult.IsFailure)
                 return Result.Failure(phoneResult.Error);
             phone = phoneResult.Value;
@@ -38,7 +38,7 @@ public class UpdateCustomerProfileCommandHandler : ICommandHandler<UpdateCustome
         PhoneNumber? secondaryPhone = null;
         if (!string.IsNullOrWhiteSpace(request.SecondaryPhone))
         {
-            var secondaryPhoneResult = PhoneNumber.Create(request.SecondaryPhone);
+            var secondaryPhoneResult = PhoneNumber.Create(request.SecondaryPhone, request.SecondaryPhoneCountryCode ?? "SA");
             if (secondaryPhoneResult.IsFailure)
                 return Result.Failure(secondaryPhoneResult.Error);
             secondaryPhone = secondaryPhoneResult.Value;

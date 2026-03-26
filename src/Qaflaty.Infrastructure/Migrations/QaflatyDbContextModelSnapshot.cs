@@ -1996,6 +1996,12 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("boolean")
                                 .HasColumnName("auth_require_email_verification");
 
+                            b1.Property<bool>("RequireOtpOnPlaceOrder")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("auth_require_otp_on_place_order");
+
                             b1.HasKey("StoreConfigurationId");
 
                             b1.ToTable("store_configurations");
@@ -2427,9 +2433,19 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("character varying(100)")
                                 .HasColumnName("country");
 
+                            b1.Property<DateTime?>("DeletedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("deleted_at");
+
                             b1.Property<bool>("IsDefault")
                                 .HasColumnType("boolean")
                                 .HasColumnName("is_default");
+
+                            b1.Property<bool>("IsDeleted")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("is_deleted");
 
                             b1.Property<string>("Label")
                                 .IsRequired()

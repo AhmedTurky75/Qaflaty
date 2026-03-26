@@ -9,5 +9,6 @@ public record RegisterStoreCustomerCommand(
     string FirstName,
     string LastName,
     string Username,
-    string? Phone
+    string? Phone,
+    string? PhoneCountryCode = null
 ) : ICommand<CustomerAuthResponse>;

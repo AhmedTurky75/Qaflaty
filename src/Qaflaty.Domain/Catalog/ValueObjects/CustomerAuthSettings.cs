@@ -8,6 +8,7 @@ public sealed class CustomerAuthSettings : ValueObject
     public CustomerAuthMode Mode { get; private set; }
     public bool AllowGuestCheckout { get; private set; }
     public bool RequireEmailVerification { get; private set; }
+    public bool RequireOtpOnPlaceOrder { get; private set; }
 
     private CustomerAuthSettings() { }
 
@@ -15,15 +16,20 @@ public sealed class CustomerAuthSettings : ValueObject
     {
         Mode = CustomerAuthMode.GuestOnly,
         AllowGuestCheckout = true,
-        RequireEmailVerification = false
+        RequireEmailVerification = false,
+        RequireOtpOnPlaceOrder = false
     };
 
     public static CustomerAuthSettings Create(
-        CustomerAuthMode mode, bool allowGuestCheckout, bool requireEmailVerification) => new()
+        CustomerAuthMode mode,
+        bool allowGuestCheckout,
+        bool requireEmailVerification,
+        bool requireOtpOnPlaceOrder = false) => new()
     {
         Mode = mode,
         AllowGuestCheckout = allowGuestCheckout,
-        RequireEmailVerification = requireEmailVerification
+        RequireEmailVerification = requireEmailVerification,
+        RequireOtpOnPlaceOrder = requireOtpOnPlaceOrder
     };
 
     protected override IEnumerable<object?> GetEqualityComponents()
@@ -31,5 +37,6 @@ public sealed class CustomerAuthSettings : ValueObject
         yield return Mode;
         yield return AllowGuestCheckout;
         yield return RequireEmailVerification;
+        yield return RequireOtpOnPlaceOrder;
     }
 }
