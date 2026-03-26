@@ -8,146 +8,291 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
         <h3 class="text-xl font-semibold text-gray-700 mb-4">Your cart is empty</h3>
-        <a
-          [routerLink]="['/products']"
-          class="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-        >
+        <a [routerLink]="['/products']"
+          class="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
           Continue Shopping
         </a>
       </div>
+
     } @else {
       <form [formGroup]="checkoutForm" (ngSubmit)="submitOrder()" class="grid lg:grid-cols-3 gap-8">
         <!-- Left Column: Forms -->
         <div class="lg:col-span-2 space-y-6">
-          <!-- Customer Information -->
-          <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold mb-4">Customer Information</h2>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  formControlName="fullName"
-                  class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  [class.border-red-500]="isFieldInvalid('fullName')"
-                >
-                @if (isFieldInvalid('fullName')) {
-                  <p class="text-red-500 text-sm mt-1">Full name is required</p>
+
+          <!-- ── AUTHENTICATED VIEW ── -->
+          @if (authService.isAuthenticated() && authService.customer(); as customer) {
+
+            <!-- Customer Info (read-only) -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-xl font-semibold mb-4">Customer Information</h2>
+              <div class="space-y-3 mb-4">
+                <div class="flex items-center gap-3 text-sm">
+                  <span class="font-medium text-gray-500 w-16">Name</span>
+                  <span class="text-gray-900 font-medium">{{ customer.fullName }}</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm">
+                  <span class="font-medium text-gray-500 w-16">Email</span>
+                  <span class="text-gray-900">{{ customer.email }}</span>
+                </div>
+                @if (customer.phone) {
+                  <div class="flex items-center gap-3 text-sm">
+                    <span class="font-medium text-gray-500 w-16">Phone</span>
+                    <span class="text-gray-900">{{ customer.phone }}</span>
+                  </div>
                 }
               </div>
 
+              <!-- Additional phone (optional) -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Phone Number <span class="text-red-500">*</span>
+                  Additional Phone Number
+                  <span class="text-gray-400 font-normal">(optional — for delivery contact)</span>
                 </label>
-                <input
-                  type="tel"
-                  formControlName="phone"
+                <input type="tel" formControlName="additionalPhone" placeholder="+966 5XXXXXXXX"
                   class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  [class.border-red-500]="isFieldInvalid('phone')"
-                  placeholder="+966 5XXXXXXXX"
-                >
-                @if (isFieldInvalid('phone')) {
-                  <p class="text-red-500 text-sm mt-1">Valid phone number is required</p>
-                }
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Email <span class="text-red-500">*</span>
-                  <span class="text-xs font-normal text-gray-500 ml-1">(verification code will be sent here)</span>
-                </label>
-                <input
-                  type="email"
-                  formControlName="email"
-                  class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  [class.border-red-500]="isFieldInvalid('email')"
-                  placeholder="your@email.com"
-                >
-                @if (isFieldInvalid('email')) {
-                  <p class="text-red-500 text-sm mt-1">Valid email is required to verify your order</p>
+                  [class.border-red-500]="isFieldInvalid('additionalPhone')">
+                @if (isFieldInvalid('additionalPhone')) {
+                  <p class="text-red-500 text-sm mt-1">Invalid phone number format</p>
                 }
               </div>
             </div>
-          </div>
 
-          <!-- Delivery Address -->
-          <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Street Address <span class="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  formControlName="street"
-                  class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  [class.border-red-500]="isFieldInvalid('street')"
-                  placeholder="Street name, building number"
-                >
-                @if (isFieldInvalid('street')) {
-                  <p class="text-red-500 text-sm mt-1">Street address is required</p>
+            <!-- Delivery Address -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
+
+              @if (addressesLoading()) {
+                <p class="text-sm text-gray-500">Loading saved addresses…</p>
+              } @else {
+                <!-- Address dropdown -->
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Select Address <span class="text-red-500">*</span>
+                  </label>
+                  <div class="flex gap-2">
+                    <select (change)="onAddressSelect($event)"
+                      class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      [class.border-red-500]="!selectedAddress() && submitting()">
+                      @if (addresses().length === 0 && !showAddAddressForm()) {
+                        <option value="" disabled selected>No saved addresses — add one below</option>
+                      }
+                      @for (addr of addresses(); track addr.label) {
+                        <option [value]="addr.label" [selected]="selectedAddress()?.label === addr.label">
+                          {{ addr.label }} — {{ addr.street }}, {{ addr.city }}{{ addr.isDefault ? ' (Default)' : '' }}
+                        </option>
+                      }
+                    </select>
+                    <button type="button" (click)="openAddAddressForm()"
+                      class="px-4 py-2 border border-blue-500 text-blue-600 rounded-lg hover:bg-blue-50 text-sm font-medium whitespace-nowrap">
+                      + Add New
+                    </button>
+                  </div>
+                  @if (!selectedAddress() && !showAddAddressForm() && submitting()) {
+                    <p class="text-red-500 text-sm mt-1">Please select a delivery address</p>
+                  }
+                </div>
+
+                <!-- Inline add-address form -->
+                @if (showAddAddressForm()) {
+                  <div class="border border-blue-200 rounded-lg p-4 bg-blue-50/30 space-y-3 mb-4" [formGroup]="addressForm">
+                    <h3 class="font-medium text-gray-900 text-sm">New Address</h3>
+
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Label <span class="text-red-500">*</span></label>
+                      <input type="text" formControlName="label" placeholder="Home, Work…"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Country <span class="text-red-500">*</span></label>
+                        @if (countriesLoading()) {
+                          <p class="text-xs text-gray-500">Loading…</p>
+                        } @else {
+                          <select formControlName="countryId" (change)="onAddressCountryChange()"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                            <option value="">Select country</option>
+                            @for (c of countries(); track c.id) {
+                              <option [value]="c.id">{{ c.name }}</option>
+                            }
+                          </select>
+                        }
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">City <span class="text-red-500">*</span></label>
+                        @if (citiesLoading()) {
+                          <p class="text-xs text-gray-500">Loading…</p>
+                        } @else {
+                          <select formControlName="city"
+                            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                            [attr.disabled]="cities().length === 0 ? true : null">
+                            <option value="">Select city</option>
+                            @for (c of cities(); track c.id) {
+                              <option [value]="c.name">{{ c.name }}</option>
+                            }
+                          </select>
+                        }
+                      </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Street <span class="text-red-500">*</span></label>
+                        <input type="text" formControlName="street"
+                          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">District</label>
+                        <input type="text" formControlName="state"
+                          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Postal Code</label>
+                      <input type="text" formControlName="postalCode"
+                        class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      <input id="isDefaultAddr" type="checkbox" formControlName="isDefault"
+                        class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                      <label for="isDefaultAddr" class="text-sm text-gray-700">Set as my default address</label>
+                    </div>
+
+                    <!-- Map picker -->
+                    <app-location-picker (locationPicked)="onLocationPicked($event)"></app-location-picker>
+                    @if (!pickedLocation()) {
+                      <p class="text-xs text-amber-600">Please pick a location on the map</p>
+                    }
+
+                    @if (addAddressError()) {
+                      <p class="text-sm text-red-600">{{ addAddressError() }}</p>
+                    }
+
+                    <div class="flex gap-2 pt-1">
+                      <button type="button" (click)="saveAndUseAddress()"
+                        [disabled]="addressForm.invalid || !pickedLocation() || addAddressLoading()"
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50">
+                        {{ addAddressLoading() ? 'Saving…' : 'Save & Use This Address' }}
+                      </button>
+                      <button type="button" (click)="cancelAddAddress()"
+                        class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm">
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
                 }
-              </div>
+              }
 
-              <div class="grid md:grid-cols-2 gap-4">
+              <!-- Additional delivery instructions -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Additional Instructions (Optional)</label>
+                <textarea formControlName="additionalInstructions" rows="3"
+                  class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                  placeholder="Apartment number, landmarks, delivery notes…"></textarea>
+              </div>
+            </div>
+
+          } @else {
+            <!-- ── GUEST VIEW ── -->
+
+            <!-- Customer Information -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-xl font-semibold mb-4">Customer Information</h2>
+              <div class="space-y-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">
-                    City <span class="text-red-500">*</span>
+                    Full Name <span class="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    formControlName="city"
+                  <input type="text" formControlName="fullName"
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    [class.border-red-500]="isFieldInvalid('city')"
-                  >
-                  @if (isFieldInvalid('city')) {
-                    <p class="text-red-500 text-sm mt-1">City is required</p>
+                    [class.border-red-500]="isFieldInvalid('fullName')">
+                  @if (isFieldInvalid('fullName')) {
+                    <p class="text-red-500 text-sm mt-1">Full name is required</p>
                   }
                 </div>
 
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">
-                    District (Optional)
+                    Phone Number <span class="text-red-500">*</span>
                   </label>
-                  <input
-                    type="text"
-                    formControlName="district"
+                  <input type="tel" formControlName="phone" placeholder="+966 5XXXXXXXX"
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
+                    [class.border-red-500]="isFieldInvalid('phone')">
+                  @if (isFieldInvalid('phone')) {
+                    <p class="text-red-500 text-sm mt-1">Valid phone number is required</p>
+                  }
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Email <span class="text-red-500">*</span>
+                    <span class="text-xs font-normal text-gray-500 ml-1">(verification code will be sent here)</span>
+                  </label>
+                  <input type="email" formControlName="email" placeholder="your@email.com"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    [class.border-red-500]="isFieldInvalid('email')">
+                  @if (isFieldInvalid('email')) {
+                    <p class="text-red-500 text-sm mt-1">Valid email is required to verify your order</p>
+                  }
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Additional Instructions (Optional)
-                </label>
-                <textarea
-                  formControlName="additionalInstructions"
-                  rows="3"
-                  class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                  placeholder="Apartment number, landmarks, delivery notes..."
-                ></textarea>
+            <!-- Delivery Address -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Street Address <span class="text-red-500">*</span>
+                  </label>
+                  <input type="text" formControlName="street" placeholder="Street name, building number"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    [class.border-red-500]="isFieldInvalid('street')">
+                  @if (isFieldInvalid('street')) {
+                    <p class="text-red-500 text-sm mt-1">Street address is required</p>
+                  }
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                      City <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" formControlName="city"
+                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      [class.border-red-500]="isFieldInvalid('city')">
+                    @if (isFieldInvalid('city')) {
+                      <p class="text-red-500 text-sm mt-1">City is required</p>
+                    }
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">District (Optional)</label>
+                    <input type="text" formControlName="district"
+                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Additional Instructions (Optional)</label>
+                  <textarea formControlName="additionalInstructions" rows="3"
+                    class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                    placeholder="Apartment number, landmarks, delivery notes…"></textarea>
+                </div>
               </div>
             </div>
-          </div>
+          }
 
-          <!-- Payment Method -->
+          <!-- Payment Method (shared) -->
           <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-semibold mb-4">Payment Method</h2>
             <div class="space-y-3">
               <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                [class.border-primary]="checkoutForm.get('paymentMethod')?.value === 'CashOnDelivery'"
-              >
-                <input
-                  type="radio"
-                  formControlName="paymentMethod"
-                  value="CashOnDelivery"
-                  class="w-5 h-5 text-primary focus:ring-primary"
-                >
+                [class.border-primary]="checkoutForm.get('paymentMethod')?.value === 'CashOnDelivery'">
+                <input type="radio" formControlName="paymentMethod" value="CashOnDelivery"
+                  class="w-5 h-5 text-primary focus:ring-primary">
                 <div class="ml-3 flex-1">
                   <span class="font-medium text-gray-900">Cash on Delivery</span>
                   <p class="text-sm text-gray-600">Pay when you receive your order</p>
@@ -155,15 +300,9 @@
               </label>
 
               <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors opacity-50"
-                [class.border-primary]="checkoutForm.get('paymentMethod')?.value === 'Card'"
-              >
-                <input
-                  type="radio"
-                  formControlName="paymentMethod"
-                  value="Card"
-                  class="w-5 h-5 text-primary focus:ring-primary"
-                  [disabled]="true"
-                >
+                [class.border-primary]="checkoutForm.get('paymentMethod')?.value === 'Card'">
+                <input type="radio" formControlName="paymentMethod" value="Card"
+                  class="w-5 h-5 text-primary focus:ring-primary" [disabled]="true">
                 <div class="ml-3 flex-1">
                   <span class="font-medium text-gray-900">Card Payment</span>
                   <p class="text-sm text-gray-600">Coming soon</p>
@@ -172,15 +311,12 @@
             </div>
           </div>
 
-          <!-- Order Notes -->
+          <!-- Order Notes (shared) -->
           <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-semibold mb-4">Order Notes (Optional)</h2>
-            <textarea
-              formControlName="notes"
-              rows="4"
+            <textarea formControlName="notes" rows="4"
               class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-              placeholder="Any special requests or notes for your order..."
-            ></textarea>
+              placeholder="Any special requests or notes for your order…"></textarea>
           </div>
         </div>
 
@@ -189,7 +325,6 @@
           <div class="bg-white rounded-lg shadow p-6 sticky top-24">
             <h2 class="text-xl font-semibold mb-4">Order Summary</h2>
 
-            <!-- Cart Items -->
             <div class="space-y-4 mb-6 max-h-64 overflow-y-auto">
               @for (item of cart().items; track getItemKey(item)) {
                 <div class="flex gap-3">
@@ -216,13 +351,11 @@
               }
             </div>
 
-            <!-- Pricing Summary -->
             <div class="border-t pt-4 space-y-3">
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Subtotal ({{ cart().itemCount }} items)</span>
                 <span class="font-medium">{{ cart().subtotal.amount.toFixed(2) }} {{ cart().subtotal.currency }}</span>
               </div>
-
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Delivery Fee</span>
                 <span class="font-medium">
@@ -233,25 +366,21 @@
                   }
                 </span>
               </div>
-
               <div class="flex justify-between text-lg font-bold pt-3 border-t">
                 <span>Total</span>
                 <span>{{ cart().total.amount.toFixed(2) }} {{ cart().total.currency }}</span>
               </div>
             </div>
 
-            <!-- Submit Button -->
-            <button
-              type="submit"
-              [disabled]="submitting() || checkoutForm.invalid"
-              class="w-full mt-6 px-6 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
+            <button type="submit"
+              [disabled]="submitting() || checkoutForm.invalid || (authService.isAuthenticated() && !selectedAddress() && !showAddAddressForm())"
+              class="w-full mt-6 px-6 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               @if (submitting()) {
                 <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Placing Order...
+                Placing Order…
               } @else {
                 Place Order
               }

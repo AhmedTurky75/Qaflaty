@@ -10,6 +10,5 @@ public record StoreCustomerDto(
     string? Phone,
     string? SecondaryPhone,
     bool IsVerified,
-    DateTime CreatedAt,
-    List<CustomerAddressDto> Addresses
+    DateTime CreatedAt
 );

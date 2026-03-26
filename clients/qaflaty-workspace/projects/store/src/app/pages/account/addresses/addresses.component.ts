@@ -263,13 +263,20 @@ export class AddressesComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    const customer = this.customer();
-    if (!customer) {
+    if (!this.customer()) {
       this.router.navigate(['/account/login']);
       return;
     }
-    this.addresses.set(customer.addresses || []);
+    this.loadAddresses();
     this.loadCountries();
+  }
+
+  private loadAddresses(): void {
+    this.isLoading.set(true);
+    this.authService.getAddresses().subscribe({
+      next: (addresses) => { this.addresses.set(addresses); this.isLoading.set(false); },
+      error: () => this.isLoading.set(false)
+    });
   }
 
   private loadCountries(): void {
@@ -379,9 +386,7 @@ export class AddressesComponent implements OnInit {
         this.editingLabel.set(null);
         this.addressForm.reset();
         this.pickedLocation.set(null);
-        this.authService.getProfile().subscribe(() => {
-          this.addresses.set(this.customer()?.addresses || []);
-        });
+        this.authService.getAddresses().subscribe(addresses => this.addresses.set(addresses));
         this.successMessage.set(originalLabel ? 'تم تعديل العنوان بنجاح' : 'تم إضافة العنوان بنجاح');
         setTimeout(() => this.clearMessages(), 3000);
       },
@@ -399,7 +404,7 @@ export class AddressesComponent implements OnInit {
     this.authService.removeAddress(address.label).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.addresses.set(this.addresses().filter(a => a.label !== address.label));
+        this.authService.getAddresses().subscribe(addresses => this.addresses.set(addresses));
         this.successMessage.set('تم حذف العنوان بنجاح');
         setTimeout(() => this.clearMessages(), 3000);
       },

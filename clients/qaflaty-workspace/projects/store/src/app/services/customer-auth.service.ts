@@ -16,7 +16,6 @@ export interface StoreCustomer {
   secondaryPhone?: string;
   isVerified: boolean;
   createdAt: string;
-  addresses: CustomerAddress[];
 }
 
 export interface CustomerAddress {
@@ -143,7 +142,6 @@ export class CustomerAuthService {
 
   private clearAuthAndResetChat(): void {
     this.clearAuth();
-    // Lazy-resolve to avoid circular dependency (ChatService -> CustomerAuthService)
     import('./chat.service').then(({ ChatService }) => {
       this.injector.get(ChatService).resetForGuest();
     });
@@ -172,10 +170,12 @@ export class CustomerAuthService {
     );
   }
 
+  getAddresses(): Observable<CustomerAddress[]> {
+    return this.http.get<CustomerAddress[]>(`${environment.apiUrl}/storefront/addresses`, { withCredentials: true });
+  }
+
   addAddress(address: CustomerAddress): Observable<void> {
-    return this.http.post<void>(`${environment.apiUrl}/storefront/addresses`, address, { withCredentials: true }).pipe(
-      tap(() => this.getProfile().subscribe())
-    );
+    return this.http.post<void>(`${environment.apiUrl}/storefront/addresses`, address, { withCredentials: true });
   }
 
   editAddress(originalLabel: string, address: CustomerAddress): Observable<void> {
@@ -183,14 +183,14 @@ export class CustomerAuthService {
       `${environment.apiUrl}/storefront/addresses/${encodeURIComponent(originalLabel)}`,
       address,
       { withCredentials: true }
-    ).pipe(tap(() => this.getProfile().subscribe()));
+    );
   }
 
   removeAddress(label: string): Observable<void> {
     return this.http.delete<void>(
       `${environment.apiUrl}/storefront/addresses/${encodeURIComponent(label)}`,
       { withCredentials: true }
-    ).pipe(tap(() => this.getProfile().subscribe()));
+    );
   }
 
   /** Returns null since auth tokens are now in httpOnly cookies, not accessible to JS */

@@ -94,17 +94,7 @@ public class InitiateCustomerLoginCommandHandler : ICommandHandler<InitiateCusto
                     customer.Phone?.Value,
                     customer.SecondaryPhone?.Value,
                     customer.IsVerified,
-                    customer.CreatedAt,
-                    customer.Addresses.Select(a => new CustomerAddressDto(
-                        a.Label,
-                        a.Street,
-                        a.City,
-                        a.State,
-                        a.PostalCode,
-                        a.Country,
-                        a.IsDefault,
-                        a.Latitude,
-                        a.Longitude)).ToList());
+                    customer.CreatedAt);
 
                 var authResponse = new CustomerAuthResponse(accessToken, refreshToken, expiresAt, customerDto);
                 return Result.Success(new InitiateCustomerLoginResponse(false, customer.Email.Value, authResponse));

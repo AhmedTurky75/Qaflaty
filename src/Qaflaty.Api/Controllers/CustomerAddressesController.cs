@@ -4,6 +4,7 @@ using Qaflaty.Api.Common;
 using Qaflaty.Application.Identity.Commands.AddCustomerAddress;
 using Qaflaty.Application.Identity.Commands.EditCustomerAddress;
 using Qaflaty.Application.Identity.Commands.RemoveCustomerAddress;
+using Qaflaty.Application.Identity.Queries.GetCustomerAddresses;
 
 namespace Qaflaty.Api.Controllers;
 
@@ -11,6 +12,15 @@ namespace Qaflaty.Api.Controllers;
 [Route("api/storefront/addresses")]
 public class CustomerAddressesController : ApiController
 {
+    [HttpGet]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetAddresses(CancellationToken ct)
+    {
+        var result = await Sender.Send(new GetCustomerAddressesQuery(), ct);
+        return HandleResult(result);
+    }
+
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
