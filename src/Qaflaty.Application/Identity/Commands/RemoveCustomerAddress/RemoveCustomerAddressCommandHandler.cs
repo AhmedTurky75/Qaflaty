@@ -19,11 +19,7 @@ public class RemoveCustomerAddressCommandHandler : ICommandHandler<RemoveCustome
         if (customer == null)
             return Result.Failure(new Error("StoreCustomer.NotFound", "Customer not found"));
 
-        var address = customer.Addresses.FirstOrDefault(a => a.Label == request.Label);
-        if (address == null)
-            return Result.Failure(new Error("CustomerAddress.NotFound", "Address not found"));
-
-        var result = customer.RemoveAddress(address);
+        var result = customer.RemoveAddress(request.Label);
         if (result.IsFailure)
             return result;
 

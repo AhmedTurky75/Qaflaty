@@ -147,11 +147,15 @@ export class LoginComponent implements OnDestroy {
     this.errorMessage.set(null);
     this.authService.initiateLogin(this.credentialsForm.value).subscribe({
       next: (res) => {
+        this.loading.set(false);
+        if (!res.requiresOtp) {
+          this.router.navigate(['/account/profile']);
+          return;
+        }
         this.pendingEmail.set(res.email);
         this.currentCode.set('');
         this.step.set('otp');
         this.startCooldown();
-        this.loading.set(false);
       },
       error: (err) => { this.errorMessage.set(err.message || 'بيانات غير صحيحة'); this.loading.set(false); }
     });

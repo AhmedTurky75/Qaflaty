@@ -1,26 +1,26 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Identity.Repositories;
-using Qaflaty.Domain.Identity.ValueObjects;
 
-namespace Qaflaty.Application.Identity.Commands.AddCustomerAddress;
+namespace Qaflaty.Application.Identity.Commands.EditCustomerAddress;
 
-public class AddCustomerAddressCommandHandler : ICommandHandler<AddCustomerAddressCommand>
+public class EditCustomerAddressCommandHandler : ICommandHandler<EditCustomerAddressCommand>
 {
     private readonly IStoreCustomerRepository _customerRepository;
 
-    public AddCustomerAddressCommandHandler(IStoreCustomerRepository customerRepository)
+    public EditCustomerAddressCommandHandler(IStoreCustomerRepository customerRepository)
     {
         _customerRepository = customerRepository;
     }
 
-    public async Task<Result> Handle(AddCustomerAddressCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(EditCustomerAddressCommand request, CancellationToken cancellationToken)
     {
         var customer = await _customerRepository.GetByIdAsync(request.CustomerId, cancellationToken);
         if (customer == null)
             return Result.Failure(new Error("StoreCustomer.NotFound", "Customer not found"));
 
-        var addressResult = CustomerAddress.Create(
+        var result = customer.UpdateAddress(
+            request.OriginalLabel,
             request.Label,
             request.Street,
             request.City,
@@ -31,12 +31,8 @@ public class AddCustomerAddressCommandHandler : ICommandHandler<AddCustomerAddre
             request.Latitude,
             request.Longitude);
 
-        if (addressResult.IsFailure)
-            return Result.Failure(addressResult.Error);
-
-        var addResult = customer.AddAddress(addressResult.Value);
-        if (addResult.IsFailure)
-            return Result.Failure(addResult.Error);
+        if (result.IsFailure)
+            return result;
 
         _customerRepository.Update(customer);
 

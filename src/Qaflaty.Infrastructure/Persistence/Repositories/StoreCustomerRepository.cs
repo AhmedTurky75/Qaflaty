@@ -18,6 +18,7 @@ public class StoreCustomerRepository : IStoreCustomerRepository
     public async Task<StoreCustomer?> GetByIdAsync(StoreCustomerId id, CancellationToken ct = default)
         => await _context.StoreCustomers
             .Include(c => c.RefreshTokens)
+            .Include(c => c.Addresses)
             .FirstOrDefaultAsync(c => c.Id == id, ct);
 
     public async Task<List<StoreCustomer>> GetByIdsAsync(IEnumerable<StoreCustomerId> ids, CancellationToken ct = default)
@@ -30,6 +31,7 @@ public class StoreCustomerRepository : IStoreCustomerRepository
     public async Task<StoreCustomer?> GetByEmailAsync(Email email, CancellationToken ct = default)
         => await _context.StoreCustomers
             .Include(c => c.RefreshTokens)
+            .Include(c => c.Addresses)
             .FirstOrDefaultAsync(c => c.Email.Value == email.Value, ct);
 
     public async Task<bool> ExistsByEmailAsync(Email email, CancellationToken ct = default)
@@ -38,6 +40,7 @@ public class StoreCustomerRepository : IStoreCustomerRepository
     public async Task<StoreCustomer?> GetByUsernameAsync(string username, CancellationToken ct = default)
         => await _context.StoreCustomers
             .Include(c => c.RefreshTokens)
+            .Include(c => c.Addresses)
             .FirstOrDefaultAsync(c => c.Username == username, ct);
 
     public async Task<bool> ExistsByUsernameAsync(string username, CancellationToken ct = default)

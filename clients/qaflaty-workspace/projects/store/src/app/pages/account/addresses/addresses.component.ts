@@ -42,10 +42,12 @@ interface LocationItem { id: number; name: string; }
           </div>
         }
 
-        <!-- Add Form -->
+        <!-- Add / Edit Form -->
         @if (showForm()) {
           <div class="mb-6 bg-white shadow rounded-lg p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">إضافة عنوان جديد</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-4">
+              {{ editingLabel() ? 'تعديل العنوان' : 'إضافة عنوان جديد' }}
+            </h3>
             <form [formGroup]="addressForm" (ngSubmit)="onSubmit()" class="space-y-4">
               <div>
                 <label for="label" class="block text-sm font-medium text-gray-700">
@@ -135,6 +137,8 @@ interface LocationItem { id: number; name: string; }
               <!-- Map Location Picker -->
               <div class="pt-2">
                 <app-location-picker
+                  [latitude]="pickedLocation()?.latitude"
+                  [longitude]="pickedLocation()?.longitude"
                   (locationPicked)="onLocationPicked($event)">
                 </app-location-picker>
                 @if (pickedLocation()) {
@@ -145,9 +149,9 @@ interface LocationItem { id: number; name: string; }
               </div>
 
               <div class="flex gap-3 pt-4">
-                <button type="submit" [disabled]="addressForm.invalid || isLoading()"
+                <button type="submit" [disabled]="addressForm.invalid || isLoading() || !pickedLocation()"
                   class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
-                  {{ isLoading() ? 'جاري الحفظ...' : 'حفظ العنوان' }}
+                  {{ isLoading() ? 'جاري الحفظ...' : (editingLabel() ? 'حفظ التعديلات' : 'حفظ العنوان') }}
                 </button>
                 <button type="button" (click)="cancelForm()" [disabled]="isLoading()"
                   class="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -198,7 +202,11 @@ interface LocationItem { id: number; name: string; }
                     </p>
                   }
                 </div>
-                <div class="mt-4 flex gap-2">
+                <div class="mt-4 flex gap-3">
+                  <button type="button" (click)="openEditForm(address)"
+                    class="text-sm text-blue-600 hover:text-blue-800 font-medium">
+                    تعديل
+                  </button>
                   @if (addresses().length > 1 || !address.isDefault) {
                     <button type="button" (click)="deleteAddress(address)"
                       class="text-sm text-red-600 hover:text-red-800 font-medium">
@@ -233,6 +241,7 @@ export class AddressesComponent implements OnInit {
   readonly customer = this.authService.customer;
   readonly addresses = signal<CustomerAddress[]>([]);
   readonly showForm = signal(false);
+  readonly editingLabel = signal<string | null>(null);
   readonly isLoading = signal(false);
   readonly successMessage = signal<string | null>(null);
   readonly errorMessage = signal<string | null>(null);
@@ -288,6 +297,7 @@ export class AddressesComponent implements OnInit {
   }
 
   openAddForm(): void {
+    this.editingLabel.set(null);
     this.showForm.set(true);
     this.addressForm.reset({ isDefault: false });
     this.cities.set([]);
@@ -295,7 +305,41 @@ export class AddressesComponent implements OnInit {
     this.clearMessages();
   }
 
+  openEditForm(address: CustomerAddress): void {
+    this.editingLabel.set(address.label);
+    this.showForm.set(true);
+    this.clearMessages();
+    this.pickedLocation.set({ latitude: address.latitude, longitude: address.longitude });
+
+    // Try to match the country by name to get the id for the dropdown
+    const matchedCountry = this.countries().find(c => c.name === address.country);
+    const countryId = matchedCountry?.id ?? '';
+
+    this.addressForm.patchValue({
+      label: address.label,
+      countryId: countryId,
+      city: address.city,
+      street: address.street,
+      state: address.state || '',
+      postalCode: address.postalCode || '',
+      isDefault: address.isDefault
+    });
+
+    if (countryId) {
+      this.citiesLoading.set(true);
+      this.locations.cities(Number(countryId)).subscribe({
+        next: (data) => {
+          this.cities.set(data);
+          this.citiesLoading.set(false);
+          this.addressForm.patchValue({ city: address.city });
+        },
+        error: () => this.citiesLoading.set(false)
+      });
+    }
+  }
+
   cancelForm(): void {
+    this.editingLabel.set(null);
     this.showForm.set(false);
     this.addressForm.reset();
     this.pickedLocation.set(null);
@@ -303,15 +347,15 @@ export class AddressesComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.addressForm.invalid) return;
+    if (this.addressForm.invalid || !this.pickedLocation()) return;
     this.isLoading.set(true);
     this.clearMessages();
 
     const v = this.addressForm.value;
     const selectedCountry = this.countries().find(c => c.id === Number(v.countryId));
+    const loc = this.pickedLocation()!;
 
-    const loc = this.pickedLocation();
-    this.authService.addAddress({
+    const addressData: CustomerAddress = {
       label: v.label,
       street: v.street,
       city: v.city,
@@ -319,18 +363,26 @@ export class AddressesComponent implements OnInit {
       postalCode: v.postalCode || '',
       country: selectedCountry?.name || '',
       isDefault: v.isDefault,
-      latitude: loc?.latitude,
-      longitude: loc?.longitude
-    }).subscribe({
+      latitude: loc.latitude,
+      longitude: loc.longitude
+    };
+
+    const originalLabel = this.editingLabel();
+    const request$ = originalLabel
+      ? this.authService.editAddress(originalLabel, addressData)
+      : this.authService.addAddress(addressData);
+
+    request$.subscribe({
       next: () => {
         this.isLoading.set(false);
         this.showForm.set(false);
+        this.editingLabel.set(null);
         this.addressForm.reset();
         this.pickedLocation.set(null);
         this.authService.getProfile().subscribe(() => {
           this.addresses.set(this.customer()?.addresses || []);
         });
-        this.successMessage.set('تم إضافة العنوان بنجاح');
+        this.successMessage.set(originalLabel ? 'تم تعديل العنوان بنجاح' : 'تم إضافة العنوان بنجاح');
         setTimeout(() => this.clearMessages(), 3000);
       },
       error: (error) => {

@@ -27,13 +27,19 @@ public class LoginStoreCustomerCommandHandler : ICommandHandler<LoginStoreCustom
 
     public async Task<Result<CustomerAuthResponse>> Handle(LoginStoreCustomerCommand request, CancellationToken cancellationToken)
     {
-        // Create Email value object
-        var emailResult = Email.Create(request.Email);
-        if (emailResult.IsFailure)
-            return Result.Failure<CustomerAuthResponse>(IdentityErrors.InvalidCredentials);
+        // Try to find customer by email or username
+        Domain.Identity.Aggregates.StoreCustomer.StoreCustomer? customer = null;
 
-        // Find customer by email
-        var customer = await _customerRepository.GetByEmailAsync(emailResult.Value, cancellationToken);
+        var emailResult = Email.Create(request.EmailOrUsername);
+        if (emailResult.IsSuccess)
+        {
+            customer = await _customerRepository.GetByEmailAsync(emailResult.Value, cancellationToken);
+        }
+        else
+        {
+            customer = await _customerRepository.GetByUsernameAsync(request.EmailOrUsername, cancellationToken);
+        }
+
         if (customer == null)
             return Result.Failure<CustomerAuthResponse>(IdentityErrors.InvalidCredentials);
 
@@ -72,7 +78,9 @@ public class LoginStoreCustomerCommandHandler : ICommandHandler<LoginStoreCustom
                 a.State,
                 a.PostalCode,
                 a.Country,
-                a.IsDefault)).ToList());
+                a.IsDefault,
+                a.Latitude,
+                a.Longitude)).ToList());
 
         var response = new CustomerAuthResponse(
             accessToken,

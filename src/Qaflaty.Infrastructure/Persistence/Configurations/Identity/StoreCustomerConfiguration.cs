@@ -83,36 +83,57 @@ public class StoreCustomerConfiguration : IEntityTypeConfiguration<StoreCustomer
         builder.Property(c => c.UpdatedAt)
             .HasColumnName("updated_at");
 
-        // Addresses stored as JSONB
         builder.OwnsMany(c => c.Addresses, addresses =>
         {
-            addresses.ToJson("addresses");
+            addresses.ToTable("customer_addresses");
+
+            addresses.WithOwner().HasForeignKey("store_customer_id");
+
+            addresses.HasKey(a => a.Id);
+            addresses.Property(a => a.Id)
+                .HasColumnName("id")
+                .ValueGeneratedNever();
 
             addresses.Property(a => a.Label)
-                .HasMaxLength(50);
+                .HasColumnName("label")
+                .HasMaxLength(50)
+                .IsRequired();
 
             addresses.Property(a => a.Street)
-                .HasMaxLength(255);
+                .HasColumnName("street")
+                .HasMaxLength(255)
+                .IsRequired();
 
             addresses.Property(a => a.City)
-                .HasMaxLength(100);
+                .HasColumnName("city")
+                .HasMaxLength(100)
+                .IsRequired();
 
             addresses.Property(a => a.State)
+                .HasColumnName("state")
                 .HasMaxLength(100);
 
             addresses.Property(a => a.PostalCode)
+                .HasColumnName("postal_code")
                 .HasMaxLength(20);
 
             addresses.Property(a => a.Country)
-                .HasMaxLength(100);
+                .HasColumnName("country")
+                .HasMaxLength(100)
+                .IsRequired();
 
-            addresses.Property(a => a.IsDefault);
+            addresses.Property(a => a.IsDefault)
+                .HasColumnName("is_default");
 
             addresses.Property(a => a.Latitude)
-                .HasColumnType("decimal(10, 7)");
+                .HasColumnName("latitude")
+                .HasColumnType("decimal(10,7)")
+                .IsRequired();
 
             addresses.Property(a => a.Longitude)
-                .HasColumnType("decimal(10, 7)");
+                .HasColumnName("longitude")
+                .HasColumnType("decimal(10,7)")
+                .IsRequired();
         });
 
         builder.HasMany(c => c.RefreshTokens)

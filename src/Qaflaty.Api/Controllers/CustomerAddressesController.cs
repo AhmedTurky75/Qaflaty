@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
 using Qaflaty.Application.Identity.Commands.AddCustomerAddress;
+using Qaflaty.Application.Identity.Commands.EditCustomerAddress;
 using Qaflaty.Application.Identity.Commands.RemoveCustomerAddress;
 
 namespace Qaflaty.Api.Controllers;
@@ -22,6 +23,37 @@ public class CustomerAddressesController : ApiController
 
         var command = new AddCustomerAddressCommand(
             customerId.Value,
+            request.Label,
+            request.Street,
+            request.City,
+            request.State,
+            request.PostalCode,
+            request.Country,
+            request.IsDefault,
+            request.Latitude,
+            request.Longitude);
+
+        var result = await Sender.Send(command, ct);
+
+        if (result.IsFailure)
+            return HandleResult(result);
+
+        return NoContent();
+    }
+
+    [HttpPut("{label}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> EditAddress(string label, [FromBody] EditAddressRequest request, CancellationToken ct)
+    {
+        var customerId = CurrentUserService.CustomerId;
+        if (customerId == null)
+            return Unauthorized();
+
+        var command = new EditCustomerAddressCommand(
+            customerId.Value,
+            label,
             request.Label,
             request.Street,
             request.City,
@@ -68,5 +100,16 @@ public record AddAddressRequest(
     string PostalCode,
     string Country,
     bool IsDefault,
-    decimal? Latitude = null,
-    decimal? Longitude = null);
+    decimal Latitude,
+    decimal Longitude);
+
+public record EditAddressRequest(
+    string Label,
+    string Street,
+    string City,
+    string State,
+    string PostalCode,
+    string Country,
+    bool IsDefault,
+    decimal Latitude,
+    decimal Longitude);

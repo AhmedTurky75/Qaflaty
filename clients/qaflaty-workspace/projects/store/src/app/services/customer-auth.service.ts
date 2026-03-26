@@ -2,7 +2,7 @@ import { Injectable, signal, computed, effect, inject, Injector } from '@angular
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
-import { catchError, tap, of, Observable } from 'rxjs';
+import { catchError, tap, map, of, Observable } from 'rxjs';
 import { GuestSessionService } from './guest-session.service';
 
 export interface StoreCustomer {
@@ -27,8 +27,8 @@ export interface CustomerAddress {
   postalCode: string;
   country: string;
   isDefault: boolean;
-  latitude?: number;
-  longitude?: number;
+  latitude: number;
+  longitude: number;
 }
 
 export interface RegisterCustomerRequest {
@@ -45,9 +45,9 @@ export interface LoginCustomerRequest {
   password: string;
 }
 
-export interface InitiateLoginResponse {
-  email: string;
-}
+export type InitiateLoginResponse =
+  | { requiresOtp: true; email: string }
+  | { requiresOtp: false; customer: StoreCustomer };
 
 @Injectable({ providedIn: 'root' })
 export class CustomerAuthService {
@@ -82,9 +82,22 @@ export class CustomerAuthService {
     } catch { return null; }
   }
 
-  /** Step 1: credentials → OTP sent */
+  /** Step 1: credentials → either OTP sent or direct login (when requireEmailVerification is false) */
   initiateLogin(request: LoginCustomerRequest): Observable<InitiateLoginResponse> {
-    return this.http.post<InitiateLoginResponse>(`${this.apiUrl}/login`, request, { withCredentials: true });
+    return this.http.post<any>(`${this.apiUrl}/login`, request, { withCredentials: true }).pipe(
+      map(res => {
+        if ('id' in res) {
+          // Direct login — backend set cookies, return customer
+          this._customer.set(res as StoreCustomer);
+          this.syncCart();
+          import('./chat.service').then(({ ChatService }) => {
+            this.injector.get(ChatService).resetForCustomer();
+          });
+          return { requiresOtp: false, customer: res as StoreCustomer } as InitiateLoginResponse;
+        }
+        return { requiresOtp: true, email: res.email } as InitiateLoginResponse;
+      })
+    );
   }
 
   /** Step 2: verify OTP → cookies set, customer returned */
@@ -159,10 +172,18 @@ export class CustomerAuthService {
     );
   }
 
-  addAddress(address: Omit<CustomerAddress, 'isDefault'> & { isDefault?: boolean }): Observable<void> {
+  addAddress(address: CustomerAddress): Observable<void> {
     return this.http.post<void>(`${environment.apiUrl}/storefront/addresses`, address, { withCredentials: true }).pipe(
       tap(() => this.getProfile().subscribe())
     );
+  }
+
+  editAddress(originalLabel: string, address: CustomerAddress): Observable<void> {
+    return this.http.put<void>(
+      `${environment.apiUrl}/storefront/addresses/${encodeURIComponent(originalLabel)}`,
+      address,
+      { withCredentials: true }
+    ).pipe(tap(() => this.getProfile().subscribe()));
   }
 
   removeAddress(label: string): Observable<void> {

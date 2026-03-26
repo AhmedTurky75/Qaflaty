@@ -106,7 +106,9 @@ public class RegisterStoreCustomerCommandHandler : ICommandHandler<RegisterStore
                 a.State,
                 a.PostalCode,
                 a.Country,
-                a.IsDefault)).ToList());
+                a.IsDefault,
+                a.Latitude,
+                a.Longitude)).ToList());
 
         var response = new CustomerAuthResponse(
             accessToken,

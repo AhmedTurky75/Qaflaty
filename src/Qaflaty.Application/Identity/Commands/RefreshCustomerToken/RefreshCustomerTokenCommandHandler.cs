@@ -65,7 +65,9 @@ public class RefreshCustomerTokenCommandHandler : ICommandHandler<RefreshCustome
                 a.State,
                 a.PostalCode,
                 a.Country,
-                a.IsDefault)).ToList());
+                a.IsDefault,
+                a.Latitude,
+                a.Longitude)).ToList());
 
         return Result.Success(new CustomerAuthResponse(accessToken, newRefreshToken, expiresAt, customerDto));
     }

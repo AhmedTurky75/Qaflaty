@@ -1,10 +1,11 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Domain.Common.Identifiers;
 
-namespace Qaflaty.Application.Identity.Commands.AddCustomerAddress;
+namespace Qaflaty.Application.Identity.Commands.EditCustomerAddress;
 
-public record AddCustomerAddressCommand(
+public record EditCustomerAddressCommand(
     StoreCustomerId CustomerId,
+    string OriginalLabel,
     string Label,
     string Street,
     string City,

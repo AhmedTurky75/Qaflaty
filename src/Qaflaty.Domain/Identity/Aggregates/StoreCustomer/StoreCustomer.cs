@@ -91,56 +91,79 @@ public sealed class StoreCustomer : AggregateRoot<StoreCustomerId>
     // Address Management
     public Result<CustomerAddress> AddAddress(CustomerAddress address)
     {
-        // If this is the first address, make it default
-        if (_addresses.Count == 0 && !address.IsDefault)
-        {
+        if (_addresses.Any(a => a.Label == address.Label))
+            return Result.Failure<CustomerAddress>(
+                new Error("CustomerAddress.DuplicateLabel", $"An address with label '{address.Label}' already exists"));
+
+        if (_addresses.Count == 0)
             address.SetAsDefault();
-        }
-        // If this address is being set as default, unset all others
         else if (address.IsDefault)
-        {
-            foreach (var existingAddress in _addresses)
-            {
-                existingAddress.UnsetAsDefault();
-            }
-        }
+            foreach (var a in _addresses) a.UnsetAsDefault();
 
         _addresses.Add(address);
         UpdatedAt = DateTime.UtcNow;
         return Result<CustomerAddress>.Success(address);
     }
 
-    public Result RemoveAddress(CustomerAddress address)
+    public Result UpdateAddress(
+        string originalLabel,
+        string label,
+        string street,
+        string city,
+        string state,
+        string postalCode,
+        string country,
+        bool isDefault,
+        decimal latitude,
+        decimal longitude)
     {
-        var existingAddress = _addresses.FirstOrDefault(a => a == address);
-        if (existingAddress == null)
-            return Result.Failure(new Error("StoreCustomer.AddressNotFound", "Address not found"));
+        var address = _addresses.FirstOrDefault(a => a.Label == originalLabel);
+        if (address == null)
+            return Result.Failure(new Error("CustomerAddress.NotFound", "Address not found"));
 
-        _addresses.Remove(existingAddress);
+        // If label is changing, check for duplicate
+        if (!string.Equals(originalLabel, label, StringComparison.OrdinalIgnoreCase)
+            && _addresses.Any(a => a.Label == label))
+            return Result.Failure(
+                new Error("CustomerAddress.DuplicateLabel", $"An address with label '{label}' already exists"));
 
-        // If we removed the default address and there are others, make the first one default
-        if (existingAddress.IsDefault && _addresses.Count > 0)
+        var updateResult = address.Update(label, street, city, state, postalCode, country, latitude, longitude);
+        if (updateResult.IsFailure)
+            return updateResult;
+
+        if (isDefault)
         {
-            _addresses[0].SetAsDefault();
+            foreach (var a in _addresses) a.UnsetAsDefault();
+            address.SetAsDefault();
         }
 
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }
 
-    public Result SetDefaultAddress(CustomerAddress address)
+    public Result RemoveAddress(string label)
     {
-        var existingAddress = _addresses.FirstOrDefault(a => a == address);
-        if (existingAddress == null)
-            return Result.Failure(new Error("StoreCustomer.AddressNotFound", "Address not found"));
+        var address = _addresses.FirstOrDefault(a => a.Label == label);
+        if (address == null)
+            return Result.Failure(new Error("CustomerAddress.NotFound", "Address not found"));
 
-        // Unset all other addresses as default
-        foreach (var addr in _addresses)
-        {
-            addr.UnsetAsDefault();
-        }
+        _addresses.Remove(address);
 
-        existingAddress.SetAsDefault();
+        if (address.IsDefault && _addresses.Count > 0)
+            _addresses[0].SetAsDefault();
+
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result SetDefaultAddress(string label)
+    {
+        var address = _addresses.FirstOrDefault(a => a.Label == label);
+        if (address == null)
+            return Result.Failure(new Error("CustomerAddress.NotFound", "Address not found"));
+
+        foreach (var a in _addresses) a.UnsetAsDefault();
+        address.SetAsDefault();
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

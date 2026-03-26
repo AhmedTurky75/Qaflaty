@@ -47,7 +47,18 @@ public class StorefrontAuthController : ApiController
     {
         var command = new InitiateCustomerLoginCommand(request.EmailOrUsername, request.Password);
         var result = await Sender.Send(command, ct);
-        return HandleResult(result);
+
+        if (result.IsFailure)
+            return HandleResult(result);
+
+        if (!result.Value.RequiresOtp)
+        {
+            var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
+            cookieService.SetAuthCookies(HttpContext, result.Value.AuthResponse!.AccessToken, result.Value.AuthResponse!.RefreshToken);
+            return Ok(result.Value.AuthResponse!.Customer);
+        }
+
+        return Ok(new { email = result.Value.Email });
     }
 
     [HttpPost("verify-otp")]

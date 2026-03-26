@@ -8,6 +8,6 @@ public record CustomerAddressDto(
     string PostalCode,
     string Country,
     bool IsDefault,
-    decimal? Latitude = null,
-    decimal? Longitude = null
+    decimal Latitude,
+    decimal Longitude
 );

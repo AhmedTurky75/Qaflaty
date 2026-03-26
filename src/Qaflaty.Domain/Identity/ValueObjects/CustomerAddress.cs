@@ -1,20 +1,19 @@
 using Qaflaty.Domain.Common.Errors;
-using Qaflaty.Domain.Common.Primitives;
-using Qaflaty.Domain.Identity.Errors;
 
 namespace Qaflaty.Domain.Identity.ValueObjects;
 
-public sealed class CustomerAddress : ValueObject
+public sealed class CustomerAddress
 {
-    public string Label { get; private init; } = string.Empty; // e.g., "Home", "Work"
-    public string Street { get; private init; } = string.Empty;
-    public string City { get; private init; } = string.Empty;
-    public string State { get; private init; } = string.Empty;
-    public string PostalCode { get; private init; } = string.Empty;
-    public string Country { get; private init; } = string.Empty;
+    public Guid Id { get; private set; }
+    public string Label { get; private set; } = string.Empty;
+    public string Street { get; private set; } = string.Empty;
+    public string City { get; private set; } = string.Empty;
+    public string State { get; private set; } = string.Empty;
+    public string PostalCode { get; private set; } = string.Empty;
+    public string Country { get; private set; } = string.Empty;
     public bool IsDefault { get; private set; }
-    public decimal? Latitude { get; private init; }
-    public decimal? Longitude { get; private init; }
+    public decimal Latitude { get; private set; }
+    public decimal Longitude { get; private set; }
 
     private CustomerAddress() { }
 
@@ -25,9 +24,9 @@ public sealed class CustomerAddress : ValueObject
         string state,
         string postalCode,
         string country,
-        bool isDefault = false,
-        decimal? latitude = null,
-        decimal? longitude = null)
+        bool isDefault,
+        decimal latitude,
+        decimal longitude)
     {
         if (string.IsNullOrWhiteSpace(label))
             return Result.Failure<CustomerAddress>(
@@ -47,6 +46,7 @@ public sealed class CustomerAddress : ValueObject
 
         return Result.Success(new CustomerAddress
         {
+            Id = Guid.NewGuid(),
             Label = label.Trim(),
             Street = street.Trim(),
             City = city.Trim(),
@@ -59,18 +59,40 @@ public sealed class CustomerAddress : ValueObject
         });
     }
 
+    public Result Update(
+        string label,
+        string street,
+        string city,
+        string state,
+        string postalCode,
+        string country,
+        decimal latitude,
+        decimal longitude)
+    {
+        if (string.IsNullOrWhiteSpace(label))
+            return Result.Failure(new Error("CustomerAddress.LabelRequired", "Address label is required"));
+
+        if (string.IsNullOrWhiteSpace(street))
+            return Result.Failure(new Error("CustomerAddress.StreetRequired", "Street is required"));
+
+        if (string.IsNullOrWhiteSpace(city))
+            return Result.Failure(new Error("CustomerAddress.CityRequired", "City is required"));
+
+        if (string.IsNullOrWhiteSpace(country))
+            return Result.Failure(new Error("CustomerAddress.CountryRequired", "Country is required"));
+
+        Label = label.Trim();
+        Street = street.Trim();
+        City = city.Trim();
+        State = state?.Trim() ?? string.Empty;
+        PostalCode = postalCode?.Trim() ?? string.Empty;
+        Country = country.Trim();
+        Latitude = latitude;
+        Longitude = longitude;
+
+        return Result.Success();
+    }
+
     public void SetAsDefault() => IsDefault = true;
     public void UnsetAsDefault() => IsDefault = false;
-
-    protected override IEnumerable<object?> GetEqualityComponents()
-    {
-        yield return Label;
-        yield return Street;
-        yield return City;
-        yield return State;
-        yield return PostalCode;
-        yield return Country;
-        yield return Latitude;
-        yield return Longitude;
-    }
 }
