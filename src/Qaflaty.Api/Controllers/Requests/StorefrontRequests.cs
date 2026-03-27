@@ -11,6 +11,7 @@ public record PlaceOrderRequest(
 public record CustomerInfoRequest(
     string FullName,
     string Phone,
+    string PhoneCountryCode,
     string Email
 );
 

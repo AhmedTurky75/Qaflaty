@@ -64,6 +64,7 @@ public class MerchantTeamController : ApiController
             request.LastName,
             request.Username,
             request.Phone,
+            request.PhoneCountryCode,
             request.Role);
 
         var result = await Sender.Send(command, ct);
@@ -145,6 +146,7 @@ public record InviteTeamMemberRequest(
     string LastName,
     string Username,
     string? Phone,
+    string? PhoneCountryCode,
     MerchantRole Role);
 
 public record UpdateTeamMemberRoleRequest(MerchantRole NewRole);

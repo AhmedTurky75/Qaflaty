@@ -43,6 +43,7 @@ public class StorefrontOrdersController : ApiController
             StoreId: _tenantContext.CurrentStoreId.Value.Value,
             CustomerName: request.CustomerInfo.FullName,
             CustomerPhone: request.CustomerInfo.Phone,
+            CustomerPhoneCountryCode: request.CustomerInfo.PhoneCountryCode,
             CustomerEmail: request.CustomerInfo.Email,
             Street: request.DeliveryAddress.Street,
             City: request.DeliveryAddress.City,
