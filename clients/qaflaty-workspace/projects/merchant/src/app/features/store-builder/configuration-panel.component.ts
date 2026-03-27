@@ -216,14 +216,14 @@ import { StoreContextService } from '../../core/services/store-context.service';
                 <div>
                   <label class="block text-xs text-gray-600 mb-1">Payment Method</label>
                   <select [(ngModel)]="adj.paymentMethod" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="COD">Cash on Delivery (COD)</option>
-                    <option value="Visa">Visa</option>
-                    <option value="Mastercard">Mastercard</option>
-                    <option value="Mada">Mada</option>
-                    <option value="ApplePay">Apple Pay</option>
-                    <option value="STCPay">STC Pay</option>
-                    <option value="BankTransfer">Bank Transfer</option>
-                    <option value="Other">Other</option>
+                    <option value="COD" [disabled]="isMethodUsedByOther('COD', i)">Cash on Delivery (COD)</option>
+                    <option value="Visa" [disabled]="isMethodUsedByOther('Visa', i)">Visa</option>
+                    <option value="Mastercard" [disabled]="isMethodUsedByOther('Mastercard', i)">Mastercard</option>
+                    <option value="Mada" [disabled]="isMethodUsedByOther('Mada', i)">Mada</option>
+                    <option value="ApplePay" [disabled]="isMethodUsedByOther('ApplePay', i)">Apple Pay</option>
+                    <option value="STCPay" [disabled]="isMethodUsedByOther('STCPay', i)">STC Pay</option>
+                    <option value="BankTransfer" [disabled]="isMethodUsedByOther('BankTransfer', i)">Bank Transfer</option>
+                    <option value="Other" [disabled]="isMethodUsedByOther('Other', i)">Other</option>
                   </select>
                 </div>
                 <div>
@@ -379,6 +379,10 @@ export class ConfigurationPanelComponent implements OnInit {
 
   isMethodDuplicate(paymentMethod: string): boolean {
     return this.duplicatePaymentMethods().includes(paymentMethod);
+  }
+
+  isMethodUsedByOther(method: PaymentMethodAdjustment['paymentMethod'], currentIndex: number): boolean {
+    return this.paymentAdjustments().some((a, i) => i !== currentIndex && a.paymentMethod === method);
   }
 
   sortOptionList = [
