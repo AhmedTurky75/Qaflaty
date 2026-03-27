@@ -52,7 +52,10 @@ public class StorefrontOrdersController : ApiController
             CustomerNotes: request.Notes,
             PaymentMethod: request.PaymentMethod,
             Items: request.Items.Select(item => new PlaceOrderItemDto(
-                item.ProductId, item.Quantity, item.VariantId)).ToList());
+                item.ProductId, item.Quantity, item.VariantId)).ToList(),
+            CountryCode: request.DeliveryAddress.CountryCode,
+            CityId: request.DeliveryAddress.CityId,
+            DistrictId: request.DeliveryAddress.DistrictId);
 
         var result = await Sender.Send(command, ct);
 

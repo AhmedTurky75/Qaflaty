@@ -13,6 +13,7 @@ public record ProductDto(
     string Status,
     Guid? CategoryId,
     List<ProductImageDto> Images,
+    List<ProductPropertyValueDto> PropertyValues,
     DateTime CreatedAt
 );
 

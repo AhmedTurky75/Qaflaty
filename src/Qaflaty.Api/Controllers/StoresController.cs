@@ -82,7 +82,15 @@ public class StoresController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateStoreBranding(Guid id, [FromBody] UpdateStoreBrandingRequest request, CancellationToken cancellationToken)
     {
-        var command = new UpdateStoreBrandingCommand(id, request.LogoUrl, request.PrimaryColor);
+        var command = new UpdateStoreBrandingCommand(
+            id,
+            request.LogoUrl,
+            request.PrimaryColor,
+            request.SecondaryLogoUrl,
+            request.FaviconUrl,
+            request.AppleTouchIconUrl,
+            request.OgImageUrl,
+            request.SecondaryColor);
         var result = await Sender.Send(command, cancellationToken);
 
         if (result.IsFailure)
@@ -169,7 +177,12 @@ public record UpdateStoreRequest(
 
 public record UpdateStoreBrandingRequest(
     string? LogoUrl,
-    string PrimaryColor);
+    string PrimaryColor,
+    string? SecondaryLogoUrl = null,
+    string? FaviconUrl = null,
+    string? AppleTouchIconUrl = null,
+    string? OgImageUrl = null,
+    string? SecondaryColor = null);
 
 public record MoneyRequest(decimal Amount, string Currency = "SAR");
 

@@ -19,6 +19,9 @@ export interface DeliveryAddress {
   city: string;
   district?: string;
   additionalInstructions?: string;
+  countryCode?: number;
+  cityId?: number;
+  districtId?: number;
 }
 
 export interface OrderItemRequest {

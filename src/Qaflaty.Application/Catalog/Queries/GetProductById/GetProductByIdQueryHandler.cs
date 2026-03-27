@@ -41,6 +41,12 @@ public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, Pro
                 i.AltText,
                 i.SortOrder
             )).OrderBy(i => i.SortOrder).ToList(),
+            product.PropertyValues.Select(v => new ProductPropertyValueDto(
+                v.Id,
+                v.DefinitionId.Value,
+                v.DefinitionId.ToString(),
+                v.Value
+            )).ToList(),
             product.CreatedAt));
     }
 }

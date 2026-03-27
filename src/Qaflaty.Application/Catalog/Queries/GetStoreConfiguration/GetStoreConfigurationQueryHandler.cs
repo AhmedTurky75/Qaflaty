@@ -55,6 +55,19 @@ public class GetStoreConfigurationQueryHandler : IQueryHandler<GetStoreConfigura
         config.FooterVariant,
         config.ProductCardVariant,
         config.ProductGridVariant,
+        new SearchSettingsDto(
+            config.SearchSettings.EnableTextSearch,
+            config.SearchSettings.EnableCategoryFilter,
+            config.SearchSettings.EnablePriceFilter,
+            config.SearchSettings.EnablePropertyFilters,
+            config.SearchSettings.FilterablePropertyDefinitionIds,
+            config.SearchSettings.AllowedSortOptions.Select(s => s.ToString()).ToList()),
+        config.PaymentMethodAdjustments.Select(a => new PaymentMethodAdjustmentDto(
+            a.Id,
+            a.PaymentMethod.ToString(),
+            a.AdjustmentType.ToString(),
+            a.Value,
+            a.DisplayLabel)).ToList(),
         config.CreatedAt,
         config.UpdatedAt);
 }

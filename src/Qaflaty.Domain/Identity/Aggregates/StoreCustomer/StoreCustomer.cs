@@ -117,7 +117,10 @@ public sealed class StoreCustomer : AggregateRoot<StoreCustomerId>
         string country,
         bool isDefault,
         decimal latitude,
-        decimal longitude)
+        decimal longitude,
+        int countryCode = 0,
+        int? cityId = null,
+        int? districtId = null)
     {
         var address = _addresses.FirstOrDefault(a => a.Label == originalLabel && !a.IsDeleted);
         if (address == null)
@@ -129,7 +132,7 @@ public sealed class StoreCustomer : AggregateRoot<StoreCustomerId>
             return Result.Failure(
                 new Error("CustomerAddress.DuplicateLabel", $"An address with label '{label}' already exists"));
 
-        var updateResult = address.Update(label, street, city, state, postalCode, country, latitude, longitude);
+        var updateResult = address.Update(label, street, city, state, postalCode, country, latitude, longitude, countryCode, cityId, districtId);
         if (updateResult.IsFailure)
             return updateResult;
 

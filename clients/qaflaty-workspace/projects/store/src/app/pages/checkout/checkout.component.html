@@ -41,8 +41,6 @@
                   </div>
                 }
               </div>
-
-              <!-- Additional phone (optional) -->
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">
                   Additional Phone Number
@@ -78,7 +76,7 @@
                       }
                       @for (addr of addresses(); track addr.label) {
                         <option [value]="addr.label" [selected]="selectedAddress()?.label === addr.label">
-                          {{ addr.label }} — {{ addr.street }}, {{ addr.city }}{{ addr.isDefault ? ' (Default)' : '' }}
+                          {{ addr.label }} — {{ addr.city }}, {{ addr.country }}{{ addr.isDefault ? ' (Default)' : '' }}
                         </option>
                       }
                     </select>
@@ -91,6 +89,27 @@
                     <p class="text-red-500 text-sm mt-1">Please select a delivery address</p>
                   }
                 </div>
+
+                <!-- Delivery zone status for selected address -->
+                @if (selectedAddress() && !showAddAddressForm()) {
+                  @if (resolvingDeliveryFee()) {
+                    <div class="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-500">Checking delivery availability…</div>
+                  } @else if (deliveryFeeInfo(); as info) {
+                    @if (!info.isDeliveryEnabled) {
+                      <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                        <svg class="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                        <span class="text-red-700 text-sm font-medium">Delivery is not available to this address</span>
+                      </div>
+                    } @else if (info.fee !== null) {
+                      <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                        <svg class="w-4 h-4 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        <span class="text-green-700 text-sm">
+                          Delivery available — fee: <strong>{{ info.fee === 0 ? 'FREE' : info.fee.toFixed(2) + ' ' + (info.currency ?? '') }}</strong>
+                        </span>
+                      </div>
+                    }
+                  }
+                }
 
                 <!-- Inline add-address form -->
                 @if (showAddAddressForm()) {
@@ -106,51 +125,54 @@
                     <div class="grid md:grid-cols-2 gap-3">
                       <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Country <span class="text-red-500">*</span></label>
-                        @if (countriesLoading()) {
-                          <p class="text-xs text-gray-500">Loading…</p>
-                        } @else {
-                          <select formControlName="countryId" (change)="onAddressCountryChange()"
-                            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                            <option value="">Select country</option>
-                            @for (c of countries(); track c.id) {
-                              <option [value]="c.id">{{ c.name }}</option>
-                            }
-                          </select>
-                        }
+                        <select formControlName="countryCode" (change)="onAuthFormCountryChange()"
+                          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                          <option value="">Select country</option>
+                          @for (c of countries; track c.isoNumeric) {
+                            <option [value]="c.isoNumeric">{{ c.flag }} {{ c.name }}</option>
+                          }
+                        </select>
                       </div>
                       <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">City <span class="text-red-500">*</span></label>
-                        @if (citiesLoading()) {
-                          <p class="text-xs text-gray-500">Loading…</p>
-                        } @else {
-                          <select formControlName="city"
-                            class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                            [attr.disabled]="cities().length === 0 ? true : null">
-                            <option value="">Select city</option>
-                            @for (c of cities(); track c.id) {
-                              <option [value]="c.name">{{ c.name }}</option>
-                            }
-                          </select>
-                        }
+                        <select formControlName="cityId" (change)="onAuthFormCityChange()"
+                          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                          [attr.disabled]="authFormCities().length === 0 ? true : null">
+                          <option value="">Select city</option>
+                          @for (c of authFormCities(); track c.id) {
+                            <option [value]="c.id">{{ c.name }}</option>
+                          }
+                        </select>
                       </div>
                     </div>
 
-                    <div class="grid md:grid-cols-2 gap-3">
+                    @if (authFormDistricts().length > 0) {
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Street <span class="text-red-500">*</span></label>
-                        <input type="text" formControlName="street"
+                        <label class="block text-xs font-medium text-gray-700 mb-1">District (Optional)</label>
+                        <select formControlName="districtId" (change)="onAuthFormDistrictChange()"
                           class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
+                          <option value="">Select district</option>
+                          @for (d of authFormDistricts(); track d.id) {
+                            <option [value]="d.id">{{ d.name }}</option>
+                          }
+                        </select>
                       </div>
-                      <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">District</label>
-                        <input type="text" formControlName="state"
-                          class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                      </div>
-                    </div>
+                    }
+
+                    <!-- Zone status for inline form -->
+                    @if (resolvingDeliveryFee()) {
+                      <p class="text-xs text-gray-500">Checking delivery availability…</p>
+                    } @else if (deliveryFeeInfo(); as info) {
+                      @if (!info.isDeliveryEnabled) {
+                        <p class="text-xs text-red-600 font-medium">⚠ Delivery not available to this area</p>
+                      } @else if (info.fee !== null) {
+                        <p class="text-xs text-green-600 font-medium">✓ Delivery fee: {{ info.fee === 0 ? 'FREE' : info.fee.toFixed(2) + ' ' + (info.currency ?? '') }}</p>
+                      }
+                    }
 
                     <div>
-                      <label class="block text-xs font-medium text-gray-700 mb-1">Postal Code</label>
-                      <input type="text" formControlName="postalCode"
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Street <span class="text-red-500">*</span></label>
+                      <input type="text" formControlName="street"
                         class="w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                     </div>
 
@@ -160,7 +182,6 @@
                       <label for="isDefaultAddr" class="text-sm text-gray-700">Set as my default address</label>
                     </div>
 
-                    <!-- Map picker -->
                     <app-location-picker (locationPicked)="onLocationPicked($event)"></app-location-picker>
                     @if (!pickedLocation()) {
                       <p class="text-xs text-amber-600">Please pick a location on the map</p>
@@ -202,9 +223,7 @@
               <h2 class="text-xl font-semibold mb-4">Customer Information</h2>
               <div class="space-y-4">
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Full Name <span class="text-red-500">*</span>
-                  </label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Full Name <span class="text-red-500">*</span></label>
                   <input type="text" formControlName="fullName"
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     [class.border-red-500]="isFieldInvalid('fullName')">
@@ -212,11 +231,8 @@
                     <p class="text-red-500 text-sm mt-1">Full name is required</p>
                   }
                 </div>
-
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Phone Number <span class="text-red-500">*</span>
-                  </label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number <span class="text-red-500">*</span></label>
                   <input type="tel" formControlName="phone" placeholder="+966 5XXXXXXXX"
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     [class.border-red-500]="isFieldInvalid('phone')">
@@ -224,7 +240,6 @@
                     <p class="text-red-500 text-sm mt-1">Valid phone number is required</p>
                   }
                 </div>
-
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1">
                     Email <span class="text-red-500">*</span>
@@ -240,39 +255,82 @@
               </div>
             </div>
 
-            <!-- Delivery Address -->
+            <!-- Delivery Address (Guest) -->
             <div class="bg-white rounded-lg shadow p-6">
               <h2 class="text-xl font-semibold mb-4">Delivery Address</h2>
               <div class="space-y-4">
+                <div class="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Country <span class="text-red-500">*</span></label>
+                    <select formControlName="countryCode" (change)="onGuestCountryChange()"
+                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      [class.border-red-500]="isFieldInvalid('countryCode')">
+                      <option value="">Select country</option>
+                      @for (c of countries; track c.isoNumeric) {
+                        <option [value]="c.isoNumeric">{{ c.flag }} {{ c.name }}</option>
+                      }
+                    </select>
+                    @if (isFieldInvalid('countryCode')) {
+                      <p class="text-red-500 text-sm mt-1">Country is required</p>
+                    }
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">City <span class="text-red-500">*</span></label>
+                    <select formControlName="cityId" (change)="onGuestCityChange()"
+                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                      [class.border-red-500]="isFieldInvalid('cityId')"
+                      [attr.disabled]="guestCities().length === 0 ? true : null">
+                      <option value="">Select city</option>
+                      @for (c of guestCities(); track c.id) {
+                        <option [value]="c.id">{{ c.name }}</option>
+                      }
+                    </select>
+                    @if (isFieldInvalid('cityId')) {
+                      <p class="text-red-500 text-sm mt-1">City is required</p>
+                    }
+                  </div>
+                </div>
+
+                @if (guestDistricts().length > 0) {
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">District (Optional)</label>
+                    <select formControlName="districtId" (change)="onGuestDistrictChange()"
+                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
+                      <option value="">Select district</option>
+                      @for (d of guestDistricts(); track d.id) {
+                        <option [value]="d.id">{{ d.name }}</option>
+                      }
+                    </select>
+                  </div>
+                }
+
+                <!-- Delivery zone status (guest) -->
+                @if (resolvingDeliveryFee()) {
+                  <div class="p-3 bg-gray-50 rounded-lg text-sm text-gray-500">Checking delivery availability…</div>
+                } @else if (deliveryFeeInfo(); as info) {
+                  @if (!info.isDeliveryEnabled) {
+                    <div class="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                      <svg class="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                      <span class="text-red-700 text-sm font-medium">Delivery is not available to this area</span>
+                    </div>
+                  } @else if (info.fee !== null) {
+                    <div class="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                      <svg class="w-4 h-4 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                      <span class="text-green-700 text-sm">
+                        Delivery available — fee: <strong>{{ info.fee === 0 ? 'FREE' : info.fee.toFixed(2) + ' ' + (info.currency ?? '') }}</strong>
+                      </span>
+                    </div>
+                  }
+                }
+
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Street Address <span class="text-red-500">*</span>
-                  </label>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Street Address <span class="text-red-500">*</span></label>
                   <input type="text" formControlName="street" placeholder="Street name, building number"
                     class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     [class.border-red-500]="isFieldInvalid('street')">
                   @if (isFieldInvalid('street')) {
                     <p class="text-red-500 text-sm mt-1">Street address is required</p>
                   }
-                </div>
-
-                <div class="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      City <span class="text-red-500">*</span>
-                    </label>
-                    <input type="text" formControlName="city"
-                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                      [class.border-red-500]="isFieldInvalid('city')">
-                    @if (isFieldInvalid('city')) {
-                      <p class="text-red-500 text-sm mt-1">City is required</p>
-                    }
-                  </div>
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">District (Optional)</label>
-                    <input type="text" formControlName="district"
-                      class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary">
-                  </div>
                 </div>
 
                 <div>
@@ -299,8 +357,7 @@
                 </div>
               </label>
 
-              <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors opacity-50"
-                [class.border-primary]="checkoutForm.get('paymentMethod')?.value === 'Card'">
+              <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors opacity-50">
                 <input type="radio" formControlName="paymentMethod" value="Card"
                   class="w-5 h-5 text-primary focus:ring-primary" [disabled]="true">
                 <div class="ml-3 flex-1">
@@ -358,12 +415,8 @@
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Delivery Fee</span>
-                <span class="font-medium">
-                  @if (cart().deliveryFee.amount === 0) {
-                    <span class="text-green-600">FREE</span>
-                  } @else {
-                    {{ cart().deliveryFee.amount.toFixed(2) }} {{ cart().deliveryFee.currency }}
-                  }
+                <span class="font-medium" [class.text-red-600]="deliveryFeeInfo() && !deliveryFeeInfo()!.isDeliveryEnabled">
+                  {{ getDisplayDeliveryFee() }}
                 </span>
               </div>
               <div class="flex justify-between text-lg font-bold pt-3 border-t">
@@ -373,7 +426,7 @@
             </div>
 
             <button type="submit"
-              [disabled]="submitting() || checkoutForm.invalid || (authService.isAuthenticated() && !selectedAddress() && !showAddAddressForm())"
+              [disabled]="submitting() || checkoutForm.invalid || (authService.isAuthenticated() && !selectedAddress() && !showAddAddressForm()) || (deliveryFeeInfo() !== null && !deliveryFeeInfo()!.isDeliveryEnabled)"
               class="w-full mt-6 px-6 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               @if (submitting()) {
                 <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">

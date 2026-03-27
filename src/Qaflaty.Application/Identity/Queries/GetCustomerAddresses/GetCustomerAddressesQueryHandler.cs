@@ -40,7 +40,10 @@ public class GetCustomerAddressesQueryHandler : IQueryHandler<GetCustomerAddress
             a.Country,
             a.IsDefault,
             a.Latitude,
-            a.Longitude)).ToList();
+            a.Longitude,
+            a.CountryCode,
+            a.CityId,
+            a.DistrictId)).ToList();
 
         return Result.Success(addresses);
     }

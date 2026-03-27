@@ -89,6 +89,11 @@ export class ProductService {
     return this.http.delete<void>(`${this.storeUrl(storeId)}/${id}`);
   }
 
+  // ============ Product Properties ============
+  setProductPropertyValues(productId: string, values: Array<{ definitionId: string; value: string }>): Observable<void> {
+    return this.http.put<void>(`${this.BASE_URL}/products/${productId}/properties`, values);
+  }
+
   generateSlug(name: string): string {
     return name
       .toLowerCase()

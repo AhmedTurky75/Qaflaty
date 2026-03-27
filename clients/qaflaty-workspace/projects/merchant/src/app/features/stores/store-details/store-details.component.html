@@ -198,31 +198,120 @@
       <div class="bg-white rounded-lg shadow p-6">
         <form [formGroup]="brandingForm" (ngSubmit)="saveBranding()" class="space-y-6">
           <div>
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Store Branding</h3>
+            <h3 class="text-lg font-medium text-gray-900 mb-1">Store Branding</h3>
+            <p class="text-sm text-gray-500 mb-6">Logos, icons, colors and social sharing images for your storefront.</p>
 
             <div class="space-y-6">
-              <!-- Logo URL -->
-              <div>
-                <label for="logoUrl" class="block text-sm font-medium text-gray-700">
-                  Logo URL
-                </label>
-                <input
-                  id="logoUrl"
-                  type="url"
-                  formControlName="logoUrl"
-                  placeholder="https://example.com/logo.png"
-                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                />
-                <p class="mt-1 text-xs text-gray-500">
-                  Provide a direct URL to your store logo image
-                </p>
+              <!-- Logos section -->
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <!-- Primary Logo -->
+                <div>
+                  <label for="logoUrl" class="block text-sm font-medium text-gray-700">
+                    Primary Logo URL
+                  </label>
+                  <input
+                    id="logoUrl"
+                    type="url"
+                    formControlName="logoUrl"
+                    placeholder="https://example.com/logo.png"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  />
+                  <p class="mt-1 text-xs text-gray-500">Main store logo (header, emails)</p>
+                </div>
+
+                <!-- Secondary Logo -->
+                <div>
+                  <label for="secondaryLogoUrl" class="block text-sm font-medium text-gray-700">
+                    Secondary Logo URL
+                    <span class="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    id="secondaryLogoUrl"
+                    type="url"
+                    formControlName="secondaryLogoUrl"
+                    placeholder="https://example.com/logo-white.png"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  />
+                  <p class="mt-1 text-xs text-gray-500">Alternate version (dark backgrounds, footer)</p>
+                </div>
+
+                <!-- Favicon -->
+                <div>
+                  <label for="faviconUrl" class="block text-sm font-medium text-gray-700">
+                    Favicon URL
+                    <span class="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    id="faviconUrl"
+                    type="url"
+                    formControlName="faviconUrl"
+                    placeholder="https://example.com/favicon.ico"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  />
+                  <p class="mt-1 text-xs text-gray-500">Browser tab icon (.ico or 32x32 .png)</p>
+                </div>
+
+                <!-- Apple Touch Icon -->
+                <div>
+                  <label for="appleTouchIconUrl" class="block text-sm font-medium text-gray-700">
+                    Apple Touch Icon URL
+                    <span class="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    id="appleTouchIconUrl"
+                    type="url"
+                    formControlName="appleTouchIconUrl"
+                    placeholder="https://example.com/apple-touch-icon.png"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  />
+                  <p class="mt-1 text-xs text-gray-500">iOS home screen icon (180x180 PNG)</p>
+                </div>
+
+                <!-- OG Image -->
+                <div class="sm:col-span-2">
+                  <label for="ogImageUrl" class="block text-sm font-medium text-gray-700">
+                    Social Share Image (OG Image) URL
+                    <span class="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <input
+                    id="ogImageUrl"
+                    type="url"
+                    formControlName="ogImageUrl"
+                    placeholder="https://example.com/og-image.jpg"
+                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  />
+                  <p class="mt-1 text-xs text-gray-500">Image shown when sharing on social media (1200x630 recommended)</p>
+                </div>
               </div>
 
-              <!-- Primary Color -->
-              <app-color-picker
-                [initialColor]="storeData.branding.primaryColor"
-                (colorChange)="onColorChange($event)"
-              ></app-color-picker>
+              <!-- Colors -->
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <app-color-picker
+                    [initialColor]="storeData.branding.primaryColor"
+                    (colorChange)="onColorChange($event)"
+                  ></app-color-picker>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Secondary Color <span class="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <div class="flex items-center gap-3">
+                    <input
+                      type="color"
+                      formControlName="secondaryColor"
+                      class="h-10 w-16 rounded border border-gray-300 cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      formControlName="secondaryColor"
+                      placeholder="#FFFFFF"
+                      class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    />
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">Used for accents and secondary UI elements</p>
+                </div>
+              </div>
 
               <!-- Preview -->
               <div class="pt-4">
@@ -246,6 +335,12 @@
                   <div>
                     <h4 class="font-semibold text-gray-900">{{ storeData.name }}</h4>
                     <p class="text-sm text-gray-600">{{ getStoreUrl() }}</p>
+                    <div class="flex items-center gap-2 mt-1">
+                      <div class="w-4 h-4 rounded-full border border-gray-200" [style.background-color]="brandingForm.value.primaryColor"></div>
+                      @if (brandingForm.value.secondaryColor) {
+                        <div class="w-4 h-4 rounded-full border border-gray-200" [style.background-color]="brandingForm.value.secondaryColor"></div>
+                      }
+                    </div>
                   </div>
                 </div>
               </div>
@@ -264,7 +359,7 @@
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
               }
-              Save Changes
+              Save Branding
             </button>
           </div>
         </form>

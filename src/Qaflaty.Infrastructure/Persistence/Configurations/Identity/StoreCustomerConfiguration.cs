@@ -152,6 +152,18 @@ public class StoreCustomerConfiguration : IEntityTypeConfiguration<StoreCustomer
             addresses.Property(a => a.DeletedAt)
                 .HasColumnName("deleted_at")
                 .IsRequired(false);
+
+            addresses.Property(a => a.CountryCode)
+                .HasColumnName("country_code")
+                .HasDefaultValue(0);
+
+            addresses.Property(a => a.CityId)
+                .HasColumnName("city_id")
+                .IsRequired(false);
+
+            addresses.Property(a => a.DistrictId)
+                .HasColumnName("district_id")
+                .IsRequired(false);
         });
 
         builder.HasMany(c => c.RefreshTokens)

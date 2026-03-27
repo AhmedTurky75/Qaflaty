@@ -14,6 +14,12 @@ public sealed class CustomerAddress
     public bool IsDefault { get; private set; }
     public decimal Latitude { get; private set; }
     public decimal Longitude { get; private set; }
+    /// <summary>ISO 3166-1 numeric country code (e.g. 682 = Saudi Arabia). Matches geo-data IDs used by delivery zones.</summary>
+    public int CountryCode { get; private set; }
+    /// <summary>City ID from the shared geo-data list. Null if zone is country-level.</summary>
+    public int? CityId { get; private set; }
+    /// <summary>District ID from the shared geo-data list. Null if zone is city- or country-level.</summary>
+    public int? DistrictId { get; private set; }
     public bool IsDeleted { get; private set; }
     public DateTime? DeletedAt { get; private set; }
 
@@ -28,7 +34,10 @@ public sealed class CustomerAddress
         string country,
         bool isDefault,
         decimal latitude,
-        decimal longitude)
+        decimal longitude,
+        int countryCode = 0,
+        int? cityId = null,
+        int? districtId = null)
     {
         if (string.IsNullOrWhiteSpace(label))
             return Result.Failure<CustomerAddress>(
@@ -57,7 +66,10 @@ public sealed class CustomerAddress
             Country = country.Trim(),
             IsDefault = isDefault,
             Latitude = latitude,
-            Longitude = longitude
+            Longitude = longitude,
+            CountryCode = countryCode,
+            CityId = cityId,
+            DistrictId = districtId
         });
     }
 
@@ -69,7 +81,10 @@ public sealed class CustomerAddress
         string postalCode,
         string country,
         decimal latitude,
-        decimal longitude)
+        decimal longitude,
+        int countryCode = 0,
+        int? cityId = null,
+        int? districtId = null)
     {
         if (string.IsNullOrWhiteSpace(label))
             return Result.Failure(new Error("CustomerAddress.LabelRequired", "Address label is required"));
@@ -91,6 +106,9 @@ public sealed class CustomerAddress
         Country = country.Trim();
         Latitude = latitude;
         Longitude = longitude;
+        CountryCode = countryCode;
+        CityId = cityId;
+        DistrictId = districtId;
 
         return Result.Success();
     }

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -9,8 +9,14 @@ import { StoreService } from '../../services/store.service';
 import { CustomerAuthService, CustomerAddress } from '../../services/customer-auth.service';
 import { CreateOrderRequest, PaymentMethod } from '../../models/order.model';
 import { LocationPickerComponent, PickedLocation } from '../../components/shared/location-picker.component';
+import { COUNTRIES, CITIES, DISTRICTS, Country, City, District } from 'shared';
 
-interface LocationItem { id: number; name: string; }
+interface DeliveryFeeInfo {
+  isDeliveryEnabled: boolean;
+  fee: number | null;
+  currency: string | null;
+  resolvedAt: string;
+}
 
 @Component({
   selector: 'app-checkout',
@@ -27,27 +33,52 @@ export class CheckoutComponent implements OnInit {
   private router = inject(Router);
   readonly authService = inject(CustomerAuthService);
 
-  private readonly locations = this.authService.getLocations();
-
   cart = this.cartService.cart;
   store = this.storeService.currentStore;
   submitting = signal<boolean>(false);
   errorMessage = signal<string>('');
+
+  // Delivery zone resolution
+  deliveryFeeInfo = signal<DeliveryFeeInfo | null>(null);
+  resolvingDeliveryFee = signal(false);
 
   // Saved addresses (authenticated users)
   addresses = signal<CustomerAddress[]>([]);
   addressesLoading = signal(false);
   selectedAddress = signal<CustomerAddress | null>(null);
 
-  // Inline "add new address" form
+  // Inline "add new address" form (authenticated)
   showAddAddressForm = signal(false);
   addAddressLoading = signal(false);
   addAddressError = signal<string | null>(null);
   pickedLocation = signal<PickedLocation | null>(null);
-  countries = signal<LocationItem[]>([]);
-  cities = signal<LocationItem[]>([]);
-  countriesLoading = signal(false);
-  citiesLoading = signal(false);
+
+  // Geo-data (static)
+  readonly countries: Country[] = COUNTRIES;
+
+  // For authenticated inline-add form
+  readonly authFormCountryCode = signal<number | null>(null);
+  readonly authFormCityId = signal<number | null>(null);
+  readonly authFormCities = computed<City[]>(() => {
+    const code = this.authFormCountryCode();
+    return code ? (CITIES[code] ?? []) : [];
+  });
+  readonly authFormDistricts = computed<District[]>(() => {
+    const id = this.authFormCityId();
+    return id ? (DISTRICTS[id] ?? []) : [];
+  });
+
+  // For guest form
+  readonly guestCountryCode = signal<number | null>(null);
+  readonly guestCityId = signal<number | null>(null);
+  readonly guestCities = computed<City[]>(() => {
+    const code = this.guestCountryCode();
+    return code ? (CITIES[code] ?? []) : [];
+  });
+  readonly guestDistricts = computed<District[]>(() => {
+    const id = this.guestCityId();
+    return id ? (DISTRICTS[id] ?? []) : [];
+  });
 
   checkoutForm!: FormGroup;
   addressForm!: FormGroup;
@@ -55,10 +86,10 @@ export class CheckoutComponent implements OnInit {
   ngOnInit(): void {
     this.addressForm = this.fb.group({
       label: ['', [Validators.required, Validators.maxLength(50)]],
-      countryId: ['', [Validators.required]],
-      city: ['', [Validators.required]],
+      countryCode: ['', [Validators.required]],
+      cityId: ['', [Validators.required]],
+      districtId: [''],
       street: ['', [Validators.required, Validators.maxLength(200)]],
-      state: ['', [Validators.maxLength(100)]],
       postalCode: ['', [Validators.maxLength(20)]],
       isDefault: [false]
     });
@@ -71,15 +102,15 @@ export class CheckoutComponent implements OnInit {
         notes: ['']
       });
       this.loadAddresses();
-      this.loadCountries();
     } else {
       this.checkoutForm = this.fb.group({
         fullName: ['', [Validators.required, Validators.minLength(2)]],
         phone: ['', [Validators.required, Validators.pattern(/^(\+966|966|05)[0-9]{8,9}$/)]],
         email: ['', [Validators.required, Validators.email]],
+        countryCode: ['', [Validators.required]],
+        cityId: ['', [Validators.required]],
+        districtId: [''],
         street: ['', [Validators.required]],
-        city: ['', [Validators.required]],
-        district: [''],
         additionalInstructions: [''],
         paymentMethod: ['CashOnDelivery', [Validators.required]],
         notes: ['']
@@ -95,49 +126,97 @@ export class CheckoutComponent implements OnInit {
         this.addressesLoading.set(false);
         const def = addresses.find(a => a.isDefault) ?? addresses[0] ?? null;
         this.selectedAddress.set(def);
+        if (def) this.resolveDeliveryFee(def.countryCode, def.cityId, def.districtId);
       },
       error: () => this.addressesLoading.set(false)
     });
   }
 
-  private loadCountries(): void {
-    this.countriesLoading.set(true);
-    this.locations.countries().subscribe({
-      next: (data) => { this.countries.set(data); this.countriesLoading.set(false); },
-      error: () => this.countriesLoading.set(false)
-    });
-  }
-
   onAddressSelect(event: Event): void {
     const label = (event.target as HTMLSelectElement).value;
-    this.selectedAddress.set(this.addresses().find(a => a.label === label) ?? null);
+    const addr = this.addresses().find(a => a.label === label) ?? null;
+    this.selectedAddress.set(addr);
     if (this.showAddAddressForm()) this.cancelAddAddress();
+    if (addr) this.resolveDeliveryFee(addr.countryCode, addr.cityId, addr.districtId);
   }
 
   openAddAddressForm(): void {
     this.showAddAddressForm.set(true);
     this.addressForm.reset({ isDefault: false });
-    this.cities.set([]);
+    this.authFormCountryCode.set(null);
+    this.authFormCityId.set(null);
     this.pickedLocation.set(null);
     this.addAddressError.set(null);
+    this.deliveryFeeInfo.set(null);
   }
 
   cancelAddAddress(): void {
     this.showAddAddressForm.set(false);
     this.addressForm.reset();
+    this.authFormCountryCode.set(null);
+    this.authFormCityId.set(null);
     this.pickedLocation.set(null);
     this.addAddressError.set(null);
   }
 
-  onAddressCountryChange(): void {
-    const countryId = this.addressForm.get('countryId')?.value;
-    this.addressForm.patchValue({ city: '' });
-    this.cities.set([]);
-    if (!countryId) return;
-    this.citiesLoading.set(true);
-    this.locations.cities(Number(countryId)).subscribe({
-      next: (data) => { this.cities.set(data); this.citiesLoading.set(false); },
-      error: () => this.citiesLoading.set(false)
+  onAuthFormCountryChange(): void {
+    const val = this.addressForm.get('countryCode')?.value;
+    this.authFormCountryCode.set(val ? Number(val) : null);
+    this.authFormCityId.set(null);
+    this.addressForm.patchValue({ cityId: '', districtId: '' });
+    this.deliveryFeeInfo.set(null);
+  }
+
+  onAuthFormCityChange(): void {
+    const val = this.addressForm.get('cityId')?.value;
+    this.authFormCityId.set(val ? Number(val) : null);
+    this.addressForm.patchValue({ districtId: '' });
+    const countryCode = this.authFormCountryCode();
+    if (countryCode && val) this.resolveDeliveryFee(countryCode, Number(val));
+  }
+
+  onAuthFormDistrictChange(): void {
+    const countryCode = this.authFormCountryCode();
+    const cityId = this.authFormCityId();
+    const districtVal = this.addressForm.get('districtId')?.value;
+    if (countryCode) this.resolveDeliveryFee(countryCode, cityId ?? undefined, districtVal ? Number(districtVal) : undefined);
+  }
+
+  onGuestCountryChange(): void {
+    const val = this.checkoutForm.get('countryCode')?.value;
+    this.guestCountryCode.set(val ? Number(val) : null);
+    this.guestCityId.set(null);
+    this.checkoutForm.patchValue({ cityId: '', districtId: '' });
+    this.deliveryFeeInfo.set(null);
+  }
+
+  onGuestCityChange(): void {
+    const val = this.checkoutForm.get('cityId')?.value;
+    this.guestCityId.set(val ? Number(val) : null);
+    this.checkoutForm.patchValue({ districtId: '' });
+    const countryCode = this.guestCountryCode();
+    if (countryCode && val) this.resolveDeliveryFee(countryCode, Number(val));
+  }
+
+  onGuestDistrictChange(): void {
+    const countryCode = this.guestCountryCode();
+    const cityId = this.guestCityId();
+    const districtVal = this.checkoutForm.get('districtId')?.value;
+    if (countryCode) this.resolveDeliveryFee(countryCode, cityId ?? undefined, districtVal ? Number(districtVal) : undefined);
+  }
+
+  private resolveDeliveryFee(countryCode: number, cityId?: number, districtId?: number): void {
+    if (!countryCode) return;
+    this.resolvingDeliveryFee.set(true);
+    this.authService.resolveDeliveryFee(countryCode, cityId, districtId).subscribe({
+      next: (info) => {
+        this.deliveryFeeInfo.set(info);
+        this.resolvingDeliveryFee.set(false);
+      },
+      error: () => {
+        this.deliveryFeeInfo.set(null);
+        this.resolvingDeliveryFee.set(false);
+      }
     });
   }
 
@@ -151,19 +230,26 @@ export class CheckoutComponent implements OnInit {
     this.addAddressError.set(null);
 
     const v = this.addressForm.value;
-    const country = this.countries().find(c => c.id === Number(v.countryId));
+    const countryCode = Number(v.countryCode);
+    const cityId = v.cityId ? Number(v.cityId) : undefined;
+    const districtId = v.districtId ? Number(v.districtId) : undefined;
+    const country = this.countries.find(c => c.isoNumeric === countryCode);
+    const city = cityId ? this.authFormCities().find(c => c.id === cityId) : undefined;
     const loc = this.pickedLocation()!;
 
     const newAddress: CustomerAddress = {
       label: v.label,
       street: v.street,
-      city: v.city,
-      state: v.state || '',
+      city: city?.name ?? '',
+      state: '',
       postalCode: v.postalCode || '',
-      country: country?.name || '',
+      country: country?.name ?? '',
       isDefault: v.isDefault,
       latitude: loc.latitude,
-      longitude: loc.longitude
+      longitude: loc.longitude,
+      countryCode,
+      cityId,
+      districtId
     };
 
     this.authService.addAddress(newAddress).subscribe({
@@ -171,10 +257,14 @@ export class CheckoutComponent implements OnInit {
         this.addAddressLoading.set(false);
         this.showAddAddressForm.set(false);
         this.addressForm.reset();
+        this.authFormCountryCode.set(null);
+        this.authFormCityId.set(null);
         this.pickedLocation.set(null);
         this.authService.getAddresses().subscribe(addresses => {
           this.addresses.set(addresses);
-          this.selectedAddress.set(addresses.find(a => a.label === newAddress.label) ?? null);
+          const saved = addresses.find(a => a.label === newAddress.label) ?? null;
+          this.selectedAddress.set(saved);
+          if (saved) this.resolveDeliveryFee(saved.countryCode, saved.cityId, saved.districtId);
         });
       },
       error: (err) => {
@@ -198,6 +288,15 @@ export class CheckoutComponent implements OnInit {
     return Object.entries(attributes).map(([k, v]) => `${k}: ${v}`).join(', ');
   }
 
+  getDisplayDeliveryFee(): string {
+    const info = this.deliveryFeeInfo();
+    if (this.resolvingDeliveryFee()) return '...';
+    if (!info) return this.cart().deliveryFee.amount === 0 ? 'FREE' : `${this.cart().deliveryFee.amount.toFixed(2)} ${this.cart().deliveryFee.currency}`;
+    if (!info.isDeliveryEnabled) return 'غير متاح';
+    if (info.fee === null) return this.cart().deliveryFee.amount === 0 ? 'FREE' : `${this.cart().deliveryFee.amount.toFixed(2)} ${this.cart().deliveryFee.currency}`;
+    return info.fee === 0 ? 'FREE' : `${info.fee.toFixed(2)} ${info.currency ?? ''}`;
+  }
+
   submitOrder(): void {
     if (this.checkoutForm.invalid) {
       this.checkoutForm.markAllAsTouched();
@@ -208,7 +307,13 @@ export class CheckoutComponent implements OnInit {
     const selectedAddr = this.selectedAddress();
 
     if (isAuth && !selectedAddr) {
-      this.errorMessage.set('Please select a delivery address');
+      this.errorMessage.set('الرجاء اختيار عنوان التوصيل');
+      return;
+    }
+
+    const info = this.deliveryFeeInfo();
+    if (info && !info.isDeliveryEnabled) {
+      this.errorMessage.set('عذراً، التوصيل غير متاح للمنطقة المحددة');
       return;
     }
 
@@ -230,8 +335,11 @@ export class CheckoutComponent implements OnInit {
         deliveryAddress: {
           street: selectedAddr.street,
           city: selectedAddr.city,
-          district: selectedAddr.state || undefined,
-          additionalInstructions: formValue.additionalInstructions || undefined
+          district: undefined,
+          additionalInstructions: formValue.additionalInstructions || undefined,
+          countryCode: selectedAddr.countryCode,
+          cityId: selectedAddr.cityId,
+          districtId: selectedAddr.districtId
         },
         items: this.cart().items.map(item => ({
           productId: item.productId,
@@ -243,6 +351,11 @@ export class CheckoutComponent implements OnInit {
         notes: formValue.notes || undefined
       };
     } else {
+      const countryCode = Number(formValue.countryCode);
+      const cityId = formValue.cityId ? Number(formValue.cityId) : undefined;
+      const districtId = formValue.districtId ? Number(formValue.districtId) : undefined;
+      const city = cityId ? this.guestCities().find(c => c.id === cityId) : undefined;
+
       request = {
         customerInfo: {
           fullName: formValue.fullName,
@@ -251,9 +364,12 @@ export class CheckoutComponent implements OnInit {
         },
         deliveryAddress: {
           street: formValue.street,
-          city: formValue.city,
-          district: formValue.district || undefined,
-          additionalInstructions: formValue.additionalInstructions || undefined
+          city: city?.name ?? '',
+          district: undefined,
+          additionalInstructions: formValue.additionalInstructions || undefined,
+          countryCode,
+          cityId,
+          districtId
         },
         items: this.cart().items.map(item => ({
           productId: item.productId,

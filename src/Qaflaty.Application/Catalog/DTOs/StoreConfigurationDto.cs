@@ -13,6 +13,8 @@ public record StoreConfigurationDto(
     string FooterVariant,
     string ProductCardVariant,
     string ProductGridVariant,
+    SearchSettingsDto SearchSettings,
+    List<PaymentMethodAdjustmentDto> PaymentMethodAdjustments,
     DateTime CreatedAt,
     DateTime UpdatedAt
 );
