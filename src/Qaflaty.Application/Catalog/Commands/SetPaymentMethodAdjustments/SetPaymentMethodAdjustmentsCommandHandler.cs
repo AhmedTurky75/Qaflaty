@@ -27,6 +27,18 @@ public class SetPaymentMethodAdjustmentsCommandHandler
         if (config == null)
             return Result.Failure<List<PaymentMethodAdjustmentDto>>(CatalogErrors.StoreConfigurationNotFound);
 
+        // Reject duplicate payment methods in the same request
+        var duplicates = request.Adjustments
+            .GroupBy(a => a.PaymentMethod, StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key)
+            .ToList();
+
+        if (duplicates.Count > 0)
+            return Result.Failure<List<PaymentMethodAdjustmentDto>>(
+                new Error("PaymentMethodAdjustment.DuplicateMethod",
+                    $"Each payment method may only appear once. Duplicates: {string.Join(", ", duplicates)}"));
+
         var adjustments = new List<PaymentMethodAdjustment>();
 
         foreach (var adj in request.Adjustments)

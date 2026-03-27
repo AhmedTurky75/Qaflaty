@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, signal, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StoreConfigurationDto, PaymentMethodAdjustment } from 'shared';
@@ -177,18 +177,39 @@ import { StoreContextService } from '../../core/services/store-context.service';
           </div>
           <button
             (click)="savePaymentAdjustments()"
-            [disabled]="savingPayments()"
-            class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50"
+            [disabled]="savingPayments() || hasDuplicates()"
+            class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ savingPayments() ? 'Saving...' : 'Save' }}
           </button>
         </div>
 
+        @if (hasDuplicates()) {
+          <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+            <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            <p class="text-sm text-red-700">
+              Each payment method can only have one adjustment.
+              Duplicate{{ duplicatePaymentMethods().length > 1 ? 's' : '' }}:
+              <strong>{{ duplicatePaymentMethods().join(', ') }}</strong>
+            </p>
+          </div>
+        }
+
         <div class="space-y-3">
           @for (adj of paymentAdjustments(); track adj.id; let i = $index) {
-            <div class="border border-gray-200 rounded-lg p-3 space-y-3">
+            <div
+              class="border rounded-lg p-3 space-y-3"
+              [class.border-red-400]="isMethodDuplicate(adj.paymentMethod)"
+              [class.bg-red-50]="isMethodDuplicate(adj.paymentMethod)"
+              [class.border-gray-200]="!isMethodDuplicate(adj.paymentMethod)"
+            >
               <div class="flex items-center justify-between">
-                <span class="text-sm font-medium text-gray-700">Adjustment {{ i + 1 }}</span>
+                <span class="text-sm font-medium" [class.text-red-700]="isMethodDuplicate(adj.paymentMethod)" [class.text-gray-700]="!isMethodDuplicate(adj.paymentMethod)">
+                  Adjustment {{ i + 1 }}
+                  @if (isMethodDuplicate(adj.paymentMethod)) {
+                    <span class="ml-1 text-xs font-normal">(duplicate — change or remove)</span>
+                  }
+                </span>
                 <button (click)="removeAdjustment(i)" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
               </div>
               <div class="grid grid-cols-2 gap-3">
@@ -239,12 +260,16 @@ import { StoreContextService } from '../../core/services/store-context.service';
             </div>
           }
 
-          <button
-            (click)="addAdjustment()"
-            class="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg hover:border-blue-400 hover:text-blue-500 text-sm"
-          >
-            + Add Payment Adjustment
-          </button>
+          @if (!allMethodsUsed()) {
+            <button
+              (click)="addAdjustment()"
+              class="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg hover:border-blue-400 hover:text-blue-500 text-sm"
+            >
+              + Add Payment Adjustment
+            </button>
+          } @else {
+            <p class="text-center text-xs text-gray-400 py-2">All payment methods already have an adjustment.</p>
+          }
         </div>
       </div>
 
@@ -332,6 +357,30 @@ export class ConfigurationPanelComponent implements OnInit {
   savingSearch = signal(false);
   savingPayments = signal(false);
 
+  duplicatePaymentMethods = computed<string[]>(() => {
+    const methods = this.paymentAdjustments().map(a => a.paymentMethod);
+    const seen = new Set<string>();
+    const dupes = new Set<string>();
+    for (const m of methods) {
+      if (seen.has(m)) dupes.add(m);
+      seen.add(m);
+    }
+    return [...dupes];
+  });
+
+  hasDuplicates = computed(() => this.duplicatePaymentMethods().length > 0);
+
+  readonly ALL_PAYMENT_METHODS: PaymentMethodAdjustment['paymentMethod'][] = ['COD', 'Visa', 'Mastercard', 'Mada', 'ApplePay', 'STCPay', 'BankTransfer', 'Other'];
+
+  allMethodsUsed = computed(() => {
+    const used = new Set(this.paymentAdjustments().map(a => a.paymentMethod));
+    return this.ALL_PAYMENT_METHODS.every(m => used.has(m));
+  });
+
+  isMethodDuplicate(paymentMethod: string): boolean {
+    return this.duplicatePaymentMethods().includes(paymentMethod);
+  }
+
   sortOptionList = [
     { value: 'PriceAsc', label: 'Price: Low to High' },
     { value: 'PriceDesc', label: 'Price: High to Low' },
@@ -390,9 +439,12 @@ export class ConfigurationPanelComponent implements OnInit {
   }
 
   addAdjustment(): void {
+    if (this.allMethodsUsed()) return;
+    const used = new Set(this.paymentAdjustments().map(a => a.paymentMethod));
+    const firstFree = this.ALL_PAYMENT_METHODS.find(m => !used.has(m)) ?? 'COD';
     this.paymentAdjustments.update(list => [
       ...list,
-      { id: crypto.randomUUID(), paymentMethod: 'COD', adjustmentType: 'Fixed', value: 0 } as PaymentMethodAdjustment
+      { id: crypto.randomUUID(), paymentMethod: firstFree, adjustmentType: 'Fixed', value: 0 } as PaymentMethodAdjustment
     ]);
   }
 
@@ -401,6 +453,7 @@ export class ConfigurationPanelComponent implements OnInit {
   }
 
   savePaymentAdjustments(): void {
+    if (this.hasDuplicates()) return;
     const storeId = this.storeContext.currentStoreId();
     if (!storeId) return;
     this.savingPayments.set(true);
