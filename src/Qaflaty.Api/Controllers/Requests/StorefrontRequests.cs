@@ -33,6 +33,13 @@ public record OrderItemRequest(
 
 public record VerifyOtpRequest(string OtpCode);
 
+public record CalculateOrderRequest(
+    List<OrderItemRequest> Items,
+    int CountryCode = 0,
+    int? CityId = null,
+    int? DistrictId = null
+);
+
 public record GetProductsRequest(
     Guid? CategoryId,
     int PageNumber = 1,

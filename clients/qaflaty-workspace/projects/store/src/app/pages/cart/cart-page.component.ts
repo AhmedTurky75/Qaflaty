@@ -107,19 +107,9 @@ import { DecimalPipe } from '@angular/common';
                     <span>{{ t('subtotal') }}</span>
                     <span>{{ cart.cart().subtotal.amount | number: '1.2-2' }} {{ cart.cart().subtotal.currency }}</span>
                   </div>
-                  <div class="flex justify-between text-gray-600">
-                    <span>{{ t('delivery') }}</span>
-                    @if (cart.isFreeDelivery()) {
-                      <span class="text-green-600 font-medium">{{ t('free_delivery') }}</span>
-                    } @else {
-                      <span>{{ cart.cart().deliveryFee.amount | number: '1.2-2' }} {{ cart.cart().deliveryFee.currency }}</span>
-                    }
+                  <div class="flex justify-between text-xs text-gray-400 italic">
+                    <span>{{ i18n.currentLanguage() === 'ar' ? 'رسوم التوصيل تحسب عند الدفع' : 'Delivery fee calculated at checkout' }}</span>
                   </div>
-                </div>
-
-                <div class="flex justify-between text-lg font-bold text-gray-900 mb-6">
-                  <span>{{ t('total') }}</span>
-                  <span>{{ cart.cart().total.amount | number: '1.2-2' }} {{ cart.cart().total.currency }}</span>
                 </div>
 
                 <a routerLink="/checkout" class="block w-full text-center bg-[var(--primary-color)] text-white py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity mb-3">

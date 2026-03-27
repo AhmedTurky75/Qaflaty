@@ -118,6 +118,14 @@ public record OrderTrackingDto(
     DateTime UpdatedAt
 );
 
+// --- Order calculation (pre-placement preview) ---
+public record CalculateOrderDto(
+    bool IsDeliveryAvailable,
+    MoneyDto Subtotal,
+    MoneyDto DeliveryFee,
+    MoneyDto Total
+);
+
 // --- Stats ---
 public record OrderStatsDto(
     int TotalOrders,

@@ -5,6 +5,7 @@ using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.Commands.PlaceOrder;
 using Qaflaty.Application.Ordering.Commands.SendOrderOtp;
 using Qaflaty.Application.Ordering.Commands.VerifyOrderOtp;
+using Qaflaty.Application.Ordering.Queries.CalculateOrder;
 using Qaflaty.Application.Ordering.Queries.GetMyOrders;
 using Qaflaty.Application.Ordering.Queries.TrackOrder;
 
@@ -28,6 +29,25 @@ public class StorefrontOrdersController : ApiController
     public async Task<IActionResult> GetMyOrders(CancellationToken ct)
     {
         var result = await Sender.Send(new GetMyOrdersQuery(), ct);
+        return HandleResult(result);
+    }
+
+    [HttpPost("calculate")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CalculateOrder([FromBody] CalculateOrderRequest request, CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var query = new CalculateOrderQuery(
+            StoreId: _tenantContext.CurrentStoreId.Value.Value,
+            CountryCode: request.CountryCode,
+            CityId: request.CityId,
+            DistrictId: request.DistrictId,
+            Items: request.Items.Select(i => new CalculateOrderItemDto(i.ProductId, i.Quantity, i.VariantId)).ToList());
+
+        var result = await Sender.Send(query, ct);
         return HandleResult(result);
     }
 

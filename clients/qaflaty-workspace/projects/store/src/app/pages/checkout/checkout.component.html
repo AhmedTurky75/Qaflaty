@@ -92,19 +92,19 @@
 
                 <!-- Delivery zone status for selected address -->
                 @if (selectedAddress() && !showAddAddressForm()) {
-                  @if (resolvingDeliveryFee()) {
+                  @if (calculatingOrder()) {
                     <div class="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-500">Checking delivery availability…</div>
-                  } @else if (deliveryFeeInfo(); as info) {
-                    @if (!info.isDeliveryAvailable) {
+                  } @else if (orderCalculation(); as calc) {
+                    @if (!calc.isDeliveryAvailable) {
                       <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                         <svg class="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
                         <span class="text-red-700 text-sm font-medium">Delivery is not available to this address</span>
                       </div>
-                    } @else if (info.fee !== null) {
+                    } @else {
                       <div class="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
                         <svg class="w-4 h-4 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                         <span class="text-green-700 text-sm">
-                          Delivery available — fee: <strong>{{ info.fee === 0 ? 'FREE' : info.fee.toFixed(2) + ' ' + (info.currency ?? '') }}</strong>
+                          Delivery available — fee: <strong>{{ calc.deliveryFee.amount === 0 ? 'FREE' : calc.deliveryFee.amount.toFixed(2) + ' ' + calc.deliveryFee.currency }}</strong>
                         </span>
                       </div>
                     }
@@ -160,13 +160,13 @@
                     }
 
                     <!-- Zone status for inline form -->
-                    @if (resolvingDeliveryFee()) {
+                    @if (calculatingOrder()) {
                       <p class="text-xs text-gray-500">Checking delivery availability…</p>
-                    } @else if (deliveryFeeInfo(); as info) {
-                      @if (!info.isDeliveryAvailable) {
+                    } @else if (orderCalculation(); as calc) {
+                      @if (!calc.isDeliveryAvailable) {
                         <p class="text-xs text-red-600 font-medium">⚠ Delivery not available to this area</p>
-                      } @else if (info.fee !== null) {
-                        <p class="text-xs text-green-600 font-medium">✓ Delivery fee: {{ info.fee === 0 ? 'FREE' : info.fee.toFixed(2) + ' ' + (info.currency ?? '') }}</p>
+                      } @else {
+                        <p class="text-xs text-green-600 font-medium">✓ Delivery fee: {{ calc.deliveryFee.amount === 0 ? 'FREE' : calc.deliveryFee.amount.toFixed(2) + ' ' + calc.deliveryFee.currency }}</p>
                       }
                     }
 
@@ -305,19 +305,19 @@
                 }
 
                 <!-- Delivery zone status (guest) -->
-                @if (resolvingDeliveryFee()) {
+                @if (calculatingOrder()) {
                   <div class="p-3 bg-gray-50 rounded-lg text-sm text-gray-500">Checking delivery availability…</div>
-                } @else if (deliveryFeeInfo(); as info) {
-                  @if (!info.isDeliveryAvailable) {
+                } @else if (orderCalculation(); as calc) {
+                  @if (!calc.isDeliveryAvailable) {
                     <div class="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                       <svg class="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
                       <span class="text-red-700 text-sm font-medium">Delivery is not available to this area</span>
                     </div>
-                  } @else if (info.fee !== null) {
+                  } @else {
                     <div class="p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
                       <svg class="w-4 h-4 text-green-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
                       <span class="text-green-700 text-sm">
-                        Delivery available — fee: <strong>{{ info.fee === 0 ? 'FREE' : info.fee.toFixed(2) + ' ' + (info.currency ?? '') }}</strong>
+                        Delivery available — fee: <strong>{{ calc.deliveryFee.amount === 0 ? 'FREE' : calc.deliveryFee.amount.toFixed(2) + ' ' + calc.deliveryFee.currency }}</strong>
                       </span>
                     </div>
                   }
@@ -411,22 +411,22 @@
             <div class="border-t pt-4 space-y-3">
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Subtotal ({{ cart().itemCount }} items)</span>
-                <span class="font-medium">{{ cart().subtotal.amount.toFixed(2) }} {{ cart().subtotal.currency }}</span>
+                <span class="font-medium">{{ (orderCalculation()?.subtotal?.amount ?? cart().subtotal.amount).toFixed(2) }} {{ orderCalculation()?.subtotal?.currency ?? cart().subtotal.currency }}</span>
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Delivery Fee</span>
-                <span class="font-medium" [class.text-red-600]="deliveryFeeInfo() && !deliveryFeeInfo()!.isDeliveryAvailable">
+                <span class="font-medium" [class.text-red-600]="orderCalculation() && !orderCalculation()!.isDeliveryAvailable">
                   {{ getDisplayDeliveryFee() }}
                 </span>
               </div>
               <div class="flex justify-between text-lg font-bold pt-3 border-t">
                 <span>Total</span>
-                <span>{{ cart().total.amount.toFixed(2) }} {{ cart().total.currency }}</span>
+                <span>{{ getDisplayTotal() }}</span>
               </div>
             </div>
 
             <button type="submit"
-              [disabled]="submitting() || checkoutForm.invalid || (authService.isAuthenticated() && !selectedAddress() && !showAddAddressForm()) || (deliveryFeeInfo() !== null && !deliveryFeeInfo()!.isDeliveryAvailable)"
+              [disabled]="submitting() || checkoutForm.invalid || (authService.isAuthenticated() && !selectedAddress() && !showAddAddressForm()) || (orderCalculation() !== null && !orderCalculation()!.isDeliveryAvailable)"
               class="w-full mt-6 px-6 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               @if (submitting()) {
                 <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">

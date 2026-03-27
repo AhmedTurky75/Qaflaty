@@ -7,16 +7,9 @@ import { getCartItemKey } from '../../models/cart.model';
 import { OrderService } from '../../services/order.service';
 import { StoreService } from '../../services/store.service';
 import { CustomerAuthService, CustomerAddress } from '../../services/customer-auth.service';
-import { CreateOrderRequest, PaymentMethod } from '../../models/order.model';
+import { CreateOrderRequest, OrderCalculation, PaymentMethod } from '../../models/order.model';
 import { LocationPickerComponent, PickedLocation } from '../../components/shared/location-picker.component';
 import { COUNTRIES, CITIES, DISTRICTS, Country, City, District } from 'shared';
-
-interface DeliveryFeeInfo {
-  isDeliveryAvailable: boolean;
-  fee: number | null;
-  currency: string | null;
-  resolvedAtLevel: string;
-}
 
 @Component({
   selector: 'app-checkout',
@@ -38,9 +31,9 @@ export class CheckoutComponent implements OnInit {
   submitting = signal<boolean>(false);
   errorMessage = signal<string>('');
 
-  // Delivery zone resolution
-  deliveryFeeInfo = signal<DeliveryFeeInfo | null>(null);
-  resolvingDeliveryFee = signal(false);
+  // Order calculation (delivery fee + totals from server)
+  orderCalculation = signal<OrderCalculation | null>(null);
+  calculatingOrder = signal(false);
 
   // Saved addresses (authenticated users)
   addresses = signal<CustomerAddress[]>([]);
@@ -126,7 +119,7 @@ export class CheckoutComponent implements OnInit {
         this.addressesLoading.set(false);
         const def = addresses.find(a => a.isDefault) ?? addresses[0] ?? null;
         this.selectedAddress.set(def);
-        if (def) this.resolveDeliveryFee(def.countryCode, def.cityId, def.districtId);
+        if (def) this.calculateOrder(def.countryCode, def.cityId, def.districtId);
       },
       error: () => this.addressesLoading.set(false)
     });
@@ -137,7 +130,7 @@ export class CheckoutComponent implements OnInit {
     const addr = this.addresses().find(a => a.label === label) ?? null;
     this.selectedAddress.set(addr);
     if (this.showAddAddressForm()) this.cancelAddAddress();
-    if (addr) this.resolveDeliveryFee(addr.countryCode, addr.cityId, addr.districtId);
+    if (addr) this.calculateOrder(addr.countryCode, addr.cityId, addr.districtId);
   }
 
   openAddAddressForm(): void {
@@ -147,7 +140,7 @@ export class CheckoutComponent implements OnInit {
     this.authFormCityId.set(null);
     this.pickedLocation.set(null);
     this.addAddressError.set(null);
-    this.deliveryFeeInfo.set(null);
+    this.orderCalculation.set(null);
   }
 
   cancelAddAddress(): void {
@@ -164,7 +157,7 @@ export class CheckoutComponent implements OnInit {
     this.authFormCountryCode.set(val ? Number(val) : null);
     this.authFormCityId.set(null);
     this.addressForm.patchValue({ cityId: '', districtId: '' });
-    this.deliveryFeeInfo.set(null);
+    this.orderCalculation.set(null);
   }
 
   onAuthFormCityChange(): void {
@@ -172,14 +165,14 @@ export class CheckoutComponent implements OnInit {
     this.authFormCityId.set(val ? Number(val) : null);
     this.addressForm.patchValue({ districtId: '' });
     const countryCode = this.authFormCountryCode();
-    if (countryCode && val) this.resolveDeliveryFee(countryCode, Number(val));
+    if (countryCode && val) this.calculateOrder(countryCode, Number(val));
   }
 
   onAuthFormDistrictChange(): void {
     const countryCode = this.authFormCountryCode();
     const cityId = this.authFormCityId();
     const districtVal = this.addressForm.get('districtId')?.value;
-    if (countryCode) this.resolveDeliveryFee(countryCode, cityId ?? undefined, districtVal ? Number(districtVal) : undefined);
+    if (countryCode) this.calculateOrder(countryCode, cityId ?? undefined, districtVal ? Number(districtVal) : undefined);
   }
 
   onGuestCountryChange(): void {
@@ -187,7 +180,7 @@ export class CheckoutComponent implements OnInit {
     this.guestCountryCode.set(val ? Number(val) : null);
     this.guestCityId.set(null);
     this.checkoutForm.patchValue({ cityId: '', districtId: '' });
-    this.deliveryFeeInfo.set(null);
+    this.orderCalculation.set(null);
   }
 
   onGuestCityChange(): void {
@@ -195,27 +188,32 @@ export class CheckoutComponent implements OnInit {
     this.guestCityId.set(val ? Number(val) : null);
     this.checkoutForm.patchValue({ districtId: '' });
     const countryCode = this.guestCountryCode();
-    if (countryCode && val) this.resolveDeliveryFee(countryCode, Number(val));
+    if (countryCode && val) this.calculateOrder(countryCode, Number(val));
   }
 
   onGuestDistrictChange(): void {
     const countryCode = this.guestCountryCode();
     const cityId = this.guestCityId();
     const districtVal = this.checkoutForm.get('districtId')?.value;
-    if (countryCode) this.resolveDeliveryFee(countryCode, cityId ?? undefined, districtVal ? Number(districtVal) : undefined);
+    if (countryCode) this.calculateOrder(countryCode, cityId ?? undefined, districtVal ? Number(districtVal) : undefined);
   }
 
-  private resolveDeliveryFee(countryCode: number, cityId?: number, districtId?: number): void {
+  private calculateOrder(countryCode: number, cityId?: number, districtId?: number): void {
     if (!countryCode) return;
-    this.resolvingDeliveryFee.set(true);
-    this.authService.resolveDeliveryFee(countryCode, cityId, districtId).subscribe({
-      next: (info) => {
-        this.deliveryFeeInfo.set(info);
-        this.resolvingDeliveryFee.set(false);
+    this.calculatingOrder.set(true);
+    const items = this.cartService.cart().items.map(i => ({
+      productId: i.productId,
+      quantity: i.quantity,
+      variantId: i.variantId
+    }));
+    this.orderService.calculateOrder({ items, countryCode, cityId, districtId }).subscribe({
+      next: (calc) => {
+        this.orderCalculation.set(calc);
+        this.calculatingOrder.set(false);
       },
       error: () => {
-        this.deliveryFeeInfo.set(null);
-        this.resolvingDeliveryFee.set(false);
+        this.orderCalculation.set(null);
+        this.calculatingOrder.set(false);
       }
     });
   }
@@ -264,7 +262,7 @@ export class CheckoutComponent implements OnInit {
           this.addresses.set(addresses);
           const saved = addresses.find(a => a.label === newAddress.label) ?? null;
           this.selectedAddress.set(saved);
-          if (saved) this.resolveDeliveryFee(saved.countryCode, saved.cityId, saved.districtId);
+          if (saved) this.calculateOrder(saved.countryCode, saved.cityId, saved.districtId);
         });
       },
       error: (err) => {
@@ -289,12 +287,18 @@ export class CheckoutComponent implements OnInit {
   }
 
   getDisplayDeliveryFee(): string {
-    const info = this.deliveryFeeInfo();
-    if (this.resolvingDeliveryFee()) return '...';
-    if (!info) return this.cart().deliveryFee.amount === 0 ? 'FREE' : `${this.cart().deliveryFee.amount.toFixed(2)} ${this.cart().deliveryFee.currency}`;
-    if (!info.isDeliveryAvailable) return 'غير متاح';
-    if (info.fee === null) return this.cart().deliveryFee.amount === 0 ? 'FREE' : `${this.cart().deliveryFee.amount.toFixed(2)} ${this.cart().deliveryFee.currency}`;
-    return info.fee === 0 ? 'FREE' : `${info.fee.toFixed(2)} ${info.currency ?? ''}`;
+    const calc = this.orderCalculation();
+    if (this.calculatingOrder()) return '...';
+    if (!calc) return '—';
+    if (!calc.isDeliveryAvailable) return 'غير متاح';
+    return calc.deliveryFee.amount === 0 ? 'FREE' : `${calc.deliveryFee.amount.toFixed(2)} ${calc.deliveryFee.currency}`;
+  }
+
+  getDisplayTotal(): string {
+    const calc = this.orderCalculation();
+    if (this.calculatingOrder()) return '...';
+    if (!calc) return `${this.cart().subtotal.amount.toFixed(2)} ${this.cart().subtotal.currency}`;
+    return `${calc.total.amount.toFixed(2)} ${calc.total.currency}`;
   }
 
   submitOrder(): void {
@@ -311,8 +315,8 @@ export class CheckoutComponent implements OnInit {
       return;
     }
 
-    const info = this.deliveryFeeInfo();
-    if (info && !info.isDeliveryAvailable) {
+    const calc = this.orderCalculation();
+    if (calc && !calc.isDeliveryAvailable) {
       this.errorMessage.set('عذراً، التوصيل غير متاح للمنطقة المحددة');
       return;
     }

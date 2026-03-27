@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { CreateOrderRequest, OrderResponse, OrderTracking } from '../models/order.model';
+import { CalculateOrderRequest, CreateOrderRequest, OrderCalculation, OrderResponse, OrderTracking } from '../models/order.model';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -10,6 +10,10 @@ import { environment } from '../../environments/environment';
 export class OrderService {
   private http = inject(HttpClient);
   private apiUrl = `${environment.apiUrl}/storefront/orders`;
+
+  calculateOrder(request: CalculateOrderRequest): Observable<OrderCalculation> {
+    return this.http.post<OrderCalculation>(`${this.apiUrl}/calculate`, request);
+  }
 
   placeOrder(request: CreateOrderRequest): Observable<OrderResponse> {
     return this.http.post<OrderResponse>(this.apiUrl, request);

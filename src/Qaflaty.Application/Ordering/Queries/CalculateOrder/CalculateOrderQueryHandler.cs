@@ -1,0 +1,117 @@
+using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Domain.Catalog.Enums;
+using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Common.Errors;
+using Qaflaty.Domain.Common.Identifiers;
+using Qaflaty.Domain.Common.ValueObjects;
+using Qaflaty.Domain.Ordering.Repositories;
+
+namespace Qaflaty.Application.Ordering.Queries.CalculateOrder;
+
+public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, CalculateOrderDto>
+{
+    private readonly IStoreRepository _storeRepository;
+    private readonly IProductRepository _productRepository;
+    private readonly IDeliveryZoneRepository _deliveryZoneRepository;
+
+    public CalculateOrderQueryHandler(
+        IStoreRepository storeRepository,
+        IProductRepository productRepository,
+        IDeliveryZoneRepository deliveryZoneRepository)
+    {
+        _storeRepository = storeRepository;
+        _productRepository = productRepository;
+        _deliveryZoneRepository = deliveryZoneRepository;
+    }
+
+    public async Task<Result<CalculateOrderDto>> Handle(CalculateOrderQuery request, CancellationToken cancellationToken)
+    {
+        var storeId = new StoreId(request.StoreId);
+
+        var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
+        if (store == null)
+            return Result.Failure<CalculateOrderDto>(new Error("Order.StoreNotFound", "Store not found"));
+
+        // Resolve delivery fee using the same hierarchical zone logic as PlaceOrderCommandHandler
+        Money deliveryFee = store.DeliverySettings.DeliveryFee;
+        bool isDeliveryAvailable = true;
+
+        if (request.CountryCode > 0)
+        {
+            if (request.DistrictId.HasValue)
+            {
+                var districtZone = await _deliveryZoneRepository.GetZoneAsync(
+                    storeId, DeliveryZoneLevel.District, request.DistrictId.Value, cancellationToken);
+                if (districtZone != null)
+                {
+                    if (!districtZone.IsDeliveryEnabled)
+                        isDeliveryAvailable = false;
+                    else if (districtZone.CustomDeliveryFee.HasValue)
+                        deliveryFee = Money.Create(districtZone.CustomDeliveryFee.Value).Value;
+                }
+            }
+
+            if (isDeliveryAvailable && deliveryFee == store.DeliverySettings.DeliveryFee && request.CityId.HasValue)
+            {
+                var cityZone = await _deliveryZoneRepository.GetZoneAsync(
+                    storeId, DeliveryZoneLevel.City, request.CityId.Value, cancellationToken);
+                if (cityZone != null)
+                {
+                    if (!cityZone.IsDeliveryEnabled)
+                        isDeliveryAvailable = false;
+                    else if (cityZone.CustomDeliveryFee.HasValue)
+                        deliveryFee = Money.Create(cityZone.CustomDeliveryFee.Value).Value;
+                }
+            }
+
+            if (isDeliveryAvailable && deliveryFee == store.DeliverySettings.DeliveryFee)
+            {
+                var countryZone = await _deliveryZoneRepository.GetZoneAsync(
+                    storeId, DeliveryZoneLevel.Country, request.CountryCode, cancellationToken);
+                if (countryZone != null)
+                {
+                    if (!countryZone.IsDeliveryEnabled)
+                        isDeliveryAvailable = false;
+                    else if (countryZone.CustomDeliveryFee.HasValue)
+                        deliveryFee = Money.Create(countryZone.CustomDeliveryFee.Value).Value;
+                }
+            }
+        }
+
+        // Calculate subtotal from current catalog prices
+        var currency = deliveryFee.Currency;
+        var subtotal = Money.Zero(currency);
+
+        foreach (var item in request.Items)
+        {
+            var product = await _productRepository.GetByIdAsync(new ProductId(item.ProductId), cancellationToken);
+            if (product == null || product.StoreId != storeId)
+                return Result.Failure<CalculateOrderDto>(new Error("Order.ProductNotFound",
+                    $"Product {item.ProductId} not found"));
+
+            Money unitPrice = product.Pricing.Price;
+            if (item.VariantId.HasValue)
+            {
+                var variant = product.GetVariant(item.VariantId.Value);
+                if (variant == null)
+                    return Result.Failure<CalculateOrderDto>(new Error("Order.VariantNotFound",
+                        $"Variant {item.VariantId} not found for product {item.ProductId}"));
+
+                unitPrice = variant.PriceOverride ?? product.Pricing.Price;
+            }
+
+            subtotal = subtotal + (unitPrice * item.Quantity);
+        }
+
+        var effectiveDeliveryFee = isDeliveryAvailable ? deliveryFee : Money.Zero(currency);
+        var total = subtotal + effectiveDeliveryFee;
+
+        return Result.Success(new CalculateOrderDto(
+            isDeliveryAvailable,
+            new MoneyDto(subtotal.Amount, currency.ToString()),
+            new MoneyDto(effectiveDeliveryFee.Amount, currency.ToString()),
+            new MoneyDto(total.Amount, currency.ToString())
+        ));
+    }
+}

@@ -1,5 +1,19 @@
 import { Money } from './store.model';
 
+export interface CalculateOrderRequest {
+  items: { productId: string; quantity: number; variantId?: string }[];
+  countryCode: number;
+  cityId?: number;
+  districtId?: number;
+}
+
+export interface OrderCalculation {
+  isDeliveryAvailable: boolean;
+  subtotal: Money;
+  deliveryFee: Money;
+  total: Money;
+}
+
 export interface CreateOrderRequest {
   customerInfo: CustomerInfo;
   deliveryAddress: DeliveryAddress;
