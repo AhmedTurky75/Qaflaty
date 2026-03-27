@@ -43,8 +43,8 @@ type ZoneLevel = 'Country' | 'City' | 'District';
             <div>
               <label class="block text-xs font-medium text-gray-600 mb-1">Country</label>
               <select
-                [(ngModel)]="selectedCountryNumeric"
-                (ngModelChange)="onCountryChange()"
+                [ngModel]="selectedCountryNumeric()"
+                (ngModelChange)="onCountryChange($event)"
                 class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option [ngValue]="null">Select country...</option>
@@ -58,8 +58,8 @@ type ZoneLevel = 'Country' | 'City' | 'District';
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">City</label>
                 <select
-                  [(ngModel)]="selectedCityId"
-                  (ngModelChange)="onCityChange()"
+                  [ngModel]="selectedCityId()"
+                  (ngModelChange)="onCityChange($event)"
                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option [ngValue]="null">Select city...</option>
@@ -74,8 +74,8 @@ type ZoneLevel = 'Country' | 'City' | 'District';
               <div>
                 <label class="block text-xs font-medium text-gray-600 mb-1">District</label>
                 <select
-                  [(ngModel)]="selectedDistrictId"
-                  (ngModelChange)="onDistrictChange()"
+                  [ngModel]="selectedDistrictId()"
+                  (ngModelChange)="onDistrictChange($event)"
                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option [ngValue]="null">Select district...</option>
@@ -185,9 +185,9 @@ export class DeliveryZonesPanelComponent implements OnInit {
   saving = signal(false);
 
   countries = COUNTRIES;
-  selectedCountryNumeric: number | null = null;
-  selectedCityId: number | null = null;
-  selectedDistrictId: number | null = null;
+  selectedCountryNumeric = signal<number | null>(null);
+  selectedCityId = signal<number | null>(null);
+  selectedDistrictId = signal<number | null>(null);
 
   newZone = {
     level: 'Country' as ZoneLevel,
@@ -198,19 +198,21 @@ export class DeliveryZonesPanelComponent implements OnInit {
   };
 
   availableCities = computed(() => {
-    if (!this.selectedCountryNumeric) return [] as City[];
-    return CITIES[this.selectedCountryNumeric] ?? [];
+    const n = this.selectedCountryNumeric();
+    if (!n) return [] as City[];
+    return CITIES[n] ?? [];
   });
 
   availableDistricts = computed(() => {
-    if (!this.selectedCityId) return [] as District[];
-    return DISTRICTS[this.selectedCityId] ?? [];
+    const id = this.selectedCityId();
+    if (!id) return [] as District[];
+    return DISTRICTS[id] ?? [];
   });
 
   canSave = computed(() => {
-    if (!this.selectedCountryNumeric) return false;
-    if (this.newZone.level === 'City' && !this.selectedCityId) return false;
-    if (this.newZone.level === 'District' && !this.selectedDistrictId) return false;
+    if (!this.selectedCountryNumeric()) return false;
+    if (this.newZone.level === 'City' && !this.selectedCityId()) return false;
+    if (this.newZone.level === 'District' && !this.selectedDistrictId()) return false;
     return true;
   });
 
@@ -229,33 +231,36 @@ export class DeliveryZonesPanelComponent implements OnInit {
   }
 
   onLevelChange(): void {
-    this.selectedCityId = null;
-    this.selectedDistrictId = null;
+    this.selectedCityId.set(null);
+    this.selectedDistrictId.set(null);
     this.updateReferenceId();
   }
 
-  onCountryChange(): void {
-    this.selectedCityId = null;
-    this.selectedDistrictId = null;
+  onCountryChange(value: number | null): void {
+    this.selectedCountryNumeric.set(value);
+    this.selectedCityId.set(null);
+    this.selectedDistrictId.set(null);
     this.updateReferenceId();
   }
 
-  onCityChange(): void {
-    this.selectedDistrictId = null;
+  onCityChange(value: number | null): void {
+    this.selectedCityId.set(value);
+    this.selectedDistrictId.set(null);
     this.updateReferenceId();
   }
 
-  onDistrictChange(): void {
+  onDistrictChange(value: number | null): void {
+    this.selectedDistrictId.set(value);
     this.updateReferenceId();
   }
 
   private updateReferenceId(): void {
     if (this.newZone.level === 'Country') {
-      this.newZone.referenceId = this.selectedCountryNumeric ?? 0;
+      this.newZone.referenceId = this.selectedCountryNumeric() ?? 0;
     } else if (this.newZone.level === 'City') {
-      this.newZone.referenceId = this.selectedCityId ?? 0;
+      this.newZone.referenceId = this.selectedCityId() ?? 0;
     } else {
-      this.newZone.referenceId = this.selectedDistrictId ?? 0;
+      this.newZone.referenceId = this.selectedDistrictId() ?? 0;
     }
   }
 

@@ -12,10 +12,10 @@ import { LocationPickerComponent, PickedLocation } from '../../components/shared
 import { COUNTRIES, CITIES, DISTRICTS, Country, City, District } from 'shared';
 
 interface DeliveryFeeInfo {
-  isDeliveryEnabled: boolean;
+  isDeliveryAvailable: boolean;
   fee: number | null;
   currency: string | null;
-  resolvedAt: string;
+  resolvedAtLevel: string;
 }
 
 @Component({
@@ -292,7 +292,7 @@ export class CheckoutComponent implements OnInit {
     const info = this.deliveryFeeInfo();
     if (this.resolvingDeliveryFee()) return '...';
     if (!info) return this.cart().deliveryFee.amount === 0 ? 'FREE' : `${this.cart().deliveryFee.amount.toFixed(2)} ${this.cart().deliveryFee.currency}`;
-    if (!info.isDeliveryEnabled) return 'غير متاح';
+    if (!info.isDeliveryAvailable) return 'غير متاح';
     if (info.fee === null) return this.cart().deliveryFee.amount === 0 ? 'FREE' : `${this.cart().deliveryFee.amount.toFixed(2)} ${this.cart().deliveryFee.currency}`;
     return info.fee === 0 ? 'FREE' : `${info.fee.toFixed(2)} ${info.currency ?? ''}`;
   }
@@ -312,7 +312,7 @@ export class CheckoutComponent implements OnInit {
     }
 
     const info = this.deliveryFeeInfo();
-    if (info && !info.isDeliveryEnabled) {
+    if (info && !info.isDeliveryAvailable) {
       this.errorMessage.set('عذراً، التوصيل غير متاح للمنطقة المحددة');
       return;
     }

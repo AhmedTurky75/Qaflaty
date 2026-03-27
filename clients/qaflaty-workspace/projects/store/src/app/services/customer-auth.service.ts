@@ -201,7 +201,7 @@ export class CustomerAuthService {
     return null;
   }
 
-  resolveDeliveryFee(countryCode: number, cityId?: number, districtId?: number): Observable<{ isDeliveryEnabled: boolean; fee: number | null; currency: string | null; resolvedAt: string }> {
+  resolveDeliveryFee(countryCode: number, cityId?: number, districtId?: number): Observable<{ isDeliveryAvailable: boolean; fee: number | null; currency: string | null; resolvedAtLevel: string }> {
     const params: Record<string, string> = { countryCode: String(countryCode) };
     if (cityId) params['cityId'] = String(cityId);
     if (districtId) params['districtId'] = String(districtId);

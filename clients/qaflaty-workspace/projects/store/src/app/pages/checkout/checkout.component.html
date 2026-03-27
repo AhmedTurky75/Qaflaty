@@ -95,7 +95,7 @@
                   @if (resolvingDeliveryFee()) {
                     <div class="mb-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-500">Checking delivery availability…</div>
                   } @else if (deliveryFeeInfo(); as info) {
-                    @if (!info.isDeliveryEnabled) {
+                    @if (!info.isDeliveryAvailable) {
                       <div class="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                         <svg class="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
                         <span class="text-red-700 text-sm font-medium">Delivery is not available to this address</span>
@@ -163,7 +163,7 @@
                     @if (resolvingDeliveryFee()) {
                       <p class="text-xs text-gray-500">Checking delivery availability…</p>
                     } @else if (deliveryFeeInfo(); as info) {
-                      @if (!info.isDeliveryEnabled) {
+                      @if (!info.isDeliveryAvailable) {
                         <p class="text-xs text-red-600 font-medium">⚠ Delivery not available to this area</p>
                       } @else if (info.fee !== null) {
                         <p class="text-xs text-green-600 font-medium">✓ Delivery fee: {{ info.fee === 0 ? 'FREE' : info.fee.toFixed(2) + ' ' + (info.currency ?? '') }}</p>
@@ -308,7 +308,7 @@
                 @if (resolvingDeliveryFee()) {
                   <div class="p-3 bg-gray-50 rounded-lg text-sm text-gray-500">Checking delivery availability…</div>
                 } @else if (deliveryFeeInfo(); as info) {
-                  @if (!info.isDeliveryEnabled) {
+                  @if (!info.isDeliveryAvailable) {
                     <div class="p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
                       <svg class="w-4 h-4 text-red-500 shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
                       <span class="text-red-700 text-sm font-medium">Delivery is not available to this area</span>
@@ -415,7 +415,7 @@
               </div>
               <div class="flex justify-between text-sm">
                 <span class="text-gray-600">Delivery Fee</span>
-                <span class="font-medium" [class.text-red-600]="deliveryFeeInfo() && !deliveryFeeInfo()!.isDeliveryEnabled">
+                <span class="font-medium" [class.text-red-600]="deliveryFeeInfo() && !deliveryFeeInfo()!.isDeliveryAvailable">
                   {{ getDisplayDeliveryFee() }}
                 </span>
               </div>
@@ -426,7 +426,7 @@
             </div>
 
             <button type="submit"
-              [disabled]="submitting() || checkoutForm.invalid || (authService.isAuthenticated() && !selectedAddress() && !showAddAddressForm()) || (deliveryFeeInfo() !== null && !deliveryFeeInfo()!.isDeliveryEnabled)"
+              [disabled]="submitting() || checkoutForm.invalid || (authService.isAuthenticated() && !selectedAddress() && !showAddAddressForm()) || (deliveryFeeInfo() !== null && !deliveryFeeInfo()!.isDeliveryAvailable)"
               class="w-full mt-6 px-6 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
               @if (submitting()) {
                 <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
