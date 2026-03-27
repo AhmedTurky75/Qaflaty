@@ -1,4 +1,5 @@
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration.Events;
+using Qaflaty.Domain.Catalog.Enums;
 using Qaflaty.Domain.Catalog.ValueObjects;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
@@ -19,8 +20,12 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public string FooterVariant { get; private set; } = null!;
     public string ProductCardVariant { get; private set; } = null!;
     public string ProductGridVariant { get; private set; } = null!;
+    public SearchSettings SearchSettings { get; private set; } = null!;
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
+
+    private readonly List<PaymentMethodAdjustment> _paymentMethodAdjustments = [];
+    public IReadOnlyList<PaymentMethodAdjustment> PaymentMethodAdjustments => _paymentMethodAdjustments.AsReadOnly();
 
     private StoreConfiguration() : base(StoreConfigurationId.Empty) { }
 
@@ -40,6 +45,7 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
             FooterVariant = "footer-standard",
             ProductCardVariant = "card-standard",
             ProductGridVariant = "grid-standard",
+            SearchSettings = SearchSettings.CreateDefault(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -99,6 +105,25 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
         FooterVariant = footerVariant;
         ProductCardVariant = productCardVariant;
         ProductGridVariant = productGridVariant;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateSearchSettings(SearchSettings settings)
+    {
+        SearchSettings = settings;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Replaces the entire payment method adjustment list with a new set.
+    /// Pass an empty list to remove all adjustments.
+    /// </summary>
+    public Result SetPaymentMethodAdjustments(IEnumerable<PaymentMethodAdjustment> adjustments)
+    {
+        _paymentMethodAdjustments.Clear();
+        _paymentMethodAdjustments.AddRange(adjustments);
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

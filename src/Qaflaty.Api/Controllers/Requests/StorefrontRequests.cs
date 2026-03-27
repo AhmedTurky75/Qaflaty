@@ -11,6 +11,7 @@ public record PlaceOrderRequest(
 public record CustomerInfoRequest(
     string FullName,
     string Phone,
+    string PhoneCountryCode,
     string Email
 );
 
@@ -18,7 +19,10 @@ public record AddressRequest(
     string Street,
     string City,
     string? District,
-    string? AdditionalInstructions
+    string? AdditionalInstructions,
+    int CountryCode = 0,
+    int? CityId = null,
+    int? DistrictId = null
 );
 
 public record OrderItemRequest(

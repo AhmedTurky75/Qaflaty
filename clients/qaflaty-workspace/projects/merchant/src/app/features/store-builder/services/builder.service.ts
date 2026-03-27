@@ -11,7 +11,15 @@ import {
   UpdateSectionsRequest,
   FaqItemDto,
   CreateFaqItemRequest,
-  UpdateFaqItemRequest
+  UpdateFaqItemRequest,
+  PaymentMethodAdjustment,
+  SetPaymentMethodAdjustmentsRequest,
+  UpdateSearchSettingsRequest,
+  DeliveryZoneDto,
+  UpsertDeliveryZoneRequest,
+  ProductPropertyDefinitionDto,
+  CreateProductPropertyDefinitionRequest,
+  UpdateProductPropertyDefinitionRequest,
 } from 'shared';
 
 @Injectable({
@@ -21,6 +29,7 @@ export class BuilderService {
   private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
 
+  // ── Store Configuration ──────────────────────────────────────────────────
   getConfiguration(storeId: string): Observable<StoreConfigurationDto> {
     return this.http.get<StoreConfigurationDto>(`${this.apiUrl}/stores/${storeId}/configuration`);
   }
@@ -29,6 +38,7 @@ export class BuilderService {
     return this.http.put<StoreConfigurationDto>(`${this.apiUrl}/stores/${storeId}/configuration`, req);
   }
 
+  // ── Pages ────────────────────────────────────────────────────────────────
   getPages(storeId: string): Observable<PageConfigurationDto[]> {
     return this.http.get<PageConfigurationDto[]>(`${this.apiUrl}/stores/${storeId}/pages`);
   }
@@ -49,6 +59,7 @@ export class BuilderService {
     return this.http.put<void>(`${this.apiUrl}/stores/${storeId}/pages/${pageId}/sections`, req);
   }
 
+  // ── FAQ ──────────────────────────────────────────────────────────────────
   getFaqItems(storeId: string): Observable<FaqItemDto[]> {
     return this.http.get<FaqItemDto[]>(`${this.apiUrl}/stores/${storeId}/faq`);
   }
@@ -63,5 +74,42 @@ export class BuilderService {
 
   deleteFaqItem(storeId: string, id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/stores/${storeId}/faq/${id}`);
+  }
+
+  // ── Payment Method Adjustments ───────────────────────────────────────────
+  setPaymentAdjustments(storeId: string, req: SetPaymentMethodAdjustmentsRequest): Observable<void> {
+    // API expects flat array, not wrapped object
+    return this.http.put<void>(`${this.apiUrl}/stores/${storeId}/payment-adjustments`, req.adjustments);
+  }
+
+  // ── Search Settings ──────────────────────────────────────────────────────
+  updateSearchSettings(storeId: string, req: UpdateSearchSettingsRequest): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/stores/${storeId}/search-settings`, req);
+  }
+
+  // ── Delivery Zones ───────────────────────────────────────────────────────
+  getDeliveryZones(storeId: string): Observable<DeliveryZoneDto[]> {
+    return this.http.get<DeliveryZoneDto[]>(`${this.apiUrl}/stores/${storeId}/delivery-zones`);
+  }
+
+  upsertDeliveryZone(storeId: string, req: UpsertDeliveryZoneRequest): Observable<DeliveryZoneDto> {
+    return this.http.put<DeliveryZoneDto>(`${this.apiUrl}/stores/${storeId}/delivery-zones`, req);
+  }
+
+  // ── Product Property Definitions ─────────────────────────────────────────
+  getProductPropertyDefinitions(storeId: string): Observable<ProductPropertyDefinitionDto[]> {
+    return this.http.get<ProductPropertyDefinitionDto[]>(`${this.apiUrl}/stores/${storeId}/product-properties`);
+  }
+
+  createProductPropertyDefinition(storeId: string, req: CreateProductPropertyDefinitionRequest): Observable<ProductPropertyDefinitionDto> {
+    return this.http.post<ProductPropertyDefinitionDto>(`${this.apiUrl}/stores/${storeId}/product-properties`, req);
+  }
+
+  updateProductPropertyDefinition(storeId: string, definitionId: string, req: UpdateProductPropertyDefinitionRequest): Observable<ProductPropertyDefinitionDto> {
+    return this.http.put<ProductPropertyDefinitionDto>(`${this.apiUrl}/stores/${storeId}/product-properties/${definitionId}`, req);
+  }
+
+  deleteProductPropertyDefinition(storeId: string, definitionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/stores/${storeId}/product-properties/${definitionId}`);
   }
 }

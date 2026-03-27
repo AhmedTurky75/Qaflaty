@@ -60,7 +60,12 @@ public sealed class UpdateStoreCommandHandler : ICommandHandler<UpdateStoreComma
             Description: store.Description,
             Branding: new StoreBrandingDto(
                 LogoUrl: store.Branding.LogoUrl,
-                PrimaryColor: store.Branding.PrimaryColor
+                PrimaryColor: store.Branding.PrimaryColor,
+                SecondaryLogoUrl: store.Branding.SecondaryLogoUrl,
+                FaviconUrl: store.Branding.FaviconUrl,
+                AppleTouchIconUrl: store.Branding.AppleTouchIconUrl,
+                OgImageUrl: store.Branding.OgImageUrl,
+                SecondaryColor: store.Branding.SecondaryColor
             ),
             Status: store.Status.ToString(),
             IsMaintenanceMode: store.Status == Domain.Catalog.Enums.StoreStatus.Maintenance,

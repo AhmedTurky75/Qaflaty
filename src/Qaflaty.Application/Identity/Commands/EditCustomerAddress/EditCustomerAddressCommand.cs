@@ -14,5 +14,8 @@ public record EditCustomerAddressCommand(
     string Country,
     bool IsDefault,
     decimal Latitude,
-    decimal Longitude
+    decimal Longitude,
+    int CountryCode = 0,
+    int? CityId = null,
+    int? DistrictId = null
 ) : ICommand;

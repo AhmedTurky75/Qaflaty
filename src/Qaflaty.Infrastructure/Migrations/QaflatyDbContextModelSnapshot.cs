@@ -299,6 +299,91 @@ namespace Qaflaty.Infrastructure.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.DeliveryZone.DeliveryZone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<decimal?>("CustomDeliveryFee")
+                        .HasColumnType("decimal(10,2)")
+                        .HasColumnName("custom_delivery_fee");
+
+                    b.Property<string>("FeeCurrency")
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("fee_currency");
+
+                    b.Property<bool>("IsDeliveryEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_delivery_enabled");
+
+                    b.Property<string>("Level")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("level");
+
+                    b.Property<int>("ReferenceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("reference_id");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "Level", "ReferenceId")
+                        .IsUnique();
+
+                    b.ToTable("delivery_zones", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.District.District", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<int>("CityId")
+                        .HasColumnType("integer")
+                        .HasColumnName("city_id");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NameAr")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_ar");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CityId");
+
+                    b.ToTable("districts", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.FaqItem.FaqItem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -513,6 +598,97 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("products", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Product.ProductPropertyDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("display_name");
+
+                    b.Property<bool>("IsFilterable")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_filterable");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_required");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.PrimitiveCollection<string>("Options")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("options");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("type");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("product_property_definitions", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Product.ProductPropertyValue", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("DefinitionId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("definition_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId", "DefinitionId")
+                        .IsUnique();
+
+                    b.ToTable("product_property_values", (string)null);
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Product.ProductVariant", b =>
@@ -1759,6 +1935,15 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Navigation("VariantOptions");
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Product.ProductPropertyValue", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Catalog.Aggregates.Product.Product", null)
+                        .WithMany("PropertyValues")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Product.ProductVariant", b =>
                 {
                     b.HasOne("Qaflaty.Domain.Catalog.Aggregates.Product.Product", null)
@@ -1861,10 +2046,25 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<Guid>("StoreId")
                                 .HasColumnType("uuid");
 
+                            b1.Property<string>("AppleTouchIconUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("apple_touch_icon_url");
+
+                            b1.Property<string>("FaviconUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("favicon_url");
+
                             b1.Property<string>("LogoUrl")
                                 .HasMaxLength(500)
                                 .HasColumnType("character varying(500)")
                                 .HasColumnName("logo_url");
+
+                            b1.Property<string>("OgImageUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("og_image_url");
 
                             b1.Property<string>("PrimaryColor")
                                 .IsRequired()
@@ -1873,6 +2073,16 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("character varying(7)")
                                 .HasDefaultValue("#3B82F6")
                                 .HasColumnName("primary_color");
+
+                            b1.Property<string>("SecondaryColor")
+                                .HasMaxLength(7)
+                                .HasColumnType("character varying(7)")
+                                .HasColumnName("secondary_color");
+
+                            b1.Property<string>("SecondaryLogoUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("secondary_logo_url");
 
                             b1.HasKey("StoreId");
 
@@ -1996,6 +2206,12 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("boolean")
                                 .HasColumnName("auth_require_email_verification");
 
+                            b1.Property<bool>("RequireOtpOnPlaceOrder")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("auth_require_otp_on_place_order");
+
                             b1.HasKey("StoreConfigurationId");
 
                             b1.ToTable("store_configurations");
@@ -2115,6 +2331,45 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasForeignKey("StoreConfigurationId");
                         });
 
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.SearchSettings", "SearchSettings", b1 =>
+                        {
+                            b1.Property<Guid>("StoreConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.PrimitiveCollection<string>("AllowedSortOptions")
+                                .IsRequired()
+                                .HasColumnType("jsonb")
+                                .HasColumnName("search_allowed_sort_options");
+
+                            b1.Property<bool>("EnableCategoryFilter")
+                                .HasColumnType("boolean")
+                                .HasColumnName("search_enable_category");
+
+                            b1.Property<bool>("EnablePriceFilter")
+                                .HasColumnType("boolean")
+                                .HasColumnName("search_enable_price");
+
+                            b1.Property<bool>("EnablePropertyFilters")
+                                .HasColumnType("boolean")
+                                .HasColumnName("search_enable_properties");
+
+                            b1.Property<bool>("EnableTextSearch")
+                                .HasColumnType("boolean")
+                                .HasColumnName("search_enable_text");
+
+                            b1.PrimitiveCollection<string>("FilterablePropertyDefinitionIds")
+                                .IsRequired()
+                                .HasColumnType("jsonb")
+                                .HasColumnName("search_filterable_property_ids");
+
+                            b1.HasKey("StoreConfigurationId");
+
+                            b1.ToTable("store_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreConfigurationId");
+                        });
+
                     b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.SocialLinks", "SocialLinks", b1 =>
                         {
                             b1.Property<Guid>("StoreConfigurationId")
@@ -2158,6 +2413,46 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasForeignKey("StoreConfigurationId");
                         });
 
+                    b.OwnsMany("Qaflaty.Domain.Catalog.ValueObjects.PaymentMethodAdjustment", "PaymentMethodAdjustments", b1 =>
+                        {
+                            b1.Property<Guid>("Id")
+                                .HasColumnType("uuid")
+                                .HasColumnName("id");
+
+                            b1.Property<string>("AdjustmentType")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("adjustment_type");
+
+                            b1.Property<string>("DisplayLabel")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("display_label");
+
+                            b1.Property<string>("PaymentMethod")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("character varying(50)")
+                                .HasColumnName("payment_method");
+
+                            b1.Property<decimal>("Value")
+                                .HasColumnType("decimal(10,4)")
+                                .HasColumnName("value");
+
+                            b1.Property<Guid>("store_configuration_id")
+                                .HasColumnType("uuid");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("store_configuration_id");
+
+                            b1.ToTable("payment_method_adjustments", (string)null);
+
+                            b1.WithOwner()
+                                .HasForeignKey("store_configuration_id");
+                        });
+
                     b.Navigation("CommunicationSettings")
                         .IsRequired();
 
@@ -2171,6 +2466,11 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("PageToggles")
+                        .IsRequired();
+
+                    b.Navigation("PaymentMethodAdjustments");
+
+                    b.Navigation("SearchSettings")
                         .IsRequired();
 
                     b.Navigation("SocialLinks")
@@ -2250,10 +2550,15 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<Guid>("MerchantId")
                                 .HasColumnType("uuid");
 
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("phone_country_code");
+
                             b1.Property<string>("Value")
                                 .IsRequired()
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)")
+                                .HasMaxLength(25)
+                                .HasColumnType("character varying(25)")
                                 .HasColumnName("phone");
 
                             b1.HasKey("MerchantId");
@@ -2376,10 +2681,15 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<Guid>("StoreCustomerId")
                                 .HasColumnType("uuid");
 
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("phone_country_code");
+
                             b1.Property<string>("Value")
                                 .IsRequired()
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)")
+                                .HasMaxLength(25)
+                                .HasColumnType("character varying(25)")
                                 .HasColumnName("phone");
 
                             b1.HasKey("StoreCustomerId");
@@ -2395,10 +2705,15 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<Guid>("StoreCustomerId")
                                 .HasColumnType("uuid");
 
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("secondary_phone_country_code");
+
                             b1.Property<string>("Value")
                                 .IsRequired()
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)")
+                                .HasMaxLength(25)
+                                .HasColumnType("character varying(25)")
                                 .HasColumnName("secondary_phone");
 
                             b1.HasKey("StoreCustomerId");
@@ -2421,15 +2736,39 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("character varying(100)")
                                 .HasColumnName("city");
 
+                            b1.Property<int?>("CityId")
+                                .HasColumnType("integer")
+                                .HasColumnName("city_id");
+
                             b1.Property<string>("Country")
                                 .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)")
                                 .HasColumnName("country");
 
+                            b1.Property<int>("CountryCode")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("integer")
+                                .HasDefaultValue(0)
+                                .HasColumnName("country_code");
+
+                            b1.Property<DateTime?>("DeletedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("deleted_at");
+
+                            b1.Property<int?>("DistrictId")
+                                .HasColumnType("integer")
+                                .HasColumnName("district_id");
+
                             b1.Property<bool>("IsDefault")
                                 .HasColumnType("boolean")
                                 .HasColumnName("is_default");
+
+                            b1.Property<bool>("IsDeleted")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("boolean")
+                                .HasDefaultValue(false)
+                                .HasColumnName("is_deleted");
 
                             b1.Property<string>("Label")
                                 .IsRequired()
@@ -2600,6 +2939,9 @@ namespace Qaflaty.Infrastructure.Migrations
                                 {
                                     b2.Property<Guid>("CustomerContactCustomerId")
                                         .HasColumnType("uuid");
+
+                                    b2.Property<string>("CountryCode")
+                                        .HasColumnType("text");
 
                                     b2.Property<string>("Value")
                                         .IsRequired()
@@ -2954,6 +3296,8 @@ namespace Qaflaty.Infrastructure.Migrations
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Product.Product", b =>
                 {
                     b.Navigation("InventoryMovements");
+
+                    b.Navigation("PropertyValues");
 
                     b.Navigation("Variants");
                 });

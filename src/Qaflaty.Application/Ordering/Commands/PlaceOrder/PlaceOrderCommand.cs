@@ -13,6 +13,7 @@ public record PlaceOrderCommand(
     Guid StoreId,
     string CustomerName,
     string CustomerPhone,
+    string CustomerPhoneCountryCode,
     string CustomerEmail,
     string Street,
     string City,
@@ -20,5 +21,8 @@ public record PlaceOrderCommand(
     string? DeliveryInstructions,
     string? CustomerNotes,
     string PaymentMethod,
-    List<PlaceOrderItemDto> Items
+    List<PlaceOrderItemDto> Items,
+    int CountryCode = 0,
+    int? CityId = null,
+    int? DistrictId = null
 ) : ICommand<OrderDto>;

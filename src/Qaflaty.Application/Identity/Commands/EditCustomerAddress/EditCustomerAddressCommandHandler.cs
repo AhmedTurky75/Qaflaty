@@ -29,7 +29,10 @@ public class EditCustomerAddressCommandHandler : ICommandHandler<EditCustomerAdd
             request.Country,
             request.IsDefault,
             request.Latitude,
-            request.Longitude);
+            request.Longitude,
+            request.CountryCode,
+            request.CityId,
+            request.DistrictId);
 
         if (result.IsFailure)
             return result;

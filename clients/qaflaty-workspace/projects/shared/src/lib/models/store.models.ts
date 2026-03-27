@@ -15,7 +15,12 @@ export interface StoreDto {
 
 export interface StoreBranding {
   logoUrl?: string;
+  secondaryLogoUrl?: string;
+  faviconUrl?: string;
+  appleTouchIconUrl?: string;
+  ogImageUrl?: string;
   primaryColor: string;
+  secondaryColor?: string;
 }
 
 export interface DeliverySettings {
@@ -53,7 +58,12 @@ export interface UpdateStoreRequest {
 
 export interface UpdateBrandingRequest {
   logoUrl?: string;
+  secondaryLogoUrl?: string;
+  faviconUrl?: string;
+  appleTouchIconUrl?: string;
+  ogImageUrl?: string;
   primaryColor: string;
+  secondaryColor?: string;
 }
 
 export interface UpdateDeliverySettingsRequest {

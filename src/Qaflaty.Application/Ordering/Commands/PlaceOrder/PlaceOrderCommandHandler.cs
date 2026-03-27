@@ -2,6 +2,7 @@ using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.DTOs;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
+using Qaflaty.Domain.Catalog.Enums;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
@@ -23,6 +24,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly ICustomerRepository _customerRepository;
     private readonly IStoreRepository _storeRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IDeliveryZoneRepository _deliveryZoneRepository;
     private readonly IOrderNumberGenerator _orderNumberGenerator;
     private readonly IOrderOtpRepository _otpRepository;
     private readonly IEmailService _emailService;
@@ -33,6 +35,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         ICustomerRepository customerRepository,
         IStoreRepository storeRepository,
         IProductRepository productRepository,
+        IDeliveryZoneRepository deliveryZoneRepository,
         IOrderNumberGenerator orderNumberGenerator,
         IOrderOtpRepository otpRepository,
         IEmailService emailService,
@@ -42,6 +45,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         _customerRepository = customerRepository;
         _storeRepository = storeRepository;
         _productRepository = productRepository;
+        _deliveryZoneRepository = deliveryZoneRepository;
         _orderNumberGenerator = orderNumberGenerator;
         _otpRepository = otpRepository;
         _emailService = emailService;
@@ -70,7 +74,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         if (nameResult.IsFailure)
             return Result.Failure<OrderDto>(nameResult.Error);
 
-        var phoneResult = PhoneNumber.Create(request.CustomerPhone);
+        var phoneResult = PhoneNumber.Create(request.CustomerPhone, request.CustomerPhoneCountryCode);
         if (phoneResult.IsFailure)
             return Result.Failure<OrderDto>(phoneResult.Error);
 
@@ -113,8 +117,52 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         // Generate order number
         var orderNumber = await _orderNumberGenerator.GenerateAsync(storeId, cancellationToken);
 
-        // Get delivery fee from store
-        var deliveryFee = store.DeliverySettings.DeliveryFee;
+        // Resolve delivery fee from zones (district > city > country > store default)
+        Money deliveryFee = store.DeliverySettings.DeliveryFee;
+        if (request.CountryCode > 0)
+        {
+            if (request.DistrictId.HasValue)
+            {
+                var districtZone = await _deliveryZoneRepository.GetZoneAsync(
+                    storeId, DeliveryZoneLevel.District, request.DistrictId.Value, cancellationToken);
+                if (districtZone != null)
+                {
+                    if (!districtZone.IsDeliveryEnabled)
+                        return Result.Failure<OrderDto>(new Error("Order.DeliveryNotAvailable",
+                            "Delivery is not available to your selected district"));
+                    if (districtZone.CustomDeliveryFee.HasValue)
+                        deliveryFee = Money.Create(districtZone.CustomDeliveryFee.Value).Value;
+                }
+            }
+
+            if (deliveryFee == store.DeliverySettings.DeliveryFee && request.CityId.HasValue)
+            {
+                var cityZone = await _deliveryZoneRepository.GetZoneAsync(
+                    storeId, DeliveryZoneLevel.City, request.CityId.Value, cancellationToken);
+                if (cityZone != null)
+                {
+                    if (!cityZone.IsDeliveryEnabled)
+                        return Result.Failure<OrderDto>(new Error("Order.DeliveryNotAvailable",
+                            "Delivery is not available to your selected city"));
+                    if (cityZone.CustomDeliveryFee.HasValue)
+                        deliveryFee = Money.Create(cityZone.CustomDeliveryFee.Value).Value;
+                }
+            }
+
+            if (deliveryFee == store.DeliverySettings.DeliveryFee)
+            {
+                var countryZone = await _deliveryZoneRepository.GetZoneAsync(
+                    storeId, DeliveryZoneLevel.Country, request.CountryCode, cancellationToken);
+                if (countryZone != null)
+                {
+                    if (!countryZone.IsDeliveryEnabled)
+                        return Result.Failure<OrderDto>(new Error("Order.DeliveryNotAvailable",
+                            "Delivery is not available to your country"));
+                    if (countryZone.CustomDeliveryFee.HasValue)
+                        deliveryFee = Money.Create(countryZone.CustomDeliveryFee.Value).Value;
+                }
+            }
+        }
 
         // Create delivery info
         var deliveryInfo = DeliveryInfo.Create(addressResult.Value, request.DeliveryInstructions);

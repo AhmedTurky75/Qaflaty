@@ -1,19 +1,20 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { ProductService } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
+import { BuilderService } from '../../store-builder/services/builder.service';
 import { ImageUploadComponent, ImageItem } from '../components/image-upload/image-upload.component';
 import { VariantManagerComponent } from '../components/variant-manager/variant-manager.component';
 import { InventoryHistoryComponent } from '../components/inventory-history/inventory-history.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
-import { CategoryDto, ProductStatus, Currency } from 'shared';
+import { CategoryDto, ProductStatus, Currency, ProductPropertyDefinitionDto } from 'shared';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, ImageUploadComponent, VariantManagerComponent, InventoryHistoryComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ImageUploadComponent, VariantManagerComponent, InventoryHistoryComponent],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss']
 })
@@ -21,6 +22,7 @@ export class ProductFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
+  private builderService = inject(BuilderService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   protected storeContext = inject(StoreContextService);
@@ -30,6 +32,8 @@ export class ProductFormComponent implements OnInit {
   error = signal<string | null>(null);
   categories = signal<CategoryDto[]>([]);
   images = signal<ImageItem[]>([]);
+  propertyDefinitions = signal<ProductPropertyDefinitionDto[]>([]);
+  propertyValues = signal<Record<string, string>>({});
 
   isEditMode = signal(false);
   productId: string | null = null;
@@ -72,12 +76,39 @@ export class ProductFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
+    this.loadPropertyDefinitions();
 
     this.productId = this.route.snapshot.paramMap.get('id');
     if (this.productId) {
       this.isEditMode.set(true);
       this.loadProduct(this.productId);
     }
+  }
+
+  loadPropertyDefinitions(): void {
+    const storeId = this.storeContext.currentStoreId();
+    if (!storeId) return;
+    this.builderService.getProductPropertyDefinitions(storeId).subscribe({
+      next: (defs) => this.propertyDefinitions.set(defs),
+      error: () => {}
+    });
+  }
+
+  onPropertyValueChange(definitionId: string, value: string): void {
+    this.propertyValues.update(current => ({ ...current, [definitionId]: value }));
+  }
+
+  isMultiChoiceSelected(definitionId: string, option: string): boolean {
+    const val = this.propertyValues()[definitionId] || '';
+    return val.split(',').map(v => v.trim()).includes(option);
+  }
+
+  toggleMultiChoice(definitionId: string, option: string, checked: boolean): void {
+    const current = (this.propertyValues()[definitionId] || '').split(',').map(v => v.trim()).filter(v => v);
+    const updated = checked
+      ? [...new Set([...current, option])]
+      : current.filter(v => v !== option);
+    this.onPropertyValueChange(definitionId, updated.join(', '));
   }
 
   loadCategories(): void {
@@ -119,6 +150,15 @@ export class ProductFormComponent implements OnInit {
           altText: img.altText,
           sortOrder: img.sortOrder
         })));
+
+        // Load property values from product DTO
+        if (product.propertyValues && product.propertyValues.length > 0) {
+          const map: Record<string, string> = {};
+          product.propertyValues.forEach((v: { definitionId: string; value: string }) => {
+            map[v.definitionId] = v.value;
+          });
+          this.propertyValues.set(map);
+        }
 
         this.loading.set(false);
       },
@@ -175,10 +215,9 @@ export class ProductFormComponent implements OnInit {
     };
 
     if (this.isEditMode() && this.productId) {
-      // Update existing product
       this.productService.updateProduct(storeId, this.productId, productData).subscribe({
-        next: () => {
-          this.router.navigate(['/products']);
+        next: (product) => {
+          this.savePropertyValues(product.id);
         },
         error: (err) => {
           this.error.set(err.message || 'Failed to update product');
@@ -186,10 +225,9 @@ export class ProductFormComponent implements OnInit {
         }
       });
     } else {
-      // Create new product
       this.productService.createProduct(storeId, productData).subscribe({
         next: (product) => {
-          this.router.navigate(['/products']);
+          this.savePropertyValues(product.id);
         },
         error: (err) => {
           this.error.set(err.message || 'Failed to create product');
@@ -197,6 +235,23 @@ export class ProductFormComponent implements OnInit {
         }
       });
     }
+  }
+
+  private savePropertyValues(productId: string): void {
+    const values = this.propertyValues();
+    const entries = Object.entries(values)
+      .filter(([, v]) => v !== '' && v !== null && v !== undefined)
+      .map(([definitionId, value]) => ({ definitionId, value }));
+
+    if (entries.length === 0) {
+      this.router.navigate(['/products']);
+      return;
+    }
+
+    this.productService.setProductPropertyValues(productId, entries).subscribe({
+      next: () => this.router.navigate(['/products']),
+      error: () => this.router.navigate(['/products']) // navigate even if props fail
+    });
   }
 
   get name() {

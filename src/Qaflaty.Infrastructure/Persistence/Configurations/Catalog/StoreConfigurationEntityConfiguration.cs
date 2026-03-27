@@ -53,6 +53,7 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
             ca.Property(c => c.Mode).HasColumnName("auth_mode").HasConversion<string>();
             ca.Property(c => c.AllowGuestCheckout).HasColumnName("auth_allow_guest_checkout");
             ca.Property(c => c.RequireEmailVerification).HasColumnName("auth_require_email_verification");
+            ca.Property(c => c.RequireOtpOnPlaceOrder).HasColumnName("auth_require_otp_on_place_order").HasDefaultValue(false);
         });
 
         // CommunicationSettings - owned value object
@@ -101,8 +102,58 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
             .HasColumnName("product_grid_variant")
             .HasMaxLength(50);
 
+        // SearchSettings - owned value object (JSON columns for list fields)
+        builder.OwnsOne(sc => sc.SearchSettings, ss =>
+        {
+            ss.Property(s => s.EnableTextSearch).HasColumnName("search_enable_text");
+            ss.Property(s => s.EnableCategoryFilter).HasColumnName("search_enable_category");
+            ss.Property(s => s.EnablePriceFilter).HasColumnName("search_enable_price");
+            ss.Property(s => s.EnablePropertyFilters).HasColumnName("search_enable_properties");
+            ss.Property(s => s.FilterablePropertyDefinitionIds)
+                .HasColumnName("search_filterable_property_ids")
+                .HasColumnType("jsonb");
+            ss.Property(s => s.AllowedSortOptions)
+                .HasColumnName("search_allowed_sort_options")
+                .HasColumnType("jsonb");
+        });
+
         builder.Property(sc => sc.CreatedAt).HasColumnName("created_at");
         builder.Property(sc => sc.UpdatedAt).HasColumnName("updated_at");
+
+        // PaymentMethodAdjustments - owned entity collection
+        builder.OwnsMany(sc => sc.PaymentMethodAdjustments, adj =>
+        {
+            adj.ToTable("payment_method_adjustments");
+
+            adj.WithOwner().HasForeignKey("store_configuration_id");
+
+            adj.HasKey(a => a.Id);
+            adj.Property(a => a.Id)
+                .HasColumnName("id")
+                .ValueGeneratedNever();
+
+            adj.Property(a => a.PaymentMethod)
+                .HasColumnName("payment_method")
+                .HasConversion<string>()
+                .HasMaxLength(50)
+                .IsRequired();
+
+            adj.Property(a => a.AdjustmentType)
+                .HasColumnName("adjustment_type")
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .IsRequired();
+
+            adj.Property(a => a.Value)
+                .HasColumnName("value")
+                .HasColumnType("decimal(10,4)")
+                .IsRequired();
+
+            adj.Property(a => a.DisplayLabel)
+                .HasColumnName("display_label")
+                .HasMaxLength(200)
+                .IsRequired(false);
+        });
 
         builder.Ignore(sc => sc.DomainEvents);
     }

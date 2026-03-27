@@ -10,6 +10,13 @@ export interface ProductListDto {
   firstImageUrl?: string;
 }
 
+export interface ProductPropertyValue {
+  id: string;
+  definitionId: string;
+  definitionName: string;
+  value: string;
+}
+
 export interface ProductDto {
   id: string;
   slug: string;
@@ -23,6 +30,7 @@ export interface ProductDto {
   status: string;
   categoryId?: string;
   images?: ProductImage[];
+  propertyValues?: ProductPropertyValue[];
   firstImageUrl?: string;
   createdAt?: string;
 }

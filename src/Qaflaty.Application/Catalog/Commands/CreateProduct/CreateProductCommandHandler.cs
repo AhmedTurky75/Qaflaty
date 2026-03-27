@@ -126,6 +126,7 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
             product.CategoryId?.Value,
             product.Images.Select(i => new ProductImageDto(i.Id, i.Url, i.AltText, i.SortOrder))
                           .OrderBy(i => i.SortOrder).ToList(),
+            [],
             product.CreatedAt);
 
         return Result.Success(dto);

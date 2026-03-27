@@ -33,7 +33,12 @@ public class GetStoreBySlugQueryHandler : IQueryHandler<GetStoreBySlugQuery, Sto
             store.Description,
             new StoreBrandingDto(
                 store.Branding.LogoUrl,
-                store.Branding.PrimaryColor),
+                store.Branding.PrimaryColor,
+                store.Branding.SecondaryLogoUrl,
+                store.Branding.FaviconUrl,
+                store.Branding.AppleTouchIconUrl,
+                store.Branding.OgImageUrl,
+                store.Branding.SecondaryColor),
             store.Status.ToString(),
             new DeliverySettingsDto(
                 new MoneyDto(store.DeliverySettings.DeliveryFee.Amount, store.DeliverySettings.DeliveryFee.Currency.ToString()),

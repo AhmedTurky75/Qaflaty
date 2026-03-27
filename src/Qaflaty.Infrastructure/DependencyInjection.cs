@@ -61,6 +61,9 @@ public static class DependencyInjection
         services.AddScoped<IOrderOtpRepository, OrderOtpRepository>();
         services.AddScoped<ICountryRepository, CountryRepository>();
         services.AddScoped<ICityRepository, CityRepository>();
+        services.AddScoped<IDeliveryZoneRepository, DeliveryZoneRepository>();
+        services.AddScoped<IDistrictRepository, DistrictRepository>();
+        services.AddScoped<IProductPropertyDefinitionRepository, ProductPropertyDefinitionRepository>();
 
         // Identity Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();

@@ -63,7 +63,12 @@ public class MerchantConfiguration : IEntityTypeConfiguration<Merchant>
         {
             phone.Property(p => p.Value)
                 .HasColumnName("phone")
-                .HasMaxLength(20);
+                .HasMaxLength(25);
+
+            phone.Property(p => p.CountryCode)
+                .HasColumnName("phone_country_code")
+                .HasMaxLength(2)
+                .IsRequired(false);
         });
 
         builder.Property(m => m.IsVerified)

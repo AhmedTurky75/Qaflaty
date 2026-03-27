@@ -8,5 +8,7 @@ public record UpdateCustomerProfileCommand(
     string FirstName,
     string LastName,
     string? Phone,
-    string? SecondaryPhone = null
+    string? PhoneCountryCode = null,
+    string? SecondaryPhone = null,
+    string? SecondaryPhoneCountryCode = null
 ) : ICommand;

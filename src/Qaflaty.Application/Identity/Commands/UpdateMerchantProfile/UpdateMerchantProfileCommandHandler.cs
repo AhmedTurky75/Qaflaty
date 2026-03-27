@@ -41,7 +41,7 @@ public class UpdateMerchantProfileCommandHandler : ICommandHandler<UpdateMerchan
         PhoneNumber? phone = null;
         if (!string.IsNullOrWhiteSpace(request.Phone))
         {
-            var phoneResult = PhoneNumber.Create(request.Phone);
+            var phoneResult = PhoneNumber.Create(request.Phone, request.PhoneCountryCode ?? "SA");
             if (phoneResult.IsFailure)
                 return Result.Failure<MerchantDto>(phoneResult.Error);
             phone = phoneResult.Value;

@@ -37,7 +37,11 @@ public class GetStorefrontConfigQueryHandler : IQueryHandler<GetStorefrontConfig
             store.Slug.Value,
             store.Name.Value,
             store.Description,
-            new StoreBrandingDto(store.Branding.LogoUrl, store.Branding.PrimaryColor),
+            new StoreBrandingDto(
+                store.Branding.LogoUrl, store.Branding.PrimaryColor,
+                store.Branding.SecondaryLogoUrl, store.Branding.FaviconUrl,
+                store.Branding.AppleTouchIconUrl, store.Branding.OgImageUrl,
+                store.Branding.SecondaryColor),
             new DeliverySettingsDto(
                 new MoneyDto(store.DeliverySettings.DeliveryFee.Amount),
                 store.DeliverySettings.FreeDeliveryThreshold != null
@@ -54,7 +58,8 @@ public class GetStorefrontConfigQueryHandler : IQueryHandler<GetStorefrontConfig
             new CustomerAuthSettingsDto(
                 config.CustomerAuthSettings.Mode.ToString(),
                 config.CustomerAuthSettings.AllowGuestCheckout,
-                config.CustomerAuthSettings.RequireEmailVerification),
+                config.CustomerAuthSettings.RequireEmailVerification,
+                config.CustomerAuthSettings.RequireOtpOnPlaceOrder),
             new CommunicationSettingsDto(
                 config.CommunicationSettings.WhatsAppEnabled, config.CommunicationSettings.WhatsAppNumber,
                 config.CommunicationSettings.WhatsAppDefaultMessage, config.CommunicationSettings.LiveChatEnabled,

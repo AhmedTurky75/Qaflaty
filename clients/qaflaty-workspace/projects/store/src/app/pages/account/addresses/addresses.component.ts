@@ -1,11 +1,10 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CustomerAuthService, CustomerAddress } from '../../../services/customer-auth.service';
 import { LocationPickerComponent, PickedLocation } from '../../../components/shared/location-picker.component';
-
-interface LocationItem { id: number; name: string; }
+import { COUNTRIES, CITIES, DISTRICTS, Country, City, District } from 'shared';
 
 @Component({
   selector: 'app-addresses',
@@ -62,46 +61,52 @@ interface LocationItem { id: number; name: string; }
 
               <!-- Country dropdown -->
               <div>
-                <label for="countryId" class="block text-sm font-medium text-gray-700">
+                <label for="countryCode" class="block text-sm font-medium text-gray-700">
                   الدولة <span class="text-red-500">*</span>
                 </label>
-                @if (countriesLoading()) {
-                  <p class="mt-1 text-sm text-gray-500">جاري التحميل...</p>
-                } @else {
-                  <select id="countryId" formControlName="countryId" (change)="onCountryChange()"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                    <option value="">اختر الدولة</option>
-                    @for (c of countries(); track c.id) {
-                      <option [value]="c.id">{{ c.name }}</option>
-                    }
-                  </select>
-                }
-                @if (addressForm.get('countryId')?.invalid && addressForm.get('countryId')?.touched) {
+                <select id="countryCode" formControlName="countryCode" (change)="onCountryChange()"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                  <option value="">اختر الدولة</option>
+                  @for (c of countries; track c.isoNumeric) {
+                    <option [value]="c.isoNumeric">{{ c.flag }} {{ c.name }}</option>
+                  }
+                </select>
+                @if (addressForm.get('countryCode')?.invalid && addressForm.get('countryCode')?.touched) {
                   <p class="mt-1 text-sm text-red-600">يرجى اختيار الدولة</p>
                 }
               </div>
 
               <!-- City dropdown -->
               <div>
-                <label for="city" class="block text-sm font-medium text-gray-700">
+                <label for="cityId" class="block text-sm font-medium text-gray-700">
                   المدينة <span class="text-red-500">*</span>
                 </label>
-                @if (citiesLoading()) {
-                  <p class="mt-1 text-sm text-gray-500">جاري التحميل...</p>
-                } @else {
-                  <select id="city" formControlName="city"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    [attr.disabled]="cities().length === 0 ? true : null">
-                    <option value="">اختر المدينة</option>
-                    @for (c of cities(); track c.id) {
-                      <option [value]="c.name">{{ c.name }}</option>
-                    }
-                  </select>
-                }
-                @if (addressForm.get('city')?.invalid && addressForm.get('city')?.touched) {
+                <select id="cityId" formControlName="cityId" (change)="onCityChange()"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  [attr.disabled]="availableCities().length === 0 ? true : null">
+                  <option value="">اختر المدينة</option>
+                  @for (c of availableCities(); track c.id) {
+                    <option [value]="c.id">{{ c.name }}</option>
+                  }
+                </select>
+                @if (addressForm.get('cityId')?.invalid && addressForm.get('cityId')?.touched) {
                   <p class="mt-1 text-sm text-red-600">يرجى اختيار المدينة</p>
                 }
               </div>
+
+              <!-- District dropdown (shown when available) -->
+              @if (availableDistricts().length > 0) {
+                <div>
+                  <label for="districtId" class="block text-sm font-medium text-gray-700">الحي</label>
+                  <select id="districtId" formControlName="districtId"
+                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    <option value="">اختر الحي (اختياري)</option>
+                    @for (d of availableDistricts(); track d.id) {
+                      <option [value]="d.id">{{ d.name }}</option>
+                    }
+                  </select>
+                </div>
+              }
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -114,13 +119,6 @@ interface LocationItem { id: number; name: string; }
                     <p class="mt-1 text-sm text-red-600">الشارع مطلوب</p>
                   }
                 </div>
-
-                <div>
-                  <label for="state" class="block text-sm font-medium text-gray-700">المنطقة</label>
-                  <input id="state" type="text" formControlName="state"
-                    class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-                </div>
-
                 <div>
                   <label for="postalCode" class="block text-sm font-medium text-gray-700">الرمز البريدي</label>
                   <input id="postalCode" type="text" formControlName="postalCode"
@@ -142,9 +140,7 @@ interface LocationItem { id: number; name: string; }
                   (locationPicked)="onLocationPicked($event)">
                 </app-location-picker>
                 @if (pickedLocation()) {
-                  <p class="mt-1 text-xs text-green-700 font-medium">
-                    ✓ تم تحديد الموقع على الخريطة
-                  </p>
+                  <p class="mt-1 text-xs text-green-700 font-medium">✓ تم تحديد الموقع على الخريطة</p>
                 }
               </div>
 
@@ -173,7 +169,7 @@ interface LocationItem { id: number; name: string; }
             <p class="mt-1 text-sm text-gray-500">ابدأ بإضافة عنوان الشحن الخاص بك</p>
             <div class="mt-6">
               <button type="button" (click)="openAddForm()"
-                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
                 إضافة عنوان
               </button>
             </div>
@@ -190,9 +186,9 @@ interface LocationItem { id: number; name: string; }
                 <h3 class="text-lg font-medium text-gray-900 mb-3">{{ address.label }}</h3>
                 <div class="text-sm text-gray-600 space-y-1">
                   <p>{{ address.street }}</p>
-                  <p>{{ address.city }}@if (address.state) {، {{ address.state }}}</p>
+                  <p>{{ address.city }}{{ getDistrictName(address.districtId) ? '، ' + getDistrictName(address.districtId) : '' }}</p>
+                  <p>{{ getCountryFlag(address.countryCode) }} {{ address.country }}</p>
                   @if (address.postalCode) { <p>{{ address.postalCode }}</p> }
-                  <p>{{ address.country }}</p>
                   @if (address.latitude && address.longitude) {
                     <p class="flex items-center gap-1 text-xs text-gray-400 mt-1">
                       <svg class="w-3.5 h-3.5 text-green-500" fill="currentColor" viewBox="0 0 24 24">
@@ -204,14 +200,10 @@ interface LocationItem { id: number; name: string; }
                 </div>
                 <div class="mt-4 flex gap-3">
                   <button type="button" (click)="openEditForm(address)"
-                    class="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                    تعديل
-                  </button>
+                    class="text-sm text-blue-600 hover:text-blue-800 font-medium">تعديل</button>
                   @if (addresses().length > 1 || !address.isDefault) {
                     <button type="button" (click)="deleteAddress(address)"
-                      class="text-sm text-red-600 hover:text-red-800 font-medium">
-                      حذف
-                    </button>
+                      class="text-sm text-red-600 hover:text-red-800 font-medium">حذف</button>
                   }
                 </div>
               </div>
@@ -236,7 +228,6 @@ export class AddressesComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(CustomerAuthService);
   private readonly router = inject(Router);
-  private readonly locations = this.authService.getLocations();
 
   readonly customer = this.authService.customer;
   readonly addresses = signal<CustomerAddress[]>([]);
@@ -247,17 +238,27 @@ export class AddressesComponent implements OnInit {
   readonly errorMessage = signal<string | null>(null);
   readonly pickedLocation = signal<PickedLocation | null>(null);
 
-  readonly countries = signal<LocationItem[]>([]);
-  readonly cities = signal<LocationItem[]>([]);
-  readonly countriesLoading = signal(false);
-  readonly citiesLoading = signal(false);
+  // Static geo-data
+  readonly countries: Country[] = COUNTRIES;
+  readonly selectedCountryCode = signal<number | null>(null);
+  readonly selectedCityId = signal<number | null>(null);
+
+  readonly availableCities = computed<City[]>(() => {
+    const code = this.selectedCountryCode();
+    return code ? (CITIES[code] ?? []) : [];
+  });
+
+  readonly availableDistricts = computed<District[]>(() => {
+    const id = this.selectedCityId();
+    return id ? (DISTRICTS[id] ?? []) : [];
+  });
 
   addressForm: FormGroup = this.fb.group({
     label: ['', [Validators.required, Validators.maxLength(50)]],
-    countryId: ['', [Validators.required]],
-    city: ['', [Validators.required]],
+    countryCode: ['', [Validators.required]],
+    cityId: ['', [Validators.required]],
+    districtId: [''],
     street: ['', [Validators.required, Validators.maxLength(200)]],
-    state: ['', [Validators.maxLength(100)]],
     postalCode: ['', [Validators.maxLength(20)]],
     isDefault: [false]
   });
@@ -268,7 +269,6 @@ export class AddressesComponent implements OnInit {
       return;
     }
     this.loadAddresses();
-    this.loadCountries();
   }
 
   private loadAddresses(): void {
@@ -279,24 +279,17 @@ export class AddressesComponent implements OnInit {
     });
   }
 
-  private loadCountries(): void {
-    this.countriesLoading.set(true);
-    this.locations.countries().subscribe({
-      next: (data) => { this.countries.set(data); this.countriesLoading.set(false); },
-      error: () => this.countriesLoading.set(false)
-    });
+  onCountryChange(): void {
+    const val = this.addressForm.get('countryCode')?.value;
+    this.selectedCountryCode.set(val ? Number(val) : null);
+    this.selectedCityId.set(null);
+    this.addressForm.patchValue({ cityId: '', districtId: '' });
   }
 
-  onCountryChange(): void {
-    const countryId = this.addressForm.get('countryId')?.value;
-    this.addressForm.patchValue({ city: '' });
-    this.cities.set([]);
-    if (!countryId) return;
-    this.citiesLoading.set(true);
-    this.locations.cities(Number(countryId)).subscribe({
-      next: (data) => { this.cities.set(data); this.citiesLoading.set(false); },
-      error: () => this.citiesLoading.set(false)
-    });
+  onCityChange(): void {
+    const val = this.addressForm.get('cityId')?.value;
+    this.selectedCityId.set(val ? Number(val) : null);
+    this.addressForm.patchValue({ districtId: '' });
   }
 
   onLocationPicked(loc: PickedLocation | null): void {
@@ -307,7 +300,8 @@ export class AddressesComponent implements OnInit {
     this.editingLabel.set(null);
     this.showForm.set(true);
     this.addressForm.reset({ isDefault: false });
-    this.cities.set([]);
+    this.selectedCountryCode.set(null);
+    this.selectedCityId.set(null);
     this.pickedLocation.set(null);
     this.clearMessages();
   }
@@ -318,37 +312,26 @@ export class AddressesComponent implements OnInit {
     this.clearMessages();
     this.pickedLocation.set({ latitude: address.latitude, longitude: address.longitude });
 
-    // Try to match the country by name to get the id for the dropdown
-    const matchedCountry = this.countries().find(c => c.name === address.country);
-    const countryId = matchedCountry?.id ?? '';
+    this.selectedCountryCode.set(address.countryCode || null);
+    this.selectedCityId.set(address.cityId ?? null);
 
     this.addressForm.patchValue({
       label: address.label,
-      countryId: countryId,
-      city: address.city,
+      countryCode: address.countryCode || '',
+      cityId: address.cityId ?? '',
+      districtId: address.districtId ?? '',
       street: address.street,
-      state: address.state || '',
       postalCode: address.postalCode || '',
       isDefault: address.isDefault
     });
-
-    if (countryId) {
-      this.citiesLoading.set(true);
-      this.locations.cities(Number(countryId)).subscribe({
-        next: (data) => {
-          this.cities.set(data);
-          this.citiesLoading.set(false);
-          this.addressForm.patchValue({ city: address.city });
-        },
-        error: () => this.citiesLoading.set(false)
-      });
-    }
   }
 
   cancelForm(): void {
     this.editingLabel.set(null);
     this.showForm.set(false);
     this.addressForm.reset();
+    this.selectedCountryCode.set(null);
+    this.selectedCityId.set(null);
     this.pickedLocation.set(null);
     this.clearMessages();
   }
@@ -359,19 +342,27 @@ export class AddressesComponent implements OnInit {
     this.clearMessages();
 
     const v = this.addressForm.value;
-    const selectedCountry = this.countries().find(c => c.id === Number(v.countryId));
+    const countryCode = Number(v.countryCode);
+    const cityId = v.cityId ? Number(v.cityId) : undefined;
+    const districtId = v.districtId ? Number(v.districtId) : undefined;
+
+    const selectedCountry = this.countries.find(c => c.isoNumeric === countryCode);
+    const selectedCity = cityId ? this.availableCities().find(c => c.id === cityId) : undefined;
     const loc = this.pickedLocation()!;
 
     const addressData: CustomerAddress = {
       label: v.label,
       street: v.street,
-      city: v.city,
-      state: v.state || '',
+      city: selectedCity?.name ?? '',
+      state: '',
       postalCode: v.postalCode || '',
-      country: selectedCountry?.name || '',
+      country: selectedCountry?.name ?? '',
       isDefault: v.isDefault,
       latitude: loc.latitude,
-      longitude: loc.longitude
+      longitude: loc.longitude,
+      countryCode,
+      cityId,
+      districtId
     };
 
     const originalLabel = this.editingLabel();
@@ -385,6 +376,8 @@ export class AddressesComponent implements OnInit {
         this.showForm.set(false);
         this.editingLabel.set(null);
         this.addressForm.reset();
+        this.selectedCountryCode.set(null);
+        this.selectedCityId.set(null);
         this.pickedLocation.set(null);
         this.authService.getAddresses().subscribe(addresses => this.addresses.set(addresses));
         this.successMessage.set(originalLabel ? 'تم تعديل العنوان بنجاح' : 'تم إضافة العنوان بنجاح');
@@ -413,6 +406,20 @@ export class AddressesComponent implements OnInit {
         this.errorMessage.set(error.error?.message || 'حدث خطأ. يرجى المحاولة مرة أخرى.');
       }
     });
+  }
+
+  getCountryFlag(code: number | undefined): string {
+    if (!code) return '';
+    return COUNTRIES.find(c => c.isoNumeric === code)?.flag ?? '';
+  }
+
+  getDistrictName(districtId: number | undefined): string {
+    if (!districtId) return '';
+    for (const districts of Object.values(DISTRICTS)) {
+      const d = districts.find(x => x.id === districtId);
+      if (d) return d.name;
+    }
+    return '';
   }
 
   private clearMessages(): void {

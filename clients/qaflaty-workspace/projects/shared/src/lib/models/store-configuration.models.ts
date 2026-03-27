@@ -27,6 +27,7 @@ export interface CustomerAuthSettings {
   mode: 'GuestOnly' | 'Required' | 'Optional';
   allowGuestCheckout: boolean;
   requireEmailVerification: boolean;
+  requireOtpOnPlaceOrder: boolean;
 }
 
 export interface CommunicationSettings {
@@ -85,6 +86,23 @@ export interface PageConfigurationDto {
   updatedAt: string;
 }
 
+export interface PaymentMethodAdjustment {
+  id: string;
+  paymentMethod: 'COD' | 'Visa' | 'Mastercard' | 'Mada' | 'ApplePay' | 'STCPay' | 'BankTransfer' | 'Other';
+  adjustmentType: 'Fixed' | 'Percentage';
+  value: number;
+  displayLabel?: string;
+}
+
+export interface SearchSettings {
+  enableTextSearch: boolean;
+  enableCategoryFilter: boolean;
+  enablePriceFilter: boolean;
+  enablePropertyFilters: boolean;
+  filterablePropertyDefinitionIds: string[];
+  allowedSortOptions: string[];
+}
+
 export interface StoreConfigurationDto {
   id: string;
   storeId: string;
@@ -98,6 +116,8 @@ export interface StoreConfigurationDto {
   footerVariant: string;
   productCardVariant: string;
   productGridVariant: string;
+  searchSettings: SearchSettings;
+  paymentMethodAdjustments: PaymentMethodAdjustment[];
   createdAt: string;
   updatedAt: string;
 }
@@ -145,6 +165,86 @@ export interface UpdateStoreConfigurationRequest {
   footerVariant: string;
   productCardVariant: string;
   productGridVariant: string;
+}
+
+export interface SetPaymentMethodAdjustmentsRequest {
+  adjustments: Array<{
+    paymentMethod: string;
+    adjustmentType: string;
+    value: number;
+    displayLabel?: string;
+  }>;
+}
+
+export interface UpdateSearchSettingsRequest {
+  enableTextSearch: boolean;
+  enableCategoryFilter: boolean;
+  enablePriceFilter: boolean;
+  enablePropertyFilters: boolean;
+  filterablePropertyDefinitionIds: string[];
+  allowedSortOptions: string[];
+}
+
+// Delivery Zones
+export interface DeliveryZoneDto {
+  id: string;
+  storeId: string;
+  level: 'Country' | 'City' | 'District';
+  referenceId: number;
+  isDeliveryEnabled: boolean;
+  customDeliveryFee?: number;
+  feeCurrency?: string;
+}
+
+export interface UpsertDeliveryZoneRequest {
+  level: 'Country' | 'City' | 'District';
+  referenceId: number;
+  isDeliveryEnabled: boolean;
+  customDeliveryFee?: number;
+  feeCurrency?: string;
+}
+
+// Product Properties
+export interface ProductPropertyDefinitionDto {
+  id: string;
+  storeId: string;
+  name: string;
+  displayName: string;
+  type: 'Text' | 'Number' | 'SingleChoice' | 'MultiChoice' | 'Boolean';
+  options: string[];
+  isRequired: boolean;
+  isFilterable: boolean;
+  sortOrder: number;
+}
+
+export interface ProductPropertyValueDto {
+  id: string;
+  definitionId: string;
+  definitionName: string;
+  value: string;
+}
+
+export interface CreateProductPropertyDefinitionRequest {
+  name: string;
+  displayName: string;
+  type: string;
+  options: string[];
+  isRequired: boolean;
+  isFilterable: boolean;
+  sortOrder: number;
+}
+
+export interface UpdateProductPropertyDefinitionRequest {
+  displayName: string;
+  type: string;
+  options: string[];
+  isRequired: boolean;
+  isFilterable: boolean;
+  sortOrder: number;
+}
+
+export interface SetProductPropertyValuesRequest {
+  values: Array<{ definitionId: string; value: string }>;
 }
 
 export interface UpdatePageConfigurationRequest {

@@ -48,7 +48,12 @@ export class StoreDetailsComponent implements OnInit {
 
     this.brandingForm = this.fb.group({
       logoUrl: [store.branding.logoUrl || ''],
-      primaryColor: [store.branding.primaryColor, Validators.required]
+      secondaryLogoUrl: [store.branding.secondaryLogoUrl || ''],
+      faviconUrl: [store.branding.faviconUrl || ''],
+      appleTouchIconUrl: [store.branding.appleTouchIconUrl || ''],
+      ogImageUrl: [store.branding.ogImageUrl || ''],
+      primaryColor: [store.branding.primaryColor, Validators.required],
+      secondaryColor: [store.branding.secondaryColor || '']
     });
 
     this.deliveryForm = this.fb.group({

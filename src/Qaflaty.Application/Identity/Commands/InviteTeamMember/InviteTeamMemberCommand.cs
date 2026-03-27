@@ -12,4 +12,5 @@ public record InviteTeamMemberCommand(
     string LastName,
     string Username,
     string? Phone,
+    string? PhoneCountryCode,
     MerchantRole Role) : ICommand<TeamMemberDto>;

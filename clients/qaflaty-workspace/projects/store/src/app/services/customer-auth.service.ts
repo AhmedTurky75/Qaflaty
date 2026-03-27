@@ -28,6 +28,9 @@ export interface CustomerAddress {
   isDefault: boolean;
   latitude: number;
   longitude: number;
+  countryCode: number;
+  cityId?: number;
+  districtId?: number;
 }
 
 export interface RegisterCustomerRequest {
@@ -198,11 +201,11 @@ export class CustomerAuthService {
     return null;
   }
 
-  getLocations(): { countries: () => Observable<any[]>; cities: (id: number) => Observable<any[]> } {
-    return {
-      countries: () => this.http.get<any[]>(`${environment.apiUrl}/storefront/locations/countries`),
-      cities: (countryId: number) => this.http.get<any[]>(`${environment.apiUrl}/storefront/locations/cities?countryId=${countryId}`)
-    };
+  resolveDeliveryFee(countryCode: number, cityId?: number, districtId?: number): Observable<{ isDeliveryEnabled: boolean; fee: number | null; currency: string | null; resolvedAt: string }> {
+    const params: Record<string, string> = { countryCode: String(countryCode) };
+    if (cityId) params['cityId'] = String(cityId);
+    if (districtId) params['districtId'] = String(districtId);
+    return this.http.get<any>(`${environment.apiUrl}/storefront/addresses/delivery-fee`, { params });
   }
 
   private clearAuth(): void {

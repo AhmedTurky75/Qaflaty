@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
 using Qaflaty.Application.Catalog.Queries.GetCities;
 using Qaflaty.Application.Catalog.Queries.GetCountries;
+using Qaflaty.Application.Catalog.Queries.GetDistricts;
 
 namespace Qaflaty.Api.Controllers;
 
@@ -22,6 +23,14 @@ public class LocationsController : ApiController
     public async Task<IActionResult> GetCities([FromQuery] int countryId, CancellationToken ct)
     {
         var result = await Sender.Send(new GetCitiesQuery(countryId), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("districts")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetDistricts([FromQuery] int cityId, CancellationToken ct)
+    {
+        var result = await Sender.Send(new GetDistrictsQuery(cityId), ct);
         return HandleResult(result);
     }
 }

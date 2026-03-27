@@ -21,7 +21,14 @@ public class UpdateStoreBrandingCommandHandler : ICommandHandler<UpdateStoreBran
         if (store == null)
             return Result.Failure(new Error("Store.NotFound", "Store not found"));
 
-        var brandingResult = StoreBranding.Create(request.LogoUrl, request.PrimaryColor);
+        var brandingResult = StoreBranding.Create(
+            request.LogoUrl,
+            request.PrimaryColor,
+            request.SecondaryLogoUrl,
+            request.FaviconUrl,
+            request.AppleTouchIconUrl,
+            request.OgImageUrl,
+            request.SecondaryColor);
         if (brandingResult.IsFailure)
             return Result.Failure(brandingResult.Error);
 

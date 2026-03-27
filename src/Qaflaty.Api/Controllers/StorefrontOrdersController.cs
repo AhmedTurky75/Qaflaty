@@ -43,6 +43,7 @@ public class StorefrontOrdersController : ApiController
             StoreId: _tenantContext.CurrentStoreId.Value.Value,
             CustomerName: request.CustomerInfo.FullName,
             CustomerPhone: request.CustomerInfo.Phone,
+            CustomerPhoneCountryCode: request.CustomerInfo.PhoneCountryCode,
             CustomerEmail: request.CustomerInfo.Email,
             Street: request.DeliveryAddress.Street,
             City: request.DeliveryAddress.City,
@@ -51,7 +52,10 @@ public class StorefrontOrdersController : ApiController
             CustomerNotes: request.Notes,
             PaymentMethod: request.PaymentMethod,
             Items: request.Items.Select(item => new PlaceOrderItemDto(
-                item.ProductId, item.Quantity, item.VariantId)).ToList());
+                item.ProductId, item.Quantity, item.VariantId)).ToList(),
+            CountryCode: request.DeliveryAddress.CountryCode,
+            CityId: request.DeliveryAddress.CityId,
+            DistrictId: request.DeliveryAddress.DistrictId);
 
         var result = await Sender.Send(command, ct);
 

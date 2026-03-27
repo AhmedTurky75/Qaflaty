@@ -32,7 +32,10 @@ public class GetMerchantStoresQueryHandler : IQueryHandler<GetMerchantStoresQuer
             s.Slug.Value,
             s.Name.Value,
             s.Description,
-            new StoreBrandingDto(s.Branding.LogoUrl, s.Branding.PrimaryColor),
+            new StoreBrandingDto(s.Branding.LogoUrl, s.Branding.PrimaryColor,
+                s.Branding.SecondaryLogoUrl, s.Branding.FaviconUrl,
+                s.Branding.AppleTouchIconUrl, s.Branding.OgImageUrl,
+                s.Branding.SecondaryColor),
             s.Status.ToString(),
             s.Status == Domain.Catalog.Enums.StoreStatus.Maintenance,
             new DeliverySettingsDto(

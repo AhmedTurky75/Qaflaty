@@ -23,7 +23,8 @@ public sealed class StoreCustomer : AggregateRoot<StoreCustomerId>
 
     // Navigation - Addresses
     private readonly List<CustomerAddress> _addresses = [];
-    public IReadOnlyList<CustomerAddress> Addresses => _addresses.AsReadOnly();
+    public IReadOnlyList<CustomerAddress> Addresses =>
+        _addresses.Where(a => !a.IsDeleted).ToList().AsReadOnly();
 
     // Navigation - Refresh Tokens
     private readonly List<CustomerRefreshToken> _refreshTokens = [];
@@ -91,14 +92,15 @@ public sealed class StoreCustomer : AggregateRoot<StoreCustomerId>
     // Address Management
     public Result<CustomerAddress> AddAddress(CustomerAddress address)
     {
-        if (_addresses.Any(a => a.Label == address.Label))
+        if (_addresses.Any(a => a.Label == address.Label && !a.IsDeleted))
             return Result.Failure<CustomerAddress>(
                 new Error("CustomerAddress.DuplicateLabel", $"An address with label '{address.Label}' already exists"));
 
-        if (_addresses.Count == 0)
+        var activeAddresses = _addresses.Where(a => !a.IsDeleted).ToList();
+        if (activeAddresses.Count == 0)
             address.SetAsDefault();
         else if (address.IsDefault)
-            foreach (var a in _addresses) a.UnsetAsDefault();
+            foreach (var a in activeAddresses) a.UnsetAsDefault();
 
         _addresses.Add(address);
         UpdatedAt = DateTime.UtcNow;
@@ -115,25 +117,28 @@ public sealed class StoreCustomer : AggregateRoot<StoreCustomerId>
         string country,
         bool isDefault,
         decimal latitude,
-        decimal longitude)
+        decimal longitude,
+        int countryCode = 0,
+        int? cityId = null,
+        int? districtId = null)
     {
-        var address = _addresses.FirstOrDefault(a => a.Label == originalLabel);
+        var address = _addresses.FirstOrDefault(a => a.Label == originalLabel && !a.IsDeleted);
         if (address == null)
             return Result.Failure(new Error("CustomerAddress.NotFound", "Address not found"));
 
-        // If label is changing, check for duplicate
+        // If label is changing, check for duplicate among non-deleted addresses
         if (!string.Equals(originalLabel, label, StringComparison.OrdinalIgnoreCase)
-            && _addresses.Any(a => a.Label == label))
+            && _addresses.Any(a => a.Label == label && !a.IsDeleted))
             return Result.Failure(
                 new Error("CustomerAddress.DuplicateLabel", $"An address with label '{label}' already exists"));
 
-        var updateResult = address.Update(label, street, city, state, postalCode, country, latitude, longitude);
+        var updateResult = address.Update(label, street, city, state, postalCode, country, latitude, longitude, countryCode, cityId, districtId);
         if (updateResult.IsFailure)
             return updateResult;
 
         if (isDefault)
         {
-            foreach (var a in _addresses) a.UnsetAsDefault();
+            foreach (var a in _addresses.Where(a => !a.IsDeleted)) a.UnsetAsDefault();
             address.SetAsDefault();
         }
 
@@ -143,14 +148,17 @@ public sealed class StoreCustomer : AggregateRoot<StoreCustomerId>
 
     public Result RemoveAddress(string label)
     {
-        var address = _addresses.FirstOrDefault(a => a.Label == label);
+        var address = _addresses.FirstOrDefault(a => a.Label == label && !a.IsDeleted);
         if (address == null)
             return Result.Failure(new Error("CustomerAddress.NotFound", "Address not found"));
 
-        _addresses.Remove(address);
+        address.SoftDelete();
 
-        if (address.IsDefault && _addresses.Count > 0)
-            _addresses[0].SetAsDefault();
+        if (address.IsDefault)
+        {
+            var nextActive = _addresses.FirstOrDefault(a => !a.IsDeleted);
+            nextActive?.SetAsDefault();
+        }
 
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
@@ -158,11 +166,11 @@ public sealed class StoreCustomer : AggregateRoot<StoreCustomerId>
 
     public Result SetDefaultAddress(string label)
     {
-        var address = _addresses.FirstOrDefault(a => a.Label == label);
+        var address = _addresses.FirstOrDefault(a => a.Label == label && !a.IsDeleted);
         if (address == null)
             return Result.Failure(new Error("CustomerAddress.NotFound", "Address not found"));
 
-        foreach (var a in _addresses) a.UnsetAsDefault();
+        foreach (var a in _addresses.Where(a => !a.IsDeleted)) a.UnsetAsDefault();
         address.SetAsDefault();
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();

@@ -38,7 +38,12 @@ public class StorefrontController : ApiController
             Description: store.Description,
             Branding: new StoreBrandingDto(
                 store.Branding.LogoUrl,
-                store.Branding.PrimaryColor),
+                store.Branding.PrimaryColor,
+                store.Branding.SecondaryLogoUrl,
+                store.Branding.FaviconUrl,
+                store.Branding.AppleTouchIconUrl,
+                store.Branding.OgImageUrl,
+                store.Branding.SecondaryColor),
             Status: store.Status.ToString(),
             DeliverySettings: new DeliverySettingsDto(
                 new MoneyDto(store.DeliverySettings.DeliveryFee.Amount, store.DeliverySettings.DeliveryFee.Currency.ToString()),

@@ -5,3 +5,4 @@ export * from './order.models';
 export * from './category.models';
 export * from './customer.models';
 export * from './store-configuration.models';
+export * from './geo-data';

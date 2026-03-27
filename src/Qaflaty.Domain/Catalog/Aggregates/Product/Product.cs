@@ -35,6 +35,9 @@ public sealed class Product : AggregateRoot<ProductId>
     private readonly List<InventoryMovement> _inventoryMovements = [];
     public IReadOnlyList<InventoryMovement> InventoryMovements => _inventoryMovements.AsReadOnly();
 
+    private readonly List<ProductPropertyValue> _propertyValues = [];
+    public IReadOnlyList<ProductPropertyValue> PropertyValues => _propertyValues.AsReadOnly();
+
     public bool HasVariants => _variantOptions.Count > 0;
 
     private Product() : base(ProductId.Empty) { }
@@ -301,5 +304,14 @@ public sealed class Product : AggregateRoot<ProductId>
     public ProductVariant? GetVariant(Guid variantId)
     {
         return _variants.FirstOrDefault(v => v.Id == variantId);
+    }
+
+    /// <summary>Replaces all property values with the provided set.</summary>
+    public Result SetPropertyValues(IEnumerable<ProductPropertyValue> values)
+    {
+        _propertyValues.Clear();
+        _propertyValues.AddRange(values);
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
     }
 }

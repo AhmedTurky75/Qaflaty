@@ -9,6 +9,8 @@ using Qaflaty.Application.Catalog.Commands.ReorderFaqItems;
 using Qaflaty.Application.Catalog.Commands.UpdateFaqItem;
 using Qaflaty.Application.Catalog.Commands.UpdatePageConfiguration;
 using Qaflaty.Application.Catalog.Commands.UpdateSectionConfiguration;
+using Qaflaty.Application.Catalog.Commands.SetPaymentMethodAdjustments;
+using Qaflaty.Application.Catalog.Commands.UpdateSearchSettings;
 using Qaflaty.Application.Catalog.Commands.UpdateStoreConfiguration;
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Catalog.Queries.GetFaqItems;
@@ -46,6 +48,34 @@ public class StoreConfigurationController : ApiController
             request.FooterVariant,
             request.ProductCardVariant,
             request.ProductGridVariant);
+
+        var result = await Sender.Send(command, ct);
+        return HandleResult(result);
+    }
+
+    // Payment Method Adjustments
+    [HttpPut("payment-adjustments")]
+    public async Task<IActionResult> SetPaymentAdjustments(
+        Guid storeId, [FromBody] List<PaymentMethodAdjustmentRequest> adjustments, CancellationToken ct)
+    {
+        var command = new SetPaymentMethodAdjustmentsCommand(storeId, adjustments);
+        var result = await Sender.Send(command, ct);
+        return HandleResult(result);
+    }
+
+    // Search Settings
+    [HttpPut("search-settings")]
+    public async Task<IActionResult> UpdateSearchSettings(
+        Guid storeId, [FromBody] UpdateSearchSettingsRequest request, CancellationToken ct)
+    {
+        var command = new UpdateSearchSettingsCommand(
+            storeId,
+            request.EnableTextSearch,
+            request.EnableCategoryFilter,
+            request.EnablePriceFilter,
+            request.EnablePropertyFilters,
+            request.FilterablePropertyDefinitionIds,
+            request.AllowedSortOptions);
 
         var result = await Sender.Send(command, ct);
         return HandleResult(result);
@@ -182,3 +212,11 @@ public record UpdateFaqItemRequest(
     bool IsPublished);
 
 public record ReorderFaqItemsRequest(List<Guid> OrderedIds);
+
+public record UpdateSearchSettingsRequest(
+    bool EnableTextSearch,
+    bool EnableCategoryFilter,
+    bool EnablePriceFilter,
+    bool EnablePropertyFilters,
+    List<Guid> FilterablePropertyDefinitionIds,
+    List<string> AllowedSortOptions);
