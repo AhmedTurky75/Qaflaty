@@ -5,12 +5,15 @@ export interface CalculateOrderRequest {
   countryCode: number;
   cityId?: number;
   districtId?: number;
+  paymentMethod?: string;
 }
 
 export interface OrderCalculation {
   isDeliveryAvailable: boolean;
   subtotal: Money;
   deliveryFee: Money;
+  paymentAdjustment: Money;
+  paymentAdjustmentLabel?: string;
   total: Money;
 }
 

@@ -14,8 +14,32 @@
         <div class="bg-white rounded-lg shadow p-6 sticky top-24">
           <h2 class="font-semibold text-lg mb-4">Filters</h2>
 
+          <!-- Text Search -->
+          @if (showTextSearch()) {
+            <div class="mb-6">
+              <h3 class="font-medium text-gray-900 mb-3">Search</h3>
+              <div class="flex gap-2">
+                <input
+                  #searchInput
+                  type="text"
+                  [value]="searchQuery()"
+                  (input)="searchQuery.set(searchInput.value)"
+                  (keyup.enter)="onSearchSubmit()"
+                  placeholder="Search products…"
+                  class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                <button
+                  (click)="onSearchSubmit()"
+                  class="px-3 py-2 bg-primary text-white rounded-lg text-sm hover:bg-primary-dark transition-colors"
+                >
+                  Go
+                </button>
+              </div>
+            </div>
+          }
+
           <!-- Categories -->
-          @if (categories().length > 0) {
+          @if (showCategoryFilter() && categories().length > 0) {
             <div class="mb-6">
               <h3 class="font-medium text-gray-900 mb-3">Categories</h3>
               <ul class="space-y-2">
@@ -45,24 +69,53 @@
             </div>
           }
 
+          <!-- Price Range -->
+          @if (showPriceFilter()) {
+            <div class="mb-6">
+              <h3 class="font-medium text-gray-900 mb-3">Price Range</h3>
+              <div class="flex gap-2 items-center mb-2">
+                <input
+                  type="number"
+                  [value]="minPrice() ?? ''"
+                  (input)="onMinPriceInput($event)"
+                  (change)="onPriceChange()"
+                  placeholder="Min"
+                  min="0"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                <span class="text-gray-400 text-sm">–</span>
+                <input
+                  type="number"
+                  [value]="maxPrice() ?? ''"
+                  (input)="onMaxPriceInput($event)"
+                  (change)="onPriceChange()"
+                  placeholder="Max"
+                  min="0"
+                  class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+              </div>
+            </div>
+          }
+
           <!-- Sort By -->
-          <div class="mb-6">
-            <h3 class="font-medium text-gray-900 mb-3">Sort By</h3>
-            <select
-              [(ngModel)]="sortBy"
-              (ngModelChange)="onSortChange()"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option [ngValue]="'Newest'">Newest</option>
-              <option [ngValue]="'NameAsc'">Name (A-Z)</option>
-              <option [ngValue]="'NameDesc'">Name (Z-A)</option>
-              <option [ngValue]="'PriceLowHigh'">Price: Low to High</option>
-              <option [ngValue]="'PriceHighLow'">Price: High to Low</option>
-            </select>
-          </div>
+          @if (visibleSortOptions().length > 0) {
+            <div class="mb-6">
+              <h3 class="font-medium text-gray-900 mb-3">Sort By</h3>
+              <select
+                #sidebarSort
+                [value]="sortBy()"
+                (change)="onSortChange(sidebarSort.value)"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                @for (opt of visibleSortOptions(); track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+          }
 
           <!-- Clear Filters -->
-          @if (selectedCategory() || searchQuery()) {
+          @if (selectedCategory() || searchQuery() || minPrice() || maxPrice()) {
             <button
               (click)="clearFilters()"
               class="w-full px-4 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
@@ -75,28 +128,27 @@
 
       <!-- Products Grid -->
       <main class="flex-1">
-        <!-- Search and Results Count -->
-        <div class="bg-white rounded-lg shadow p-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <span class="text-gray-600">
-              {{ totalCount() }} {{ totalCount() === 1 ? 'product' : 'products' }} found
-            </span>
-          </div>
+        <!-- Results Count -->
+        <div class="bg-white rounded-lg shadow p-4 mb-6 flex items-center justify-between">
+          <span class="text-gray-600">
+            {{ totalCount() }} {{ totalCount() === 1 ? 'product' : 'products' }} found
+          </span>
 
           <!-- Mobile Sort -->
-          <div class="md:hidden">
-            <select
-              [(ngModel)]="sortBy"
-              (ngModelChange)="onSortChange()"
-              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-            >
-              <option [ngValue]="'Newest'">Newest</option>
-              <option [ngValue]="'NameAsc'">Name (A-Z)</option>
-              <option [ngValue]="'NameDesc'">Name (Z-A)</option>
-              <option [ngValue]="'PriceLowHigh'">Price: Low to High</option>
-              <option [ngValue]="'PriceHighLow'">Price: High to Low</option>
-            </select>
-          </div>
+          @if (visibleSortOptions().length > 0) {
+            <div class="md:hidden">
+              <select
+                #mobileSort
+                [value]="sortBy()"
+                (change)="onSortChange(mobileSort.value)"
+                class="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm"
+              >
+                @for (opt of visibleSortOptions(); track opt.value) {
+                  <option [value]="opt.value">{{ opt.label }}</option>
+                }
+              </select>
+            </div>
+          }
         </div>
 
         <!-- Loading State -->
@@ -136,7 +188,6 @@
                   (click)="goToPage(page)"
                   [class.bg-primary]="page === currentPage()"
                   [class.text-white]="page === currentPage()"
-                  [class.hover:bg-primary-dark]="page === currentPage()"
                   class="px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   {{ page }}

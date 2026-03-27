@@ -123,6 +123,8 @@ public record CalculateOrderDto(
     bool IsDeliveryAvailable,
     MoneyDto Subtotal,
     MoneyDto DeliveryFee,
+    MoneyDto PaymentAdjustment,
+    string? PaymentAdjustmentLabel,
     MoneyDto Total
 );
 

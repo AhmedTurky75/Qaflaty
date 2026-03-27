@@ -45,7 +45,8 @@ public class StorefrontOrdersController : ApiController
             CountryCode: request.CountryCode,
             CityId: request.CityId,
             DistrictId: request.DistrictId,
-            Items: request.Items.Select(i => new CalculateOrderItemDto(i.ProductId, i.Quantity, i.VariantId)).ToList());
+            Items: request.Items.Select(i => new CalculateOrderItemDto(i.ProductId, i.Quantity, i.VariantId)).ToList(),
+            PaymentMethod: request.PaymentMethod);
 
         var result = await Sender.Send(query, ct);
         return HandleResult(result);

@@ -140,6 +140,8 @@ export interface StorefrontConfigDto {
   productCardVariant: string;
   productGridVariant: string;
   isUnderMaintenance: boolean;
+  searchSettings: SearchSettings;
+  paymentMethodAdjustments: PaymentMethodAdjustment[];
 }
 
 export interface FaqItemDto {

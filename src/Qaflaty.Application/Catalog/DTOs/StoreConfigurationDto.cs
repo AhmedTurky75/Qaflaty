@@ -76,5 +76,7 @@ public record StorefrontConfigDto(
     string FooterVariant,
     string ProductCardVariant,
     string ProductGridVariant,
-    bool IsUnderMaintenance
+    bool IsUnderMaintenance,
+    SearchSettingsDto SearchSettings,
+    List<PaymentMethodAdjustmentDto> PaymentMethodAdjustments
 );

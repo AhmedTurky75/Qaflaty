@@ -39,7 +39,9 @@ export interface VariantOption {
 export interface ProductFilter {
   categoryId?: string;
   search?: string;
-  sortBy?: ProductSortBy;
+  sortBy?: string;
+  minPrice?: number;
+  maxPrice?: number;
   page?: number;
   pageSize?: number;
 }
@@ -47,9 +49,10 @@ export interface ProductFilter {
 export enum ProductSortBy {
   NameAsc = 'NameAsc',
   NameDesc = 'NameDesc',
-  PriceLowHigh = 'PriceLowHigh',
-  PriceHighLow = 'PriceHighLow',
-  Newest = 'Newest'
+  PriceAsc = 'PriceAsc',
+  PriceDesc = 'PriceDesc',
+  Newest = 'Newest',
+  BestSelling = 'BestSelling'
 }
 
 export interface PaginatedProducts {

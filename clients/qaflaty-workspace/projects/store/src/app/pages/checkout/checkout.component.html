@@ -419,6 +419,14 @@
                   {{ getDisplayDeliveryFee() }}
                 </span>
               </div>
+              @if (getPaymentAdjustmentLabel(); as adjLabel) {
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">{{ adjLabel }}</span>
+                  <span class="font-medium" [class.text-orange-600]="orderCalculation()!.paymentAdjustment.amount > 0">
+                    {{ getDisplayPaymentAdjustment() }}
+                  </span>
+                </div>
+              }
               <div class="flex justify-between text-lg font-bold pt-3 border-t">
                 <span>Total</span>
                 <span>{{ getDisplayTotal() }}</span>

@@ -37,11 +37,16 @@ public record CalculateOrderRequest(
     List<OrderItemRequest> Items,
     int CountryCode = 0,
     int? CityId = null,
-    int? DistrictId = null
+    int? DistrictId = null,
+    string? PaymentMethod = null
 );
 
 public record GetProductsRequest(
     Guid? CategoryId,
+    string? Search = null,
+    string? SortBy = null,
+    decimal? MinPrice = null,
+    decimal? MaxPrice = null,
     int PageNumber = 1,
     int PageSize = 20
 );

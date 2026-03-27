@@ -76,6 +76,11 @@ export class CheckoutComponent implements OnInit {
   checkoutForm!: FormGroup;
   addressForm!: FormGroup;
 
+  // Track last resolved location so we can re-calculate when payment method changes
+  private lastCountryCode = signal<number>(0);
+  private lastCityId = signal<number | undefined>(undefined);
+  private lastDistrictId = signal<number | undefined>(undefined);
+
   ngOnInit(): void {
     this.addressForm = this.fb.group({
       label: ['', [Validators.required, Validators.maxLength(50)]],
@@ -109,6 +114,12 @@ export class CheckoutComponent implements OnInit {
         notes: ['']
       });
     }
+
+    // Re-calculate order totals whenever the payment method changes (COD fee may apply)
+    this.checkoutForm.get('paymentMethod')!.valueChanges.subscribe(() => {
+      const cc = this.lastCountryCode();
+      if (cc > 0) this.calculateOrder(cc, this.lastCityId(), this.lastDistrictId());
+    });
   }
 
   private loadAddresses(): void {
@@ -200,13 +211,17 @@ export class CheckoutComponent implements OnInit {
 
   private calculateOrder(countryCode: number, cityId?: number, districtId?: number): void {
     if (!countryCode) return;
+    this.lastCountryCode.set(countryCode);
+    this.lastCityId.set(cityId);
+    this.lastDistrictId.set(districtId);
     this.calculatingOrder.set(true);
     const items = this.cartService.cart().items.map(i => ({
       productId: i.productId,
       quantity: i.quantity,
       variantId: i.variantId
     }));
-    this.orderService.calculateOrder({ items, countryCode, cityId, districtId }).subscribe({
+    const paymentMethod = this.checkoutForm?.get('paymentMethod')?.value ?? undefined;
+    this.orderService.calculateOrder({ items, countryCode, cityId, districtId, paymentMethod }).subscribe({
       next: (calc) => {
         this.orderCalculation.set(calc);
         this.calculatingOrder.set(false);
@@ -286,6 +301,20 @@ export class CheckoutComponent implements OnInit {
     return Object.entries(attributes).map(([k, v]) => `${k}: ${v}`).join(', ');
   }
 
+  getPaymentAdjustmentLabel(): string | null {
+    const calc = this.orderCalculation();
+    if (!calc || calc.paymentAdjustment.amount === 0) return null;
+    return calc.paymentAdjustmentLabel || 'Payment Fee';
+  }
+
+  getDisplayPaymentAdjustment(): string {
+    const calc = this.orderCalculation();
+    if (!calc) return '';
+    const amt = calc.paymentAdjustment.amount;
+    const sign = amt > 0 ? '+' : '';
+    return `${sign}${amt.toFixed(2)} ${calc.paymentAdjustment.currency}`;
+  }
+
   getDisplayDeliveryFee(): string {
     const calc = this.orderCalculation();
     if (this.calculatingOrder()) return '...';
@@ -295,8 +324,8 @@ export class CheckoutComponent implements OnInit {
   }
 
   getDisplayTotal(): string {
-    const calc = this.orderCalculation();
     if (this.calculatingOrder()) return '...';
+    const calc = this.orderCalculation();
     if (!calc) return `${this.cart().subtotal.amount.toFixed(2)} ${this.cart().subtotal.currency}`;
     return `${calc.total.amount.toFixed(2)} ${calc.total.currency}`;
   }

@@ -35,13 +35,43 @@ public class GetStorefrontProductsQueryHandler : IQueryHandler<GetStorefrontProd
 
         var products = await _productRepository.GetByStoreIdAsync(store.Id, cancellationToken);
 
-        // Filter only active products
         var query = products.Where(p => p.Status == ProductStatus.Active);
 
         if (request.CategoryId.HasValue)
         {
             var categoryId = new CategoryId(request.CategoryId.Value);
             query = query.Where(p => p.CategoryId?.Value == categoryId.Value);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var search = request.Search.ToLowerInvariant();
+            query = query.Where(p =>
+                p.Name.Value.ToLowerInvariant().Contains(search) ||
+                (p.Description != null && p.Description.ToLowerInvariant().Contains(search)));
+        }
+
+        if (request.MinPrice.HasValue)
+            query = query.Where(p => p.Pricing.Price.Amount >= request.MinPrice.Value);
+
+        if (request.MaxPrice.HasValue)
+            query = query.Where(p => p.Pricing.Price.Amount <= request.MaxPrice.Value);
+
+        if (!string.IsNullOrWhiteSpace(request.SortBy) &&
+            Enum.TryParse<ProductSortOption>(request.SortBy, true, out var sortOption))
+        {
+            query = sortOption switch
+            {
+                ProductSortOption.PriceAsc  => query.OrderBy(p => p.Pricing.Price.Amount),
+                ProductSortOption.PriceDesc => query.OrderByDescending(p => p.Pricing.Price.Amount),
+                ProductSortOption.NameAsc   => query.OrderBy(p => p.Name.Value),
+                ProductSortOption.NameDesc  => query.OrderByDescending(p => p.Name.Value),
+                _                           => query.OrderByDescending(p => p.CreatedAt)
+            };
+        }
+        else
+        {
+            query = query.OrderByDescending(p => p.CreatedAt);
         }
 
         var dtos = query.Select(p => new ProductPublicDto(

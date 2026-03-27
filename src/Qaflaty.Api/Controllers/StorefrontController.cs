@@ -71,10 +71,14 @@ public class StorefrontController : ApiController
             return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
 
         var query = new GetStorefrontProductsQuery(
-            _tenantContext.CurrentStore.Slug.Value,
-            request.CategoryId,
-            request.PageNumber,
-            request.PageSize);
+            StoreSlug: _tenantContext.CurrentStore.Slug.Value,
+            CategoryId: request.CategoryId,
+            Search: request.Search,
+            SortBy: request.SortBy,
+            MinPrice: request.MinPrice,
+            MaxPrice: request.MaxPrice,
+            PageNumber: request.PageNumber,
+            PageSize: request.PageSize);
 
         var result = await Sender.Send(query, ct);
         return HandleResult(result);

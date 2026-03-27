@@ -27,6 +27,12 @@ export class ProductService {
       if (filter.sortBy) {
         params = params.set('sortBy', filter.sortBy);
       }
+      if (filter.minPrice !== undefined && filter.minPrice !== null) {
+        params = params.set('minPrice', filter.minPrice.toString());
+      }
+      if (filter.maxPrice !== undefined && filter.maxPrice !== null) {
+        params = params.set('maxPrice', filter.maxPrice.toString());
+      }
       if (filter.page) {
         params = params.set('page', filter.page.toString());
       }
