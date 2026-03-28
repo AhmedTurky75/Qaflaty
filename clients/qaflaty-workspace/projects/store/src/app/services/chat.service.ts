@@ -66,12 +66,12 @@ export class ChatService {
 
   constructor() {
     // Generate or retrieve guest session ID
-    const stored = localStorage.getItem('chat_guest_session');
+    const stored = localStorage.getItem('guest_session_id');
     if (stored) {
       this.guestSessionId = stored;
     } else {
       this.guestSessionId = this.generateGuestSessionId();
-      localStorage.setItem('chat_guest_session', this.guestSessionId);
+      localStorage.setItem('guest_session_id', this.guestSessionId);
     }
   }
 
@@ -370,7 +370,7 @@ export class ChatService {
     await this.disconnectFromHub();
     // Generate a new guest session so the new conversation is not linked to the closed one
     this.guestSessionId = this.generateGuestSessionId();
-    localStorage.setItem('chat_guest_session', this.guestSessionId);
+    localStorage.setItem('guest_session_id', this.guestSessionId);
     this.conversation.set(null);
     this.messages.set([]);
     this.error.set(null);

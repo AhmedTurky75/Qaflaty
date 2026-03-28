@@ -1,14 +1,13 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Storefront.Common;
-using Qaflaty.Application.Storefront.DTOs;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Storefront.Repositories;
 
 namespace Qaflaty.Application.Storefront.Commands.SyncCart;
 
-public class SyncCartCommandHandler : ICommandHandler<SyncCartCommand, CartDto>
+public class SyncCartCommandHandler : ICommandHandler<SyncCartCommand>
 {
     private readonly ICartRepository _cartRepository;
     private readonly ITenantContext _tenantContext;
@@ -19,7 +18,7 @@ public class SyncCartCommandHandler : ICommandHandler<SyncCartCommand, CartDto>
         _tenantContext = tenantContext;
     }
 
-    public async Task<Result<CartDto>> Handle(SyncCartCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(SyncCartCommand request, CancellationToken cancellationToken)
     {
         // Get or create the authenticated customer's cart
         var cart = await CartOwnerResolver.ResolveOrCreateCartAsync(request.Owner, _cartRepository, cancellationToken);
@@ -52,24 +51,9 @@ public class SyncCartCommandHandler : ICommandHandler<SyncCartCommand, CartDto>
 
             var mergeResult = cart.MergeGuestCart(localItems);
             if (mergeResult.IsFailure)
-                return Result.Failure<CartDto>(mergeResult.Error);
+                return Result.Failure(mergeResult.Error);
         }
 
-        var dto = new CartDto(
-            cart.Id.Value,
-            cart.CustomerId?.Value,
-            cart.GuestId,
-            cart.Items.Select(i => new CartItemDto(
-                i.Id,
-                i.ProductId.Value,
-                i.VariantId,
-                i.Quantity,
-                i.AddedAt,
-                i.UpdatedAt)).ToList(),
-            cart.TotalItems,
-            cart.CreatedAt,
-            cart.UpdatedAt);
-
-        return Result.Success(dto);
+        return Result.Success();
     }
 }

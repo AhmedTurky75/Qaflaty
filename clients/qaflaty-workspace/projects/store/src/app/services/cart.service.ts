@@ -1,22 +1,24 @@
-import { Injectable, signal, computed, effect, inject } from '@angular/core';
-import { Cart, CartItem, getCartItemKey } from '../models/cart.model';
+import { Injectable, signal, computed, inject } from '@angular/core';
+import { BackendCart, Cart, CartItem, getCartItemKey } from '../models/cart.model';
 import { Product, ProductVariant } from '../models/product.model';
 import { Money } from '../models/store.model';
 import { CartApiService } from './cart-api.service';
 import { CustomerAuthService } from './customer-auth.service';
+import { GuestSessionService } from './guest-session.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
-  private readonly STORAGE_KEY = 'qaflaty_cart';
-
   private cartItems = signal<CartItem[]>([]);
   private deliveryFee = signal<Money>({ amount: 0, currency: 'SAR' });
   private freeDeliveryThreshold = signal<Money | null>(null);
 
+  cartLoading = signal(false);
+
   private cartApi = inject(CartApiService);
   private authService = inject(CustomerAuthService);
+  private guestSession = inject(GuestSessionService);
 
   private get isLoggedIn(): boolean {
     return this.authService.isAuthenticated();
@@ -63,13 +65,51 @@ export class CartService {
   }));
 
   constructor() {
-    // Load cart from localStorage on init
-    this.loadCart();
+    this.loadFromBackend();
+  }
 
-    // Save cart to localStorage whenever it changes
-    effect(() => {
-      this.saveCart(this.cartItems());
-    });
+  /**
+   * Load cart from backend. Called on app init and after login.
+   */
+  loadFromBackend(): void {
+    this.cartLoading.set(true);
+
+    if (this.isLoggedIn) {
+      this.cartApi.getCart().subscribe(backendCart => {
+        if (backendCart) {
+          this.cartItems.set(this.mapBackendItems(backendCart));
+        }
+        this.cartLoading.set(false);
+      });
+    } else {
+      const guestId = this.guestSession.getGuestId();
+      if (!guestId) {
+        // No guest session yet — cart is empty, nothing to load
+        this.cartLoading.set(false);
+        return;
+      }
+      this.cartApi.getGuestCart().subscribe(backendCart => {
+        if (backendCart) {
+          this.cartItems.set(this.mapBackendItems(backendCart));
+        }
+        this.cartLoading.set(false);
+      });
+    }
+  }
+
+  private mapBackendItems(backendCart: BackendCart): CartItem[] {
+    return backendCart.items.map(i => ({
+      productId: i.productId,
+      productName: i.productName,
+      productSlug: i.productSlug,
+      unitPrice: { amount: i.unitPrice, currency: i.currency },
+      quantity: i.quantity,
+      imageUrl: i.imageUrl,
+      maxQuantity: i.maxQuantity > 0 ? i.maxQuantity : 99,
+      variantId: i.variantId,
+      variantAttributes: i.variantAttributes,
+      variantSku: undefined
+    }));
   }
 
   /**
@@ -82,7 +122,7 @@ export class CartService {
 
   /**
    * Add item to cart (with optional variant support).
-   * Also persists to server when the customer is logged in.
+   * Updates local state immediately and persists to backend.
    */
   addItem(product: Product, quantity: number = 1, variant?: ProductVariant): void {
     const items = [...this.cartItems()];
@@ -91,7 +131,7 @@ export class CartService {
       getCartItemKey(item.productId, item.variantId) === itemKey
     );
 
-    const unitPrice = variant?.priceOverride ?? { amount: product.price, currency: 'EGP' };
+    const unitPrice = variant?.priceOverride ?? { amount: product.price, currency: 'SAR' };
     const maxQty = variant?.quantity ?? 99;
 
     if (existingIndex >= 0) {
@@ -115,17 +155,16 @@ export class CartService {
 
     this.cartItems.set(items);
 
-    // Persist to server (fire-and-forget)
     if (this.isLoggedIn) {
       this.cartApi.addItem(product.id, quantity, variant?.id);
     } else {
+      this.guestSession.getOrCreateGuestId();
       this.cartApi.addGuestItem(product.id, quantity, variant?.id);
     }
   }
 
   /**
    * Update item quantity (supports variants via itemKey).
-   * Also persists to server when the customer is logged in.
    */
   updateQuantity(productId: string, quantity: number, variantId?: string): void {
     const targetKey = getCartItemKey(productId, variantId);
@@ -147,7 +186,6 @@ export class CartService {
 
   /**
    * Remove item from cart (supports variants via itemKey).
-   * Also persists to server when the customer is logged in.
    */
   removeItem(productId: string, variantId?: string): void {
     const targetKey = getCartItemKey(productId, variantId);
@@ -165,7 +203,6 @@ export class CartService {
 
   /**
    * Clear cart.
-   * Also clears on server when the customer is logged in.
    */
   clear(): void {
     this.cartItems.set([]);
@@ -195,31 +232,5 @@ export class CartService {
     return this.cartItems().some(item =>
       getCartItemKey(item.productId, item.variantId) === targetKey
     );
-  }
-
-  /**
-   * Save cart to localStorage
-   */
-  private saveCart(items: CartItem[]): void {
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(items));
-    } catch (error) {
-      console.error('Failed to save cart to localStorage:', error);
-    }
-  }
-
-  /**
-   * Load cart from localStorage
-   */
-  private loadCart(): void {
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        const items = JSON.parse(stored) as CartItem[];
-        this.cartItems.set(items);
-      }
-    } catch (error) {
-      console.error('Failed to load cart from localStorage:', error);
-    }
   }
 }

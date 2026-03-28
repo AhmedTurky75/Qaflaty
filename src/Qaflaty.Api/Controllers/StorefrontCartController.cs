@@ -38,7 +38,7 @@ public class StorefrontCartController : ApiController
             .ToList();
 
         var result = await Sender.Send(new SyncCartCommand(owner, guestItems, request.GuestSessionId), ct);
-        return HandleResult(result);
+        return result.IsSuccess ? NoContent() : HandleResult(result);
     }
 
     [HttpPost("items")]

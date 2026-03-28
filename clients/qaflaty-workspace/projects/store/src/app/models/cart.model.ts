@@ -1,5 +1,35 @@
 import { Money } from './store.model';
 
+// ── Backend API response types ────────────────────────────────────────────────
+
+export interface BackendCartItem {
+  id: string;
+  productId: string;
+  productName: string;
+  productSlug: string;
+  variantId?: string;
+  variantAttributes?: Record<string, string>;
+  unitPrice: number;
+  currency: string;
+  quantity: number;
+  imageUrl?: string;
+  maxQuantity: number;
+  addedAt: string;
+  updatedAt: string;
+}
+
+export interface BackendCart {
+  id: string;
+  customerId?: string;
+  guestId?: string;
+  items: BackendCartItem[];
+  totalItems: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Local cart state ───────────────────────────────────────────────────────────
+
 export interface CartItem {
   productId: string;
   productName: string;

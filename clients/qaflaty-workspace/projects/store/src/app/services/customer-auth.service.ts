@@ -219,21 +219,13 @@ export class CustomerAuthService {
   }
 
   private syncCart(): void {
-    const guestCartJson = localStorage.getItem('qaflaty_cart');
     const guestSessionId = this.guestSession.getGuestId();
-    if (!guestCartJson && !guestSessionId) return;
+    if (!guestSessionId) return;
 
-    try {
-      const guestItems: any[] = guestCartJson ? JSON.parse(guestCartJson) : [];
-      const syncRequest = {
-        guestItems: guestItems.map((item: any) => ({
-          productId: item.productId, variantId: item.variantId ?? null, quantity: item.quantity
-        })),
-        guestSessionId
-      };
-      this.http.post(`${environment.apiUrl}/storefront/cart/sync`, syncRequest, { withCredentials: true }).subscribe();
-      localStorage.removeItem('qaflaty_cart');
-      this.guestSession.clearGuestId();
-    } catch (e) { console.error('Failed to sync cart', e); }
+    // Guest cart is persisted on the backend — send the session ID so the server
+    // merges it into the authenticated cart. No localStorage items to include.
+    const syncRequest = { guestItems: [], guestSessionId };
+    this.http.post(`${environment.apiUrl}/storefront/cart/sync`, syncRequest, { withCredentials: true }).subscribe();
+    this.guestSession.clearGuestId();
   }
 }

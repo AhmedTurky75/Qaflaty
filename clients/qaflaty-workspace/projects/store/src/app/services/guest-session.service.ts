@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class GuestSessionService {
-  private readonly KEY = 'qaflaty_guest_id';
+  private readonly KEY = 'guest_session_id';
 
   /**
    * Returns the existing guest UUID or generates a new one and persists it.

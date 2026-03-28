@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, EMPTY } from 'rxjs';
+import { catchError, EMPTY, Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { BackendCart } from '../models/cart.model';
 
 const BASE       = `${environment.apiUrl}/storefront/cart`;
 const GUEST_BASE = `${environment.apiUrl}/storefront/guest-cart`;
@@ -9,6 +10,20 @@ const GUEST_BASE = `${environment.apiUrl}/storefront/guest-cart`;
 @Injectable({ providedIn: 'root' })
 export class CartApiService {
   private http = inject(HttpClient);
+
+  // ── Fetch cart (returns Observable) ──────────────────────────────────────
+
+  getCart(): Observable<BackendCart | null> {
+    return this.http.get<BackendCart>(BASE).pipe(
+      catchError(() => of(null))
+    );
+  }
+
+  getGuestCart(): Observable<BackendCart | null> {
+    return this.http.get<BackendCart>(GUEST_BASE).pipe(
+      catchError(() => of(null))
+    );
+  }
 
   // ── Authenticated cart (fire-and-forget) ──────────────────────────────
 
