@@ -125,28 +125,19 @@
       <!-- Cart Summary -->
       <div class="border-t p-4 space-y-3">
         <!-- Subtotal -->
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-600">Subtotal</span>
-          <span class="font-medium">{{ cart().subtotal.amount.toFixed(2) }} {{ cart().subtotal.currency }}</span>
+        <div class="flex justify-between text-lg font-semibold pt-1">
+          <span>Subtotal</span>
+          @if (calculationLoading()) {
+            <span class="text-gray-400 text-sm animate-pulse">Calculating...</span>
+          } @else if (calculation(); as calc) {
+            <span>{{ calc.subtotal.amount.toFixed(2) }} {{ calc.subtotal.currency }}</span>
+          } @else {
+            <span>{{ cart().subtotal.amount.toFixed(2) }} {{ cart().subtotal.currency }}</span>
+          }
         </div>
 
-        <!-- Delivery Fee -->
-        <div class="flex justify-between text-sm">
-          <span class="text-gray-600">Delivery Fee</span>
-          <span class="font-medium">
-            @if (cart().deliveryFee.amount === 0) {
-              <span class="text-green-600">FREE</span>
-            } @else {
-              {{ cart().deliveryFee.amount.toFixed(2) }} {{ cart().deliveryFee.currency }}
-            }
-          </span>
-        </div>
-
-        <!-- Total -->
-        <div class="flex justify-between text-lg font-semibold pt-3 border-t">
-          <span>Total</span>
-          <span>{{ cart().total.amount.toFixed(2) }} {{ cart().total.currency }}</span>
-        </div>
+        <!-- Delivery note -->
+        <p class="text-xs text-gray-500">Delivery fee calculated at checkout</p>
 
         <!-- Checkout Button -->
         <button
