@@ -1,5 +1,5 @@
 import { Component, inject, signal, computed } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgClass } from '@angular/common';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
@@ -13,7 +13,7 @@ import { ProductCardComponent } from '../../components/products/product-card.com
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ProductCardComponent],
+  imports: [CommonModule, NgClass, RouterModule, FormsModule, ProductCardComponent],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
@@ -64,6 +64,12 @@ export class ProductListComponent {
   totalCount = signal<number>(0);
   totalPages = signal<number>(0);
   pageSize = 12;
+  sidebarOpen = signal<boolean>(false);
+
+  activeFiltersCount = computed(() =>
+    [this.selectedCategory(), this.searchQuery() || null, this.minPrice(), this.maxPrice()]
+      .filter(v => v !== null).length
+  );
 
   currentCategory = computed(() => {
     const catId = this.selectedCategory();
@@ -176,6 +182,16 @@ export class ProductListComponent {
 
   clearFilters() {
     this.router.navigate(['/products']);
+  }
+
+  clearMinPrice() {
+    this.minPrice.set(null);
+    this.onPriceChange();
+  }
+
+  clearMaxPrice() {
+    this.maxPrice.set(null);
+    this.onPriceChange();
   }
 
   private updateQueryParams(params: any) {

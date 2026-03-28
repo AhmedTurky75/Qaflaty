@@ -7,6 +7,7 @@ export interface MerchantDto {
   username: string;
   fullName: string;
   phone?: string;
+  phoneCountryCode?: string;
   isVerified: boolean;
   createdAt: string;
 }
@@ -49,6 +50,7 @@ export interface UpdateProfileRequest {
   firstName: string;
   lastName: string;
   phone?: string;
+  phoneCountryCode?: string;
 }
 
 // Customer Auth
@@ -60,7 +62,9 @@ export interface StoreCustomerDto {
   username: string;
   fullName: string;
   phone?: string;
+  phoneCountryCode?: string;
   secondaryPhone?: string;
+  secondaryPhoneCountryCode?: string;
   isVerified: boolean;
   createdAt: string;
   addresses: CustomerAddressDto[];

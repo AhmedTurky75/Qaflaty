@@ -56,14 +56,12 @@
 
       <!-- Phone -->
       <div>
-        <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
-        <input id="phone" type="tel" formControlName="phone" autocomplete="tel"
-          placeholder="+966 50 123 4567"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-          [class.border-red-300]="phone?.invalid && phone?.touched" />
-        @if (phone?.invalid && phone?.touched) {
-          <p class="mt-1 text-sm text-red-600">Please enter a valid phone number</p>
-        }
+        <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+        <div class="mt-1">
+          <lib-phone-input formControlName="phone"
+            (regionCodeChange)="profileForm.get('phoneCountryCode')?.setValue($event)">
+          </lib-phone-input>
+        </div>
       </div>
 
       @if (success()) {

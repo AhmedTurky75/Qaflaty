@@ -156,7 +156,7 @@ public class StorefrontAuthController : ApiController
         if (customerId == null)
             return Unauthorized();
 
-        var command = new UpdateCustomerProfileCommand(customerId.Value, request.FirstName, request.LastName, request.Phone, request.SecondaryPhone);
+        var command = new UpdateCustomerProfileCommand(customerId.Value, request.FirstName, request.LastName, request.Phone, request.PhoneCountryCode, request.SecondaryPhone, request.SecondaryPhoneCountryCode);
         var result = await Sender.Send(command, ct);
 
         if (result.IsFailure)
@@ -177,4 +177,4 @@ public record RegisterCustomerRequest(
 public record LoginCustomerRequest(string EmailOrUsername, string Password);
 public record VerifyCustomerOtpRequest(string Email, string OtpCode);
 public record ResendCustomerOtpRequest(string Email);
-public record UpdateCustomerProfileRequest(string FirstName, string LastName, string? Phone, string? SecondaryPhone = null);
+public record UpdateCustomerProfileRequest(string FirstName, string LastName, string? Phone, string? SecondaryPhone = null, string? PhoneCountryCode = null, string? SecondaryPhoneCountryCode = null);

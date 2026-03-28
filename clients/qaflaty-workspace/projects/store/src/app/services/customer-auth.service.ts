@@ -13,7 +13,9 @@ export interface StoreCustomer {
   username: string;
   fullName: string;
   phone?: string;
+  phoneCountryCode?: string;
   secondaryPhone?: string;
+  secondaryPhoneCountryCode?: string;
   isVerified: boolean;
   createdAt: string;
 }
@@ -157,7 +159,7 @@ export class CustomerAuthService {
     );
   }
 
-  updateProfile(profile: { firstName: string; lastName: string; phone?: string; secondaryPhone?: string }): Observable<void> {
+  updateProfile(profile: { firstName: string; lastName: string; phone?: string; phoneCountryCode?: string; secondaryPhone?: string; secondaryPhoneCountryCode?: string }): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/profile`, profile, { withCredentials: true }).pipe(
       tap(() => {
         const current = this._customer();
@@ -167,7 +169,9 @@ export class CustomerAuthService {
           lastName: profile.lastName,
           fullName: `${profile.firstName} ${profile.lastName}`,
           phone: profile.phone,
-          secondaryPhone: profile.secondaryPhone
+          phoneCountryCode: profile.phoneCountryCode,
+          secondaryPhone: profile.secondaryPhone,
+          secondaryPhoneCountryCode: profile.secondaryPhoneCountryCode
         });
       })
     );

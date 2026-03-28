@@ -10,5 +10,7 @@ public record StoreCustomerDto(
     string? Phone,
     string? SecondaryPhone,
     bool IsVerified,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? PhoneCountryCode = null,
+    string? SecondaryPhoneCountryCode = null
 );

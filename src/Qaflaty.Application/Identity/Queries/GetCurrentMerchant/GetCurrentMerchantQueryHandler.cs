@@ -38,6 +38,7 @@ public class GetCurrentMerchantQueryHandler : IQueryHandler<GetCurrentMerchantQu
             merchant.Username,
             merchant.Phone?.Value,
             merchant.IsVerified,
-            merchant.CreatedAt));
+            merchant.CreatedAt,
+            PhoneCountryCode: merchant.Phone?.CountryCode));
     }
 }

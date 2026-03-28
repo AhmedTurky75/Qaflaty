@@ -144,7 +144,7 @@ public class AuthController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request, CancellationToken ct)
     {
-        var command = new UpdateMerchantProfileCommand(request.FirstName, request.LastName, request.Phone);
+        var command = new UpdateMerchantProfileCommand(request.FirstName, request.LastName, request.Phone, request.PhoneCountryCode);
         var result = await Sender.Send(command, ct);
         return HandleResult(result);
     }
@@ -199,4 +199,4 @@ public record VerifyMerchantOtpRequest(string Email, string OtpCode);
 public record ResendMerchantOtpRequest(string Email);
 public record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public record SelectStoreRequest(Guid StoreId);
-public record UpdateProfileRequest(string FirstName, string LastName, string? Phone);
+public record UpdateProfileRequest(string FirstName, string LastName, string? Phone, string? PhoneCountryCode = null);

@@ -9,5 +9,6 @@ public record MerchantDto(
     string Username,
     string? Phone,
     bool IsVerified,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string? PhoneCountryCode = null
 );

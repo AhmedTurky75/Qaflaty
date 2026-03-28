@@ -2,11 +2,12 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../../core/services/auth.service';
+import { PhoneInputComponent } from 'shared';
 
 @Component({
   selector: 'app-profile-settings',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, PhoneInputComponent],
   templateUrl: './profile-settings.component.html'
 })
 export class ProfileSettingsComponent implements OnInit {
@@ -24,15 +25,16 @@ export class ProfileSettingsComponent implements OnInit {
       lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
       username: [{ value: '', disabled: true }],
       email: [{ value: '', disabled: true }],
-      phone: ['', [Validators.pattern(/^[\d\s\-\+\(\)]+$/)]]
+      phone: [''],
+      phoneCountryCode: ['SA']
     });
 
     const m = this.authService.currentMerchant();
     if (m) {
-      this.profileForm.patchValue({ firstName: m.firstName, lastName: m.lastName, username: m.username, email: m.email, phone: m.phone || '' });
+      this.profileForm.patchValue({ firstName: m.firstName, lastName: m.lastName, username: m.username, email: m.email, phone: m.phone || '', phoneCountryCode: m.phoneCountryCode || 'SA' });
     } else {
       this.authService.getCurrentMerchant().subscribe(loaded => {
-        this.profileForm.patchValue({ firstName: loaded.firstName, lastName: loaded.lastName, username: loaded.username, email: loaded.email, phone: loaded.phone || '' });
+        this.profileForm.patchValue({ firstName: loaded.firstName, lastName: loaded.lastName, username: loaded.username, email: loaded.email, phone: loaded.phone || '', phoneCountryCode: loaded.phoneCountryCode || 'SA' });
       });
     }
   }
@@ -46,10 +48,12 @@ export class ProfileSettingsComponent implements OnInit {
     this.success.set(false);
     this.error.set(null);
 
+    const phone = this.profileForm.get('phone')?.value || undefined;
     this.authService.updateProfile({
       firstName: this.profileForm.get('firstName')!.value,
       lastName: this.profileForm.get('lastName')!.value,
-      phone: this.profileForm.get('phone')?.value || undefined
+      phone,
+      phoneCountryCode: phone ? (this.profileForm.get('phoneCountryCode')?.value || undefined) : undefined
     }).subscribe({
       next: () => {
         this.success.set(true);

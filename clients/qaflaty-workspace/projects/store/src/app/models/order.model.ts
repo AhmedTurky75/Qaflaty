@@ -28,6 +28,7 @@ export interface CreateOrderRequest {
 export interface CustomerInfo {
   fullName: string;
   phone: string;
+  phoneCountryCode: string;
   email: string;
 }
 

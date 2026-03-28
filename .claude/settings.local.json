@@ -158,7 +158,8 @@
       "Bash(cmd /c \"dotnet ef migrations list --project src\\\\Qaflety.Infrastructure\\\\Qaflety.Infrastructure.csproj --startup-project src\\\\Qaflety.Api\\\\Qaflety.Api.csproj\" 2>&1)",
       "Bash(cmd /c \"dir D:\\\\Projects\\\\Qafilaty\\\\src\\\\Qaflety.Infrastructure\\\\Migrations 2>&1\")",
       "Bash(cmd /c \"dir D:\\\\Projects\\\\Qafilaty\\\\src\\\\Qaflaty.Infrastructure\\\\Migrations 2>&1\")",
-      "Bash(xargs head:*)"
+      "Bash(xargs head:*)",
+      "Bash(head -20 grep -n \"Phone\\\\|profile\\\\|Profile\\\\|UpdateCustomer\" /d/Projects/Qafilaty/src/Qaflaty.Api/Controllers/StorefrontAuthController.cs)"
     ],
     "deny": [],
     "ask": [],

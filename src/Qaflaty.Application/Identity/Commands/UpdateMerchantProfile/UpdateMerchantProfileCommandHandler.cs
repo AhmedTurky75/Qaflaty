@@ -41,7 +41,7 @@ public class UpdateMerchantProfileCommandHandler : ICommandHandler<UpdateMerchan
         PhoneNumber? phone = null;
         if (!string.IsNullOrWhiteSpace(request.Phone))
         {
-            var phoneResult = PhoneNumber.Create(request.Phone, request.PhoneCountryCode ?? "SA");
+            var phoneResult = PhoneNumber.Create(request.Phone, request.PhoneCountryCode ?? string.Empty);
             if (phoneResult.IsFailure)
                 return Result.Failure<MerchantDto>(phoneResult.Error);
             phone = phoneResult.Value;
@@ -59,6 +59,7 @@ public class UpdateMerchantProfileCommandHandler : ICommandHandler<UpdateMerchan
             merchant.Username,
             merchant.Phone?.Value,
             merchant.IsVerified,
-            merchant.CreatedAt));
+            merchant.CreatedAt,
+            PhoneCountryCode: merchant.Phone?.CountryCode));
     }
 }

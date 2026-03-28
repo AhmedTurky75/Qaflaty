@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CustomerAuthService } from '../../../services/customer-auth.service';
+import { PhoneInputComponent } from 'shared';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, PhoneInputComponent],
   template: `
     <div class="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div class="max-w-3xl mx-auto">
@@ -125,15 +126,21 @@ import { CustomerAuthService } from '../../../services/customer-auth.service';
               </div>
 
               <div>
-                <label for="phone" class="block text-sm font-medium text-gray-700">رقم الهاتف (اختياري)</label>
-                <input id="phone" type="tel" formControlName="phone" placeholder="05xxxxxxxx"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <label class="block text-sm font-medium text-gray-700">رقم الهاتف (اختياري)</label>
+                <div class="mt-1">
+                  <lib-phone-input formControlName="phone"
+                    (regionCodeChange)="profileForm.get('phoneCountryCode')?.setValue($event)">
+                  </lib-phone-input>
+                </div>
               </div>
 
               <div>
-                <label for="secondaryPhone" class="block text-sm font-medium text-gray-700">رقم هاتف إضافي (اختياري)</label>
-                <input id="secondaryPhone" type="tel" formControlName="secondaryPhone" placeholder="05xxxxxxxx"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+                <label class="block text-sm font-medium text-gray-700">رقم هاتف إضافي (اختياري)</label>
+                <div class="mt-1">
+                  <lib-phone-input formControlName="secondaryPhone"
+                    (regionCodeChange)="profileForm.get('secondaryPhoneCountryCode')?.setValue($event)">
+                  </lib-phone-input>
+                </div>
               </div>
 
               <div class="flex gap-3 pt-4">
@@ -180,7 +187,9 @@ export class ProfileComponent implements OnInit {
     username: [{ value: '', disabled: true }],
     email: [{ value: '', disabled: true }],
     phone: [''],
-    secondaryPhone: ['']
+    phoneCountryCode: ['SA'],
+    secondaryPhone: [''],
+    secondaryPhoneCountryCode: ['SA']
   });
 
   ngOnInit(): void {
@@ -195,7 +204,9 @@ export class ProfileComponent implements OnInit {
       username: customer.username,
       email: customer.email,
       phone: customer.phone || '',
-      secondaryPhone: customer.secondaryPhone || ''
+      phoneCountryCode: customer.phoneCountryCode || 'SA',
+      secondaryPhone: customer.secondaryPhone || '',
+      secondaryPhoneCountryCode: customer.secondaryPhoneCountryCode || 'SA'
     });
   }
 
@@ -215,7 +226,9 @@ export class ProfileComponent implements OnInit {
         firstName: customer.firstName,
         lastName: customer.lastName,
         phone: customer.phone || '',
-        secondaryPhone: customer.secondaryPhone || ''
+        phoneCountryCode: customer.phoneCountryCode || 'SA',
+        secondaryPhone: customer.secondaryPhone || '',
+        secondaryPhoneCountryCode: customer.secondaryPhoneCountryCode || 'SA'
       });
     }
   }
@@ -226,8 +239,15 @@ export class ProfileComponent implements OnInit {
     this.errorMessage.set(null);
     this.successMessage.set(null);
 
-    const { firstName, lastName, phone, secondaryPhone } = this.profileForm.value;
-    this.authService.updateProfile({ firstName, lastName, phone: phone || undefined, secondaryPhone: secondaryPhone || undefined }).subscribe({
+    const { firstName, lastName, phone, phoneCountryCode, secondaryPhone, secondaryPhoneCountryCode } = this.profileForm.value;
+    this.authService.updateProfile({
+      firstName,
+      lastName,
+      phone: phone || undefined,
+      phoneCountryCode: phone ? (phoneCountryCode || undefined) : undefined,
+      secondaryPhone: secondaryPhone || undefined,
+      secondaryPhoneCountryCode: secondaryPhone ? (secondaryPhoneCountryCode || undefined) : undefined
+    }).subscribe({
       next: () => {
         this.isLoading.set(false);
         this.isEditing.set(false);

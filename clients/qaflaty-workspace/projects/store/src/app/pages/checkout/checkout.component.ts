@@ -9,12 +9,12 @@ import { StoreService } from '../../services/store.service';
 import { CustomerAuthService, CustomerAddress } from '../../services/customer-auth.service';
 import { CreateOrderRequest, OrderCalculation, PaymentMethod } from '../../models/order.model';
 import { LocationPickerComponent, PickedLocation } from '../../components/shared/location-picker.component';
-import { COUNTRIES, CITIES, DISTRICTS, Country, City, District } from 'shared';
+import { COUNTRIES, CITIES, DISTRICTS, Country, City, District, PhoneInputComponent } from 'shared';
 
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule, LocationPickerComponent],
+  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule, LocationPickerComponent, PhoneInputComponent],
   templateUrl: './checkout.component.html',
   styleUrls: ['./checkout.component.css']
 })
@@ -94,7 +94,8 @@ export class CheckoutComponent implements OnInit {
 
     if (this.authService.isAuthenticated()) {
       this.checkoutForm = this.fb.group({
-        additionalPhone: ['', [Validators.pattern(/^(\+966|966|05)[0-9]{8,9}$/)]],
+        additionalPhone: [''],
+        additionalPhoneCountryCode: ['SA'],
         additionalInstructions: [''],
         paymentMethod: ['CashOnDelivery', [Validators.required]],
         notes: ['']
@@ -103,7 +104,8 @@ export class CheckoutComponent implements OnInit {
     } else {
       this.checkoutForm = this.fb.group({
         fullName: ['', [Validators.required, Validators.minLength(2)]],
-        phone: ['', [Validators.required, Validators.pattern(/^(\+966|966|05)[0-9]{8,9}$/)]],
+        phone: ['', [Validators.required]],
+        phoneCountryCode: ['SA'],
         email: ['', [Validators.required, Validators.email]],
         countryCode: ['', [Validators.required]],
         cityId: ['', [Validators.required]],
@@ -359,10 +361,15 @@ export class CheckoutComponent implements OnInit {
     let request: CreateOrderRequest;
 
     if (isAuth && customer && selectedAddr) {
+      const contactPhone = formValue.additionalPhone || customer.phone || '';
+      const contactPhoneCountryCode = formValue.additionalPhone
+        ? (formValue.additionalPhoneCountryCode || 'SA')
+        : (customer.phoneCountryCode || this.regionFromE164(customer.phone));
       request = {
         customerInfo: {
           fullName: customer.fullName,
-          phone: formValue.additionalPhone || customer.phone || '',
+          phone: contactPhone,
+          phoneCountryCode: contactPhoneCountryCode,
           email: customer.email
         },
         deliveryAddress: {
@@ -393,6 +400,7 @@ export class CheckoutComponent implements OnInit {
         customerInfo: {
           fullName: formValue.fullName,
           phone: formValue.phone,
+          phoneCountryCode: formValue.phoneCountryCode || 'SA',
           email: formValue.email
         },
         deliveryAddress: {
@@ -415,7 +423,7 @@ export class CheckoutComponent implements OnInit {
       };
     }
 
-    this.orderService.placeOrder(request).subscribe({
+    this.orderService.placeOrder(request!).subscribe({
       next: (response) => {
         this.cartService.clear();
         const emailForVerify = isAuth ? customer!.email : formValue.email;
@@ -428,5 +436,12 @@ export class CheckoutComponent implements OnInit {
         this.submitting.set(false);
       }
     });
+  }
+
+  /** Infer ISO alpha-2 region code from an E.164 phone number using the known dial-code list. */
+  private regionFromE164(e164: string | undefined): string {
+    if (!e164 || !e164.startsWith('+')) return 'SA';
+    const sorted = [...COUNTRIES].sort((a, b) => b.dialCode.length - a.dialCode.length);
+    return sorted.find(c => e164.startsWith(c.dialCode))?.isoAlpha2 ?? 'SA';
   }
 }

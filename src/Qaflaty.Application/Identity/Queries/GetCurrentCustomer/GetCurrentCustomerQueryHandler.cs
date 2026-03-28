@@ -38,6 +38,8 @@ public class GetCurrentCustomerQueryHandler : IQueryHandler<GetCurrentCustomerQu
             customer.Phone?.Value,
             customer.SecondaryPhone?.Value,
             customer.IsVerified,
-            customer.CreatedAt));
+            customer.CreatedAt,
+            PhoneCountryCode: customer.Phone?.CountryCode,
+            SecondaryPhoneCountryCode: customer.SecondaryPhone?.CountryCode));
     }
 }
