@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { OrderService, OrderFilters } from '../services/order.service';
 import { OrderCardComponent } from '../components/order-card/order-card.component';
-import { OrderDto, OrderStatus } from 'shared';
+import { OrderSummaryDto, OrderStatus } from 'shared';
 
 @Component({
   selector: 'app-order-list',
@@ -17,7 +17,7 @@ export class OrderListComponent implements OnInit {
   private orderService = inject(OrderService);
   private router = inject(Router);
 
-  orders = signal<OrderDto[]>([]);
+  orders = signal<OrderSummaryDto[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
 
@@ -80,7 +80,7 @@ export class OrderListComponent implements OnInit {
     this.orderService.getOrders(storeId, filters).subscribe({
       next: (response) => {
         this.orders.set(response.items);
-        this.totalOrders.set(response.total);
+        this.totalOrders.set(response.totalCount);
         this.loading.set(false);
       },
       error: (err) => {

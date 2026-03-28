@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { CustomerService } from '../services/customer.service';
-import { CustomerDto, OrderDto } from 'shared';
+import { CustomerDto, OrderSummaryDto } from 'shared';
 import { OrderCardComponent } from '../../orders/components/order-card/order-card.component';
 
 @Component({
@@ -20,7 +20,7 @@ export class CustomerDetailComponent implements OnInit {
   private router = inject(Router);
 
   customer = signal<CustomerDto | null>(null);
-  orders = signal<OrderDto[]>([]);
+  orders = signal<OrderSummaryDto[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
 

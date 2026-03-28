@@ -12,15 +12,18 @@ namespace Qaflaty.Application.Ordering.Queries.GetOrderById;
 public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDto>
 {
     private readonly IOrderRepository _orderRepository;
+    private readonly ICustomerRepository _customerRepository;
     private readonly IStoreRepository _storeRepository;
     private readonly ICurrentUserService _currentUserService;
 
     public GetOrderByIdQueryHandler(
         IOrderRepository orderRepository,
+        ICustomerRepository customerRepository,
         IStoreRepository storeRepository,
         ICurrentUserService currentUserService)
     {
         _orderRepository = orderRepository;
+        _customerRepository = customerRepository;
         _storeRepository = storeRepository;
         _currentUserService = currentUserService;
     }
@@ -36,12 +39,21 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
         if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
             return Result.Failure<OrderDto>(Error.Unauthorized);
 
+        var customer = await _customerRepository.GetByIdAsync(order.CustomerId, cancellationToken);
+        var customerSnapshot = customer != null
+            ? new CustomerSnapshotDto(
+                customer.Contact.FullName.FullName,
+                customer.Contact.Phone.Value,
+                customer.Contact.Email?.Value)
+            : new CustomerSnapshotDto("Unknown", "-", null);
+
         return Result.Success(new OrderDto(
             order.Id.Value,
             order.StoreId.Value,
             order.CustomerId.Value,
             order.OrderNumber.Value,
             order.Status.ToString(),
+            customerSnapshot,
             order.Items.Select(i => new OrderItemDto(
                 i.Id.Value,
                 i.ProductId.Value,

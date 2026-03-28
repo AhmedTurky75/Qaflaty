@@ -8,7 +8,7 @@ import {
   CustomerFilters,
   PaginatedCustomers,
   UpdateCustomerNotesRequest,
-  OrderDto
+  OrderSummaryDto
 } from 'shared';
 
 @Injectable({
@@ -44,8 +44,8 @@ export class CustomerService {
     return this.http.get<CustomerDto>(`${this.API_URL}/${id}`);
   }
 
-  getCustomerOrders(customerId: string): Observable<OrderDto[]> {
-    return this.http.get<OrderDto[]>(`${this.API_URL}/${customerId}/orders`);
+  getCustomerOrders(customerId: string): Observable<OrderSummaryDto[]> {
+    return this.http.get<OrderSummaryDto[]>(`${this.API_URL}/${customerId}/orders`);
   }
 
   updateCustomerNotes(customerId: string, request: UpdateCustomerNotesRequest): Observable<CustomerDto> {

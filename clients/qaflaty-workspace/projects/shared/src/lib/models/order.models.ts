@@ -1,11 +1,31 @@
 import { Money } from './store.models';
 
+export interface OrderSummaryDto {
+  id: string;
+  orderNumber: string;
+  status: OrderStatus;
+  customerName: string;
+  customerPhone: string;
+  total: number;
+  itemCount: number;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  createdAt: string;
+}
+
+export interface CustomerSnapshot {
+  fullName: string;
+  phone: string;
+  email?: string;
+}
+
 export interface OrderDto {
   id: string;
   storeId: string;
   customerId: string;
   orderNumber: string;
   status: OrderStatus;
+  customer: CustomerSnapshot;
   items: OrderItemDto[];
   pricing: OrderPricing;
   payment: PaymentInfo;

@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { OrderDto } from 'shared';
+import { OrderSummaryDto } from 'shared';
 import { StatusBadgeComponent } from '../status-badge/status-badge.component';
 
 @Component({
@@ -11,13 +11,8 @@ import { StatusBadgeComponent } from '../status-badge/status-badge.component';
   styleUrls: ['./order-card.component.scss']
 })
 export class OrderCardComponent {
-  @Input({ required: true }) order!: OrderDto;
+  @Input({ required: true }) order!: OrderSummaryDto;
   @Output() viewDetails = new EventEmitter<string>();
-
-  get customerName(): string {
-    // Extract customer name from the first status change or use a placeholder
-    return 'Customer';
-  }
 
   formatDate(date: string): string {
     return new Date(date).toLocaleDateString('en-US', {

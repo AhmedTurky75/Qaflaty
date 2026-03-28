@@ -7,7 +7,7 @@ import { getCartItemKey } from '../../models/cart.model';
 import { OrderService } from '../../services/order.service';
 import { StoreService } from '../../services/store.service';
 import { CustomerAuthService, CustomerAddress } from '../../services/customer-auth.service';
-import { CreateOrderRequest, OrderCalculation, PaymentMethod } from '../../models/order.model';
+import { CreateOrderRequest, OrderCalculation, OrderStatus, PaymentMethod } from '../../models/order.model';
 import { LocationPickerComponent, PickedLocation } from '../../components/shared/location-picker.component';
 import { COUNTRIES, CITIES, DISTRICTS, Country, City, District, PhoneInputComponent } from 'shared';
 
@@ -426,10 +426,16 @@ export class CheckoutComponent implements OnInit {
     this.orderService.placeOrder(request!).subscribe({
       next: (response) => {
         this.cartService.clear();
-        const emailForVerify = isAuth ? customer!.email : formValue.email;
-        this.router.navigate(['/order-verify', response.orderNumber], {
-          queryParams: { email: emailForVerify }
-        });
+        if (response.status === OrderStatus.Pending) {
+          // OTP verification required
+          const emailForVerify = isAuth ? customer!.email : formValue.email;
+          this.router.navigate(['/order-verify', response.orderNumber], {
+            queryParams: { email: emailForVerify }
+          });
+        } else {
+          // Order auto-confirmed — go straight to confirmation
+          this.router.navigate(['/order-confirmation', response.orderNumber]);
+        }
       },
       error: (error) => {
         this.errorMessage.set(error.error?.message || 'Failed to place order. Please try again.');

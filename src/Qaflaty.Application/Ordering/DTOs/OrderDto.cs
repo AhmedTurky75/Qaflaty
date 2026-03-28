@@ -57,6 +57,13 @@ public record OrderNotesDto(
     string? MerchantNotes
 );
 
+// --- Customer snapshot (data as captured at order placement) ---
+public record CustomerSnapshotDto(
+    string FullName,
+    string Phone,
+    string? Email
+);
+
 // --- Full order DTO (merchant view) ---
 public record OrderDto(
     Guid Id,
@@ -64,6 +71,7 @@ public record OrderDto(
     Guid CustomerId,
     string OrderNumber,
     string Status,
+    CustomerSnapshotDto Customer,
     List<OrderItemDto> Items,
     OrderPricingDto Pricing,
     PaymentInfoDto Payment,

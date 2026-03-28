@@ -29,6 +29,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly IOrderOtpRepository _otpRepository;
     private readonly IEmailService _emailService;
     private readonly IOtpSettings _otpSettings;
+    private readonly IStoreConfigurationRepository _storeConfigRepository;
 
     public PlaceOrderCommandHandler(
         IOrderRepository orderRepository,
@@ -39,7 +40,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         IOrderNumberGenerator orderNumberGenerator,
         IOrderOtpRepository otpRepository,
         IEmailService emailService,
-        IOtpSettings otpSettings)
+        IOtpSettings otpSettings,
+        IStoreConfigurationRepository storeConfigRepository)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
@@ -50,6 +52,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         _otpRepository = otpRepository;
         _emailService = emailService;
         _otpSettings = otpSettings;
+        _storeConfigRepository = storeConfigRepository;
     }
 
     public async Task<Result<OrderDto>> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -214,18 +217,30 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
 
         await _orderRepository.AddAsync(order, cancellationToken);
 
-        // Generate OTP and send confirmation email
-        var otp = OrderOtp.Create(order.Id, emailResult.Value.Value, _otpSettings.MockCode);
-        await _otpRepository.AddAsync(otp, cancellationToken);
+        // Check whether the store requires OTP confirmation on order placement
+        var storeConfig = await _storeConfigRepository.GetByStoreIdAsync(storeId, cancellationToken);
+        var requireOtp = storeConfig?.CustomerAuthSettings.RequireOtpOnPlaceOrder ?? false;
 
-        var storeName = store.Name.Value;
-        var htmlBody = BuildOtpEmail(storeName, order.OrderNumber.Value, otp.Code);
+        if (requireOtp)
+        {
+            // Generate OTP and send confirmation email — order stays Pending until verified
+            var otp = OrderOtp.Create(order.Id, emailResult.Value.Value, _otpSettings.MockCode);
+            await _otpRepository.AddAsync(otp, cancellationToken);
 
-        await _emailService.SendEmailAsync(
-            to: emailResult.Value.Value,
-            subject: $"Your order verification code - {order.OrderNumber.Value}",
-            htmlBody: htmlBody,
-            ct: cancellationToken);
+            var storeName = store.Name.Value;
+            var htmlBody = BuildOtpEmail(storeName, order.OrderNumber.Value, otp.Code);
+
+            await _emailService.SendEmailAsync(
+                to: emailResult.Value.Value,
+                subject: $"Your order verification code - {order.OrderNumber.Value}",
+                htmlBody: htmlBody,
+                ct: cancellationToken);
+        }
+        else
+        {
+            // OTP not required — confirm the order immediately
+            order.Confirm();
+        }
 
         return Result.Success(MapToDto(order, customer));
     }
@@ -269,6 +284,10 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         order.CustomerId.Value,
         order.OrderNumber.Value,
         order.Status.ToString(),
+        new CustomerSnapshotDto(
+            customer.Contact.FullName.FullName,
+            customer.Contact.Phone.Value,
+            customer.Contact.Email?.Value),
         order.Items.Select(i => new OrderItemDto(
             i.Id.Value,
             i.ProductId.Value,

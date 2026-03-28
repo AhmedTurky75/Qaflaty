@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import {
   OrderDto,
+  OrderSummaryDto,
   OrderStatus,
   CancelOrderRequest,
   AddOrderNoteRequest
@@ -19,11 +20,12 @@ export interface OrderFilters {
 }
 
 export interface PaginatedOrders {
-  items: OrderDto[];
-  total: number;
-  page: number;
-  limit: number;
+  items: OrderSummaryDto[];
+  pageNumber: number;
   totalPages: number;
+  totalCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }
 
 export interface OrderStats {
