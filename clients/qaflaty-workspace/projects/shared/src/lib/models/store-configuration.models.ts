@@ -88,10 +88,19 @@ export interface PageConfigurationDto {
 
 export interface PaymentMethodAdjustment {
   id: string;
-  paymentMethod: 'COD' | 'Visa' | 'Mastercard' | 'Mada' | 'ApplePay' | 'STCPay' | 'BankTransfer' | 'Other';
-  adjustmentType: 'Fixed' | 'Percentage';
+  paymentMethod: string;
+  adjustmentType: string;
   value: number;
   displayLabel?: string;
+  isEnabled: boolean;
+  defaultLabel: string;
+  defaultDescription: string;
+}
+
+export interface PaymentMethodOptionDto {
+  key: string;
+  defaultLabel: string;
+  defaultDescription: string;
 }
 
 export interface SearchSettings {
@@ -175,6 +184,7 @@ export interface SetPaymentMethodAdjustmentsRequest {
     adjustmentType: string;
     value: number;
     displayLabel?: string;
+    isEnabled?: boolean;
   }>;
 }
 

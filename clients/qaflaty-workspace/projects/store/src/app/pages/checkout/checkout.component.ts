@@ -6,8 +6,10 @@ import { CartService } from '../../services/cart.service';
 import { getCartItemKey } from '../../models/cart.model';
 import { OrderService } from '../../services/order.service';
 import { StoreService } from '../../services/store.service';
+import { ConfigService } from '../../services/config.service';
 import { CustomerAuthService, CustomerAddress } from '../../services/customer-auth.service';
-import { CreateOrderRequest, OrderCalculation, OrderStatus, PaymentMethod } from '../../models/order.model';
+import { CreateOrderRequest, OrderCalculation, OrderStatus } from '../../models/order.model';
+import { PaymentMethodAdjustment } from 'shared';
 import { LocationPickerComponent, PickedLocation } from '../../components/shared/location-picker.component';
 import { COUNTRIES, CITIES, DISTRICTS, Country, City, District, PhoneInputComponent } from 'shared';
 
@@ -23,11 +25,20 @@ export class CheckoutComponent implements OnInit {
   private cartService = inject(CartService);
   private orderService = inject(OrderService);
   private storeService = inject(StoreService);
+  private configService = inject(ConfigService);
   private router = inject(Router);
   readonly authService = inject(CustomerAuthService);
 
   cart = this.cartService.cart;
   store = this.storeService.currentStore;
+
+  readonly paymentMethods = computed<PaymentMethodAdjustment[]>(() =>
+    this.configService.config()?.paymentMethodAdjustments ?? []
+  );
+
+  private get defaultPaymentMethod(): string {
+    return this.paymentMethods().find(m => m.isEnabled)?.paymentMethod ?? '';
+  }
   submitting = signal<boolean>(false);
   errorMessage = signal<string>('');
 
@@ -92,12 +103,14 @@ export class CheckoutComponent implements OnInit {
       isDefault: [false]
     });
 
+    const defaultMethod = this.defaultPaymentMethod;
+
     if (this.authService.isAuthenticated()) {
       this.checkoutForm = this.fb.group({
         additionalPhone: [''],
         additionalPhoneCountryCode: ['SA'],
         additionalInstructions: [''],
-        paymentMethod: ['CashOnDelivery', [Validators.required]],
+        paymentMethod: [defaultMethod, [Validators.required]],
         notes: ['']
       });
       this.loadAddresses();
@@ -112,7 +125,7 @@ export class CheckoutComponent implements OnInit {
         districtId: [''],
         street: ['', [Validators.required]],
         additionalInstructions: [''],
-        paymentMethod: ['CashOnDelivery', [Validators.required]],
+        paymentMethod: [defaultMethod, [Validators.required]],
         notes: ['']
       });
     }
@@ -303,6 +316,7 @@ export class CheckoutComponent implements OnInit {
     return Object.entries(attributes).map(([k, v]) => `${k}: ${v}`).join(', ');
   }
 
+
   getPaymentAdjustmentLabel(): string | null {
     const calc = this.orderCalculation();
     if (!calc || calc.paymentAdjustment.amount === 0) return null;
@@ -387,7 +401,7 @@ export class CheckoutComponent implements OnInit {
           variantId: item.variantId,
           variantAttributes: item.variantAttributes
         })),
-        paymentMethod: formValue.paymentMethod as PaymentMethod,
+        paymentMethod: formValue.paymentMethod,
         notes: formValue.notes || undefined
       };
     } else {
@@ -418,7 +432,7 @@ export class CheckoutComponent implements OnInit {
           variantId: item.variantId,
           variantAttributes: item.variantAttributes
         })),
-        paymentMethod: formValue.paymentMethod as PaymentMethod,
+        paymentMethod: formValue.paymentMethod,
         notes: formValue.notes || undefined
       };
     }

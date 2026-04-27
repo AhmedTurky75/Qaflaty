@@ -38,7 +38,7 @@ public class AuthController : ApiController
             return HandleResult(result);
 
         var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-        cookieService.SetAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
+        cookieService.SetMerchantAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
 
         return StatusCode(StatusCodes.Status201Created, result.Value.Merchant);
     }
@@ -65,7 +65,7 @@ public class AuthController : ApiController
             return HandleResult(result);
 
         var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-        cookieService.SetAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
+        cookieService.SetMerchantAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
 
         return Ok(new { merchant = result.Value.Merchant, storeIds = result.Value.StoreIds });
     }
@@ -85,7 +85,7 @@ public class AuthController : ApiController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RefreshToken(CancellationToken ct)
     {
-        if (!HttpContext.Request.Cookies.TryGetValue("refresh_token", out var refreshToken) ||
+        if (!HttpContext.Request.Cookies.TryGetValue("merchant_refresh_token", out var refreshToken) ||
             string.IsNullOrEmpty(refreshToken))
             return BadRequest(new { error = "Identity.InvalidRefreshToken", message = "Refresh token is missing" });
 
@@ -96,7 +96,7 @@ public class AuthController : ApiController
             return HandleResult(result);
 
         var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-        cookieService.SetAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
+        cookieService.SetMerchantAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
 
         return Ok(result.Value.Merchant);
     }
@@ -107,11 +107,11 @@ public class AuthController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Logout(CancellationToken ct)
     {
-        if (!HttpContext.Request.Cookies.TryGetValue("refresh_token", out var refreshToken) ||
+        if (!HttpContext.Request.Cookies.TryGetValue("merchant_refresh_token", out var refreshToken) ||
             string.IsNullOrEmpty(refreshToken))
         {
             var cookieServiceEarly = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-            cookieServiceEarly.ClearAuthCookies(HttpContext);
+            cookieServiceEarly.ClearMerchantAuthCookies(HttpContext);
             return NoContent();
         }
 
@@ -119,7 +119,7 @@ public class AuthController : ApiController
         var result = await Sender.Send(command, ct);
 
         var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-        cookieService.ClearAuthCookies(HttpContext);
+        cookieService.ClearMerchantAuthCookies(HttpContext);
 
         if (result.IsFailure)
             return HandleResult(result);

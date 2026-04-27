@@ -344,24 +344,34 @@
           <div class="bg-white rounded-lg shadow p-6">
             <h2 class="text-xl font-semibold mb-4">Payment Method</h2>
             <div class="space-y-3">
-              <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors"
-                [class.border-primary]="checkoutForm.get('paymentMethod')?.value === 'CashOnDelivery'">
-                <input type="radio" formControlName="paymentMethod" value="CashOnDelivery"
-                  class="w-5 h-5 text-primary focus:ring-primary">
-                <div class="ml-3 flex-1">
-                  <span class="font-medium text-gray-900">Cash on Delivery</span>
-                  <p class="text-sm text-gray-600">Pay when you receive your order</p>
-                </div>
-              </label>
-
-              <label class="flex items-center p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors opacity-50">
-                <input type="radio" formControlName="paymentMethod" value="Card"
-                  class="w-5 h-5 text-primary focus:ring-primary" [disabled]="true">
-                <div class="ml-3 flex-1">
-                  <span class="font-medium text-gray-900">Card Payment</span>
-                  <p class="text-sm text-gray-600">Coming soon</p>
-                </div>
-              </label>
+              @for (method of paymentMethods(); track method.paymentMethod) {
+                <label class="flex items-center p-4 border-2 rounded-lg transition-colors"
+                  [class.border-primary]="checkoutForm.get('paymentMethod')?.value === method.paymentMethod"
+                  [class.cursor-pointer]="method.isEnabled"
+                  [class.hover:bg-gray-50]="method.isEnabled"
+                  [class.opacity-50]="!method.isEnabled"
+                  [class.cursor-not-allowed]="!method.isEnabled">
+                  <input type="radio" formControlName="paymentMethod"
+                    [value]="method.paymentMethod"
+                    [disabled]="!method.isEnabled"
+                    class="w-5 h-5 text-primary focus:ring-primary">
+                  <div class="ml-3 flex-1">
+                    <span class="font-medium text-gray-900">
+                      {{ method.displayLabel || method.defaultLabel }}
+                    </span>
+                    @if (!method.isEnabled) {
+                      <p class="text-sm text-gray-500">Coming soon</p>
+                    } @else if (method.defaultDescription) {
+                      <p class="text-sm text-gray-600">{{ method.defaultDescription }}</p>
+                    }
+                    @if (method.isEnabled && method.value !== 0) {
+                      <p class="text-sm text-orange-600">
+                        {{ method.adjustmentType === 'Percentage' ? (method.value > 0 ? '+' : '') + method.value + '%' : (method.value > 0 ? '+' : '') + method.value.toFixed(2) + ' fee' }}
+                      </p>
+                    }
+                  </div>
+                </label>
+              }
             </div>
           </div>
 

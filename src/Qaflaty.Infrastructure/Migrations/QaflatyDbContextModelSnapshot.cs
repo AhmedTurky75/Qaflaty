@@ -937,6 +937,90 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("chat_messages", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Identity.Aggregates.AccessDeniedReport.AccessDeniedReport", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("user_id");
+
+                    b.Property<string>("UserType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("user_type");
+
+                    b.Property<string>("Endpoint")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("endpoint");
+
+                    b.Property<DateTime>("ReportedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("reported_at");
+
+                    b.Property<bool>("IsReviewed")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_reviewed");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ReportedAt");
+
+                    b.ToTable("access_denied_reports", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PaymentMethodDefinition.PaymentMethodDefinition", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("key");
+
+                    b.Property<string>("DefaultLabel")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("default_label");
+
+                    b.Property<string>("DefaultDescription")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("default_description");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key").IsUnique();
+
+                    b.ToTable("payment_method_definitions", (string)null);
+
+                    b.HasData(
+                        new { Id = 1, Key = "COD", DefaultLabel = "Cash on Delivery", DefaultDescription = "Pay when you receive your order", IsActive = true, SortOrder = 1 },
+                        new { Id = 2, Key = "Visa", DefaultLabel = "Visa", DefaultDescription = "Pay with Visa card", IsActive = true, SortOrder = 2 }
+                    );
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Identity.Aggregates.LoginOtp.LoginOtp", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2207,9 +2291,7 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnName("auth_require_email_verification");
 
                             b1.Property<bool>("RequireOtpOnPlaceOrder")
-                                .ValueGeneratedOnAdd()
                                 .HasColumnType("boolean")
-                                .HasDefaultValue(false)
                                 .HasColumnName("auth_require_otp_on_place_order");
 
                             b1.HasKey("StoreConfigurationId");
@@ -2430,7 +2512,11 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("character varying(200)")
                                 .HasColumnName("display_label");
 
-                            b1.Property<string>("PaymentMethod")
+                            b1.Property<bool>("IsEnabled")
+                                .HasColumnType("boolean")
+                                .HasColumnName("is_enabled");
+
+                            b1.Property<string>("PaymentMethodKey")
                                 .IsRequired()
                                 .HasMaxLength(50)
                                 .HasColumnType("character varying(50)")

@@ -7,7 +7,8 @@ public record PaymentMethodAdjustmentRequest(
     string PaymentMethod,
     string AdjustmentType,
     decimal Value,
-    string? DisplayLabel);
+    string? DisplayLabel,
+    bool IsEnabled = true);
 
 public record SetPaymentMethodAdjustmentsCommand(
     Guid StoreId,

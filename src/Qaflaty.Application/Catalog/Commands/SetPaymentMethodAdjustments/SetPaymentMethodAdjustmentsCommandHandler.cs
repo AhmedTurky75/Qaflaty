@@ -13,10 +13,14 @@ public class SetPaymentMethodAdjustmentsCommandHandler
     : ICommandHandler<SetPaymentMethodAdjustmentsCommand, List<PaymentMethodAdjustmentDto>>
 {
     private readonly IStoreConfigurationRepository _configRepository;
+    private readonly IPaymentMethodDefinitionRepository _definitionRepository;
 
-    public SetPaymentMethodAdjustmentsCommandHandler(IStoreConfigurationRepository configRepository)
+    public SetPaymentMethodAdjustmentsCommandHandler(
+        IStoreConfigurationRepository configRepository,
+        IPaymentMethodDefinitionRepository definitionRepository)
     {
         _configRepository = configRepository;
+        _definitionRepository = definitionRepository;
     }
 
     public async Task<Result<List<PaymentMethodAdjustmentDto>>> Handle(
@@ -39,11 +43,15 @@ public class SetPaymentMethodAdjustmentsCommandHandler
                 new Error("PaymentMethodAdjustment.DuplicateMethod",
                     $"Each payment method may only appear once. Duplicates: {string.Join(", ", duplicates)}"));
 
+        // Validate all keys exist in the definitions table
+        var definitions = await _definitionRepository.GetAllActiveAsync(cancellationToken);
+        var validKeys = definitions.ToDictionary(d => d.Key, d => d, StringComparer.OrdinalIgnoreCase);
+
         var adjustments = new List<PaymentMethodAdjustment>();
 
         foreach (var adj in request.Adjustments)
         {
-            if (!Enum.TryParse<PaymentMethodOption>(adj.PaymentMethod, true, out var paymentMethod))
+            if (!validKeys.ContainsKey(adj.PaymentMethod))
                 return Result.Failure<List<PaymentMethodAdjustmentDto>>(
                     new Error("PaymentMethodAdjustment.InvalidMethod",
                         $"Invalid payment method: '{adj.PaymentMethod}'"));
@@ -53,7 +61,7 @@ public class SetPaymentMethodAdjustmentsCommandHandler
                     new Error("PaymentMethodAdjustment.InvalidType",
                         $"Invalid adjustment type: '{adj.AdjustmentType}'"));
 
-            var result = PaymentMethodAdjustment.Create(paymentMethod, adjType, adj.Value, adj.DisplayLabel);
+            var result = PaymentMethodAdjustment.Create(adj.PaymentMethod, adjType, adj.Value, adj.DisplayLabel, adj.IsEnabled);
             if (result.IsFailure)
                 return Result.Failure<List<PaymentMethodAdjustmentDto>>(result.Error);
 
@@ -64,12 +72,19 @@ public class SetPaymentMethodAdjustmentsCommandHandler
         _configRepository.Update(config);
 
         var dtos = config.PaymentMethodAdjustments
-            .Select(a => new PaymentMethodAdjustmentDto(
-                a.Id,
-                a.PaymentMethod.ToString(),
-                a.AdjustmentType.ToString(),
-                a.Value,
-                a.DisplayLabel))
+            .Select(a =>
+            {
+                validKeys.TryGetValue(a.PaymentMethodKey, out var def);
+                return new PaymentMethodAdjustmentDto(
+                    a.Id,
+                    a.PaymentMethodKey,
+                    a.AdjustmentType.ToString(),
+                    a.Value,
+                    a.DisplayLabel,
+                    a.IsEnabled,
+                    def?.DefaultLabel ?? a.PaymentMethodKey,
+                    def?.DefaultDescription ?? string.Empty);
+            })
             .ToList();
 
         return Result.Success(dtos);

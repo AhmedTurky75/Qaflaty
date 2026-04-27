@@ -110,6 +110,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/account/wishlist/wishlist.component').then(m => m.WishlistComponent)
   },
   {
+    path: 'access-denied',
+    loadComponent: () => import('./pages/access-denied/access-denied.component').then(m => m.AccessDeniedComponent)
+  },
+  {
     path: 'not-found',
     loadComponent: () => import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent)
   },

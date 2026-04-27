@@ -48,7 +48,12 @@ public record PaymentMethodAdjustmentDto(
     string PaymentMethod,
     string AdjustmentType,
     decimal Value,
-    string? DisplayLabel);
+    string? DisplayLabel,
+    bool IsEnabled,
+    string DefaultLabel,
+    string DefaultDescription);
+
+public record PaymentMethodOptionDto(string Key, string DefaultLabel, string DefaultDescription);
 
 public record SearchSettingsDto(
     bool EnableTextSearch,

@@ -35,7 +35,7 @@ public class StorefrontAuthController : ApiController
             return HandleResult(result);
 
         var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-        cookieService.SetAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
+        cookieService.SetCustomerAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
 
         return StatusCode(StatusCodes.Status201Created, result.Value.Customer);
     }
@@ -54,7 +54,7 @@ public class StorefrontAuthController : ApiController
         if (!result.Value.RequiresOtp)
         {
             var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-            cookieService.SetAuthCookies(HttpContext, result.Value.AuthResponse!.AccessToken, result.Value.AuthResponse!.RefreshToken);
+            cookieService.SetCustomerAuthCookies(HttpContext, result.Value.AuthResponse!.AccessToken, result.Value.AuthResponse!.RefreshToken);
             return Ok(result.Value.AuthResponse!.Customer);
         }
 
@@ -73,7 +73,7 @@ public class StorefrontAuthController : ApiController
             return HandleResult(result);
 
         var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-        cookieService.SetAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
+        cookieService.SetCustomerAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
 
         return Ok(result.Value.Customer);
     }
@@ -93,7 +93,7 @@ public class StorefrontAuthController : ApiController
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RefreshToken(CancellationToken ct)
     {
-        if (!HttpContext.Request.Cookies.TryGetValue("refresh_token", out var refreshToken) ||
+        if (!HttpContext.Request.Cookies.TryGetValue("customer_refresh_token", out var refreshToken) ||
             string.IsNullOrEmpty(refreshToken))
             return BadRequest(new { error = "Identity.InvalidRefreshToken", message = "Refresh token is missing" });
 
@@ -104,7 +104,7 @@ public class StorefrontAuthController : ApiController
             return HandleResult(result);
 
         var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-        cookieService.SetAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
+        cookieService.SetCustomerAuthCookies(HttpContext, result.Value.AccessToken, result.Value.RefreshToken);
 
         return Ok(result.Value.Customer);
     }
@@ -115,11 +115,11 @@ public class StorefrontAuthController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Logout(CancellationToken ct)
     {
-        if (!HttpContext.Request.Cookies.TryGetValue("refresh_token", out var refreshToken) ||
+        if (!HttpContext.Request.Cookies.TryGetValue("customer_refresh_token", out var refreshToken) ||
             string.IsNullOrEmpty(refreshToken))
         {
             var cookieServiceEarly = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-            cookieServiceEarly.ClearAuthCookies(HttpContext);
+            cookieServiceEarly.ClearCustomerAuthCookies(HttpContext);
             return NoContent();
         }
 
@@ -127,7 +127,7 @@ public class StorefrontAuthController : ApiController
         var result = await Sender.Send(command, ct);
 
         var cookieService = HttpContext.RequestServices.GetRequiredService<ICookieAuthService>();
-        cookieService.ClearAuthCookies(HttpContext);
+        cookieService.ClearCustomerAuthCookies(HttpContext);
 
         if (result.IsFailure)
             return HandleResult(result);

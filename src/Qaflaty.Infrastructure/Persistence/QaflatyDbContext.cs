@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Qaflaty.Domain.Catalog.Aggregates.Category;
 using Qaflaty.Domain.Catalog.Aggregates.City;
+using Qaflaty.Domain.Catalog.Aggregates.PaymentMethodDefinition;
 using Qaflaty.Domain.Catalog.Aggregates.Country;
 using Qaflaty.Domain.Catalog.Aggregates.DeliveryZone;
 using Qaflaty.Domain.Catalog.Aggregates.District;
@@ -11,6 +12,7 @@ using Qaflaty.Domain.Catalog.Aggregates.Store;
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 using Qaflaty.Domain.Communication.Entities;
+using Qaflaty.Domain.Identity.Aggregates.AccessDeniedReport;
 using Qaflaty.Domain.Identity.Aggregates.LoginOtp;
 using Qaflaty.Domain.Identity.Aggregates.Merchant;
 using Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
@@ -32,8 +34,10 @@ public class QaflatyDbContext : DbContext
     public DbSet<CustomerRefreshToken> CustomerRefreshTokens => Set<CustomerRefreshToken>();
     public DbSet<LoginOtp> LoginOtps => Set<LoginOtp>();
     public DbSet<MerchantStoreAssignment> MerchantStoreAssignments => Set<MerchantStoreAssignment>();
+    public DbSet<AccessDeniedReport> AccessDeniedReports => Set<AccessDeniedReport>();
 
     // Catalog
+    public DbSet<PaymentMethodDefinition> PaymentMethodDefinitions => Set<PaymentMethodDefinition>();
     public DbSet<Store> Stores => Set<Store>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductVariant> ProductVariants => Set<ProductVariant>();

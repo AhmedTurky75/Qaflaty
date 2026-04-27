@@ -1,5 +1,6 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Domain.Catalog.Aggregates.PaymentMethodDefinition;
 using Qaflaty.Domain.Catalog.Enums;
 using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
@@ -12,10 +13,14 @@ namespace Qaflaty.Application.Catalog.Commands.UpdateStoreConfiguration;
 public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStoreConfigurationCommand, StoreConfigurationDto>
 {
     private readonly IStoreConfigurationRepository _configurationRepository;
+    private readonly IPaymentMethodDefinitionRepository _definitionRepository;
 
-    public UpdateStoreConfigurationCommandHandler(IStoreConfigurationRepository configurationRepository)
+    public UpdateStoreConfigurationCommandHandler(
+        IStoreConfigurationRepository configurationRepository,
+        IPaymentMethodDefinitionRepository definitionRepository)
     {
         _configurationRepository = configurationRepository;
+        _definitionRepository = definitionRepository;
     }
 
     public async Task<Result<StoreConfigurationDto>> Handle(
@@ -27,6 +32,9 @@ public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStor
 
         if (configuration == null)
             return Result.Failure<StoreConfigurationDto>(CatalogErrors.StoreConfigurationNotFound);
+
+        var definitions = await _definitionRepository.GetAllActiveAsync(cancellationToken);
+        var defMap = definitions.ToDictionary(d => d.Key, d => d, StringComparer.OrdinalIgnoreCase);
 
         // Update PageToggles
         var pageToggles = PageToggles.Create(
@@ -98,11 +106,13 @@ public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStor
 
         _configurationRepository.Update(configuration);
 
-        var dto = MapToDto(configuration);
+        var dto = MapToDto(configuration, defMap);
         return Result.Success(dto);
     }
 
-    private static StoreConfigurationDto MapToDto(Domain.Catalog.Aggregates.StoreConfiguration.StoreConfiguration config)
+    private static StoreConfigurationDto MapToDto(
+        Domain.Catalog.Aggregates.StoreConfiguration.StoreConfiguration config,
+        Dictionary<string, PaymentMethodDefinition> defMap)
     {
         return new StoreConfigurationDto(
             config.Id.Value,
@@ -157,8 +167,13 @@ public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStor
                 config.SearchSettings.EnablePropertyFilters,
                 config.SearchSettings.FilterablePropertyDefinitionIds,
                 config.SearchSettings.AllowedSortOptions.Select(s => s.ToString()).ToList()),
-            config.PaymentMethodAdjustments.Select(a => new PaymentMethodAdjustmentDto(
-                a.Id, a.PaymentMethod.ToString(), a.AdjustmentType.ToString(), a.Value, a.DisplayLabel)).ToList(),
+            config.PaymentMethodAdjustments.Select(a =>
+            {
+                defMap.TryGetValue(a.PaymentMethodKey, out var def);
+                return new PaymentMethodAdjustmentDto(
+                    a.Id, a.PaymentMethodKey, a.AdjustmentType.ToString(), a.Value, a.DisplayLabel, a.IsEnabled,
+                    def?.DefaultLabel ?? a.PaymentMethodKey, def?.DefaultDescription ?? string.Empty);
+            }).ToList(),
             config.CreatedAt,
             config.UpdatedAt);
     }

@@ -53,7 +53,7 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
             ca.Property(c => c.Mode).HasColumnName("auth_mode").HasConversion<string>();
             ca.Property(c => c.AllowGuestCheckout).HasColumnName("auth_allow_guest_checkout");
             ca.Property(c => c.RequireEmailVerification).HasColumnName("auth_require_email_verification");
-            ca.Property(c => c.RequireOtpOnPlaceOrder).HasColumnName("auth_require_otp_on_place_order").HasDefaultValue(false);
+            ca.Property(c => c.RequireOtpOnPlaceOrder).HasColumnName("auth_require_otp_on_place_order");
         });
 
         // CommunicationSettings - owned value object
@@ -132,9 +132,8 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
                 .HasColumnName("id")
                 .ValueGeneratedNever();
 
-            adj.Property(a => a.PaymentMethod)
+            adj.Property(a => a.PaymentMethodKey)
                 .HasColumnName("payment_method")
-                .HasConversion<string>()
                 .HasMaxLength(50)
                 .IsRequired();
 
@@ -153,6 +152,10 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
                 .HasColumnName("display_label")
                 .HasMaxLength(200)
                 .IsRequired(false);
+
+            adj.Property(a => a.IsEnabled)
+                .HasColumnName("is_enabled")
+                .IsRequired();
         });
 
         builder.Ignore(sc => sc.DomainEvents);

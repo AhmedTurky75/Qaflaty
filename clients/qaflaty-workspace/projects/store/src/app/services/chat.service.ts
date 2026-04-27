@@ -4,6 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { CustomerAuthService } from './customer-auth.service';
+import { GuestSessionService } from './guest-session.service';
 
 export interface ChatMessage {
   id: string;
@@ -44,6 +45,7 @@ interface SendMessageRequest {
 export class ChatService {
   private http = inject(HttpClient);
   private authService = inject(CustomerAuthService);
+  private guestSession = inject(GuestSessionService);
   private apiUrl = environment.apiUrl;
 
   // SignalR connection
@@ -61,22 +63,8 @@ export class ChatService {
   public hasActiveConversation = computed(() => this.conversation() !== null);
   public unreadCount = computed(() => this.conversation()?.unreadCustomerMessages ?? 0);
 
-  // Guest session ID for unauthenticated users
-  private guestSessionId: string;
-
-  constructor() {
-    // Generate or retrieve guest session ID
-    const stored = localStorage.getItem('guest_session_id');
-    if (stored) {
-      this.guestSessionId = stored;
-    } else {
-      this.guestSessionId = this.generateGuestSessionId();
-      localStorage.setItem('guest_session_id', this.guestSessionId);
-    }
-  }
-
-  private generateGuestSessionId(): string {
-    return `guest_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+  private get guestSessionId(): string {
+    return this.guestSession.getOrCreateGuestId();
   }
 
   /**
@@ -369,8 +357,7 @@ export class ChatService {
   async startNewConversation(): Promise<void> {
     await this.disconnectFromHub();
     // Generate a new guest session so the new conversation is not linked to the closed one
-    this.guestSessionId = this.generateGuestSessionId();
-    localStorage.setItem('guest_session_id', this.guestSessionId);
+    this.guestSession.clearGuestId();
     this.conversation.set(null);
     this.messages.set([]);
     this.error.set(null);

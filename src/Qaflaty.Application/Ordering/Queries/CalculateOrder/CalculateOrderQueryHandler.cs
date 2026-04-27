@@ -116,27 +116,12 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
             var config = await _configRepository.GetByStoreIdAsync(storeId, cancellationToken);
             if (config != null)
             {
-                var paymentMethodOption = request.PaymentMethod switch
+                var adj = config.PaymentMethodAdjustments
+                    .FirstOrDefault(a => a.PaymentMethodKey.Equals(request.PaymentMethod, StringComparison.OrdinalIgnoreCase));
+                if (adj != null)
                 {
-                    "CashOnDelivery" => (PaymentMethodOption?)PaymentMethodOption.COD,
-                    "Visa"          => PaymentMethodOption.Visa,
-                    "Mastercard"    => PaymentMethodOption.Mastercard,
-                    "Mada"          => PaymentMethodOption.Mada,
-                    "ApplePay"      => PaymentMethodOption.ApplePay,
-                    "STCPay"        => PaymentMethodOption.STCPay,
-                    "BankTransfer"  => PaymentMethodOption.BankTransfer,
-                    _               => null
-                };
-
-                if (paymentMethodOption.HasValue)
-                {
-                    var adj = config.PaymentMethodAdjustments
-                        .FirstOrDefault(a => a.PaymentMethod == paymentMethodOption.Value);
-                    if (adj != null)
-                    {
-                        paymentAdjustmentAmount = adj.CalculateAmount(subtotal.Amount);
-                        paymentAdjustmentLabel = adj.DisplayLabel;
-                    }
+                    paymentAdjustmentAmount = adj.CalculateAmount(subtotal.Amount);
+                    paymentAdjustmentLabel = adj.DisplayLabel;
                 }
             }
         }

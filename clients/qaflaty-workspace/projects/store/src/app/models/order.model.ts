@@ -21,7 +21,7 @@ export interface CreateOrderRequest {
   customerInfo: CustomerInfo;
   deliveryAddress: DeliveryAddress;
   items: OrderItemRequest[];
-  paymentMethod: PaymentMethod;
+  paymentMethod: string;
   notes?: string;
 }
 
@@ -49,10 +49,6 @@ export interface OrderItemRequest {
   variantAttributes?: Record<string, string>;
 }
 
-export enum PaymentMethod {
-  CashOnDelivery = 'CashOnDelivery',
-  Card = 'Card'
-}
 
 export interface OrderResponse {
   orderId: string;

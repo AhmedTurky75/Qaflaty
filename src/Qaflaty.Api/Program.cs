@@ -91,9 +91,14 @@ builder.Services.AddAuthentication(options =>
                 return Task.CompletedTask;
             }
 
-            // httpOnly cookie authentication
-            if (context.Request.Cookies.TryGetValue("access_token", out var cookieToken))
-                context.Token = cookieToken;
+            // httpOnly cookie authentication — try merchant cookie first, then customer
+            if (context.Request.Cookies.TryGetValue("merchant_access_token", out var merchantToken))
+                context.Token = merchantToken;
+            else if (context.Request.Cookies.TryGetValue("customer_access_token", out var customerToken))
+                context.Token = customerToken;
+            // Legacy fallback for existing sessions until they expire
+            else if (context.Request.Cookies.TryGetValue("access_token", out var legacyToken))
+                context.Token = legacyToken;
 
             return Task.CompletedTask;
         }

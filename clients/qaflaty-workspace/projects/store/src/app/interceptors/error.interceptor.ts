@@ -2,12 +2,12 @@ import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError, switchMap } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { CustomerAuthService } from '../services/customer-auth.service';
 
-const AUTH_PATHS = ['/auth/refresh', '/auth/login', '/auth/verify-otp'];
+const AUTH_PATHS = ['/storefront/auth/refresh', '/storefront/auth/login', '/storefront/auth/verify-otp'];
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
-  const authService = inject(AuthService);
+  const authService = inject(CustomerAuthService);
   const router = inject(Router);
 
   const isAuthRequest = AUTH_PATHS.some(p => req.url.includes(p));
@@ -15,14 +15,11 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401 && !isAuthRequest) {
-        // Attempt token refresh
         return authService.refreshToken().pipe(
           switchMap(() => {
-            // Retry original request after successful refresh
             return next(req.clone({ withCredentials: true })).pipe(
               catchError((retryError: HttpErrorResponse) => {
                 if (retryError.status === 401) {
-                  // Retry also got 401 → access denied
                   router.navigate(['/access-denied'], {
                     queryParams: { endpoint: req.url }
                   });
@@ -32,7 +29,6 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
             );
           }),
           catchError(refreshError => {
-            // Refresh token expired → back to login
             authService.logout();
             return throwError(() => refreshError);
           })

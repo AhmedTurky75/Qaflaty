@@ -2,7 +2,7 @@ import { Injectable, signal, computed, effect, inject, Injector } from '@angular
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
-import { catchError, tap, map, of, Observable } from 'rxjs';
+import { catchError, tap, map, of, Observable, throwError, share } from 'rxjs';
 import { GuestSessionService } from './guest-session.service';
 
 export interface StoreCustomer {
@@ -60,6 +60,7 @@ export class CustomerAuthService {
   private readonly guestSession = inject(GuestSessionService);
   private readonly injector = inject(Injector);
   private readonly apiUrl = `${environment.apiUrl}/storefront/auth`;
+  private refreshInProgress$: Observable<StoreCustomer> | null = null;
 
   private readonly _customer = signal<StoreCustomer | null>(this.loadFromStorage());
   readonly customer = this._customer.asReadonly();
@@ -133,8 +134,22 @@ export class CustomerAuthService {
   }
 
   refreshToken(): Observable<StoreCustomer> {
-    return this.http.post<StoreCustomer>(`${this.apiUrl}/refresh`, {}, { withCredentials: true })
-      .pipe(tap(c => this._customer.set(c)));
+    if (!this.refreshInProgress$) {
+      this.refreshInProgress$ = this.http.post<StoreCustomer>(`${this.apiUrl}/refresh`, {}, { withCredentials: true }).pipe(
+        tap(c => this._customer.set(c)),
+        catchError(err => {
+          this.refreshInProgress$ = null;
+          return throwError(() => err);
+        }),
+        share()
+      );
+      this.refreshInProgress$.subscribe({ complete: () => { this.refreshInProgress$ = null; } });
+    }
+    return this.refreshInProgress$;
+  }
+
+  reportAccessDenied(endpoint: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/reports/access-denied`, { endpoint }, { withCredentials: true });
   }
 
   logout(): void {

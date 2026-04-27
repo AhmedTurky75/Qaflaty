@@ -4,6 +4,7 @@ using Qaflaty.Application.Ordering.DTOs;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
 using Qaflaty.Domain.Catalog.Enums;
 using Qaflaty.Domain.Catalog.Repositories;
+using OrderingPaymentMethod = Qaflaty.Domain.Ordering.Enums.PaymentMethod;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Common.ValueObjects;
@@ -113,9 +114,24 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             await _customerRepository.AddAsync(customer, cancellationToken);
         }
 
-        // Parse payment method
-        if (!Enum.TryParse<PaymentMethod>(request.PaymentMethod, out var paymentMethod))
-            return Result.Failure<OrderDto>(new Error("Order.InvalidPaymentMethod", "Invalid payment method"));
+        // Validate payment method key
+        if (string.IsNullOrWhiteSpace(request.PaymentMethod))
+            return Result.Failure<OrderDto>(new Error("Order.InvalidPaymentMethod", "Payment method is required"));
+
+        var storeConfigForPayment = await _storeConfigRepository.GetByStoreIdAsync(storeId, cancellationToken);
+        if (storeConfigForPayment != null && storeConfigForPayment.PaymentMethodAdjustments.Count > 0)
+        {
+            var adjustment = storeConfigForPayment.PaymentMethodAdjustments
+                .FirstOrDefault(a => a.PaymentMethodKey.Equals(request.PaymentMethod, StringComparison.OrdinalIgnoreCase));
+            if (adjustment != null && !adjustment.IsEnabled)
+                return Result.Failure<OrderDto>(new Error("Order.PaymentMethodDisabled",
+                    $"Payment method '{request.PaymentMethod}' is not available for this store"));
+            if (adjustment == null)
+                return Result.Failure<OrderDto>(new Error("Order.PaymentMethodNotConfigured",
+                    $"Payment method '{request.PaymentMethod}' is not configured for this store"));
+        }
+
+        var paymentMethod = MapToOrderingPaymentMethod(request.PaymentMethod);
 
         // Generate order number
         var orderNumber = await _orderNumberGenerator.GenerateAsync(storeId, cancellationToken);
@@ -217,8 +233,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
 
         await _orderRepository.AddAsync(order, cancellationToken);
 
-        // Check whether the store requires OTP confirmation on order placement
-        var storeConfig = await _storeConfigRepository.GetByStoreIdAsync(storeId, cancellationToken);
+        // Re-use already-fetched config (or re-fetch if it was null above)
+        var storeConfig = storeConfigForPayment ?? await _storeConfigRepository.GetByStoreIdAsync(storeId, cancellationToken);
         var requireOtp = storeConfig?.CustomerAuthSettings.RequireOtpOnPlaceOrder ?? false;
 
         if (requireOtp)
@@ -244,6 +260,15 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
 
         return Result.Success(MapToDto(order, customer));
     }
+
+    private static OrderingPaymentMethod MapToOrderingPaymentMethod(string key) =>
+        key.ToUpperInvariant() switch
+        {
+            "COD" => OrderingPaymentMethod.CashOnDelivery,
+            "APPLEPAY" => OrderingPaymentMethod.Wallet,
+            "STCPAY" => OrderingPaymentMethod.Wallet,
+            _ => OrderingPaymentMethod.Card
+        };
 
     private static string BuildOtpEmail(string storeName, string orderNumber, string otpCode) => $"""
         <!DOCTYPE html>

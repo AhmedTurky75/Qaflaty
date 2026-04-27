@@ -13,6 +13,7 @@ import {
   CreateFaqItemRequest,
   UpdateFaqItemRequest,
   PaymentMethodAdjustment,
+  PaymentMethodOptionDto,
   SetPaymentMethodAdjustmentsRequest,
   UpdateSearchSettingsRequest,
   DeliveryZoneDto,
@@ -74,6 +75,11 @@ export class BuilderService {
 
   deleteFaqItem(storeId: string, id: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/stores/${storeId}/faq/${id}`);
+  }
+
+  // ── Payment Method Options (catalog) ────────────────────────────────────
+  getPaymentMethodOptions(): Observable<PaymentMethodOptionDto[]> {
+    return this.http.get<PaymentMethodOptionDto[]>(`${this.apiUrl}/payment-methods/options`);
   }
 
   // ── Payment Method Adjustments ───────────────────────────────────────────

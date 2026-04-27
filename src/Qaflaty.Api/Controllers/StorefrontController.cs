@@ -8,6 +8,7 @@ using Qaflaty.Application.Catalog.Queries.GetStorefrontPages;
 using Qaflaty.Application.Catalog.Queries.GetFaqItems;
 using Qaflaty.Application.Catalog.Queries.GetProductBySlug;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontConfig;
+using Qaflaty.Application.Catalog.Queries.GetStorefrontPaymentMethods;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontProducts;
 using Qaflaty.Application.Common.Interfaces;
 
@@ -125,6 +126,17 @@ public class StorefrontController : ApiController
 
         var result = await Sender.Send(
             new GetCustomPageQuery(_tenantContext.CurrentStoreId.Value.Value, slug), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("payment-methods")]
+    public async Task<IActionResult> GetPaymentMethods(CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var result = await Sender.Send(
+            new GetStorefrontPaymentMethodsQuery(_tenantContext.CurrentStoreId.Value.Value), ct);
         return HandleResult(result);
     }
 

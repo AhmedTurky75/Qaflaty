@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { StoreConfigurationDto, PaymentMethodAdjustment } from 'shared';
+import { StoreConfigurationDto, PaymentMethodAdjustment, PaymentMethodOptionDto } from 'shared';
 import { BuilderService } from './services/builder.service';
 import { inject } from '@angular/core';
 import { StoreContextService } from '../../core/services/store-context.service';
@@ -172,103 +172,56 @@ import { StoreContextService } from '../../core/services/store-context.service';
       <div class="bg-white rounded-lg shadow p-6">
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">Payment Method Fees / Discounts</h3>
-            <p class="text-sm text-gray-500 mt-0.5">Add surcharges or discounts to incentivize specific payment methods</p>
+            <h3 class="text-lg font-semibold text-gray-900">Payment Methods</h3>
+            <p class="text-sm text-gray-500 mt-0.5">Enable payment methods and optionally add a fee or discount for each</p>
           </div>
           <button
             (click)="savePaymentAdjustments()"
-            [disabled]="savingPayments() || hasDuplicates()"
+            [disabled]="savingPayments()"
             class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {{ savingPayments() ? 'Saving...' : 'Save' }}
           </button>
         </div>
 
-        @if (hasDuplicates()) {
-          <div class="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-            <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
-            <p class="text-sm text-red-700">
-              Each payment method can only have one adjustment.
-              Duplicate{{ duplicatePaymentMethods().length > 1 ? 's' : '' }}:
-              <strong>{{ duplicatePaymentMethods().join(', ') }}</strong>
-            </p>
-          </div>
-        }
-
-        <div class="space-y-3">
-          @for (adj of paymentAdjustments(); track adj.id; let i = $index) {
-            <div
-              class="border rounded-lg p-3 space-y-3"
-              [class.border-red-400]="isMethodDuplicate(adj.paymentMethod)"
-              [class.bg-red-50]="isMethodDuplicate(adj.paymentMethod)"
-              [class.border-gray-200]="!isMethodDuplicate(adj.paymentMethod)"
-            >
-              <div class="flex items-center justify-between">
-                <span class="text-sm font-medium" [class.text-red-700]="isMethodDuplicate(adj.paymentMethod)" [class.text-gray-700]="!isMethodDuplicate(adj.paymentMethod)">
-                  Adjustment {{ i + 1 }}
-                  @if (isMethodDuplicate(adj.paymentMethod)) {
-                    <span class="ml-1 text-xs font-normal">(duplicate — change or remove)</span>
-                  }
+        <div class="space-y-2">
+          @for (adj of paymentAdjustments(); track adj.paymentMethod) {
+            <div class="border border-gray-200 rounded-lg p-3">
+              <!-- Header row: toggle + name -->
+              <div class="flex items-center gap-3">
+                <input type="checkbox" [(ngModel)]="adj.isEnabled"
+                  class="h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                <span class="text-sm font-medium text-gray-900 flex-1">
+                  {{ adj.defaultLabel }}
                 </span>
-                <button (click)="removeAdjustment(i)" class="text-red-500 hover:text-red-700 text-sm">Remove</button>
               </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs text-gray-600 mb-1">Payment Method</label>
-                  <select [(ngModel)]="adj.paymentMethod" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="COD" [disabled]="isMethodUsedByOther('COD', i)">Cash on Delivery (COD)</option>
-                    <option value="Visa" [disabled]="isMethodUsedByOther('Visa', i)">Visa</option>
-                    <option value="Mastercard" [disabled]="isMethodUsedByOther('Mastercard', i)">Mastercard</option>
-                    <option value="Mada" [disabled]="isMethodUsedByOther('Mada', i)">Mada</option>
-                    <option value="ApplePay" [disabled]="isMethodUsedByOther('ApplePay', i)">Apple Pay</option>
-                    <option value="STCPay" [disabled]="isMethodUsedByOther('STCPay', i)">STC Pay</option>
-                    <option value="BankTransfer" [disabled]="isMethodUsedByOther('BankTransfer', i)">Bank Transfer</option>
-                    <option value="Other" [disabled]="isMethodUsedByOther('Other', i)">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-600 mb-1">Type</label>
-                  <select [(ngModel)]="adj.adjustmentType" class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="Fixed">Fixed Amount</option>
-                    <option value="Percentage">Percentage (%)</option>
-                  </select>
-                </div>
-              </div>
-              <div class="grid grid-cols-2 gap-3">
-                <div>
-                  <label class="block text-xs text-gray-600 mb-1">
-                    Value <span class="text-gray-400">(negative = discount, positive = fee)</span>
-                  </label>
-                  <input
-                    type="number"
-                    [(ngModel)]="adj.value"
-                    step="0.01"
-                    placeholder="-5 or 10"
-                    class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-600 mb-1">Display Label (optional)</label>
-                  <input
-                    type="text"
-                    [(ngModel)]="adj.displayLabel"
-                    placeholder="e.g. COD fee"
-                    class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-          }
 
-          @if (!allMethodsUsed()) {
-            <button
-              (click)="addAdjustment()"
-              class="w-full py-2 border-2 border-dashed border-gray-300 text-gray-500 rounded-lg hover:border-blue-400 hover:text-blue-500 text-sm"
-            >
-              + Add Payment Adjustment
-            </button>
-          } @else {
-            <p class="text-center text-xs text-gray-400 py-2">All payment methods already have an adjustment.</p>
+              <!-- Fee settings — only visible when enabled -->
+              @if (adj.isEnabled) {
+                <div class="mt-3 pt-3 border-t border-gray-100 grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs text-gray-500 mb-1">Fee Type</label>
+                    <select [(ngModel)]="adj.adjustmentType"
+                      class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <option value="Fixed">Fixed Amount</option>
+                      <option value="Percentage">Percentage (%)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-xs text-gray-500 mb-1">
+                      Value <span class="text-gray-400">(negative = discount)</span>
+                    </label>
+                    <input type="number" [(ngModel)]="adj.value" step="0.01" placeholder="0"
+                      class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                  <div class="col-span-2">
+                    <label class="block text-xs text-gray-500 mb-1">Display Label (optional)</label>
+                    <input type="text" [(ngModel)]="adj.displayLabel" placeholder="e.g. COD fee +20 SAR"
+                      class="w-full px-2 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+                </div>
+              }
+            </div>
           }
         </div>
       </div>
@@ -354,36 +307,9 @@ export class ConfigurationPanelComponent implements OnInit {
   } | null>(null);
 
   paymentAdjustments = signal<PaymentMethodAdjustment[]>([]);
+  paymentOptions = signal<PaymentMethodOptionDto[]>([]);
   savingSearch = signal(false);
   savingPayments = signal(false);
-
-  duplicatePaymentMethods = computed<string[]>(() => {
-    const methods = this.paymentAdjustments().map(a => a.paymentMethod);
-    const seen = new Set<string>();
-    const dupes = new Set<string>();
-    for (const m of methods) {
-      if (seen.has(m)) dupes.add(m);
-      seen.add(m);
-    }
-    return [...dupes];
-  });
-
-  hasDuplicates = computed(() => this.duplicatePaymentMethods().length > 0);
-
-  readonly ALL_PAYMENT_METHODS: PaymentMethodAdjustment['paymentMethod'][] = ['COD', 'Visa', 'Mastercard', 'Mada', 'ApplePay', 'STCPay', 'BankTransfer', 'Other'];
-
-  allMethodsUsed = computed(() => {
-    const used = new Set(this.paymentAdjustments().map(a => a.paymentMethod));
-    return this.ALL_PAYMENT_METHODS.every(m => used.has(m));
-  });
-
-  isMethodDuplicate(paymentMethod: string): boolean {
-    return this.duplicatePaymentMethods().includes(paymentMethod);
-  }
-
-  isMethodUsedByOther(method: PaymentMethodAdjustment['paymentMethod'], currentIndex: number): boolean {
-    return this.paymentAdjustments().some((a, i) => i !== currentIndex && a.paymentMethod === method);
-  }
 
   sortOptionList = [
     { value: 'PriceAsc', label: 'Price: Low to High' },
@@ -410,9 +336,22 @@ export class ConfigurationPanelComponent implements OnInit {
       });
     }
 
-    if (this.config.paymentMethodAdjustments) {
-      this.paymentAdjustments.set(this.config.paymentMethodAdjustments.map(a => ({ ...a })));
-    }
+    // Load available payment method options from backend, then merge with stored adjustments
+    this.builderService.getPaymentMethodOptions().subscribe(options => {
+      this.paymentOptions.set(options);
+      const stored = new Map(
+        (this.config.paymentMethodAdjustments ?? []).map(a => [a.paymentMethod, a])
+      );
+      this.paymentAdjustments.set(
+        options.map(opt => {
+          const existing = stored.get(opt.key);
+          return existing
+            ? { ...existing }
+            : { id: crypto.randomUUID(), paymentMethod: opt.key, adjustmentType: 'Fixed', value: 0, isEnabled: false,
+                defaultLabel: opt.defaultLabel, defaultDescription: opt.defaultDescription };
+        })
+      );
+    });
   }
 
   isSortOptionEnabled(value: string): boolean {
@@ -442,22 +381,7 @@ export class ConfigurationPanelComponent implements OnInit {
     });
   }
 
-  addAdjustment(): void {
-    if (this.allMethodsUsed()) return;
-    const used = new Set(this.paymentAdjustments().map(a => a.paymentMethod));
-    const firstFree = this.ALL_PAYMENT_METHODS.find(m => !used.has(m)) ?? 'COD';
-    this.paymentAdjustments.update(list => [
-      ...list,
-      { id: crypto.randomUUID(), paymentMethod: firstFree, adjustmentType: 'Fixed', value: 0 } as PaymentMethodAdjustment
-    ]);
-  }
-
-  removeAdjustment(index: number): void {
-    this.paymentAdjustments.update(list => list.filter((_, i) => i !== index));
-  }
-
   savePaymentAdjustments(): void {
-    if (this.hasDuplicates()) return;
     const storeId = this.storeContext.currentStoreId();
     if (!storeId) return;
     this.savingPayments.set(true);
@@ -465,7 +389,8 @@ export class ConfigurationPanelComponent implements OnInit {
       paymentMethod: a.paymentMethod,
       adjustmentType: a.adjustmentType,
       value: a.value,
-      displayLabel: a.displayLabel
+      displayLabel: a.displayLabel,
+      isEnabled: a.isEnabled
     }));
     this.builderService.setPaymentAdjustments(storeId, { adjustments }).subscribe({
       next: () => { this.savingPayments.set(false); alert('Payment adjustments saved!'); },

@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError } from 'rxjs';
+import { Observable, tap, catchError, throwError, share } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   MerchantDto,
@@ -27,6 +27,7 @@ export class AuthService {
   permissions = signal<string[]>(JSON.parse(localStorage.getItem('qaflaty_permissions') || '[]'));
 
   private readonly MERCHANT_KEY = 'qaflaty_merchant';
+  private refreshInProgress$: Observable<MerchantDto> | null = null;
 
   private loadStoredMerchant(): MerchantDto | null {
     try {
@@ -78,8 +79,23 @@ export class AuthService {
   }
 
   refreshToken(): Observable<MerchantDto> {
-    return this.http.post<MerchantDto>(`${environment.apiUrl}/auth/refresh`, {}, { withCredentials: true })
-      .pipe(tap(merchant => this.storeMerchant(merchant)));
+    if (!this.refreshInProgress$) {
+      this.refreshInProgress$ = this.http.post<MerchantDto>(`${environment.apiUrl}/auth/refresh`, {}, { withCredentials: true }).pipe(
+        tap(merchant => this.storeMerchant(merchant)),
+        catchError(err => {
+          this.refreshInProgress$ = null;
+          return throwError(() => err);
+        }),
+        share()
+      );
+      // Clear once the shared observable completes
+      this.refreshInProgress$.subscribe({ complete: () => { this.refreshInProgress$ = null; } });
+    }
+    return this.refreshInProgress$;
+  }
+
+  reportAccessDenied(endpoint: string): Observable<void> {
+    return this.http.post<void>(`${environment.apiUrl}/reports/access-denied`, { endpoint }, { withCredentials: true });
   }
 
   logout(): void {

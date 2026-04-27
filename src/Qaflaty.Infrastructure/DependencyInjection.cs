@@ -64,6 +64,7 @@ public static class DependencyInjection
         services.AddScoped<IDeliveryZoneRepository, DeliveryZoneRepository>();
         services.AddScoped<IDistrictRepository, DistrictRepository>();
         services.AddScoped<IProductPropertyDefinitionRepository, ProductPropertyDefinitionRepository>();
+        services.AddScoped<IPaymentMethodDefinitionRepository, PaymentMethodDefinitionRepository>();
 
         // Identity Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -71,6 +72,7 @@ public static class DependencyInjection
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<ICookieAuthService, CookieAuthService>();
         services.AddScoped<ILoginOtpRepository, LoginOtpRepository>();
+        services.AddScoped<IAccessDeniedReportRepository, AccessDeniedReportRepository>();
 
         // Ordering Services
         services.AddScoped<IOrderNumberGenerator, OrderNumberGenerator>();

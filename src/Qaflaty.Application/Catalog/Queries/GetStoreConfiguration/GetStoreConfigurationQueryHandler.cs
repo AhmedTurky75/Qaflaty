@@ -1,5 +1,6 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Domain.Catalog.Aggregates.PaymentMethodDefinition;
 using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
@@ -10,10 +11,14 @@ namespace Qaflaty.Application.Catalog.Queries.GetStoreConfiguration;
 public class GetStoreConfigurationQueryHandler : IQueryHandler<GetStoreConfigurationQuery, StoreConfigurationDto>
 {
     private readonly IStoreConfigurationRepository _configRepo;
+    private readonly IPaymentMethodDefinitionRepository _definitionRepo;
 
-    public GetStoreConfigurationQueryHandler(IStoreConfigurationRepository configRepo)
+    public GetStoreConfigurationQueryHandler(
+        IStoreConfigurationRepository configRepo,
+        IPaymentMethodDefinitionRepository definitionRepo)
     {
         _configRepo = configRepo;
+        _definitionRepo = definitionRepo;
     }
 
     public async Task<Result<StoreConfigurationDto>> Handle(GetStoreConfigurationQuery request, CancellationToken cancellationToken)
@@ -22,10 +27,15 @@ public class GetStoreConfigurationQueryHandler : IQueryHandler<GetStoreConfigura
         if (config == null)
             return Result.Failure<StoreConfigurationDto>(CatalogErrors.StoreConfigurationNotFound);
 
-        return Result.Success(MapToDto(config));
+        var definitions = await _definitionRepo.GetAllActiveAsync(cancellationToken);
+        var defMap = definitions.ToDictionary(d => d.Key, d => d, StringComparer.OrdinalIgnoreCase);
+
+        return Result.Success(MapToDto(config, defMap));
     }
 
-    internal static StoreConfigurationDto MapToDto(Domain.Catalog.Aggregates.StoreConfiguration.StoreConfiguration config) => new(
+    internal static StoreConfigurationDto MapToDto(
+        Domain.Catalog.Aggregates.StoreConfiguration.StoreConfiguration config,
+        Dictionary<string, PaymentMethodDefinition> defMap) => new(
         config.Id.Value,
         config.StoreId.Value,
         new PageTogglesDto(
@@ -62,12 +72,13 @@ public class GetStoreConfigurationQueryHandler : IQueryHandler<GetStoreConfigura
             config.SearchSettings.EnablePropertyFilters,
             config.SearchSettings.FilterablePropertyDefinitionIds,
             config.SearchSettings.AllowedSortOptions.Select(s => s.ToString()).ToList()),
-        config.PaymentMethodAdjustments.Select(a => new PaymentMethodAdjustmentDto(
-            a.Id,
-            a.PaymentMethod.ToString(),
-            a.AdjustmentType.ToString(),
-            a.Value,
-            a.DisplayLabel)).ToList(),
+        config.PaymentMethodAdjustments.Select(a =>
+        {
+            defMap.TryGetValue(a.PaymentMethodKey, out var def);
+            return new PaymentMethodAdjustmentDto(
+                a.Id, a.PaymentMethodKey, a.AdjustmentType.ToString(), a.Value, a.DisplayLabel, a.IsEnabled,
+                def?.DefaultLabel ?? a.PaymentMethodKey, def?.DefaultDescription ?? string.Empty);
+        }).ToList(),
         config.CreatedAt,
         config.UpdatedAt);
 }
