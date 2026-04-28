@@ -91,7 +91,7 @@ export interface DeliveryInfo {
 }
 
 export interface PaymentInfo {
-  method: PaymentMethod;
+  method: PaymentMethodData;
   status: PaymentStatus;
 }
 
