@@ -24,8 +24,8 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
-    private readonly List<PaymentMethodAdjustment> _paymentMethodAdjustments = [];
-    public IReadOnlyList<PaymentMethodAdjustment> PaymentMethodAdjustments => _paymentMethodAdjustments.AsReadOnly();
+    private readonly List<PaymentMethod> _paymentMethods = [];
+    public IReadOnlyList<PaymentMethod> PaymentMethods => _paymentMethods.AsReadOnly();
 
     private StoreConfiguration() : base(StoreConfigurationId.Empty) { }
 
@@ -51,9 +51,60 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
         };
 
         config.RaiseDomainEvent(new StoreConfigurationCreatedEvent(config.Id, storeId));
-
         return Result.Success(config);
     }
+
+    // ── Payment Methods ────────────────────────────────────────────────────
+
+    public Result<PaymentMethod> AddPaymentMethod(
+        string key, string label, FeeAdjustmentType feeType = FeeAdjustmentType.None,
+        decimal feeValue = 0m, string? description = null, int sortOrder = 0)
+    {
+        if (_paymentMethods.Any(p => !p.IsDeleted && p.Key.Equals(key, StringComparison.OrdinalIgnoreCase)))
+            return Result.Failure<PaymentMethod>(
+                new Error("PaymentMethod.DuplicateKey", $"A payment method with key '{key}' already exists"));
+
+        var result = PaymentMethod.Create(key, label, feeType, feeValue, description, sortOrder);
+        if (result.IsFailure) return result;
+
+        _paymentMethods.Add(result.Value);
+        UpdatedAt = DateTime.UtcNow;
+        return result;
+    }
+
+    public Result UpdatePaymentMethod(Guid id, string label, string? description,
+        FeeAdjustmentType feeType, decimal feeValue, bool isEnabled, int sortOrder)
+    {
+        var method = _paymentMethods.FirstOrDefault(p => p.Id == id && !p.IsDeleted);
+        if (method is null)
+            return Result.Failure(new Error("PaymentMethod.NotFound", "Payment method not found"));
+
+        return method.Update(label, description, feeType, feeValue, isEnabled, sortOrder);
+    }
+
+    public Result SoftDeletePaymentMethod(Guid id)
+    {
+        var method = _paymentMethods.FirstOrDefault(p => p.Id == id && !p.IsDeleted);
+        if (method is null)
+            return Result.Failure(new Error("PaymentMethod.NotFound", "Payment method not found"));
+
+        method.SoftDelete();
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result TogglePaymentMethod(Guid id, bool isEnabled)
+    {
+        var method = _paymentMethods.FirstOrDefault(p => p.Id == id && !p.IsDeleted);
+        if (method is null)
+            return Result.Failure(new Error("PaymentMethod.NotFound", "Payment method not found"));
+
+        method.SetEnabled(isEnabled);
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    // ── Config Updates ─────────────────────────────────────────────────────
 
     public Result UpdatePageToggles(PageToggles pageToggles)
     {
@@ -112,18 +163,6 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public Result UpdateSearchSettings(SearchSettings settings)
     {
         SearchSettings = settings;
-        UpdatedAt = DateTime.UtcNow;
-        return Result.Success();
-    }
-
-    /// <summary>
-    /// Replaces the entire payment method adjustment list with a new set.
-    /// Pass an empty list to remove all adjustments.
-    /// </summary>
-    public Result SetPaymentMethodAdjustments(IEnumerable<PaymentMethodAdjustment> adjustments)
-    {
-        _paymentMethodAdjustments.Clear();
-        _paymentMethodAdjustments.AddRange(adjustments);
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }
