@@ -160,7 +160,8 @@
       "Bash(cmd /c \"dir D:\\\\Projects\\\\Qafilaty\\\\src\\\\Qaflaty.Infrastructure\\\\Migrations 2>&1\")",
       "Bash(xargs head:*)",
       "Bash(head -20 grep -n \"Phone\\\\|profile\\\\|Profile\\\\|UpdateCustomer\" /d/Projects/Qafilaty/src/Qaflaty.Api/Controllers/StorefrontAuthController.cs)",
-      "Bash(/dev/null grep:*)"
+      "Bash(/dev/null grep:*)",
+      "Bash(git -C /d/Projects/Qafilaty status --short)"
     ],
     "deny": [],
     "ask": [],

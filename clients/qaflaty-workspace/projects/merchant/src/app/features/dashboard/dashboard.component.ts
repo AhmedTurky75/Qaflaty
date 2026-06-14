@@ -10,6 +10,7 @@ import { RecentOrdersComponent } from './components/recent-orders/recent-orders.
 import { TopProductsComponent } from './components/top-products/top-products.component';
 import { QuickActionsComponent } from './components/quick-actions/quick-actions.component';
 import { LowStockAlertsComponent } from './components/low-stock-alerts/low-stock-alerts.component';
+import { SetupGuideComponent } from '../setup-guide/setup-guide.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,7 +23,8 @@ import { LowStockAlertsComponent } from './components/low-stock-alerts/low-stock
     RecentOrdersComponent,
     TopProductsComponent,
     QuickActionsComponent,
-    LowStockAlertsComponent
+    LowStockAlertsComponent,
+    SetupGuideComponent
   ],
   templateUrl: './dashboard.component.html'
 })
