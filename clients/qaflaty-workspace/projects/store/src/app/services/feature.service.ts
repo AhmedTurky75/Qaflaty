@@ -35,19 +35,51 @@ export class FeatureService {
   isLiveChatEnabled = computed(() => this.config()?.communicationSettings?.liveChatEnabled ?? false);
 
   // Layout variants
-  headerVariant = computed(() => this.config()?.headerVariant ?? 'header-minimal');
-  footerVariant = computed(() => this.config()?.footerVariant ?? 'footer-standard');
+  headerVariant = computed(() => {
+    const legacyMap: Record<string, string> = {
+      'Centered': 'header-centered',
+      'LeftAligned': 'header-full',
+      'MinimalCentered': 'header-minimal',
+      'SplitNavigation': 'header-sidebar',
+    };
+    const raw = this.config()?.headerVariant;
+    if (!raw) return 'header-minimal';
+    return legacyMap[raw] ?? raw;
+  });
+  footerVariant = computed(() => {
+    const legacyMap: Record<string, string> = {
+      'FourColumn': 'footer-standard',
+      'ThreeColumn': 'footer-centered',
+      'Minimal': 'footer-minimal',
+      'Stacked': 'footer-standard',
+    };
+    const raw = this.config()?.footerVariant;
+    if (!raw) return 'footer-standard';
+    return legacyMap[raw] ?? raw;
+  });
   productCardVariant = computed(() => {
-    const variantMap: Record<string, string> = {
+    const legacyMap: Record<string, string> = {
       'Standard': 'card-standard',
       'Compact':  'card-minimal',
       'Detailed': 'card-detailed',
       'WithHover': 'card-overlay',
     };
     const raw = this.config()?.productCardVariant;
-    return (raw && variantMap[raw]) ? variantMap[raw] : 'card-standard';
+    if (!raw) return 'card-standard';
+    return legacyMap[raw] ?? raw;
   });
-  productGridVariant = computed(() => this.config()?.productGridVariant ?? 'grid-standard');
+  productGridVariant = computed(() => {
+    const legacyMap: Record<string, string> = {
+      'TwoColumn': 'grid-2',
+      'ThreeColumn': 'grid-3',
+      'FourColumn': 'grid-4',
+      'Masonry': 'grid-masonry',
+      'grid-standard': 'grid-3',
+    };
+    const raw = this.config()?.productGridVariant;
+    if (!raw) return 'grid-3';
+    return legacyMap[raw] ?? raw;
+  });
 
   // Social Links
   socialLinks = computed(() => this.config()?.socialLinks);

@@ -71,6 +71,15 @@ export class ProductListComponent {
       .filter(v => v !== null).length
   );
 
+  gridClass = computed(() => {
+    switch (this.featureService.productGridVariant()) {
+      case 'grid-2': return 'grid-cols-2 gap-6';
+      case 'grid-4': return 'grid-cols-2 lg:grid-cols-4 gap-6';
+      case 'grid-masonry': return 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4';
+      default: return 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6';
+    }
+  });
+
   currentCategory = computed(() => {
     const catId = this.selectedCategory();
     return catId ? this.categories().find(c => c.id === catId) : null;

@@ -46,10 +46,10 @@ import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
                     [(ngModel)]="localConfig!.headerVariant"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                   >
-                    <option value="Centered">Centered</option>
-                    <option value="LeftAligned">Left Aligned</option>
-                    <option value="MinimalCentered">Minimal Centered</option>
-                    <option value="SplitNavigation">Split Navigation</option>
+                    <option value="header-centered">Centered</option>
+                    <option value="header-full">Left Aligned</option>
+                    <option value="header-minimal">Minimal</option>
+                    <option value="header-sidebar">Split Navigation</option>
                   </select>
                 </div>
                 <div>
@@ -58,10 +58,9 @@ import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
                     [(ngModel)]="localConfig!.footerVariant"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                   >
-                    <option value="FourColumn">Four Column</option>
-                    <option value="ThreeColumn">Three Column</option>
-                    <option value="Minimal">Minimal</option>
-                    <option value="Stacked">Stacked</option>
+                    <option value="footer-standard">Standard (Four Column)</option>
+                    <option value="footer-centered">Centered (Three Column)</option>
+                    <option value="footer-minimal">Minimal</option>
                   </select>
                 </div>
                 <div>
@@ -70,10 +69,10 @@ import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
                     [(ngModel)]="localConfig!.productCardVariant"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                   >
-                    <option value="Standard">Standard</option>
-                    <option value="Compact">Compact</option>
-                    <option value="Detailed">Detailed</option>
-                    <option value="WithHover">With Hover</option>
+                    <option value="card-standard">Standard</option>
+                    <option value="card-minimal">Compact</option>
+                    <option value="card-detailed">Detailed</option>
+                    <option value="card-overlay">With Hover</option>
                   </select>
                 </div>
                 <div>
@@ -82,10 +81,10 @@ import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
                     [(ngModel)]="localConfig!.productGridVariant"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                   >
-                    <option value="TwoColumn">Two Columns</option>
-                    <option value="ThreeColumn">Three Columns</option>
-                    <option value="FourColumn">Four Columns</option>
-                    <option value="Masonry">Masonry</option>
+                    <option value="grid-2">Two Columns</option>
+                    <option value="grid-3">Three Columns</option>
+                    <option value="grid-4">Four Columns</option>
+                    <option value="grid-masonry">Masonry</option>
                   </select>
                 </div>
               </div>

@@ -276,7 +276,7 @@
 
         <!-- Loading State -->
         @if (loading()) {
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div class="grid" [ngClass]="gridClass()">
             @for (item of [1,2,3,4,5,6]; track item) {
               <div class="animate-pulse bg-white rounded-xl shadow-sm border border-gray-100 p-4">
                 <div class="bg-gray-200 h-56 rounded-lg mb-4"></div>
@@ -289,7 +289,7 @@
 
         <!-- Products Grid -->
         @else if (products().length > 0) {
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          <div class="grid mb-8" [ngClass]="gridClass()">
             @for (product of products(); track product.id) {
               <app-product-card [product]="product" />
             }
