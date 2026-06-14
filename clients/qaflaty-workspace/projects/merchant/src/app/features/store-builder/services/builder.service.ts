@@ -102,6 +102,10 @@ export class BuilderService {
     return this.http.put<DeliveryZoneDto>(`${this.apiUrl}/stores/${storeId}/delivery-zones`, req);
   }
 
+  deleteDeliveryZone(storeId: string, zoneId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/stores/${storeId}/delivery-zones/${zoneId}`);
+  }
+
   // ── Product Property Definitions ─────────────────────────────────────────
   getProductPropertyDefinitions(storeId: string): Observable<ProductPropertyDefinitionDto[]> {
     return this.http.get<ProductPropertyDefinitionDto[]>(`${this.apiUrl}/stores/${storeId}/product-properties`);

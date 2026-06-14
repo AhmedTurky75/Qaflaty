@@ -1,6 +1,7 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
+using Qaflaty.Application.Catalog.Commands.DeleteDeliveryZone;
 using Qaflaty.Application.Catalog.Commands.UpsertDeliveryZone;
 using Qaflaty.Application.Catalog.Queries.GetDeliveryZones;
 using Qaflaty.Application.Catalog.Queries.ResolveDeliveryFee;
@@ -31,6 +32,13 @@ public class DeliveryZonesController : ApiController
             request.FeeCurrency);
 
         var result = await Sender.Send(command, ct);
+        return HandleResult(result);
+    }
+
+    [HttpDelete("{zoneId:guid}")]
+    public async Task<IActionResult> DeleteZone(Guid storeId, Guid zoneId, CancellationToken ct)
+    {
+        var result = await Sender.Send(new DeleteDeliveryZoneCommand(storeId, zoneId), ct);
         return HandleResult(result);
     }
 

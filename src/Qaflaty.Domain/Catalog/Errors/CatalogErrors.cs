@@ -66,4 +66,7 @@ public static class CatalogErrors
 
     public static readonly Error FaqItemNotFound =
         new("Catalog.FaqItemNotFound", "FAQ item not found");
+
+    public static readonly Error DeliveryZoneNotFound =
+        new("Catalog.DeliveryZoneNotFound", "Delivery zone not found");
 }
