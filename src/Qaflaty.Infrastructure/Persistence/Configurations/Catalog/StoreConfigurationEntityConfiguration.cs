@@ -120,61 +120,42 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
         builder.Property(sc => sc.CreatedAt).HasColumnName("created_at");
         builder.Property(sc => sc.UpdatedAt).HasColumnName("updated_at");
 
-        // PaymentMethods - owned entity collection
-        builder.OwnsMany(sc => sc.PaymentMethods, pm =>
+        // PaymentMethodAdjustments - owned entity collection
+        builder.OwnsMany(sc => sc.PaymentMethodAdjustments, adj =>
         {
-            pm.ToTable("store_payment_methods");
+            adj.ToTable("payment_method_adjustments");
 
-            pm.WithOwner().HasForeignKey("store_configuration_id");
+            adj.WithOwner().HasForeignKey("store_configuration_id");
 
-            pm.HasKey(p => p.Id);
-            pm.Property(p => p.Id)
+            adj.HasKey(a => a.Id);
+            adj.Property(a => a.Id)
                 .HasColumnName("id")
                 .ValueGeneratedNever();
 
-            pm.Property(p => p.Key)
-                .HasColumnName("key")
+            adj.Property(a => a.PaymentMethodKey)
+                .HasColumnName("payment_method")
                 .HasMaxLength(50)
                 .IsRequired();
 
-            pm.Property(p => p.Label)
-                .HasColumnName("label")
-                .HasMaxLength(100)
-                .IsRequired();
-
-            pm.Property(p => p.Description)
-                .HasColumnName("description")
-                .HasMaxLength(500)
-                .IsRequired(false);
-
-            pm.Property(p => p.IsEnabled)
-                .HasColumnName("is_enabled")
-                .IsRequired();
-
-            pm.Property(p => p.IsDeleted)
-                .HasColumnName("is_deleted")
-                .IsRequired();
-
-            pm.Property(p => p.FeeType)
-                .HasColumnName("fee_type")
+            adj.Property(a => a.AdjustmentType)
+                .HasColumnName("adjustment_type")
                 .HasConversion<string>()
                 .HasMaxLength(20)
                 .IsRequired();
 
-            pm.Property(p => p.FeeValue)
-                .HasColumnName("fee_value")
+            adj.Property(a => a.Value)
+                .HasColumnName("value")
                 .HasColumnType("decimal(10,4)")
                 .IsRequired();
 
-            pm.Property(p => p.SortOrder)
-                .HasColumnName("sort_order")
+            adj.Property(a => a.DisplayLabel)
+                .HasColumnName("display_label")
+                .HasMaxLength(200)
+                .IsRequired(false);
+
+            adj.Property(a => a.IsEnabled)
+                .HasColumnName("is_enabled")
                 .IsRequired();
-
-            pm.Property(p => p.CreatedAt)
-                .HasColumnName("created_at");
-
-            pm.Property(p => p.UpdatedAt)
-                .HasColumnName("updated_at");
         });
 
         builder.Ignore(sc => sc.DomainEvents);
