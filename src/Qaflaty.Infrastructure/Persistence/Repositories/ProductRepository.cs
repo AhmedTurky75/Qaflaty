@@ -18,11 +18,22 @@ public class ProductRepository : IProductRepository
     public async Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct = default)
         => await _context.Products.FirstOrDefaultAsync(p => p.Id == id, ct);
 
+    public async Task<Product?> GetByIdWithPropertyValuesAsync(ProductId id, CancellationToken ct = default)
+        => await _context.Products
+            .Include(p => p.PropertyValues)
+            .FirstOrDefaultAsync(p => p.Id == id, ct);
+
     public async Task<Product?> GetBySlugAsync(StoreId storeId, ProductSlug slug, CancellationToken ct = default)
         => await _context.Products.FirstOrDefaultAsync(p => p.StoreId == storeId && p.Slug.Value == slug.Value, ct);
 
     public async Task<IReadOnlyList<Product>> GetByStoreIdAsync(StoreId storeId, CancellationToken ct = default)
         => await _context.Products.Where(p => p.StoreId == storeId).ToListAsync(ct);
+
+    public async Task<IReadOnlyList<Product>> GetByStoreIdWithPropertyValuesAsync(StoreId storeId, CancellationToken ct = default)
+        => await _context.Products
+            .Include(p => p.PropertyValues)
+            .Where(p => p.StoreId == storeId)
+            .ToListAsync(ct);
 
     public async Task<bool> IsSlugAvailableAsync(StoreId storeId, ProductSlug slug, ProductId? excludeId = null, CancellationToken ct = default)
     {

@@ -18,7 +18,7 @@ public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, Pro
 
     public async Task<Result<ProductDto>> Handle(GetProductByIdQuery request, CancellationToken cancellationToken)
     {
-        var product = await _productRepository.GetByIdAsync(new ProductId(request.ProductId), cancellationToken);
+        var product = await _productRepository.GetByIdWithPropertyValuesAsync(new ProductId(request.ProductId), cancellationToken);
 
         if (product is null)
             return Result.Failure<ProductDto>(CatalogErrors.ProductNotFound);

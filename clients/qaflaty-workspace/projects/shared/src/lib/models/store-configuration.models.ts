@@ -131,6 +131,14 @@ export interface StoreConfigurationDto {
   updatedAt: string;
 }
 
+export interface FilterablePropertyDefinition {
+  id: string;
+  name: string;
+  displayName: string;
+  type: 'Text' | 'Number' | 'SingleChoice' | 'MultiChoice' | 'Boolean';
+  options: string[];
+}
+
 export interface StorefrontConfigDto {
   storeId: string;
   slug: string;
@@ -151,6 +159,7 @@ export interface StorefrontConfigDto {
   isUnderMaintenance: boolean;
   searchSettings: SearchSettings;
   paymentMethodAdjustments: PaymentMethodAdjustment[];
+  filterablePropertyDefinitions: FilterablePropertyDefinition[];
 }
 
 export interface FaqItemDto {

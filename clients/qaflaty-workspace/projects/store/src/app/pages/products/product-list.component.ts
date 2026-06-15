@@ -9,6 +9,7 @@ import { FeatureService } from '../../services/feature.service';
 import { Product, ProductFilter, ProductSortBy } from '../../models/product.model';
 import { Category } from '../../models/category.model';
 import { ProductCardComponent } from '../../components/products/product-card.component';
+import { FilterablePropertyDefinition } from 'shared';
 
 @Component({
   selector: 'app-product-list',
@@ -45,6 +46,12 @@ export class ProductListComponent {
   showPriceFilter = computed(() =>
     this.featureService.isProductSearchEnabled() && (this.searchSettings()?.enablePriceFilter ?? true));
 
+  showPropertyFilters = computed(() =>
+    this.featureService.isProductSearchEnabled() && (this.searchSettings()?.enablePropertyFilters ?? false));
+
+  filterablePropertyDefinitions = computed<FilterablePropertyDefinition[]>(() =>
+    this.configService.config()?.filterablePropertyDefinitions ?? []);
+
   visibleSortOptions = computed(() => {
     const allowed = this.searchSettings()?.allowedSortOptions;
     if (!allowed || allowed.length === 0) return this.ALL_SORT_OPTIONS;
@@ -66,10 +73,15 @@ export class ProductListComponent {
   pageSize = 12;
   sidebarOpen = signal<boolean>(false);
 
-  activeFiltersCount = computed(() =>
-    [this.selectedCategory(), this.searchQuery() || null, this.minPrice(), this.maxPrice()]
-      .filter(v => v !== null).length
-  );
+  // Map of definitionId -> Set of selected values
+  selectedPropertyValues = signal<Map<string, Set<string>>>(new Map());
+
+  activeFiltersCount = computed(() => {
+    const propFilterCount = Array.from(this.selectedPropertyValues().values())
+      .reduce((acc, set) => acc + set.size, 0);
+    return [this.selectedCategory(), this.searchQuery() || null, this.minPrice(), this.maxPrice()]
+      .filter(v => v !== null).length + propFilterCount;
+  });
 
   gridClass = computed(() => {
     switch (this.featureService.productGridVariant()) {
@@ -114,12 +126,29 @@ export class ProductListComponent {
       this.minPrice.set(params['minPrice'] ? Number(params['minPrice']) : null);
       this.maxPrice.set(params['maxPrice'] ? Number(params['maxPrice']) : null);
       this.currentPage.set(parseInt(params['page'] || '1'));
+
+      // Restore property filters from query params: "pf_<definitionId>" = comma-separated values
+      const newMap = new Map<string, Set<string>>();
+      for (const key of Object.keys(params)) {
+        if (key.startsWith('pf_')) {
+          const defId = key.slice(3);
+          const values = (params[key] as string).split(',').filter(Boolean);
+          if (values.length > 0) newMap.set(defId, new Set(values));
+        }
+      }
+      this.selectedPropertyValues.set(newMap);
+
       this.loadProducts();
     });
   }
 
   loadProducts() {
     this.loading.set(true);
+
+    const propertyFilters: string[] = [];
+    this.selectedPropertyValues().forEach((values, defId) => {
+      values.forEach(val => propertyFilters.push(`${defId}:${val}`));
+    });
 
     const filter: ProductFilter = {
       categoryId: this.selectedCategory() || undefined,
@@ -128,7 +157,8 @@ export class ProductListComponent {
       minPrice: this.minPrice() ?? undefined,
       maxPrice: this.maxPrice() ?? undefined,
       page: this.currentPage(),
-      pageSize: this.pageSize
+      pageSize: this.pageSize,
+      propertyFilters: propertyFilters.length > 0 ? propertyFilters : undefined
     };
 
     this.productService.getProducts(filter).subscribe({
@@ -181,6 +211,61 @@ export class ProductListComponent {
       maxPrice: this.maxPrice() ?? null,
       page: 1
     });
+  }
+
+  isPropertyValueSelected(definitionId: string, value: string): boolean {
+    return this.selectedPropertyValues().get(definitionId)?.has(value) ?? false;
+  }
+
+  getFirstPropertyValue(definitionId: string): string {
+    const set = this.selectedPropertyValues().get(definitionId);
+    return set && set.size > 0 ? Array.from(set)[0] : '';
+  }
+
+  setPropertyTextValue(definitionId: string, value: string): void {
+    const current = new Map(this.selectedPropertyValues());
+    if (value.trim()) {
+      current.set(definitionId, new Set([value.trim()]));
+    } else {
+      current.delete(definitionId);
+    }
+    this.selectedPropertyValues.set(current);
+    this.applyPropertyFilters();
+  }
+
+  togglePropertyValue(definitionId: string, value: string): void {
+    const current = new Map(this.selectedPropertyValues());
+    const selected = new Set(current.get(definitionId) ?? []);
+
+    if (selected.has(value)) {
+      selected.delete(value);
+    } else {
+      selected.add(value);
+    }
+
+    if (selected.size === 0) {
+      current.delete(definitionId);
+    } else {
+      current.set(definitionId, selected);
+    }
+
+    this.selectedPropertyValues.set(current);
+    this.applyPropertyFilters();
+  }
+
+  private applyPropertyFilters(): void {
+    const params: Record<string, string | null> = { page: '1' };
+    this.selectedPropertyValues().forEach((values, defId) => {
+      params[`pf_${defId}`] = values.size > 0 ? Array.from(values).join(',') : null;
+    });
+    // Clear removed definition keys
+    const currentParams = this.route.snapshot.queryParams;
+    for (const key of Object.keys(currentParams)) {
+      if (key.startsWith('pf_') && !params.hasOwnProperty(key)) {
+        params[key] = null;
+      }
+    }
+    this.updateQueryParams(params);
   }
 
   goToPage(page: number) {

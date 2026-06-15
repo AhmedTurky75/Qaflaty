@@ -7,8 +7,10 @@ namespace Qaflaty.Domain.Catalog.Repositories;
 public interface IProductRepository
 {
     Task<Product?> GetByIdAsync(ProductId id, CancellationToken ct = default);
+    Task<Product?> GetByIdWithPropertyValuesAsync(ProductId id, CancellationToken ct = default);
     Task<Product?> GetBySlugAsync(StoreId storeId, ProductSlug slug, CancellationToken ct = default);
     Task<IReadOnlyList<Product>> GetByStoreIdAsync(StoreId storeId, CancellationToken ct = default);
+    Task<IReadOnlyList<Product>> GetByStoreIdWithPropertyValuesAsync(StoreId storeId, CancellationToken ct = default);
     Task<bool> IsSlugAvailableAsync(StoreId storeId, ProductSlug slug, ProductId? excludeId = null, CancellationToken ct = default);
     Task AddAsync(Product product, CancellationToken ct = default);
     void Update(Product product);

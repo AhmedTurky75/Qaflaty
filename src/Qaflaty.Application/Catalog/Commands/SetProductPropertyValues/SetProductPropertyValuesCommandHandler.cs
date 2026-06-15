@@ -25,7 +25,7 @@ public class SetProductPropertyValuesCommandHandler
     public async Task<Result<List<ProductPropertyValueDto>>> Handle(
         SetProductPropertyValuesCommand request, CancellationToken cancellationToken)
     {
-        var product = await _productRepository.GetByIdAsync(new ProductId(request.ProductId), cancellationToken);
+        var product = await _productRepository.GetByIdWithPropertyValuesAsync(new ProductId(request.ProductId), cancellationToken);
         if (product == null)
             return Result.Failure<List<ProductPropertyValueDto>>(CatalogErrors.ProductNotFound);
 
@@ -47,7 +47,7 @@ public class SetProductPropertyValuesCommandHandler
         }
 
         product.SetPropertyValues(values);
-        _productRepository.Update(product);
+        //_productRepository.Update(product);
 
         var dtos = product.PropertyValues
             .Select(v =>

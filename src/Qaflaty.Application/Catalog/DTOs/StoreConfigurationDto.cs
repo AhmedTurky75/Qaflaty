@@ -63,6 +63,13 @@ public record SearchSettingsDto(
     List<Guid> FilterablePropertyDefinitionIds,
     List<string> AllowedSortOptions);
 
+public record FilterablePropertyDefinitionDto(
+    Guid Id,
+    string Name,
+    string DisplayName,
+    string Type,
+    List<string> Options);
+
 // Public storefront DTO combining store + configuration
 public record StorefrontConfigDto(
     Guid StoreId,
@@ -83,5 +90,6 @@ public record StorefrontConfigDto(
     string ProductGridVariant,
     bool IsUnderMaintenance,
     SearchSettingsDto SearchSettings,
-    List<PaymentMethodAdjustmentDto> PaymentMethodAdjustments
+    List<PaymentMethodAdjustmentDto> PaymentMethodAdjustments,
+    List<FilterablePropertyDefinitionDto> FilterablePropertyDefinitions
 );

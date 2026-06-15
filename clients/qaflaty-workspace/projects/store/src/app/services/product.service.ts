@@ -39,6 +39,11 @@ export class ProductService {
       if (filter.pageSize) {
         params = params.set('pageSize', filter.pageSize.toString());
       }
+      if (filter.propertyFilters && filter.propertyFilters.length > 0) {
+        for (const pf of filter.propertyFilters) {
+          params = params.append('propertyFilters', pf);
+        }
+      }
     }
 
     return this.http.get<PaginatedProducts>(this.apiUrl, { params });

@@ -173,6 +173,62 @@
               <div class="border-t border-gray-100 mb-5"></div>
             }
 
+            <!-- Custom Property Filters -->
+            @if (showPropertyFilters() && filterablePropertyDefinitions().length > 0) {
+              @for (def of filterablePropertyDefinitions(); track def.id) {
+                <div class="mb-5">
+                  <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{{ def.displayName }}</p>
+
+                  @if (def.type === 'SingleChoice' || def.type === 'MultiChoice') {
+                    <div class="space-y-1.5">
+                      @for (option of def.options; track option) {
+                        <label class="flex items-center gap-2.5 cursor-pointer group">
+                          <input
+                            type="checkbox"
+                            [checked]="isPropertyValueSelected(def.id, option)"
+                            (change)="togglePropertyValue(def.id, option)"
+                            class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary cursor-pointer"
+                          />
+                          <span
+                            class="text-sm transition-colors"
+                            [ngClass]="isPropertyValueSelected(def.id, option) ? 'font-semibold text-primary' : 'text-gray-600 group-hover:text-gray-900'"
+                          >
+                            {{ option }}
+                          </span>
+                        </label>
+                      }
+                    </div>
+                  }
+
+                  @if (def.type === 'Boolean') {
+                    <label class="flex items-center gap-2.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        [checked]="isPropertyValueSelected(def.id, 'true')"
+                        (change)="togglePropertyValue(def.id, 'true')"
+                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary accent-primary cursor-pointer"
+                      />
+                      <span class="text-sm text-gray-600">Yes</span>
+                    </label>
+                  }
+
+                  @if (def.type === 'Text' || def.type === 'Number') {
+                    <input
+                      #propInput
+                      [type]="def.type === 'Number' ? 'number' : 'text'"
+                      [placeholder]="'Filter by ' + def.displayName"
+                      [value]="getFirstPropertyValue(def.id)"
+                      (keyup.enter)="setPropertyTextValue(def.id, propInput.value)"
+                      (change)="setPropertyTextValue(def.id, propInput.value)"
+                      class="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm
+                             focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"
+                    />
+                  }
+                </div>
+                <div class="border-t border-gray-100 mb-5"></div>
+              }
+            }
+
             <!-- Sort By -->
             @if (visibleSortOptions().length > 0) {
               <div>

@@ -12,5 +12,7 @@ public record GetStorefrontProductsQuery(
     decimal? MinPrice = null,
     decimal? MaxPrice = null,
     int PageNumber = 1,
-    int PageSize = 20
+    int PageSize = 20,
+    // "definitionId:value" pairs for custom property filters
+    List<string>? PropertyFilters = null
 ) : IQuery<PaginatedList<ProductPublicDto>>;

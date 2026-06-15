@@ -3,6 +3,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StoreContextService } from '../../../core/services/store-context.service';
 import { BuilderService } from '../services/builder.service';
+import { ProductPropertyDefinitionDto } from 'shared';
 
 interface SearchSettingsLocal {
   enableTextSearch: boolean;
@@ -26,7 +27,7 @@ interface SearchSettingsLocal {
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
             </svg>
           </a>
-          <h1 class="text-lg font-semibold text-gray-900">Search & Filters</h1>
+          <h1 class="text-lg font-semibold text-gray-900">Search &amp; Filters</h1>
         </div>
       </div>
 
@@ -83,6 +84,39 @@ interface SearchSettingsLocal {
               </div>
             </div>
 
+            <!-- Filterable Property Definitions Picker (shown only when toggle is on) -->
+            @if (localSettings!.enablePropertyFilters) {
+              <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+                <h2 class="text-base font-semibold text-gray-900 mb-1">Filterable Properties</h2>
+                <p class="text-sm text-gray-500 mb-4">Choose which product properties appear as filters on your storefront. Only properties marked as <em>filterable</em> are listed here.</p>
+
+                @if (filterableDefinitions().length === 0) {
+                  <p class="text-sm text-gray-400">
+                    No filterable property definitions found.
+                    <a routerLink="/products/properties" class="text-blue-600 hover:underline">Create one</a>
+                    and mark it as filterable.
+                  </p>
+                } @else {
+                  <div class="space-y-3">
+                    @for (def of filterableDefinitions(); track def.id) {
+                      <label class="flex items-start gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          [checked]="isDefinitionSelected(def.id)"
+                          (change)="toggleDefinition(def.id, $event)"
+                          class="mt-0.5 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                        />
+                        <div>
+                          <p class="text-sm font-medium text-gray-800">{{ def.displayName }}</p>
+                          <p class="text-xs text-gray-400">{{ def.type }}{{ def.options.length > 0 ? ' · ' + def.options.join(', ') : '' }}</p>
+                        </div>
+                      </label>
+                    }
+                  </div>
+                }
+              </div>
+            }
+
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
               <h2 class="text-base font-semibold text-gray-900 mb-4">Allowed Sort Options</h2>
               <div class="space-y-3">
@@ -137,6 +171,7 @@ export class SearchSettingsComponent implements OnInit {
   saveErr = signal<string | null>(null);
 
   localSettings: SearchSettingsLocal | null = null;
+  filterableDefinitions = signal<ProductPropertyDefinitionDto[]>([]);
 
   sortOptionList = [
     { value: 'PriceAsc', label: 'Price: Low to High' },
@@ -154,6 +189,12 @@ export class SearchSettingsComponent implements OnInit {
       this.loading.set(false);
       return;
     }
+
+    // Load config and property definitions in parallel
+    let configDone = false;
+    let defsDone = false;
+    const checkDone = () => { if (configDone && defsDone) this.loading.set(false); };
+
     this.builderService.getConfiguration(storeId).subscribe({
       next: (config) => {
         if (config.searchSettings) {
@@ -168,13 +209,42 @@ export class SearchSettingsComponent implements OnInit {
             allowedSortOptions: ['Newest', 'PriceAsc', 'PriceDesc'],
           };
         }
-        this.loading.set(false);
+        configDone = true;
+        checkDone();
       },
       error: (err) => {
         this.loadErr.set(err.message || 'Failed to load configuration');
         this.loading.set(false);
       }
     });
+
+    this.builderService.getProductPropertyDefinitions(storeId).subscribe({
+      next: (defs) => {
+        this.filterableDefinitions.set(defs.filter(d => d.isFilterable));
+        defsDone = true;
+        checkDone();
+      },
+      error: () => {
+        // Non-fatal: just show no definitions
+        defsDone = true;
+        checkDone();
+      }
+    });
+  }
+
+  isDefinitionSelected(id: string): boolean {
+    return this.localSettings?.filterablePropertyDefinitionIds.includes(id) ?? false;
+  }
+
+  toggleDefinition(id: string, event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (!this.localSettings) return;
+    const current = this.localSettings.filterablePropertyDefinitionIds;
+    if (checked && !current.includes(id)) {
+      this.localSettings = { ...this.localSettings, filterablePropertyDefinitionIds: [...current, id] };
+    } else if (!checked) {
+      this.localSettings = { ...this.localSettings, filterablePropertyDefinitionIds: current.filter(v => v !== id) };
+    }
   }
 
   isSortOptionEnabled(value: string): boolean {

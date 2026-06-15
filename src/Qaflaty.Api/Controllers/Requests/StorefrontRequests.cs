@@ -48,5 +48,7 @@ public record GetProductsRequest(
     decimal? MinPrice = null,
     decimal? MaxPrice = null,
     int PageNumber = 1,
-    int PageSize = 20
+    int PageSize = 20,
+    // "definitionId:value" pairs, e.g. "3fa85f64-...:Cotton"
+    [Microsoft.AspNetCore.Mvc.FromQuery(Name = "propertyFilters")] List<string>? PropertyFilters = null
 );

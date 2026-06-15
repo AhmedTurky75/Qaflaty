@@ -161,7 +161,11 @@
       "Bash(xargs head:*)",
       "Bash(head -20 grep -n \"Phone\\\\|profile\\\\|Profile\\\\|UpdateCustomer\" /d/Projects/Qafilaty/src/Qaflaty.Api/Controllers/StorefrontAuthController.cs)",
       "Bash(/dev/null grep:*)",
-      "Bash(git -C /d/Projects/Qafilaty status --short)"
+      "Bash(git -C /d/Projects/Qafilaty status --short)",
+      "PowerShell([System.IO.File]::ReadAllText\\(\"D:\\\\Projects\\\\Qafilaty\\\\src\\\\Qaflety.Infrastructure\\\\Persistence\\\\Repositories\\\\ProductRepository.cs\"\\))",
+      "Read(//d/Projects//**)",
+      "Read(//d/Projects/**)",
+      "Bash(cmd /c \"dir /aL D:\\\\\\\\Projects\\\\\\\\\")"
     ],
     "deny": [],
     "ask": [],

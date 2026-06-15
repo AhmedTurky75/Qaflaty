@@ -15,15 +15,18 @@ public class GetStorefrontConfigQueryHandler : IQueryHandler<GetStorefrontConfig
     private readonly IStoreRepository _storeRepo;
     private readonly IStoreConfigurationRepository _configRepo;
     private readonly IPaymentMethodDefinitionRepository _definitionRepo;
+    private readonly IProductPropertyDefinitionRepository _propertyDefinitionRepo;
 
     public GetStorefrontConfigQueryHandler(
         IStoreRepository storeRepo,
         IStoreConfigurationRepository configRepo,
-        IPaymentMethodDefinitionRepository definitionRepo)
+        IPaymentMethodDefinitionRepository definitionRepo,
+        IProductPropertyDefinitionRepository propertyDefinitionRepo)
     {
         _storeRepo = storeRepo;
         _configRepo = configRepo;
         _definitionRepo = definitionRepo;
+        _propertyDefinitionRepo = propertyDefinitionRepo;
     }
 
     public async Task<Result<StorefrontConfigDto>> Handle(GetStorefrontConfigQuery request, CancellationToken cancellationToken)
@@ -40,6 +43,19 @@ public class GetStorefrontConfigQueryHandler : IQueryHandler<GetStorefrontConfig
 
         var definitions = await _definitionRepo.GetAllActiveAsync(cancellationToken);
         var defMap = definitions.ToDictionary(d => d.Key, d => d, StringComparer.OrdinalIgnoreCase);
+
+        // Load only the property definitions that are marked as filterable and are selected in SearchSettings
+        var filterableIds = config.SearchSettings.FilterablePropertyDefinitionIds;
+        var allPropertyDefs = await _propertyDefinitionRepo.GetByStoreAsync(storeId, cancellationToken);
+        var filterablePropertyDefs = allPropertyDefs
+            .Where(d => d.IsFilterable && filterableIds.Contains(d.Id.Value))
+            .Select(d => new FilterablePropertyDefinitionDto(
+                d.Id.Value,
+                d.Name,
+                d.DisplayName,
+                d.Type.ToString(),
+                d.Options))
+            .ToList();
 
         var dto = new StorefrontConfigDto(
             store.Id.Value,
@@ -91,7 +107,8 @@ public class GetStorefrontConfigQueryHandler : IQueryHandler<GetStorefrontConfig
                 config.SearchSettings.EnablePropertyFilters,
                 config.SearchSettings.FilterablePropertyDefinitionIds,
                 config.SearchSettings.AllowedSortOptions.Select(s => s.ToString()).ToList()),
-            BuildPaymentDtos(config.PaymentMethodAdjustments, defMap));
+            BuildPaymentDtos(config.PaymentMethodAdjustments, defMap),
+            filterablePropertyDefs);
 
         return Result.Success(dto);
     }

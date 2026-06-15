@@ -33,7 +33,11 @@ public class GetStorefrontProductsQueryHandler : IQueryHandler<GetStorefrontProd
         if (store == null)
             return Result.Failure<PaginatedList<ProductPublicDto>>(CatalogErrors.StoreNotFound);
 
-        var products = await _productRepository.GetByStoreIdAsync(store.Id, cancellationToken);
+        var hasPropertyFilters = request.PropertyFilters != null && request.PropertyFilters.Count > 0;
+
+        var products = hasPropertyFilters
+            ? await _productRepository.GetByStoreIdWithPropertyValuesAsync(store.Id, cancellationToken)
+            : await _productRepository.GetByStoreIdAsync(store.Id, cancellationToken);
 
         var query = products.Where(p => p.Status == ProductStatus.Active);
 
@@ -56,6 +60,27 @@ public class GetStorefrontProductsQueryHandler : IQueryHandler<GetStorefrontProd
 
         if (request.MaxPrice.HasValue)
             query = query.Where(p => p.Pricing.Price.Amount <= request.MaxPrice.Value);
+
+        if (hasPropertyFilters)
+        {
+            // Each entry is "definitionId:value"; a product must match ALL supplied filters
+            foreach (var filterEntry in request.PropertyFilters!)
+            {
+                var colonIdx = filterEntry.IndexOf(':');
+                if (colonIdx <= 0) continue;
+
+                var rawId = filterEntry[..colonIdx];
+                var filterValue = filterEntry[(colonIdx + 1)..];
+
+                if (!Guid.TryParse(rawId, out var definitionGuid)) continue;
+                var definitionId = new ProductPropertyDefinitionId(definitionGuid);
+
+                query = query.Where(p =>
+                    p.PropertyValues.Any(v =>
+                        v.DefinitionId == definitionId &&
+                        v.Value.Equals(filterValue, StringComparison.OrdinalIgnoreCase)));
+            }
+        }
 
         if (!string.IsNullOrWhiteSpace(request.SortBy) &&
             Enum.TryParse<ProductSortOption>(request.SortBy, true, out var sortOption))

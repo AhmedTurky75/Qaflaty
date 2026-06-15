@@ -44,6 +44,8 @@ export interface ProductFilter {
   maxPrice?: number;
   page?: number;
   pageSize?: number;
+  // "definitionId:value" pairs, one entry per selected option
+  propertyFilters?: string[];
 }
 
 export enum ProductSortBy {
