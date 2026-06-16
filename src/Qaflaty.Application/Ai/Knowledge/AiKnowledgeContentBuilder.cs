@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Qaflaty.Application.Common.Interfaces.Ai;
 using Qaflaty.Domain.Catalog.Aggregates.FaqItem;
@@ -137,10 +138,14 @@ public static class AiKnowledgeContentBuilder
         {
             ["productId"] = product.Id.Value.ToString(),
             ["slug"] = product.Slug.Value,
-            ["price"] = price.Amount.ToString("0.##"),
+            ["price"] = price.Amount.ToString("0.##", CultureInfo.InvariantCulture),
             ["currency"] = price.Currency.ToString(),
             ["inStock"] = product.Inventory.InStock.ToString()
         };
+
+        var image = product.Images.OrderBy(i => i.SortOrder).FirstOrDefault();
+        if (image is not null && !string.IsNullOrWhiteSpace(image.Url))
+            metadata["imageUrl"] = image.Url;
 
         return new AiKnowledgeDraft(
             $"product-{product.Id.Value}",

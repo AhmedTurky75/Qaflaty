@@ -19,11 +19,40 @@ A backend + frontend vertical slice of "Phase 1":
   `ChatConversation` aggregate and delivered over the existing SignalR `/hubs/chat`.
 - **Status/insights** — a status endpoint surfaces knowledge counts and service availability.
 
+### Also delivered (follow-up)
+
+- **Cart actions** — AI replies carry suggested products (derived from retrieved product
+  knowledge). The storefront renders them as cards with an explicit **Add to cart** button;
+  the assistant never modifies the cart itself (confirmation required by design).
+- **Analytics dashboard** — AI interactions are logged to `ai_interaction_logs` and surfaced
+  as merchant dashboard widgets (conversations, cart additions, products recommended,
+  conversion, top questions, product interest, knowledge gaps).
+
 ### Deferred (future phases)
 
-Cart add-to-cart actions / function calling, customer-information collection, the full
-analytics dashboard and widgets, offers/orders/customer-history embeddings, and omnichannel
+Customer-information collection, offers/orders/customer-history embeddings, and omnichannel
 (WhatsApp/Messenger) integration. The design leaves room for these (see interfaces below).
+
+## Cart actions
+
+`GenerateAiReplyCommand` returns an `AiReplyDto { message, suggestedProducts[] }`. Suggested
+products come from the in-stock product documents retrieved during RAG (top 3), including
+name, slug, price, currency and image. Delivery:
+
+- SignalR: the Bot message arrives via `ReceiveMessage`; suggestions via an `AiSuggestedProducts`
+  event keyed by message id.
+- HTTP: `POST /api/storefront/chat/conversations/{id}/ai-reply` returns the full `AiReplyDto`.
+
+The storefront adds the product through the existing cart API on explicit click, then calls
+`POST /api/storefront/chat/conversations/{id}/ai-cart-added` to record the influenced sale.
+
+## Analytics
+
+`AiInteractionLog` (table `ai_interaction_logs`) records three event types: `Reply`
+(with retrieved-document count for knowledge-gap detection), `ProductSuggested`, and `CartAdd`.
+`GET /api/stores/{storeId}/ai-assistant/analytics` aggregates a rolling 30-day window into
+`AiAnalyticsDto` (usage, sales influence, conversion, top questions, product interest, and
+knowledge-gap questions) shown on the merchant AI Assistant page.
 
 ## Architecture
 
@@ -105,12 +134,18 @@ Storefront:
 
 ## Required database migration
 
-A new owned value object adds columns to `store_configurations`
-(`ai_enabled`, `ai_disable_human_chat`, `ai_assistant_name`, `ai_welcome_message`,
-`ai_personality`, `ai_language`, `ai_enabled_hours_start`, `ai_enabled_hours_end`,
-`ai_max_conversation_length`).
+Two schema changes are introduced:
 
-This sandbox has no .NET SDK, so the migration was **not** generated here. Run locally:
+1. A new owned value object adds columns to `store_configurations`
+   (`ai_enabled`, `ai_disable_human_chat`, `ai_assistant_name`, `ai_welcome_message`,
+   `ai_personality`, `ai_language`, `ai_enabled_hours_start`, `ai_enabled_hours_end`,
+   `ai_max_conversation_length`).
+2. A new `ai_interaction_logs` table (analytics) with columns `id`, `store_id`,
+   `conversation_id`, `event_type`, `query`, `product_id`, `documents_retrieved`, `created_at`
+   and indexes on `(store_id, created_at)` and `(store_id, event_type)`.
+
+This sandbox has no .NET SDK, so the migration was **not** generated here. A single
+`dotnet ef migrations add` run will capture both changes:
 
 ```bash
 dotnet ef migrations add AddAiAssistantSettings \

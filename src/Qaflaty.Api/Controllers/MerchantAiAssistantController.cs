@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
 using Qaflaty.Application.Ai.Commands.RefreshAiKnowledge;
+using Qaflaty.Application.Ai.Queries.GetAiAnalytics;
 using Qaflaty.Application.Ai.Queries.GetAiAssistantStatus;
 
 namespace Qaflaty.Api.Controllers;
@@ -26,6 +27,14 @@ public class MerchantAiAssistantController : ApiController
     public async Task<IActionResult> RefreshKnowledge(Guid storeId, CancellationToken ct)
     {
         var result = await Sender.Send(new RefreshAiKnowledgeCommand(storeId), ct);
+        return HandleResult(result);
+    }
+
+    /// <summary>Returns aggregated AI assistant analytics for the merchant dashboard.</summary>
+    [HttpGet("analytics")]
+    public async Task<IActionResult> GetAnalytics(Guid storeId, CancellationToken ct)
+    {
+        var result = await Sender.Send(new GetAiAnalyticsQuery(storeId), ct);
         return HandleResult(result);
     }
 }

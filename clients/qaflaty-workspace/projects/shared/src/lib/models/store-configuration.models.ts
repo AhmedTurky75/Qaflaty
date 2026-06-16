@@ -199,6 +199,30 @@ export interface AiKnowledgeRefreshResultDto {
   completedAtUtc: string;
 }
 
+export interface AiQuestionStatDto {
+  question: string;
+  count: number;
+}
+
+export interface AiProductInterestDto {
+  productId: string;
+  name: string;
+  count: number;
+}
+
+export interface AiAnalyticsDto {
+  conversationsLast30Days: number;
+  conversationsToday: number;
+  repliesTotal: number;
+  productsRecommended: number;
+  cartAdditions: number;
+  knowledgeGaps: number;
+  conversionRate: number;
+  topQuestions: AiQuestionStatDto[];
+  productInterest: AiProductInterestDto[];
+  knowledgeGapQuestions: string[];
+}
+
 export interface FaqItemDto {
   id: string;
   storeId: string;

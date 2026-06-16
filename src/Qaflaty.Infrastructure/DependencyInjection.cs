@@ -8,6 +8,7 @@ using Qaflaty.Application.Common.Interfaces.Ai;
 using Qaflaty.Infrastructure.Services.Ai;
 using Qaflaty.Application.Identity.Services;
 using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Communication.Aggregates.AiInteraction;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 using Qaflaty.Domain.Identity.Repositories;
 using Qaflaty.Domain.Identity.Services;
@@ -62,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<IWishlistRepository, WishlistRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IChatConversationRepository, ChatConversationRepository>();
+        services.AddScoped<IAiInteractionLogRepository, AiInteractionLogRepository>();
         services.AddScoped<IOrderOtpRepository, OrderOtpRepository>();
         services.AddScoped<ICountryRepository, CountryRepository>();
         services.AddScoped<ICityRepository, CityRepository>();

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ai.Commands.GenerateAiReply;
+using Qaflaty.Application.Ai.Commands.LogAiCartAddition;
 using Qaflaty.Application.Communication.Commands.StartConversation;
 using Qaflaty.Application.Communication.Commands.SendChatMessage;
 using Qaflaty.Application.Communication.Commands.MarkMessagesAsRead;
@@ -165,6 +166,24 @@ public class StorefrontChatController : ControllerBase
     }
 
     /// <summary>
+    /// Record that the customer added an AI-recommended product to their cart (analytics only).
+    /// </summary>
+    [HttpPost("conversations/{conversationId:guid}/ai-cart-added")]
+    public async Task<IActionResult> LogAiCartAddition(
+        Guid conversationId,
+        [FromBody] AiCartAddedRequest request,
+        CancellationToken cancellationToken)
+    {
+        var storeId = _tenantContext.CurrentStoreId
+            ?? throw new InvalidOperationException("Store context not available");
+
+        var command = new LogAiCartAdditionCommand(conversationId, storeId.Value, request.ProductId);
+        await _mediator.Send(command, cancellationToken);
+
+        return Ok(new { logged = true });
+    }
+
+    /// <summary>
     /// Mark messages as read by customer
     /// </summary>
     [HttpPost("conversations/{conversationId:guid}/messages/read")]
@@ -189,3 +208,5 @@ public class StorefrontChatController : ControllerBase
         return Ok(new { message = "Messages marked as read" });
     }
 }
+
+public record AiCartAddedRequest(Guid ProductId);

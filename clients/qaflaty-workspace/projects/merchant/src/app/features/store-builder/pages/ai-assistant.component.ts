@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { StoreContextService } from '../../../core/services/store-context.service';
@@ -9,12 +9,13 @@ import {
   UpdateStoreConfigurationRequest,
   AiAssistantStatusDto,
   AiKnowledgeRefreshResultDto,
+  AiAnalyticsDto,
 } from 'shared';
 
 @Component({
   selector: 'app-ai-assistant',
   standalone: true,
-  imports: [RouterLink, FormsModule, DatePipe],
+  imports: [RouterLink, FormsModule, DatePipe, DecimalPipe],
   template: `
     <div class="min-h-screen bg-gray-50">
       <div class="bg-white border-b border-gray-200">
@@ -97,6 +98,84 @@ import {
                 <p class="mt-4 text-sm text-red-600">{{ refreshErr() }}</p>
               }
             </div>
+
+            <!-- Analytics card -->
+            @if (analytics(); as a) {
+              <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+                <h2 class="text-base font-semibold text-gray-900 mb-1">AI Analytics</h2>
+                <p class="text-xs text-gray-500 mb-4">Last 30 days</p>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                  <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-xl font-semibold text-gray-900">{{ a.conversationsToday }}</p>
+                    <p class="text-xs text-gray-500">Conversations today</p>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-xl font-semibold text-gray-900">{{ a.cartAdditions }}</p>
+                    <p class="text-xs text-gray-500">Cart additions</p>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-xl font-semibold text-gray-900">{{ a.productsRecommended }}</p>
+                    <p class="text-xs text-gray-500">Products recommended</p>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-xl font-semibold text-gray-900">{{ (a.conversionRate * 100) | number:'1.0-1' }}%</p>
+                    <p class="text-xs text-gray-500">Cart conversion</p>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Top questions</h3>
+                    @if (a.topQuestions.length) {
+                      <ul class="space-y-1">
+                        @for (q of a.topQuestions; track q.question) {
+                          <li class="flex items-center justify-between text-sm text-gray-700">
+                            <span class="truncate pr-2">{{ q.question }}</span>
+                            <span class="text-gray-400">{{ q.count }}</span>
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <p class="text-sm text-gray-400">No data yet.</p>
+                    }
+                  </div>
+
+                  <div>
+                    <h3 class="text-sm font-semibold text-gray-900 mb-2">Product interest</h3>
+                    @if (a.productInterest.length) {
+                      <ul class="space-y-1">
+                        @for (p of a.productInterest; track p.productId) {
+                          <li class="flex items-center justify-between text-sm text-gray-700">
+                            <span class="truncate pr-2">{{ p.name }}</span>
+                            <span class="text-gray-400">{{ p.count }}</span>
+                          </li>
+                        }
+                      </ul>
+                    } @else {
+                      <p class="text-sm text-gray-400">No data yet.</p>
+                    }
+                  </div>
+                </div>
+
+                <div class="mt-6">
+                  <h3 class="text-sm font-semibold text-gray-900 mb-2">
+                    Knowledge gaps
+                    <span class="text-gray-400 font-normal">({{ a.knowledgeGaps }})</span>
+                  </h3>
+                  @if (a.knowledgeGapQuestions.length) {
+                    <ul class="space-y-1">
+                      @for (g of a.knowledgeGapQuestions; track g) {
+                        <li class="text-sm text-amber-700 truncate">• {{ g }}</li>
+                      }
+                    </ul>
+                    <p class="text-xs text-gray-500 mt-2">Questions the assistant couldn't answer — improve your catalog or FAQ to cover these.</p>
+                  } @else {
+                    <p class="text-sm text-gray-400">No knowledge gaps detected.</p>
+                  }
+                </div>
+              </div>
+            }
 
             <!-- Settings card -->
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
@@ -239,6 +318,7 @@ export class AiAssistantComponent implements OnInit {
   refreshErr = signal<string | null>(null);
   status = signal<AiAssistantStatusDto | null>(null);
   refreshResult = signal<AiKnowledgeRefreshResultDto | null>(null);
+  analytics = signal<AiAnalyticsDto | null>(null);
 
   localConfig: StoreConfigurationDto | null = null;
 
@@ -262,12 +342,20 @@ export class AiAssistantComponent implements OnInit {
     });
 
     this.loadStatus(storeId);
+    this.loadAnalytics(storeId);
   }
 
   private loadStatus(storeId: string): void {
     this.builderService.getAiAssistantStatus(storeId).subscribe({
       next: (status) => this.status.set(status),
       error: () => { /* status is best-effort */ }
+    });
+  }
+
+  private loadAnalytics(storeId: string): void {
+    this.builderService.getAiAnalytics(storeId).subscribe({
+      next: (analytics) => this.analytics.set(analytics),
+      error: () => { /* analytics is best-effort */ }
     });
   }
 

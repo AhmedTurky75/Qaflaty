@@ -172,7 +172,18 @@ public class ChatHub : Hub
 
             if (result.IsSuccess)
             {
-                await Clients.Group(roomName).SendAsync("ReceiveMessage", result.Value);
+                await Clients.Group(roomName).SendAsync("ReceiveMessage", result.Value.Message);
+
+                if (result.Value.SuggestedProducts.Count > 0)
+                {
+                    await Clients.Group(roomName).SendAsync("AiSuggestedProducts", new
+                    {
+                        ConversationId = conversationId,
+                        MessageId = result.Value.Message.Id,
+                        Products = result.Value.SuggestedProducts
+                    });
+                }
+
                 _logger.LogInformation("AI reply generated for conversation {ConversationId}", conversationId);
             }
             else

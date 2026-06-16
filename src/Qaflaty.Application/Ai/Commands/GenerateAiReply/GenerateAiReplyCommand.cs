@@ -1,5 +1,5 @@
+using Qaflaty.Application.Ai.DTOs;
 using Qaflaty.Application.Common.CQRS;
-using Qaflaty.Application.Communication.DTOs;
 
 namespace Qaflaty.Application.Ai.Commands.GenerateAiReply;
 
@@ -13,4 +13,4 @@ namespace Qaflaty.Application.Ai.Commands.GenerateAiReply;
 /// </param>
 public sealed record GenerateAiReplyCommand(
     Guid ConversationId,
-    Guid? ExpectedStoreId) : ICommand<ChatMessageDto>;
+    Guid? ExpectedStoreId) : ICommand<AiReplyDto>;

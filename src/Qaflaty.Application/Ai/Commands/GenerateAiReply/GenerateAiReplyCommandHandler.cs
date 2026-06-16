@@ -1,4 +1,6 @@
+using System.Globalization;
 using Microsoft.Extensions.Logging;
+using Qaflaty.Application.Ai.DTOs;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.Interfaces.Ai;
@@ -6,12 +8,13 @@ using Qaflaty.Application.Communication.DTOs;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
+using Qaflaty.Domain.Communication.Aggregates.AiInteraction;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 using Qaflaty.Domain.Communication.Enums;
 
 namespace Qaflaty.Application.Ai.Commands.GenerateAiReply;
 
-public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiReplyCommand, ChatMessageDto>
+public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiReplyCommand, AiReplyDto>
 {
     private const string BotSenderId = "ai-assistant";
     private const int MaxHistoryMessages = 20;
@@ -22,6 +25,7 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
     private readonly IAiEmbeddingService _embeddingService;
     private readonly IAiChatCompletionService _chatService;
     private readonly IAiKnowledgeStore _knowledgeStore;
+    private readonly IAiInteractionLogRepository _interactionLogRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GenerateAiReplyCommandHandler> _logger;
 
@@ -32,6 +36,7 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         IAiEmbeddingService embeddingService,
         IAiChatCompletionService chatService,
         IAiKnowledgeStore knowledgeStore,
+        IAiInteractionLogRepository interactionLogRepository,
         IUnitOfWork unitOfWork,
         ILogger<GenerateAiReplyCommandHandler> logger)
     {
@@ -41,34 +46,35 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         _embeddingService = embeddingService;
         _chatService = chatService;
         _knowledgeStore = knowledgeStore;
+        _interactionLogRepository = interactionLogRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
-    public async Task<Result<ChatMessageDto>> Handle(GenerateAiReplyCommand request, CancellationToken cancellationToken)
+    public async Task<Result<AiReplyDto>> Handle(GenerateAiReplyCommand request, CancellationToken cancellationToken)
     {
         if (!_chatService.IsConfigured || !_embeddingService.IsConfigured)
-            return Result.Failure<ChatMessageDto>(
+            return Result.Failure<AiReplyDto>(
                 new Error("Ai.NotConfigured", "The AI assistant service is not configured."));
 
         var conversation = await _conversationRepository.GetByIdAsync(
             new ChatConversationId(request.ConversationId), cancellationToken);
 
         if (conversation is null)
-            return Result.Failure<ChatMessageDto>(
+            return Result.Failure<AiReplyDto>(
                 new Error("Ai.ConversationNotFound", "Conversation not found."));
 
         // Tenant isolation: the conversation must belong to the requesting store.
         if (request.ExpectedStoreId is { } expectedStoreId && conversation.StoreId.Value != expectedStoreId)
-            return Result.Failure<ChatMessageDto>(Error.Unauthorized);
+            return Result.Failure<AiReplyDto>(Error.Unauthorized);
 
         if (conversation.Status != ConversationStatus.Active)
-            return Result.Failure<ChatMessageDto>(
+            return Result.Failure<AiReplyDto>(
                 new Error("Ai.ConversationNotActive", "Cannot reply to a closed conversation."));
 
         var config = await _configRepository.GetByStoreIdAsync(conversation.StoreId, cancellationToken);
         if (config is null || !config.AiAssistantSettings.Enabled)
-            return Result.Failure<ChatMessageDto>(
+            return Result.Failure<AiReplyDto>(
                 new Error("Ai.Disabled", "The AI assistant is not enabled for this store."));
 
         var settings = config.AiAssistantSettings;
@@ -79,7 +85,7 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
             .LastOrDefault();
 
         if (latestCustomerMessage is null)
-            return Result.Failure<ChatMessageDto>(
+            return Result.Failure<AiReplyDto>(
                 new Error("Ai.NoCustomerMessage", "There is no customer message to reply to."));
 
         var store = await _storeRepository.GetByIdAsync(conversation.StoreId, cancellationToken);
@@ -115,16 +121,28 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         catch (Exception ex)
         {
             _logger.LogError(ex, "AI chat completion failed for conversation {ConversationId}", request.ConversationId);
-            return Result.Failure<ChatMessageDto>(
+            return Result.Failure<AiReplyDto>(
                 new Error("Ai.CompletionFailed", "The AI assistant could not generate a reply."));
         }
 
         var botMessage = conversation.AddMessage(MessageSenderType.Bot, BotSenderId, Truncate(replyText, 2000));
 
+        var suggestedProducts = BuildSuggestedProducts(context);
+
+        // Record analytics: the reply (with retrieved-doc count for knowledge-gap tracking)
+        // plus one record per recommended product.
+        var logs = new List<AiInteractionLog>
+        {
+            AiInteractionLog.Reply(conversation.StoreId, conversation.Id, latestCustomerMessage.Content, context.Count)
+        };
+        logs.AddRange(suggestedProducts.Select(p =>
+            AiInteractionLog.ProductSuggested(conversation.StoreId, conversation.Id, p.ProductId)));
+        await _interactionLogRepository.AddRangeAsync(logs, cancellationToken);
+
         await _conversationRepository.UpdateAsync(conversation, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result.Success(new ChatMessageDto
+        var messageDto = new ChatMessageDto
         {
             Id = botMessage.Id.Value,
             ConversationId = botMessage.ConversationId.Value,
@@ -133,7 +151,51 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
             Content = botMessage.Content,
             SentAt = botMessage.SentAt,
             ReadAt = botMessage.ReadAt
-        });
+        };
+
+        return Result.Success(new AiReplyDto(messageDto, suggestedProducts));
+    }
+
+    private static IReadOnlyList<AiSuggestedProductDto> BuildSuggestedProducts(
+        IReadOnlyList<AiKnowledgeSearchResult> context)
+    {
+        return context
+            .Where(r => r.Document.Type == AiKnowledgeDocumentType.Product)
+            .Select(r => ToSuggestedProduct(r.Document))
+            .OfType<AiSuggestedProductDto>()
+            .Where(p => p.InStock)
+            .Take(3)
+            .ToList();
+    }
+
+    private static AiSuggestedProductDto? ToSuggestedProduct(AiKnowledgeDocument doc)
+    {
+        var metadata = doc.Metadata;
+        if (metadata is null ||
+            !metadata.TryGetValue("productId", out var productIdRaw) ||
+            !Guid.TryParse(productIdRaw, out var productId))
+            return null;
+
+        metadata.TryGetValue("slug", out var slug);
+        metadata.TryGetValue("currency", out var currency);
+        metadata.TryGetValue("imageUrl", out var imageUrl);
+
+        decimal price = 0;
+        if (metadata.TryGetValue("price", out var priceRaw))
+            decimal.TryParse(priceRaw, NumberStyles.Any, CultureInfo.InvariantCulture, out price);
+
+        var inStock = true;
+        if (metadata.TryGetValue("inStock", out var inStockRaw))
+            bool.TryParse(inStockRaw, out inStock);
+
+        return new AiSuggestedProductDto(
+            productId,
+            doc.Title,
+            slug ?? string.Empty,
+            price,
+            currency ?? string.Empty,
+            string.IsNullOrWhiteSpace(imageUrl) ? null : imageUrl,
+            inStock);
     }
 
     private static IEnumerable<AiChatMessage> BuildHistory(ChatConversation conversation, int take)

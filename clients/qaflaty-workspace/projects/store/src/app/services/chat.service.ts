@@ -30,6 +30,21 @@ export interface ChatConversation {
   unreadMerchantMessages: number;
 }
 
+export interface AiSuggestedProduct {
+  productId: string;
+  name: string;
+  slug: string;
+  price: number;
+  currency: string;
+  imageUrl?: string;
+  inStock: boolean;
+}
+
+interface AiReply {
+  message: ChatMessage;
+  suggestedProducts: AiSuggestedProduct[];
+}
+
 interface StartConversationRequest {
   guestSessionId?: string;
   initialMessage?: string;
@@ -58,6 +73,8 @@ export class ChatService {
   public isConnecting = signal(false);
   public isMerchantTyping = signal(false);
   public error = signal<string | null>(null);
+  // AI-recommended products keyed by the Bot message id they accompany.
+  public suggestedProducts = signal<Record<string, AiSuggestedProduct[]>>({});
 
   // Computed
   public hasActiveConversation = computed(() => this.conversation() !== null);
@@ -181,22 +198,49 @@ export class ChatService {
 
     try {
       if (this.isConnected() && this.hubConnection) {
+        // Reply + suggestions arrive via 'ReceiveMessage' and 'AiSuggestedProducts'.
         await this.hubConnection.invoke('RequestAiReply', conv.id);
       } else {
-        const message = await firstValueFrom(
-          this.http.post<ChatMessage>(
+        const reply = await firstValueFrom(
+          this.http.post<AiReply>(
             `${this.apiUrl}/storefront/chat/conversations/${conv.id}/ai-reply`,
             {}
           )
         );
 
-        if (message) {
-          this.messages.update(msgs => [...msgs, message]);
+        if (reply?.message) {
+          this.messages.update(msgs => [...msgs, reply.message]);
+          if (reply.suggestedProducts?.length) {
+            this.setSuggestedProducts(reply.message.id, reply.suggestedProducts);
+          }
         }
       }
     } catch (err) {
       console.error('Failed to get AI reply:', err);
     }
+  }
+
+  /**
+   * Record that the customer added an AI-recommended product to their cart (analytics).
+   */
+  async logAiCartAddition(productId: string): Promise<void> {
+    const conv = this.conversation();
+    if (!conv) return;
+
+    try {
+      await firstValueFrom(
+        this.http.post(
+          `${this.apiUrl}/storefront/chat/conversations/${conv.id}/ai-cart-added`,
+          { productId }
+        )
+      );
+    } catch (err) {
+      console.error('Failed to log AI cart addition:', err);
+    }
+  }
+
+  private setSuggestedProducts(messageId: string, products: AiSuggestedProduct[]): void {
+    this.suggestedProducts.update(map => ({ ...map, [messageId]: products }));
   }
 
   /**
@@ -298,6 +342,12 @@ export class ChatService {
         );
       });
 
+      this.hubConnection.on('AiSuggestedProducts', (payload: { messageId: string; products: AiSuggestedProduct[] }) => {
+        if (payload?.messageId && payload.products?.length) {
+          this.setSuggestedProducts(payload.messageId, payload.products);
+        }
+      });
+
       this.hubConnection.on('UserTyping', (senderType: string, isTyping: boolean) => {
         // Reuse the same typing indicator for both human support and the AI assistant.
         if (senderType === 'Merchant' || senderType === 'Bot') {
@@ -356,6 +406,7 @@ export class ChatService {
     await this.disconnectFromHub();
     this.conversation.set(null);
     this.messages.set([]);
+    this.suggestedProducts.set({});
     this.error.set(null);
   }
 
@@ -377,6 +428,7 @@ export class ChatService {
     await this.disconnectFromHub();
     this.conversation.set(null);
     this.messages.set([]);
+    this.suggestedProducts.set({});
     this.error.set(null);
     await this.getActiveConversation();
   }
@@ -390,6 +442,7 @@ export class ChatService {
     this.guestSession.clearGuestId();
     this.conversation.set(null);
     this.messages.set([]);
+    this.suggestedProducts.set({});
     this.error.set(null);
     await this.startConversation();
   }

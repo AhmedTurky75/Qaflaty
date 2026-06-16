@@ -10,6 +10,7 @@ using Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
 using Qaflaty.Domain.Catalog.Aggregates.Store;
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
+using Qaflaty.Domain.Communication.Aggregates.AiInteraction;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
 using Qaflaty.Domain.Communication.Entities;
 using Qaflaty.Domain.Identity.Aggregates.AccessDeniedReport;
@@ -68,6 +69,7 @@ public class QaflatyDbContext : DbContext
     // Communication
     public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
+    public DbSet<AiInteractionLog> AiInteractionLogs => Set<AiInteractionLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

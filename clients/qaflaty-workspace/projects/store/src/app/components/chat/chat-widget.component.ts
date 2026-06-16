@@ -1,19 +1,23 @@
 import { Component, signal, effect, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ChatService, ChatMessage } from '../../services/chat.service';
+import { RouterLink } from '@angular/router';
+import { ChatService, ChatMessage, AiSuggestedProduct } from '../../services/chat.service';
+import { CartService } from '../../services/cart.service';
 import { FeatureService } from '../../services/feature.service';
-import { I18nService } from '../../services/i18n.service';
+import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
+import { Product } from '../../models/product.model';
 
 @Component({
   selector: 'app-chat-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './chat-widget.component.html',
   styleUrls: ['./chat-widget.component.css']
 })
 export class ChatWidgetComponent implements OnInit, OnDestroy {
   public chatService = inject(ChatService);
+  private cartService = inject(CartService);
   private featureService = inject(FeatureService);
   public i18n = inject(I18nService);
 
@@ -212,5 +216,40 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       default:
         return '';
     }
+  }
+
+  /**
+   * AI-recommended products for a given Bot message
+   */
+  suggestionsFor(messageId: string): AiSuggestedProduct[] {
+    return this.chatService.suggestedProducts()[messageId] ?? [];
+  }
+
+  /**
+   * Add an AI-recommended product to the cart (explicit customer confirmation), then log it.
+   */
+  addSuggestion(product: AiSuggestedProduct): void {
+    const cartProduct: Product = {
+      id: product.productId,
+      slug: product.slug,
+      name: product.name,
+      price: product.price,
+      compareAtPrice: null,
+      inStock: product.inStock,
+      images: product.imageUrl
+        ? [{ id: '', url: product.imageUrl, sortOrder: 0 }]
+        : [],
+      hasVariants: false,
+    };
+
+    this.cartService.addItem(cartProduct, 1);
+    this.chatService.logAiCartAddition(product.productId);
+  }
+
+  /**
+   * Translate a static UI key for the current language
+   */
+  t(key: string): string {
+    return TRANSLATIONS[this.i18n.currentLanguage()]?.[key] ?? key;
   }
 }

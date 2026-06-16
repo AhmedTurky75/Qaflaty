@@ -23,6 +23,7 @@ import {
   UpdateProductPropertyDefinitionRequest,
   AiAssistantStatusDto,
   AiKnowledgeRefreshResultDto,
+  AiAnalyticsDto,
 } from 'shared';
 
 @Injectable({
@@ -48,6 +49,10 @@ export class BuilderService {
 
   refreshAiKnowledge(storeId: string): Observable<AiKnowledgeRefreshResultDto> {
     return this.http.post<AiKnowledgeRefreshResultDto>(`${this.apiUrl}/stores/${storeId}/ai-assistant/refresh-knowledge`, {});
+  }
+
+  getAiAnalytics(storeId: string): Observable<AiAnalyticsDto> {
+    return this.http.get<AiAnalyticsDto>(`${this.apiUrl}/stores/${storeId}/ai-assistant/analytics`);
   }
 
   // ── Pages ────────────────────────────────────────────────────────────────
