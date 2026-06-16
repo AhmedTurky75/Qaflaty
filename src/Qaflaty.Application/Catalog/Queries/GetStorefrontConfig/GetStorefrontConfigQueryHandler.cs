@@ -89,6 +89,7 @@ public class GetStorefrontConfigQueryHandler : IQueryHandler<GetStorefrontConfig
                 config.CommunicationSettings.WhatsAppEnabled, config.CommunicationSettings.WhatsAppNumber,
                 config.CommunicationSettings.WhatsAppDefaultMessage, config.CommunicationSettings.LiveChatEnabled,
                 config.CommunicationSettings.AiChatbotEnabled, config.CommunicationSettings.AiChatbotName),
+            AiAssistantSettingsMapper.ToDto(config.AiAssistantSettings),
             new LocalizationSettingsDto(
                 config.LocalizationSettings.DefaultLanguage, config.LocalizationSettings.EnableBilingual,
                 config.LocalizationSettings.DefaultDirection),

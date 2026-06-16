@@ -240,6 +240,7 @@ export class GeneralSettingsComponent implements OnInit {
       featureToggles: this.localConfig.featureToggles,
       customerAuthSettings: this.localConfig.customerAuthSettings,
       communicationSettings: this.localConfig.communicationSettings,
+      aiAssistantSettings: this.localConfig.aiAssistantSettings,
       localizationSettings: this.localConfig.localizationSettings,
       socialLinks: this.localConfig.socialLinks,
       headerVariant: this.localConfig.headerVariant,

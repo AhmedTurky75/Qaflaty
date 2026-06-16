@@ -67,6 +67,20 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
             cs.Property(c => c.AiChatbotName).HasColumnName("comm_ai_chatbot_name").HasMaxLength(50);
         });
 
+        // AiAssistantSettings - owned value object
+        builder.OwnsOne(sc => sc.AiAssistantSettings, ai =>
+        {
+            ai.Property(a => a.Enabled).HasColumnName("ai_enabled");
+            ai.Property(a => a.DisableHumanChat).HasColumnName("ai_disable_human_chat");
+            ai.Property(a => a.AssistantName).HasColumnName("ai_assistant_name").HasMaxLength(50);
+            ai.Property(a => a.WelcomeMessage).HasColumnName("ai_welcome_message").HasMaxLength(500);
+            ai.Property(a => a.Personality).HasColumnName("ai_personality").HasConversion<string>().HasMaxLength(20);
+            ai.Property(a => a.Language).HasColumnName("ai_language").HasConversion<string>().HasMaxLength(20);
+            ai.Property(a => a.EnabledHoursStart).HasColumnName("ai_enabled_hours_start");
+            ai.Property(a => a.EnabledHoursEnd).HasColumnName("ai_enabled_hours_end");
+            ai.Property(a => a.MaxConversationLength).HasColumnName("ai_max_conversation_length");
+        });
+
         // LocalizationSettings - owned value object
         builder.OwnsOne(sc => sc.LocalizationSettings, ls =>
         {

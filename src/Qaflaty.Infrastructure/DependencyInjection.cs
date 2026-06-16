@@ -1,7 +1,11 @@
+using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Common.Interfaces.Ai;
+using Qaflaty.Infrastructure.Services.Ai;
 using Qaflaty.Application.Identity.Services;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
@@ -85,9 +89,25 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddSingleton<IOtpSettings, OtpSettings>();
 
+        // AI Assistant Services
+        services.Configure<AiAssistantOptions>(configuration.GetSection(AiAssistantOptions.SectionName));
+        services.AddSingleton<IAiKnowledgeStore, InMemoryAiKnowledgeStore>();
+
+        services.AddHttpClient<IAiChatCompletionService, OpenAiCompatibleChatCompletionService>(ConfigureAiHttpClient);
+        services.AddHttpClient<IAiEmbeddingService, OpenAiCompatibleEmbeddingService>(ConfigureAiHttpClient);
+
         // Background Services
         services.AddHostedService<GuestCartCleanupService>();
 
         return services;
+    }
+
+    private static void ConfigureAiHttpClient(IServiceProvider sp, HttpClient client)
+    {
+        var options = sp.GetRequiredService<IOptions<AiAssistantOptions>>().Value;
+        client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds <= 0 ? 60 : options.TimeoutSeconds);
+
+        if (!string.IsNullOrWhiteSpace(options.ApiKey))
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
     }
 }

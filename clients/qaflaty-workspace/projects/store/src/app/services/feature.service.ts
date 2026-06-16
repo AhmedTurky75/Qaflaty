@@ -34,6 +34,14 @@ export class FeatureService {
   whatsAppNumber = computed(() => this.config()?.communicationSettings?.whatsAppNumber ?? '');
   isLiveChatEnabled = computed(() => this.config()?.communicationSettings?.liveChatEnabled ?? false);
 
+  // AI shopping assistant
+  isAiAssistantEnabled = computed(() => this.config()?.aiAssistantSettings?.enabled ?? false);
+  aiDisableHumanChat = computed(() => this.config()?.aiAssistantSettings?.disableHumanChat ?? false);
+  aiAssistantName = computed(() => this.config()?.aiAssistantSettings?.assistantName ?? '');
+  aiWelcomeMessage = computed(() => this.config()?.aiAssistantSettings?.welcomeMessage ?? '');
+  // The chat widget should show when human live chat OR the AI assistant is enabled.
+  isChatEnabled = computed(() => this.isLiveChatEnabled() || this.isAiAssistantEnabled());
+
   // Layout variants
   headerVariant = computed(() => {
     const legacyMap: Record<string, string> = {

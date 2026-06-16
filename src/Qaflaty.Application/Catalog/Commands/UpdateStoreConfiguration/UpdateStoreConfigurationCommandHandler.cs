@@ -80,6 +80,10 @@ public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStor
             request.CommunicationSettings.AiChatbotName);
         configuration.UpdateCommunicationSettings(communicationSettings);
 
+        // Update AiAssistantSettings
+        configuration.UpdateAiAssistantSettings(
+            AiAssistantSettingsMapper.ToDomain(request.AiAssistantSettings));
+
         // Update LocalizationSettings
         var localizationSettings = LocalizationSettings.Create(
             request.LocalizationSettings.DefaultLanguage,
@@ -145,6 +149,7 @@ public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStor
                 config.CommunicationSettings.LiveChatEnabled,
                 config.CommunicationSettings.AiChatbotEnabled,
                 config.CommunicationSettings.AiChatbotName),
+            AiAssistantSettingsMapper.ToDto(config.AiAssistantSettings),
             new LocalizationSettingsDto(
                 config.LocalizationSettings.DefaultLanguage,
                 config.LocalizationSettings.EnableBilingual,

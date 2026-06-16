@@ -242,6 +242,7 @@ export class BuilderLayoutComponent implements OnInit {
       featureToggles: currentConfig.featureToggles,
       customerAuthSettings: currentConfig.customerAuthSettings,
       communicationSettings: currentConfig.communicationSettings,
+      aiAssistantSettings: currentConfig.aiAssistantSettings,
       localizationSettings: currentConfig.localizationSettings,
       socialLinks: currentConfig.socialLinks,
       headerVariant: currentConfig.headerVariant,

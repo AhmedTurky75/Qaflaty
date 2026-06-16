@@ -171,6 +171,35 @@ export class ChatService {
   }
 
   /**
+   * Ask the AI assistant to reply to the latest customer message.
+   * Over SignalR the reply arrives via the 'ReceiveMessage' event; over HTTP it is appended directly.
+   * Best-effort: failures are logged but not surfaced as hard errors.
+   */
+  async requestAiReply(): Promise<void> {
+    const conv = this.conversation();
+    if (!conv) return;
+
+    try {
+      if (this.isConnected() && this.hubConnection) {
+        await this.hubConnection.invoke('RequestAiReply', conv.id);
+      } else {
+        const message = await firstValueFrom(
+          this.http.post<ChatMessage>(
+            `${this.apiUrl}/storefront/chat/conversations/${conv.id}/ai-reply`,
+            {}
+          )
+        );
+
+        if (message) {
+          this.messages.update(msgs => [...msgs, message]);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to get AI reply:', err);
+    }
+  }
+
+  /**
    * Mark messages as read
    */
   async markMessagesAsRead(messageIds: string[]): Promise<void> {
@@ -270,7 +299,8 @@ export class ChatService {
       });
 
       this.hubConnection.on('UserTyping', (senderType: string, isTyping: boolean) => {
-        if (senderType === 'Merchant') {
+        // Reuse the same typing indicator for both human support and the AI assistant.
+        if (senderType === 'Merchant' || senderType === 'Bot') {
           this.isMerchantTyping.set(isTyping);
         }
       });

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Ai.Commands.GenerateAiReply;
 using Qaflaty.Application.Communication.Commands.StartConversation;
 using Qaflaty.Application.Communication.Commands.SendChatMessage;
 using Qaflaty.Application.Communication.Commands.MarkMessagesAsRead;
@@ -136,6 +137,28 @@ public class StorefrontChatController : ControllerBase
         {
             _logger.LogWarning("Failed to send message: {Error}", result.Error.Message);
             return BadRequest(new { error = result.Error.Message });
+        }
+
+        return Ok(result.Value);
+    }
+
+    /// <summary>
+    /// Generate an AI assistant reply to the latest customer message in a conversation.
+    /// Used as an HTTP fallback for the SignalR <c>RequestAiReply</c> hub method.
+    /// </summary>
+    [HttpPost("conversations/{conversationId:guid}/ai-reply")]
+    public async Task<IActionResult> GenerateAiReply(Guid conversationId, CancellationToken cancellationToken)
+    {
+        var storeId = _tenantContext.CurrentStoreId
+            ?? throw new InvalidOperationException("Store context not available");
+
+        var command = new GenerateAiReplyCommand(conversationId, storeId.Value);
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            _logger.LogWarning("Failed to generate AI reply for {ConversationId}: {Error}", conversationId, result.Error.Message);
+            return BadRequest(new { error = result.Error.Code, message = result.Error.Message });
         }
 
         return Ok(result.Value);

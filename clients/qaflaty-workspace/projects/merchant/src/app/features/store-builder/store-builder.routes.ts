@@ -30,6 +30,10 @@ export const STORE_BUILDER_ROUTES: Routes = [
     loadComponent: () => import('./pages/social-links.component').then(m => m.SocialLinksComponent)
   },
   {
+    path: 'ai-assistant',
+    loadComponent: () => import('./pages/ai-assistant.component').then(m => m.AiAssistantComponent)
+  },
+  {
     path: 'pages',
     loadComponent: () => import('./pages/pages-manager.component').then(m => m.PagesManagerComponent)
   },

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using MediatR;
+using Qaflaty.Application.Ai.Commands.GenerateAiReply;
 using Qaflaty.Application.Communication.Commands.SendChatMessage;
 using Qaflaty.Application.Communication.Commands.MarkMessagesAsRead;
 using Qaflaty.Application.Communication.Queries.GetConversationMessages;
@@ -140,6 +141,52 @@ public class ChatHub : Hub
         {
             _logger.LogError(ex, "Error marking messages as read in conversation {ConversationId}", conversationId);
             await Clients.Caller.SendAsync("Error", "Failed to mark messages as read");
+        }
+    }
+
+    /// <summary>
+    /// Ask the AI assistant to reply to the latest customer message in a conversation.
+    /// Broadcasts a typing indicator, then the generated Bot message, to the conversation group.
+    /// </summary>
+    public async Task RequestAiReply(Guid conversationId)
+    {
+        var roomName = GetConversationRoom(conversationId);
+
+        try
+        {
+            await Clients.Group(roomName).SendAsync("UserTyping", new
+            {
+                ConversationId = conversationId,
+                SenderType = "Bot",
+                IsTyping = true
+            });
+
+            var result = await _mediator.Send(new GenerateAiReplyCommand(conversationId, null));
+
+            await Clients.Group(roomName).SendAsync("UserTyping", new
+            {
+                ConversationId = conversationId,
+                SenderType = "Bot",
+                IsTyping = false
+            });
+
+            if (result.IsSuccess)
+            {
+                await Clients.Group(roomName).SendAsync("ReceiveMessage", result.Value);
+                _logger.LogInformation("AI reply generated for conversation {ConversationId}", conversationId);
+            }
+            else
+            {
+                await Clients.Caller.SendAsync("Error", result.Error.Message);
+                _logger.LogWarning(
+                    "Failed to generate AI reply for conversation {ConversationId}: {Error}",
+                    conversationId, result.Error.Message);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating AI reply for conversation {ConversationId}", conversationId);
+            await Clients.Caller.SendAsync("Error", "Failed to generate AI reply");
         }
     }
 

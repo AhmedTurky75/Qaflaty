@@ -24,8 +24,9 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   public isSendingMessage = signal(false);
   public isLoadingConversation = signal(false);
 
-  // Check if chat is enabled
-  public isChatEnabled = this.featureService.isLiveChatEnabled;
+  // Chat is shown when human live chat OR the AI assistant is enabled.
+  public isChatEnabled = this.featureService.isChatEnabled;
+  public isAiAssistantEnabled = this.featureService.isAiAssistantEnabled;
 
   constructor() {
     // Auto-scroll to bottom when new messages arrive
@@ -83,6 +84,11 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     this.isLoadingConversation.set(true);
     try {
       await this.chatService.startConversation(initialMessage);
+
+      // If the conversation opened with a customer question, let the AI assistant respond.
+      if (initialMessage && this.isAiAssistantEnabled()) {
+        this.chatService.requestAiReply();
+      }
     } catch (err) {
       console.error('Failed to start conversation:', err);
     } finally {
@@ -124,6 +130,11 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       await this.chatService.sendMessage(content);
       this.messageInput.set('');
       this.scrollToBottom();
+
+      // Let the AI assistant reply (the bot message arrives asynchronously).
+      if (this.isAiAssistantEnabled()) {
+        this.chatService.requestAiReply();
+      }
     } catch (err) {
       console.error('Failed to send message:', err);
     } finally {

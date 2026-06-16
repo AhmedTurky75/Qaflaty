@@ -76,6 +76,7 @@ export class BuilderHubComponent {
         { icon: '📄', title: 'Pages', description: 'Manage store pages and their sections', route: 'pages' },
         { icon: '❓', title: 'FAQ', description: 'Answer common customer questions', route: 'faq' },
         { icon: '💬', title: 'Communication', description: 'WhatsApp, live chat and AI chatbot settings', route: 'communication' },
+        { icon: '🤖', title: 'AI Assistant', description: 'Configure the AI shopping assistant and refresh its knowledge', route: 'ai-assistant' },
       ]
     },
     {

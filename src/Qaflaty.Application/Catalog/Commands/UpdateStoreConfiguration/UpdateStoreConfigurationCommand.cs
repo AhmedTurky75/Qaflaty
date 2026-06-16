@@ -9,6 +9,7 @@ public record UpdateStoreConfigurationCommand(
     FeatureTogglesDto FeatureToggles,
     CustomerAuthSettingsDto CustomerAuthSettings,
     CommunicationSettingsDto CommunicationSettings,
+    AiAssistantSettingsDto AiAssistantSettings,
     LocalizationSettingsDto LocalizationSettings,
     SocialLinksDto SocialLinks,
     string HeaderVariant,

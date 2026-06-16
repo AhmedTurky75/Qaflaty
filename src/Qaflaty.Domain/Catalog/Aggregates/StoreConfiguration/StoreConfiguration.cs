@@ -14,6 +14,7 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public FeatureToggles FeatureToggles { get; private set; } = null!;
     public CustomerAuthSettings CustomerAuthSettings { get; private set; } = null!;
     public CommunicationSettings CommunicationSettings { get; private set; } = null!;
+    public AiAssistantSettings AiAssistantSettings { get; private set; } = null!;
     public LocalizationSettings LocalizationSettings { get; private set; } = null!;
     public SocialLinks SocialLinks { get; private set; } = null!;
     public string HeaderVariant { get; private set; } = null!;
@@ -39,6 +40,7 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
             FeatureToggles = FeatureToggles.CreateDefault(),
             CustomerAuthSettings = CustomerAuthSettings.CreateDefault(),
             CommunicationSettings = CommunicationSettings.CreateDefault(),
+            AiAssistantSettings = AiAssistantSettings.CreateDefault(),
             LocalizationSettings = LocalizationSettings.CreateDefault(),
             SocialLinks = SocialLinks.CreateDefault(),
             HeaderVariant = "header-minimal",
@@ -79,6 +81,13 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public Result UpdateCommunicationSettings(CommunicationSettings settings)
     {
         CommunicationSettings = settings;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateAiAssistantSettings(AiAssistantSettings settings)
+    {
+        AiAssistantSettings = settings;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

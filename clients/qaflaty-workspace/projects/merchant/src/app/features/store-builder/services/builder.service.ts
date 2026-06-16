@@ -21,6 +21,8 @@ import {
   ProductPropertyDefinitionDto,
   CreateProductPropertyDefinitionRequest,
   UpdateProductPropertyDefinitionRequest,
+  AiAssistantStatusDto,
+  AiKnowledgeRefreshResultDto,
 } from 'shared';
 
 @Injectable({
@@ -37,6 +39,15 @@ export class BuilderService {
 
   updateConfiguration(storeId: string, req: UpdateStoreConfigurationRequest): Observable<StoreConfigurationDto> {
     return this.http.put<StoreConfigurationDto>(`${this.apiUrl}/stores/${storeId}/configuration`, req);
+  }
+
+  // ── AI Assistant ─────────────────────────────────────────────────────────
+  getAiAssistantStatus(storeId: string): Observable<AiAssistantStatusDto> {
+    return this.http.get<AiAssistantStatusDto>(`${this.apiUrl}/stores/${storeId}/ai-assistant/status`);
+  }
+
+  refreshAiKnowledge(storeId: string): Observable<AiKnowledgeRefreshResultDto> {
+    return this.http.post<AiKnowledgeRefreshResultDto>(`${this.apiUrl}/stores/${storeId}/ai-assistant/refresh-knowledge`, {});
   }
 
   // ── Pages ────────────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ public record StoreConfigurationDto(
     FeatureTogglesDto FeatureToggles,
     CustomerAuthSettingsDto CustomerAuthSettings,
     CommunicationSettingsDto CommunicationSettings,
+    AiAssistantSettingsDto AiAssistantSettings,
     LocalizationSettingsDto LocalizationSettings,
     SocialLinksDto SocialLinks,
     string HeaderVariant,
@@ -36,6 +37,17 @@ public record CustomerAuthSettingsDto(
 public record CommunicationSettingsDto(
     bool WhatsAppEnabled, string? WhatsAppNumber, string? WhatsAppDefaultMessage,
     bool LiveChatEnabled, bool AiChatbotEnabled, string? AiChatbotName);
+
+public record AiAssistantSettingsDto(
+    bool Enabled,
+    bool DisableHumanChat,
+    string? AssistantName,
+    string? WelcomeMessage,
+    string Personality,
+    string Language,
+    int? EnabledHoursStart,
+    int? EnabledHoursEnd,
+    int MaxConversationLength);
 
 public record LocalizationSettingsDto(string DefaultLanguage, bool EnableBilingual, string DefaultDirection);
 
@@ -82,6 +94,7 @@ public record StorefrontConfigDto(
     FeatureTogglesDto FeatureToggles,
     CustomerAuthSettingsDto CustomerAuthSettings,
     CommunicationSettingsDto CommunicationSettings,
+    AiAssistantSettingsDto AiAssistantSettings,
     LocalizationSettingsDto LocalizationSettings,
     SocialLinksDto SocialLinks,
     string HeaderVariant,

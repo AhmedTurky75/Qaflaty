@@ -45,6 +45,21 @@ export interface LocalizationSettings {
   defaultDirection: string;
 }
 
+export type AssistantPersonality = 'Friendly' | 'Professional' | 'SalesFocused' | 'Technical';
+export type AssistantLanguage = 'Arabic' | 'English' | 'AutoDetect';
+
+export interface AiAssistantSettings {
+  enabled: boolean;
+  disableHumanChat: boolean;
+  assistantName?: string;
+  welcomeMessage?: string;
+  personality: AssistantPersonality;
+  language: AssistantLanguage;
+  enabledHoursStart?: number | null;
+  enabledHoursEnd?: number | null;
+  maxConversationLength: number;
+}
+
 export interface SocialLinksConfig {
   facebook?: string;
   instagram?: string;
@@ -119,6 +134,7 @@ export interface StoreConfigurationDto {
   featureToggles: FeatureToggles;
   customerAuthSettings: CustomerAuthSettings;
   communicationSettings: CommunicationSettings;
+  aiAssistantSettings: AiAssistantSettings;
   localizationSettings: LocalizationSettings;
   socialLinks: SocialLinksConfig;
   headerVariant: string;
@@ -150,6 +166,7 @@ export interface StorefrontConfigDto {
   featureToggles: FeatureToggles;
   customerAuthSettings: CustomerAuthSettings;
   communicationSettings: CommunicationSettings;
+  aiAssistantSettings: AiAssistantSettings;
   localizationSettings: LocalizationSettings;
   socialLinks: SocialLinksConfig;
   headerVariant: string;
@@ -160,6 +177,26 @@ export interface StorefrontConfigDto {
   searchSettings: SearchSettings;
   paymentMethodAdjustments: PaymentMethodAdjustment[];
   filterablePropertyDefinitions: FilterablePropertyDefinition[];
+}
+
+export interface AiAssistantStatusDto {
+  enabled: boolean;
+  disableHumanChat: boolean;
+  serviceConfigured: boolean;
+  hasKnowledge: boolean;
+  productsEmbedded: number;
+  faqItemsEmbedded: number;
+  storePagesEmbedded: number;
+  totalDocuments: number;
+  lastRefreshedAtUtc?: string | null;
+}
+
+export interface AiKnowledgeRefreshResultDto {
+  productsEmbedded: number;
+  faqItemsEmbedded: number;
+  storePagesEmbedded: number;
+  totalDocuments: number;
+  completedAtUtc: string;
 }
 
 export interface FaqItemDto {
@@ -179,6 +216,7 @@ export interface UpdateStoreConfigurationRequest {
   featureToggles: FeatureToggles;
   customerAuthSettings: CustomerAuthSettings;
   communicationSettings: CommunicationSettings;
+  aiAssistantSettings: AiAssistantSettings;
   localizationSettings: LocalizationSettings;
   socialLinks: SocialLinksConfig;
   headerVariant: string;
