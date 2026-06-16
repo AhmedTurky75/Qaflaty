@@ -5,4 +5,7 @@
     <Project Path="src/Qaflaty.Domain/Qaflaty.Domain.csproj" />
     <Project Path="src/Qaflaty.Infrastructure/Qaflaty.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Qaflaty.UnitTests/Qaflaty.UnitTests.csproj" />
+  </Folder>
 </Solution>

@@ -181,5 +181,10 @@ dotnet ef database update \
 
 - Angular `shared`, `merchant`, and `store` projects build cleanly with the new types and
   components (`ng build`).
+- A `tests/Qaflaty.UnitTests` xUnit project covers the pure-logic surface (no DB/LLM needed):
+  `AiAssistantSettings` (defaults, normalization, active-hours incl. overnight),
+  `InMemoryAiKnowledgeStore` (cosine ranking, top-K, min-score, tenant isolation, stats),
+  `AiPromptBuilder` (guardrails, persona/language, retrieved-context injection), and
+  `GetAiAnalyticsQueryHandler` (metric aggregation). Run with `dotnet test`.
 - Backend could not be compiled in this environment (no .NET SDK; SDK download hosts blocked).
   Build/`dotnet test` and the migration must be run locally.
