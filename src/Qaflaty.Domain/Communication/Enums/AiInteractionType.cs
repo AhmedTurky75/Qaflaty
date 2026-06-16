@@ -10,5 +10,8 @@ public enum AiInteractionType
     ProductSuggested = 2,
 
     /// <summary>A customer added an AI-recommended product to their cart.</summary>
-    CartAdd = 3
+    CartAdd = 3,
+
+    /// <summary>The AI assistant placed an order on the customer's behalf.</summary>
+    OrderPlaced = 4
 }

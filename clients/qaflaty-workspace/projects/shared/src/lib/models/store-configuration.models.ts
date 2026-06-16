@@ -216,6 +216,7 @@ export interface AiAnalyticsDto {
   repliesTotal: number;
   productsRecommended: number;
   cartAdditions: number;
+  ordersPlaced: number;
   knowledgeGaps: number;
   conversionRate: number;
   topQuestions: AiQuestionStatDto[];

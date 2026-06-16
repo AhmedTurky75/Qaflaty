@@ -11,6 +11,7 @@ export interface OrderSummaryDto {
   paymentMethod: PaymentMethod;
   paymentStatus: PaymentStatus;
   createdAt: string;
+  source?: string;
 }
 
 export interface CustomerSnapshot {
@@ -34,6 +35,7 @@ export interface OrderDto {
   statusHistory: OrderStatusChange[];
   createdAt: string;
   updatedAt: string;
+  source?: string;
 }
 
 export interface OrderItemDto {

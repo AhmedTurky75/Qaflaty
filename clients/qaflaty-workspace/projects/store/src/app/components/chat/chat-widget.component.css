@@ -578,3 +578,94 @@
 .ai-suggestion-add:hover {
   background: #1d4ed8;
 }
+
+/* Assistant order placement */
+.ai-order-bar {
+  padding: 8px 12px;
+  border-top: 1px solid #eef2f7;
+  background: #fafbfc;
+}
+
+.ai-order-open {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #16a34a;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ai-order-open:hover {
+  background: #15803d;
+}
+
+.ai-order-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ai-order-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.ai-order-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  outline: none;
+}
+
+.ai-order-input:focus {
+  border-color: #2563eb;
+}
+
+.ai-order-error {
+  font-size: 12px;
+  color: #dc2626;
+}
+
+.ai-order-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.ai-order-cancel {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: #374151;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ai-order-submit {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #16a34a;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.ai-order-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ai-order-confirm {
+  font-size: 13px;
+  color: #15803d;
+  text-align: center;
+}

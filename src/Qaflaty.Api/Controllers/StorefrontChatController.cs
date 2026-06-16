@@ -2,8 +2,12 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Api.Controllers.Requests;
 using Qaflaty.Application.Ai.Commands.GenerateAiReply;
 using Qaflaty.Application.Ai.Commands.LogAiCartAddition;
+using Qaflaty.Application.Ai.Commands.LogAiOrderPlaced;
+using Qaflaty.Application.Ordering.Commands.PlaceOrder;
+using Qaflaty.Domain.Ordering.Enums;
 using Qaflaty.Application.Communication.Commands.StartConversation;
 using Qaflaty.Application.Communication.Commands.SendChatMessage;
 using Qaflaty.Application.Communication.Commands.MarkMessagesAsRead;
@@ -181,6 +185,52 @@ public class StorefrontChatController : ControllerBase
         await _mediator.Send(command, cancellationToken);
 
         return Ok(new { logged = true });
+    }
+
+    /// <summary>
+    /// Place an order on the customer's behalf from within the chat (collected by the assistant).
+    /// The order is stamped as placed by the chat assistant and an analytics event is recorded.
+    /// </summary>
+    [HttpPost("conversations/{conversationId:guid}/place-order")]
+    public async Task<IActionResult> PlaceAssistantOrder(
+        Guid conversationId,
+        [FromBody] PlaceOrderRequest request,
+        CancellationToken cancellationToken)
+    {
+        var storeId = _tenantContext.CurrentStoreId
+            ?? throw new InvalidOperationException("Store context not available");
+
+        var command = new PlaceOrderCommand(
+            StoreId: storeId.Value,
+            CustomerName: request.CustomerInfo.FullName,
+            CustomerPhone: request.CustomerInfo.Phone,
+            CustomerPhoneCountryCode: request.CustomerInfo.PhoneCountryCode,
+            CustomerEmail: request.CustomerInfo.Email,
+            Street: request.DeliveryAddress.Street,
+            City: request.DeliveryAddress.City,
+            District: request.DeliveryAddress.District,
+            DeliveryInstructions: request.DeliveryAddress.AdditionalInstructions,
+            CustomerNotes: request.Notes,
+            PaymentMethod: request.PaymentMethod,
+            Items: request.Items.Select(item => new PlaceOrderItemDto(
+                item.ProductId, item.Quantity, item.VariantId)).ToList(),
+            CountryCode: request.DeliveryAddress.CountryCode,
+            CityId: request.DeliveryAddress.CityId,
+            DistrictId: request.DeliveryAddress.DistrictId,
+            Source: OrderSource.ChatAssistant);
+
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+        {
+            _logger.LogWarning("Assistant order failed for {ConversationId}: {Error}", conversationId, result.Error.Message);
+            return BadRequest(new { error = result.Error.Code, message = result.Error.Message });
+        }
+
+        // Record the AI-placed order for analytics (best-effort).
+        await _mediator.Send(new LogAiOrderPlacedCommand(conversationId, storeId.Value), cancellationToken);
+
+        return Ok(result.Value);
     }
 
     /// <summary>

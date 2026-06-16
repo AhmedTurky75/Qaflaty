@@ -7,6 +7,7 @@ import { CartService } from '../../services/cart.service';
 import { FeatureService } from '../../services/feature.service';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 import { Product } from '../../models/product.model';
+import { CreateOrderRequest, OrderResponse } from '../../models/order.model';
 
 @Component({
   selector: 'app-chat-widget',
@@ -31,6 +32,18 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
   // Chat is shown when human live chat OR the AI assistant is enabled.
   public isChatEnabled = this.featureService.isChatEnabled;
   public isAiAssistantEnabled = this.featureService.isAiAssistantEnabled;
+  public cartItemCount = this.cartService.itemCount;
+
+  // Assistant order form state
+  public showOrderForm = signal(false);
+  public placingOrder = signal(false);
+  public placedOrder = signal<OrderResponse | null>(null);
+  public orderError = signal<string | null>(null);
+  public orderName = signal('');
+  public orderPhone = signal('');
+  public orderEmail = signal('');
+  public orderStreet = signal('');
+  public orderCity = signal('');
 
   constructor() {
     // Auto-scroll to bottom when new messages arrive
@@ -251,5 +264,67 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
    */
   t(key: string): string {
     return TRANSLATIONS[this.i18n.currentLanguage()]?.[key] ?? key;
+  }
+
+  openOrderForm(): void {
+    this.orderError.set(null);
+    this.showOrderForm.set(true);
+  }
+
+  closeOrderForm(): void {
+    this.showOrderForm.set(false);
+  }
+
+  /**
+   * Place the current cart as an order through the AI assistant (customer-confirmed).
+   */
+  async submitOrder(): Promise<void> {
+    const name = this.orderName().trim();
+    const phone = this.orderPhone().trim();
+    const street = this.orderStreet().trim();
+    const city = this.orderCity().trim();
+
+    if (!name || !phone || !street || !city) {
+      this.orderError.set(this.i18n.isRtl()
+        ? 'يرجى إدخال الاسم والهاتف والعنوان والمدينة'
+        : 'Please provide name, phone, address and city');
+      return;
+    }
+
+    const items = this.cartService.cart().items.map(i => ({
+      productId: i.productId,
+      quantity: i.quantity,
+      variantId: i.variantId,
+    }));
+
+    if (items.length === 0) {
+      this.orderError.set(this.i18n.isRtl() ? 'سلتك فارغة' : 'Your cart is empty');
+      return;
+    }
+
+    const request: CreateOrderRequest = {
+      customerInfo: {
+        fullName: name,
+        phone,
+        phoneCountryCode: 'SA',
+        email: this.orderEmail().trim(),
+      },
+      deliveryAddress: { street, city },
+      items,
+      paymentMethod: 'COD',
+    };
+
+    this.placingOrder.set(true);
+    this.orderError.set(null);
+    try {
+      const order = await this.chatService.placeOrder(request);
+      this.placedOrder.set(order);
+      this.showOrderForm.set(false);
+      this.cartService.clear();
+    } catch (err: any) {
+      this.orderError.set(err?.error?.message || (this.i18n.isRtl() ? 'تعذر إنشاء الطلب' : 'Could not place the order'));
+    } finally {
+      this.placingOrder.set(false);
+    }
   }
 }

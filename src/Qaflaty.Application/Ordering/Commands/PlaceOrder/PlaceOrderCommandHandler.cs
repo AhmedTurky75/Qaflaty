@@ -194,7 +194,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             deliveryInfo,
             paymentMethod,
             deliveryFee,
-            request.CustomerNotes);
+            request.CustomerNotes,
+            request.Source);
 
         if (orderResult.IsFailure)
             return Result.Failure<OrderDto>(orderResult.Error);
@@ -354,6 +355,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             s.Notes
         )).ToList(),
         order.CreatedAt,
-        order.UpdatedAt
+        order.UpdatedAt,
+        order.Source.ToString()
     );
 }

@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Domain.Ordering.Enums;
 
 namespace Qaflaty.Application.Ordering.Commands.PlaceOrder;
 
@@ -24,5 +25,6 @@ public record PlaceOrderCommand(
     List<PlaceOrderItemDto> Items,
     int CountryCode = 0,
     int? CityId = null,
-    int? DistrictId = null
+    int? DistrictId = null,
+    OrderSource Source = OrderSource.Storefront
 ) : ICommand<OrderDto>;

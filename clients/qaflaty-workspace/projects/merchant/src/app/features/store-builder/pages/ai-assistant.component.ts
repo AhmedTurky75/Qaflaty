@@ -105,7 +105,7 @@ import {
                 <h2 class="text-base font-semibold text-gray-900 mb-1">AI Analytics</h2>
                 <p class="text-xs text-gray-500 mb-4">Last 30 days</p>
 
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-6">
                   <div class="bg-gray-50 rounded-lg p-3 text-center">
                     <p class="text-xl font-semibold text-gray-900">{{ a.conversationsToday }}</p>
                     <p class="text-xs text-gray-500">Conversations today</p>
@@ -113,6 +113,10 @@ import {
                   <div class="bg-gray-50 rounded-lg p-3 text-center">
                     <p class="text-xl font-semibold text-gray-900">{{ a.cartAdditions }}</p>
                     <p class="text-xs text-gray-500">Cart additions</p>
+                  </div>
+                  <div class="bg-gray-50 rounded-lg p-3 text-center">
+                    <p class="text-xl font-semibold text-gray-900">{{ a.ordersPlaced }}</p>
+                    <p class="text-xs text-gray-500">Orders placed</p>
                   </div>
                   <div class="bg-gray-50 rounded-lg p-3 text-center">
                     <p class="text-xl font-semibold text-gray-900">{{ a.productsRecommended }}</p>

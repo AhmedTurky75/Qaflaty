@@ -79,7 +79,8 @@ public record OrderDto(
     OrderNotesDto Notes,
     List<OrderStatusChangeDto> StatusHistory,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    string Source
 );
 
 // --- Order list item (compact, for list views) ---
@@ -93,7 +94,8 @@ public record OrderListDto(
     int ItemCount,
     string PaymentMethod,
     string PaymentStatus,
-    DateTime CreatedAt
+    DateTime CreatedAt,
+    string Source
 );
 
 // --- Track order (public, no auth) ---

@@ -48,6 +48,11 @@
       </div>
       <div class="flex items-center space-x-3">
         <app-status-badge [status]="orderData.status"></app-status-badge>
+        @if (orderData.source === 'ChatAssistant') {
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700" title="Placed by the AI shopping assistant">
+            🤖 Placed by chat bot
+          </span>
+        }
         <button
           type="button"
           (click)="onPrintInvoice()"

@@ -13,6 +13,7 @@ public sealed record AiAnalyticsDto(
     int RepliesTotal,
     int ProductsRecommended,
     int CartAdditions,
+    int OrdersPlaced,
     int KnowledgeGaps,
     double ConversionRate,
     IReadOnlyList<AiQuestionStatDto> TopQuestions,

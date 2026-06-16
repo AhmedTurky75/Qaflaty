@@ -39,6 +39,11 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasColumnName("status")
             .HasConversion<string>();
 
+        builder.Property(o => o.Source)
+            .HasColumnName("source")
+            .HasConversion<string>()
+            .HasMaxLength(20);
+
         builder.OwnsOne(o => o.Pricing, pricing =>
         {
             pricing.OwnsOne(p => p.Subtotal, money =>

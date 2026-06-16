@@ -60,6 +60,11 @@ public sealed class AiInteractionLog : AggregateRoot<AiInteractionId>
         new(AiInteractionId.New(), storeId, conversationId, AiInteractionType.CartAdd,
             null, productId, 0);
 
+    public static AiInteractionLog OrderPlaced(
+        StoreId storeId, ChatConversationId conversationId) =>
+        new(AiInteractionId.New(), storeId, conversationId, AiInteractionType.OrderPlaced,
+            null, null, 0);
+
     private static string? Truncate(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value))

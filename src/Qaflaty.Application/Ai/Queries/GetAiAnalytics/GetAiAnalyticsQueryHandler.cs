@@ -32,6 +32,7 @@ public sealed class GetAiAnalyticsQueryHandler : IQueryHandler<GetAiAnalyticsQue
         var replies = logs.Where(l => l.Type == AiInteractionType.Reply).ToList();
         var suggested = logs.Where(l => l.Type == AiInteractionType.ProductSuggested && l.ProductId.HasValue).ToList();
         var cartAdditions = logs.Count(l => l.Type == AiInteractionType.CartAdd);
+        var ordersPlaced = logs.Count(l => l.Type == AiInteractionType.OrderPlaced);
 
         var todayUtc = DateTime.UtcNow.Date;
         var conversations30 = logs.Select(l => l.ConversationId).Distinct().Count();
@@ -85,6 +86,7 @@ public sealed class GetAiAnalyticsQueryHandler : IQueryHandler<GetAiAnalyticsQue
             replies.Count,
             suggested.Count,
             cartAdditions,
+            ordersPlaced,
             knowledgeGaps,
             conversionRate,
             topQuestions,

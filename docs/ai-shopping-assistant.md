@@ -27,6 +27,10 @@ A backend + frontend vertical slice of "Phase 1":
 - **Analytics dashboard** — AI interactions are logged to `ai_interaction_logs` and surfaced
   as merchant dashboard widgets (conversations, cart additions, products recommended,
   conversion, top questions, product interest, knowledge gaps).
+- **Assistant order placement** — the assistant collects the customer's contact + address in
+  an in-chat form and places the order from the current cart. Such orders are stamped
+  `Source = ChatAssistant` and shown with a "Placed by chat bot" badge in the merchant orders
+  UI; an `OrderPlaced` analytics event is recorded.
 
 ### Deferred (future phases)
 
@@ -143,6 +147,8 @@ Two schema changes are introduced:
 2. A new `ai_interaction_logs` table (analytics) with columns `id`, `store_id`,
    `conversation_id`, `event_type`, `query`, `product_id`, `documents_retrieved`, `created_at`
    and indexes on `(store_id, created_at)` and `(store_id, event_type)`.
+3. A new `source` column on `orders` (string, e.g. `Storefront` / `ChatAssistant`).
+   Existing rows must default to `Storefront`.
 
 This sandbox has no .NET SDK, so the migration was **not** generated here. A single
 `dotnet ef migrations add` run will capture both changes:
@@ -159,7 +165,7 @@ dotnet ef database update \
 > (EF may emit them without one):
 > `ai_enabled = false`, `ai_disable_human_chat = false`,
 > `ai_personality = 'Friendly'`, `ai_language = 'AutoDetect'`,
-> `ai_max_conversation_length = 50`.
+> `ai_max_conversation_length = 50`, and `orders.source = 'Storefront'`.
 
 ## Security & governance
 

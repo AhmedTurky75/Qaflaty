@@ -5,6 +5,7 @@ import * as signalR from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
 import { CustomerAuthService } from './customer-auth.service';
 import { GuestSessionService } from './guest-session.service';
+import { CreateOrderRequest, OrderResponse } from '../models/order.model';
 
 export interface ChatMessage {
   id: string;
@@ -241,6 +242,24 @@ export class ChatService {
 
   private setSuggestedProducts(messageId: string, products: AiSuggestedProduct[]): void {
     this.suggestedProducts.update(map => ({ ...map, [messageId]: products }));
+  }
+
+  /**
+   * Place an order on the customer's behalf from within the chat. The resulting order is
+   * stamped as placed by the AI assistant on the backend.
+   */
+  async placeOrder(request: CreateOrderRequest): Promise<OrderResponse> {
+    const conv = this.conversation();
+    if (!conv) {
+      throw new Error('No active conversation');
+    }
+
+    return await firstValueFrom(
+      this.http.post<OrderResponse>(
+        `${this.apiUrl}/storefront/chat/conversations/${conv.id}/place-order`,
+        request
+      )
+    );
   }
 
   /**

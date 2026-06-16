@@ -175,6 +175,39 @@
           }
         </div>
 
+        <!-- Assistant order placement -->
+        @if (isAiAssistantEnabled() && chatService.conversation()?.status === 'Active') {
+          <div class="ai-order-bar">
+            @if (placedOrder(); as order) {
+              <div class="ai-order-confirm">
+                {{ i18n.isRtl() ? 'تم إنشاء طلبك:' : 'Order placed:' }} <strong>{{ order.orderNumber }}</strong>
+              </div>
+            } @else if (showOrderForm()) {
+              <form class="ai-order-form" (submit)="submitOrder(); $event.preventDefault()">
+                <div class="ai-order-title">{{ i18n.isRtl() ? 'إتمام الطلب عبر المساعد' : 'Place order with assistant' }}</div>
+                <input class="ai-order-input" name="oname" [(ngModel)]="orderName" [placeholder]="i18n.isRtl() ? 'الاسم الكامل' : 'Full name'" />
+                <input class="ai-order-input" name="ophone" [(ngModel)]="orderPhone" [placeholder]="i18n.isRtl() ? 'رقم الهاتف' : 'Phone'" />
+                <input class="ai-order-input" name="oemail" [(ngModel)]="orderEmail" [placeholder]="i18n.isRtl() ? 'البريد الإلكتروني (اختياري)' : 'Email (optional)'" />
+                <input class="ai-order-input" name="ostreet" [(ngModel)]="orderStreet" [placeholder]="i18n.isRtl() ? 'الشارع والعنوان' : 'Street address'" />
+                <input class="ai-order-input" name="ocity" [(ngModel)]="orderCity" [placeholder]="i18n.isRtl() ? 'المدينة' : 'City'" />
+                @if (orderError()) {
+                  <div class="ai-order-error">{{ orderError() }}</div>
+                }
+                <div class="ai-order-actions">
+                  <button type="button" class="ai-order-cancel" (click)="closeOrderForm()">{{ i18n.isRtl() ? 'إلغاء' : 'Cancel' }}</button>
+                  <button type="submit" class="ai-order-submit" [disabled]="placingOrder()">
+                    {{ placingOrder() ? (i18n.isRtl() ? 'جارٍ الإرسال...' : 'Placing...') : (i18n.isRtl() ? 'تأكيد الطلب' : 'Confirm order') }}
+                  </button>
+                </div>
+              </form>
+            } @else if (cartItemCount() > 0) {
+              <button type="button" class="ai-order-open" (click)="openOrderForm()">
+                {{ i18n.isRtl() ? 'اطلب عبر المساعد (' + cartItemCount() + ')' : 'Place order with assistant (' + cartItemCount() + ')' }}
+              </button>
+            }
+          </div>
+        }
+
         <!-- Chat Input / Closed Banner -->
         @if (chatService.conversation()?.status === 'Closed' || chatService.conversation()?.status === 'Archived') {
           <div class="chat-closed-banner">

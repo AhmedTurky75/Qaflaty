@@ -71,7 +71,8 @@ public class GetStoreOrdersQueryHandler : IQueryHandler<GetStoreOrdersQuery, Pag
                 o.Items.Count,
                 o.Payment.Method.ToString(),
                 o.Payment.Status.ToString(),
-                o.CreatedAt
+                o.CreatedAt,
+                o.Source.ToString()
             );
         });
 

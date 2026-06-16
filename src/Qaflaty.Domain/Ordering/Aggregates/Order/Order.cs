@@ -15,6 +15,7 @@ public sealed class Order : AggregateRoot<OrderId>
     public CustomerId CustomerId { get; private set; }
     public OrderNumber OrderNumber { get; private set; } = null!;
     public OrderStatus Status { get; private set; }
+    public OrderSource Source { get; private set; }
     public OrderPricing Pricing { get; private set; } = null!;
     public PaymentInfo Payment { get; private set; } = null!;
     public DeliveryInfo Delivery { get; private set; } = null!;
@@ -37,7 +38,8 @@ public sealed class Order : AggregateRoot<OrderId>
         DeliveryInfo delivery,
         PaymentMethod paymentMethod,
         Money deliveryFee,
-        string? customerNotes = null)
+        string? customerNotes = null,
+        OrderSource source = OrderSource.Storefront)
     {
         var order = new Order
         {
@@ -46,6 +48,7 @@ public sealed class Order : AggregateRoot<OrderId>
             CustomerId = customerId,
             OrderNumber = orderNumber,
             Status = OrderStatus.Pending,
+            Source = source,
             Delivery = delivery,
             Payment = PaymentInfo.Create(paymentMethod),
             Notes = OrderNotes.Create(customerNotes),

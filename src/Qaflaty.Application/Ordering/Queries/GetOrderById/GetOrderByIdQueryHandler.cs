@@ -95,7 +95,8 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
                 s.Notes
             )).ToList(),
             order.CreatedAt,
-            order.UpdatedAt
+            order.UpdatedAt,
+            order.Source.ToString()
         ));
     }
 }
