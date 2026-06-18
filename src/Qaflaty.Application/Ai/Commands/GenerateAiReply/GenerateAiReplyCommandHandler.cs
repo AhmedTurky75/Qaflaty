@@ -105,24 +105,35 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
             _logger.LogWarning(ex, "AI knowledge retrieval failed for conversation {ConversationId}", request.ConversationId);
         }
 
-        var systemPrompt = AiPromptBuilder.BuildSystemPrompt(storeName, settings, context);
-
-        var messages = new List<AiChatMessage> { new(AiChatRole.System, systemPrompt) };
-        messages.AddRange(BuildHistory(conversation, Math.Min(settings.MaxConversationLength, MaxHistoryMessages)));
-
         string replyText;
-        try
+        if (context.Count == 0)
         {
-            var completion = await _chatService.CompleteAsync(messages, cancellationToken: cancellationToken);
-            replyText = string.IsNullOrWhiteSpace(completion.Content)
-                ? AiPromptBuilder.NoInformationReply
-                : completion.Content;
+            // Relevance gate: no store knowledge matched this question, so do NOT call the LLM.
+            // This keeps the assistant strictly on-topic (it can't answer general-knowledge
+            // questions like "capital of France" from the model's own training) and avoids
+            // spending tokens on irrelevant or abusive prompts.
+            replyText = AiPromptBuilder.NoInformationReply;
         }
-        catch (Exception ex)
+        else
         {
-            _logger.LogError(ex, "AI chat completion failed for conversation {ConversationId}", request.ConversationId);
-            return Result.Failure<AiReplyDto>(
-                new Error("Ai.CompletionFailed", "The AI assistant could not generate a reply."));
+            var systemPrompt = AiPromptBuilder.BuildSystemPrompt(storeName, settings, context);
+
+            var messages = new List<AiChatMessage> { new(AiChatRole.System, systemPrompt) };
+            messages.AddRange(BuildHistory(conversation, Math.Min(settings.MaxConversationLength, MaxHistoryMessages)));
+
+            try
+            {
+                var completion = await _chatService.CompleteAsync(messages, cancellationToken: cancellationToken);
+                replyText = string.IsNullOrWhiteSpace(completion.Content)
+                    ? AiPromptBuilder.NoInformationReply
+                    : completion.Content;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "AI chat completion failed for conversation {ConversationId}", request.ConversationId);
+                return Result.Failure<AiReplyDto>(
+                    new Error("Ai.CompletionFailed", "The AI assistant could not generate a reply."));
+            }
         }
 
         var botMessage = conversation.AddMessage(MessageSenderType.Bot, BotSenderId, Truncate(replyText, 2000));

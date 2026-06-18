@@ -34,6 +34,8 @@ public static class AiPromptBuilder
         sb.AppendLine("- Be concise. Prefer short paragraphs and small lists.");
         sb.AppendLine();
         sb.AppendLine("Strict rules:");
+        sb.AppendLine("- Only answer questions about this store — its products, FAQ, policies, contact, delivery, and orders.");
+        sb.AppendLine($"- For unrelated or general-knowledge questions (world facts, math, coding, trivia, etc.), do not answer them; reply with exactly: \"{NoInformationReply}\"");
         sb.AppendLine("- Only use facts from the \"Store knowledge\" section below. Never invent products, prices, specifications, or availability.");
         sb.AppendLine($"- If the answer is not in the store knowledge, say exactly: \"{NoInformationReply}\"");
         sb.AppendLine("- Never modify the cart or place an order yourself; only suggest actions and ask the customer to confirm.");

@@ -29,6 +29,15 @@ public class AiPromptBuilderTests
     }
 
     [Fact]
+    public void BuildSystemPrompt_InstructsToRefuseOffTopicQuestions()
+    {
+        var prompt = AiPromptBuilder.BuildSystemPrompt("Acme", Settings(), Array.Empty<AiKnowledgeSearchResult>());
+
+        Assert.Contains("Only answer questions about this store", prompt);
+        Assert.Contains("general-knowledge", prompt);
+    }
+
+    [Fact]
     public void BuildSystemPrompt_WithNoContext_StatesNoInformationFound()
     {
         var prompt = AiPromptBuilder.BuildSystemPrompt("Acme", Settings(), Array.Empty<AiKnowledgeSearchResult>());

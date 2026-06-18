@@ -172,6 +172,10 @@ dotnet ef database update \
 - Tenant isolation: knowledge is partitioned by `storeId`; `GenerateAiReply` verifies the
   conversation belongs to the requesting store.
 - No hallucination: replies are grounded only in retrieved store knowledge.
+- Relevance gate / abuse protection: if a question retrieves no store knowledge above the
+  similarity threshold, the assistant returns the canned out-of-scope reply **without calling
+  the LLM**. This keeps it on-topic (it won't answer general-knowledge questions like
+  "capital of France") and prevents off-topic/abusive prompts from consuming chat tokens.
 - No unauthorized actions: the assistant only suggests cart/order actions; it never performs
   them.
 - Prompt-injection resistance baked into the system prompt.
