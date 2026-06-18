@@ -8,7 +8,7 @@ using Qaflaty.Application.Common.Interfaces.Ai;
 namespace Qaflaty.Infrastructure.Services.Ai;
 
 /// <summary>
-/// Embeddings via an OpenAI-compatible /embeddings endpoint (LM Studio).
+/// Embeddings via an OpenAI-compatible /embeddings endpoint (LM Studio or Ollama).
 /// </summary>
 public sealed class OpenAiCompatibleEmbeddingService : IAiEmbeddingService
 {
@@ -46,7 +46,7 @@ public sealed class OpenAiCompatibleEmbeddingService : IAiEmbeddingService
 
         var request = new EmbeddingRequest
         {
-            Model = _options.EmbeddingModel,
+            Model = _options.EffectiveEmbeddingModel,
             Input = inputs.ToList()
         };
 
@@ -70,7 +70,7 @@ public sealed class OpenAiCompatibleEmbeddingService : IAiEmbeddingService
             .ToList() ?? new List<float[]>();
     }
 
-    private string BuildUrl(string path) => $"{_options.Endpoint.TrimEnd('/')}/{path}";
+    private string BuildUrl(string path) => $"{_options.EffectiveEndpoint.TrimEnd('/')}/{path}";
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

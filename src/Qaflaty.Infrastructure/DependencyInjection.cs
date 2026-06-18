@@ -109,7 +109,8 @@ public static class DependencyInjection
         var options = sp.GetRequiredService<IOptions<AiAssistantOptions>>().Value;
         client.Timeout = TimeSpan.FromSeconds(options.TimeoutSeconds <= 0 ? 60 : options.TimeoutSeconds);
 
-        if (!string.IsNullOrWhiteSpace(options.ApiKey))
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiKey);
+        var apiKey = options.EffectiveApiKey;
+        if (!string.IsNullOrWhiteSpace(apiKey))
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
     }
 }

@@ -8,7 +8,7 @@ using Qaflaty.Application.Common.Interfaces.Ai;
 namespace Qaflaty.Infrastructure.Services.Ai;
 
 /// <summary>
-/// Chat completion via an OpenAI-compatible /chat/completions endpoint (LM Studio).
+/// Chat completion via an OpenAI-compatible /chat/completions endpoint (LM Studio or Ollama).
 /// </summary>
 public sealed class OpenAiCompatibleChatCompletionService : IAiChatCompletionService
 {
@@ -40,7 +40,7 @@ public sealed class OpenAiCompatibleChatCompletionService : IAiChatCompletionSer
 
         var request = new ChatRequest
         {
-            Model = _options.ChatModel,
+            Model = _options.EffectiveChatModel,
             Temperature = options.Temperature,
             MaxTokens = options.MaxTokens,
             Messages = messages.Select(m => new ChatRequestMessage
@@ -71,7 +71,7 @@ public sealed class OpenAiCompatibleChatCompletionService : IAiChatCompletionSer
             payload?.Usage?.CompletionTokens);
     }
 
-    private string BuildUrl(string path) => $"{_options.Endpoint.TrimEnd('/')}/{path}";
+    private string BuildUrl(string path) => $"{_options.EffectiveEndpoint.TrimEnd('/')}/{path}";
 
     private static string RoleToString(AiChatRole role) => role switch
     {
