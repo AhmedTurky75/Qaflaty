@@ -28,9 +28,11 @@ public class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderCommand>
         RuleFor(x => x.City)
             .NotEmpty().WithMessage("City is required");
 
+        // The payment method is a store-configured key (e.g. "COD", "Visa"), not a
+        // PaymentMethod enum name. The handler validates the key against the store's
+        // enabled payment methods, so here we only require a value to be present.
         RuleFor(x => x.PaymentMethod)
-            .NotEmpty().WithMessage("Payment method is required")
-            .Must(BeValidPaymentMethod).WithMessage("Payment method must be CashOnDelivery, Card, or Wallet");
+            .NotEmpty().WithMessage("Payment method is required");
 
         RuleFor(x => x.Items)
             .NotEmpty().WithMessage("Order must have at least one item");
@@ -44,7 +46,4 @@ public class PlaceOrderCommandValidator : AbstractValidator<PlaceOrderCommand>
                 .GreaterThan(0).WithMessage("Quantity must be greater than zero");
         });
     }
-
-    private static bool BeValidPaymentMethod(string method) =>
-        method is "CashOnDelivery" or "Card" or "Wallet";
 }
