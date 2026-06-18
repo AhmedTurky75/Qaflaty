@@ -4,6 +4,7 @@ using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Ordering.Aggregates.Customer;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
+using Qaflaty.Domain.Ordering.Enums;
 using Qaflaty.Domain.Ordering.Errors;
 using Qaflaty.Domain.Ordering.Repositories;
 using Qaflaty.Domain.Ordering.ValueObjects;
@@ -131,6 +132,7 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
             s.Notes
         )).ToList(),
         order.CreatedAt,
-        order.UpdatedAt
+        order.UpdatedAt,
+        OrderSource.Storefront.ToString()
     );
 }
