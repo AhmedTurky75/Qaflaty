@@ -8,11 +8,12 @@ import { Product, ProductVariant } from '../../models/product.model';
 import { VariantSelectorComponent } from '../../components/products/variant-selector.component';
 import { WhatsAppButtonComponent } from '../../components/shared/whatsapp-button.component';
 import { WhatsAppService } from '../../services/whatsapp.service';
+import { ProductReviewsComponent } from '../../components/reviews/product-reviews.component';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent, WhatsAppButtonComponent],
+  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent, WhatsAppButtonComponent, ProductReviewsComponent],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.css']
 })

@@ -66,6 +66,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/customers/customers.routes').then(m => m.CUSTOMER_ROUTES)
       },
       {
+        path: 'reviews',
+        canActivate: [storeGuard],
+        loadComponent: () => import('./features/reviews/reviews.component').then(m => m.ReviewsComponent)
+      },
+      {
         path: 'chat',
         canActivate: [storeGuard],
         children: [

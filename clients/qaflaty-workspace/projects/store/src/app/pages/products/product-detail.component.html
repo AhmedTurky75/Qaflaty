@@ -269,6 +269,11 @@
           }
         </div>
       </div>
+
+      <!-- Ratings & Reviews -->
+      <div class="mt-12 bg-white rounded-lg shadow-lg p-6 lg:p-8">
+        <app-product-reviews [productId]="product()!.id" />
+      </div>
     </div>
   </div>
 } @else if (!loading()) {

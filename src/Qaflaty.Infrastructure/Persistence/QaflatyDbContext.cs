@@ -21,6 +21,7 @@ using Qaflaty.Domain.Ordering.Aggregates.Customer;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
 using Qaflaty.Domain.Storefront.Aggregates.Wishlist;
 using Qaflaty.Domain.Storefront.Aggregates.Cart;
+using Qaflaty.Domain.Storefront.Aggregates.ProductReview;
 
 namespace Qaflaty.Infrastructure.Persistence;
 
@@ -65,6 +66,8 @@ public class QaflatyDbContext : DbContext
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
+    public DbSet<ProductReviewMedia> ProductReviewMedia => Set<ProductReviewMedia>();
 
     // Communication
     public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();
