@@ -9,11 +9,13 @@ import { VariantSelectorComponent } from '../../components/products/variant-sele
 import { WhatsAppButtonComponent } from '../../components/shared/whatsapp-button.component';
 import { WhatsAppService } from '../../services/whatsapp.service';
 import { ProductReviewsComponent } from '../../components/reviews/product-reviews.component';
+import { ProductRowComponent } from '../../components/recommendations/product-row.component';
+import { RecommendationService } from '../../services/recommendation.service';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent, WhatsAppButtonComponent, ProductReviewsComponent],
+  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent, WhatsAppButtonComponent, ProductReviewsComponent, ProductRowComponent],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.css']
 })
@@ -21,6 +23,7 @@ export class ProductDetailComponent {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private route = inject(ActivatedRoute);
+  private recommendations = inject(RecommendationService);
   whatsAppService = inject(WhatsAppService);
 
   product = signal<Product | null>(null);
@@ -29,6 +32,12 @@ export class ProductDetailComponent {
   addingToCart = signal<boolean>(false);
   showAddedMessage = signal<boolean>(false);
   selectedVariant = signal<ProductVariant | null>(null);
+
+  // Recommendation sections
+  relatedProducts = signal<Product[]>([]);
+  frequentlyBoughtTogether = signal<Product[]>([]);
+  recentlyViewed = signal<Product[]>([]);
+  trendingProducts = signal<Product[]>([]);
 
   selectedImage = computed(() => {
     const prod = this.product();
@@ -114,11 +123,36 @@ export class ProductDetailComponent {
       next: (product) => {
         this.product.set(product);
         this.loading.set(false);
+        this.loadRecommendations(product.id);
       },
       error: (error) => {
         console.error('Failed to load product:', error);
         this.loading.set(false);
       }
+    });
+  }
+
+  private loadRecommendations(productId: string) {
+    // Track this view (fire-and-forget), then load recently-viewed which depends on it.
+    this.recommendations.trackView(productId).subscribe({
+      next: () => this.recommendations.getRecentlyViewed(12).subscribe({
+        next: (items) => this.recentlyViewed.set(items.filter(p => p.id !== productId)),
+        error: () => {}
+      }),
+      error: () => {}
+    });
+
+    this.recommendations.getRelated(productId, 8).subscribe({
+      next: (items) => this.relatedProducts.set(items),
+      error: () => {}
+    });
+    this.recommendations.getFrequentlyBoughtTogether(productId, 4).subscribe({
+      next: (items) => this.frequentlyBoughtTogether.set(items),
+      error: () => {}
+    });
+    this.recommendations.getTrending(8).subscribe({
+      next: (items) => this.trendingProducts.set(items.filter(p => p.id !== productId)),
+      error: () => {}
     });
   }
 

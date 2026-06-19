@@ -270,10 +270,22 @@
         </div>
       </div>
 
+      <!-- Frequently Bought Together -->
+      <app-product-row title="Frequently Bought Together" [products]="frequentlyBoughtTogether()" />
+
+      <!-- Related Products -->
+      <app-product-row title="You May Also Like" [products]="relatedProducts()" />
+
       <!-- Ratings & Reviews -->
       <div class="mt-12 bg-white rounded-lg shadow-lg p-6 lg:p-8">
         <app-product-reviews [productId]="product()!.id" />
       </div>
+
+      <!-- Trending -->
+      <app-product-row title="Trending Now" [products]="trendingProducts()" />
+
+      <!-- Recently Viewed -->
+      <app-product-row title="Recently Viewed" [products]="recentlyViewed()" />
     </div>
   </div>
 } @else if (!loading()) {
