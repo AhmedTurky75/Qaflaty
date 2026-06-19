@@ -13,6 +13,7 @@ import { ProductRowComponent } from '../../components/recommendations/product-ro
 import { ProductGalleryComponent } from '../../components/products/product-gallery.component';
 import { RecommendationService } from '../../services/recommendation.service';
 import { ReviewService } from '../../services/review.service';
+import { WishlistService } from '../../services/wishlist.service';
 
 type ProductTab = 'description' | 'specifications' | 'reviews' | 'shipping';
 
@@ -29,6 +30,7 @@ export class ProductDetailComponent {
   private route = inject(ActivatedRoute);
   private recommendations = inject(RecommendationService);
   private reviewService = inject(ReviewService);
+  private wishlistService = inject(WishlistService);
   whatsAppService = inject(WhatsAppService);
 
   product = signal<Product | null>(null);
@@ -137,6 +139,16 @@ export class ProductDetailComponent {
 
   setTab(tab: ProductTab) {
     this.activeTab.set(tab);
+  }
+
+  isInWishlist(): boolean {
+    const prod = this.product();
+    return prod ? this.wishlistService.isInWishlist(prod.id, this.selectedVariant()?.id) : false;
+  }
+
+  toggleWishlist() {
+    const prod = this.product();
+    if (prod) this.wishlistService.toggle(prod, this.selectedVariant() ?? undefined);
   }
 
   scrollToReviews() {

@@ -94,8 +94,11 @@
         <app-top-products [products]="topProducts()" />
       </div>
 
-      <!-- Low Stock Alerts -->
-      <app-low-stock-alerts />
+      <!-- Wishlist Insights and Low Stock -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <app-most-wishlisted />
+        <app-low-stock-alerts />
+      </div>
 
       <!-- Quick Actions -->
       <app-quick-actions [storeId]="selectedStore()!" />

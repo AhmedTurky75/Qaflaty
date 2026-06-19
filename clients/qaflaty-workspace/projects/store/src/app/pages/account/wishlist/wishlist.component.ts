@@ -2,7 +2,9 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { CustomerAuthService } from '../../../services/customer-auth.service';
-import { WishlistService } from '../../../services/wishlist.service';
+import { WishlistService, WishlistItem } from '../../../services/wishlist.service';
+import { CartService } from '../../../services/cart.service';
+import { Product } from '../../../models/product.model';
 
 @Component({
   selector: 'app-wishlist',
@@ -193,8 +195,9 @@ export class WishlistComponent implements OnInit {
   private readonly authService = inject(CustomerAuthService);
   private readonly wishlistService = inject(WishlistService);
   private readonly router = inject(Router);
+  private readonly cartService = inject(CartService);
 
-  readonly wishlistItems = this.wishlistService.wishlistItems;
+  readonly wishlistItems = this.wishlistService.items;
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
@@ -203,80 +206,68 @@ export class WishlistComponent implements OnInit {
   readonly isAddingAllToCart = signal(false);
 
   ngOnInit(): void {
-    if (!this.authService.isAuthenticated()) {
-      this.router.navigate(['/account/login']);
-      return;
-    }
-
+    // Wishlist works for both guests (localStorage) and signed-in customers.
     this.loadWishlist();
   }
 
   loadWishlist(): void {
-    this.isLoading.set(true);
     this.errorMessage.set(null);
-
-    this.wishlistService.loadWishlist().subscribe({
-      next: () => {
-        this.isLoading.set(false);
-      },
-      error: (error) => {
-        this.errorMessage.set(error.error?.message || 'فشل تحميل قائمة الأمنيات. يرجى المحاولة مرة أخرى.');
-        this.isLoading.set(false);
-      }
-    });
+    this.wishlistService.load();
   }
 
-  addToCart(item: any): void {
+  /** Build a minimal Product from a wishlist item so it can be added to the cart. */
+  private toProduct(item: WishlistItem): Product {
+    return {
+      id: item.productId,
+      slug: item.productSlug,
+      name: item.productName,
+      price: item.price,
+      compareAtPrice: item.compareAtPrice ?? null,
+      inStock: item.inStock,
+      images: item.imageUrl ? [{ id: '', url: item.imageUrl, sortOrder: 0 }] : []
+    };
+  }
+
+  addToCart(item: WishlistItem): void {
     const ids = this.addingToCartIds();
     ids.add(item.id);
     this.addingToCartIds.set(new Set(ids));
     this.clearMessages();
 
-    // Here you would call cart service to add item
-    // For now, just show success message after a delay
-    setTimeout(() => {
-      const ids = this.addingToCartIds();
-      ids.delete(item.id);
-      this.addingToCartIds.set(new Set(ids));
-      this.successMessage.set('تم إضافة المنتج إلى السلة');
-      setTimeout(() => this.clearMessages(), 3000);
-    }, 500);
+    this.cartService.addItem(this.toProduct(item), 1);
+
+    // Move semantics: once in the cart, drop it from the wishlist.
+    this.wishlistService.remove(item.productId, item.variantId);
+
+    const next = this.addingToCartIds();
+    next.delete(item.id);
+    this.addingToCartIds.set(new Set(next));
+    this.successMessage.set('تم نقل المنتج إلى السلة');
+    setTimeout(() => this.clearMessages(), 3000);
   }
 
-  removeFromWishlist(item: any): void {
-    const ids = this.removingFromWishlistIds();
-    ids.add(item.id);
-    this.removingFromWishlistIds.set(new Set(ids));
+  removeFromWishlist(item: WishlistItem): void {
     this.clearMessages();
-
-    this.wishlistService.removeFromWishlist(item.productId, item.variantId).subscribe({
-      next: () => {
-        const ids = this.removingFromWishlistIds();
-        ids.delete(item.id);
-        this.removingFromWishlistIds.set(new Set(ids));
-        this.successMessage.set('تم إزالة المنتج من قائمة الأمنيات');
-        setTimeout(() => this.clearMessages(), 3000);
-      },
-      error: (error) => {
-        const ids = this.removingFromWishlistIds();
-        ids.delete(item.id);
-        this.removingFromWishlistIds.set(new Set(ids));
-        this.errorMessage.set(error.error?.message || 'فشل إزالة المنتج. يرجى المحاولة مرة أخرى.');
-      }
-    });
+    this.wishlistService.remove(item.productId, item.variantId);
+    this.successMessage.set('تم إزالة المنتج من قائمة الأمنيات');
+    setTimeout(() => this.clearMessages(), 3000);
   }
 
   addAllToCart(): void {
     this.isAddingAllToCart.set(true);
     this.clearMessages();
 
-    // Here you would call cart service to add all items
-    // For now, just show success message after a delay
-    setTimeout(() => {
-      this.isAddingAllToCart.set(false);
-      this.successMessage.set('تم إضافة جميع المنتجات إلى السلة');
-      setTimeout(() => this.clearMessages(), 3000);
-    }, 1000);
+    const items = [...this.wishlistItems()];
+    for (const item of items) {
+      if (item.inStock) {
+        this.cartService.addItem(this.toProduct(item), 1);
+        this.wishlistService.remove(item.productId, item.variantId);
+      }
+    }
+
+    this.isAddingAllToCart.set(false);
+    this.successMessage.set('تم نقل جميع المنتجات المتوفرة إلى السلة');
+    setTimeout(() => this.clearMessages(), 3000);
   }
 
   isAddingToCart(itemId: string): boolean {
