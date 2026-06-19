@@ -63,6 +63,7 @@ public static class DependencyInjection
         services.AddScoped<IWishlistRepository, WishlistRepository>();
         services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
         services.AddScoped<IProductViewRepository, ProductViewRepository>();
+        services.AddScoped<IRelatedProductRepository, RelatedProductRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IChatConversationRepository, ChatConversationRepository>();
         services.AddScoped<IAiInteractionLogRepository, AiInteractionLogRepository>();

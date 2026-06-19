@@ -4,22 +4,30 @@ using Qaflaty.Domain.Catalog.Aggregates.Product;
 using Qaflaty.Domain.Catalog.Enums;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
+using Qaflaty.Domain.Storefront.Repositories;
 
 namespace Qaflaty.Application.Storefront.Recommendations.GetRelatedProducts;
 
 /// <summary>
-/// Automatic related-products engine. Scores candidates from the same store by:
-/// same category, then number of shared property values. Falls back to newest
-/// active products to fill the requested count.
+/// Related-products engine. When the store uses manual mode and the product has
+/// curated links, those are returned (in merchant order). Otherwise it falls back
+/// to an automatic score: same category, then shared property values, then newest.
 /// </summary>
 public class GetRelatedProductsQueryHandler
     : IQueryHandler<GetRelatedProductsQuery, IReadOnlyList<ProductPublicDto>>
 {
     private readonly IProductRepository _productRepository;
+    private readonly IRelatedProductRepository _relatedProductRepository;
+    private readonly IStoreConfigurationRepository _storeConfigRepository;
 
-    public GetRelatedProductsQueryHandler(IProductRepository productRepository)
+    public GetRelatedProductsQueryHandler(
+        IProductRepository productRepository,
+        IRelatedProductRepository relatedProductRepository,
+        IStoreConfigurationRepository storeConfigRepository)
     {
         _productRepository = productRepository;
+        _relatedProductRepository = relatedProductRepository;
+        _storeConfigRepository = storeConfigRepository;
     }
 
     public async Task<Result<IReadOnlyList<ProductPublicDto>>> Handle(
@@ -29,22 +37,50 @@ public class GetRelatedProductsQueryHandler
         if (target is null)
             return Result.Success<IReadOnlyList<ProductPublicDto>>([]);
 
+        var config = await _storeConfigRepository.GetByStoreIdAsync(target.StoreId, ct);
+
+        // Manual mode: return the merchant's curated selection when present.
+        if (config is { RelatedProductsManual: true })
+        {
+            var links = await _relatedProductRepository.GetByProductIdAsync(target.Id, ct);
+            if (links.Count > 0)
+            {
+                var storeProducts = await _productRepository.GetByStoreIdAsync(target.StoreId, ct);
+                var byId = storeProducts
+                    .Where(p => p.Status == ProductStatus.Active)
+                    .ToDictionary(p => p.Id.Value);
+
+                var manual = links
+                    .Select(l => l.RelatedProductId.Value)
+                    .Where(byId.ContainsKey)
+                    .Take(request.Take)
+                    .Select(id => ProductRecommendationMapper.Map(byId[id]))
+                    .ToList();
+
+                return Result.Success<IReadOnlyList<ProductPublicDto>>(manual);
+            }
+        }
+
+        return Result.Success(await AutomaticAsync(target, request.Take, ct));
+    }
+
+    private async Task<IReadOnlyList<ProductPublicDto>> AutomaticAsync(
+        Product target, int take, CancellationToken ct)
+    {
         var candidates = await _productRepository.GetByStoreIdWithPropertyValuesAsync(target.StoreId, ct);
 
         var targetProps = target.PropertyValues
             .Select(v => (v.DefinitionId, v.Value))
             .ToHashSet();
 
-        var ranked = candidates
+        return candidates
             .Where(p => p.Status == ProductStatus.Active && p.Id != target.Id)
             .Select(p => new { Product = p, Score = Score(p, target, targetProps) })
             .OrderByDescending(x => x.Score)
             .ThenByDescending(x => x.Product.CreatedAt)
-            .Take(request.Take)
+            .Take(take)
             .Select(x => ProductRecommendationMapper.Map(x.Product))
             .ToList();
-
-        return Result.Success<IReadOnlyList<ProductPublicDto>>(ranked);
     }
 
     private static int Score(
