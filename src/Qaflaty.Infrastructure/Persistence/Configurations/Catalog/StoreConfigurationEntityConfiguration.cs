@@ -131,6 +131,14 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
                 .HasColumnType("jsonb");
         });
 
+        // Reviews & ratings policy
+        builder.Property(sc => sc.ReviewsRequirePurchase).HasColumnName("reviews_require_purchase");
+        builder.Property(sc => sc.ReviewsAutoApprove).HasColumnName("reviews_auto_approve");
+        builder.Property(sc => sc.ReviewsAllowEditing).HasColumnName("reviews_allow_editing");
+
+        // Recommendations
+        builder.Property(sc => sc.RelatedProductsManual).HasColumnName("related_products_manual");
+
         builder.Property(sc => sc.CreatedAt).HasColumnName("created_at");
         builder.Property(sc => sc.UpdatedAt).HasColumnName("updated_at");
 

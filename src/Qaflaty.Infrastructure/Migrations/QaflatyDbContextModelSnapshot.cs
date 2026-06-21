@@ -877,6 +877,22 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("product_grid_variant");
 
+                    b.Property<bool>("RelatedProductsManual")
+                        .HasColumnType("boolean")
+                        .HasColumnName("related_products_manual");
+
+                    b.Property<bool>("ReviewsAllowEditing")
+                        .HasColumnType("boolean")
+                        .HasColumnName("reviews_allow_editing");
+
+                    b.Property<bool>("ReviewsAutoApprove")
+                        .HasColumnType("boolean")
+                        .HasColumnName("reviews_auto_approve");
+
+                    b.Property<bool>("ReviewsRequirePurchase")
+                        .HasColumnType("boolean")
+                        .HasColumnName("reviews_require_purchase");
+
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid")
                         .HasColumnName("store_id");
@@ -1642,6 +1658,193 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("wishlist_items", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("customer_name");
+
+                    b.Property<int>("HelpfulCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("helpful_count");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_pinned");
+
+                    b.Property<bool>("IsVerifiedPurchase")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_verified_purchase");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer")
+                        .HasColumnName("rating");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId", "ProductId")
+                        .IsUnique();
+
+                    b.HasIndex("ProductId", "Status");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("product_reviews", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReviewMedia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("review_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId");
+
+                    b.ToTable("product_review_media", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductView.ProductView", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("SessionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("session_id");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("ViewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("viewed_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("ProductId", "ViewedAt");
+
+                    b.HasIndex("StoreId", "ViewedAt");
+
+                    b.ToTable("product_views", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.RelatedProduct.RelatedProductLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<Guid>("RelatedProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("related_product_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ProductId", "RelatedProductId")
+                        .IsUnique();
+
+                    b.ToTable("related_product_links", (string)null);
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Category.Category", b =>
@@ -3500,6 +3703,15 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReviewMedia", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", null)
+                        .WithMany("Media")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
                 {
                     b.Navigation("Sections");
@@ -3541,6 +3753,11 @@ namespace Qaflaty.Infrastructure.Migrations
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", b =>
+                {
+                    b.Navigation("Media");
                 });
 #pragma warning restore 612, 618
         }

@@ -22,6 +22,15 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public string ProductCardVariant { get; private set; } = null!;
     public string ProductGridVariant { get; private set; } = null!;
     public SearchSettings SearchSettings { get; private set; } = null!;
+
+    // Reviews & ratings policy (master on/off lives in FeatureToggles.Reviews)
+    public bool ReviewsRequirePurchase { get; private set; }
+    public bool ReviewsAutoApprove { get; private set; }
+    public bool ReviewsAllowEditing { get; private set; }
+
+    // Recommendations: when true, related products use the merchant's manual selection.
+    public bool RelatedProductsManual { get; private set; }
+
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -48,6 +57,10 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
             ProductCardVariant = "card-standard",
             ProductGridVariant = "grid-standard",
             SearchSettings = SearchSettings.CreateDefault(),
+            ReviewsRequirePurchase = true,
+            ReviewsAutoApprove = false,
+            ReviewsAllowEditing = true,
+            RelatedProductsManual = false,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -67,6 +80,22 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public Result UpdateFeatureToggles(FeatureToggles featureToggles)
     {
         FeatureToggles = featureToggles;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateReviewSettings(bool requirePurchase, bool autoApprove, bool allowEditing)
+    {
+        ReviewsRequirePurchase = requirePurchase;
+        ReviewsAutoApprove = autoApprove;
+        ReviewsAllowEditing = allowEditing;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateRelatedProductsMode(bool manual)
+    {
+        RelatedProductsManual = manual;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

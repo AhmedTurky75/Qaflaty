@@ -15,100 +15,84 @@
     </div>
   </div>
 } @else if (product()) {
-  <div class="min-h-screen bg-gray-50 py-8">
+  <div class="min-h-screen bg-gray-50 py-8 pb-28">
     <div class="container mx-auto px-4">
       <!-- Breadcrumb -->
-      <nav class="mb-8 text-sm">
+      <nav class="mb-6 text-sm">
         <ol class="flex items-center space-x-2">
-          <li>
-            <a [routerLink]="['/']" class="text-gray-600 hover:text-primary">Home</a>
-          </li>
+          <li><a [routerLink]="['/']" class="text-gray-600 hover:text-primary">Home</a></li>
           <li class="text-gray-400">/</li>
-          <li>
-            <a [routerLink]="['/products']" class="text-gray-600 hover:text-primary">Products</a>
-          </li>
+          <li><a [routerLink]="['/products']" class="text-gray-600 hover:text-primary">Products</a></li>
           <li class="text-gray-400">/</li>
-          <li class="text-gray-900 font-medium">{{ product()!.name }}</li>
+          <li class="text-gray-900 font-medium truncate max-w-[200px]">{{ product()!.name }}</li>
         </ol>
       </nav>
 
       <div class="grid md:grid-cols-2 gap-8 lg:gap-12">
-        <!-- Product Images -->
-        <div class="space-y-4">
-          <!-- Main Image -->
-          <div class="relative aspect-square bg-white rounded-lg shadow-lg overflow-hidden">
-            @if (product()!.images.length > 0) {
-              <img
-                [src]="selectedImage().url"
-                [alt]="selectedImage().altText || product()!.name"
-                class="w-full h-full object-contain"
-              >
-            } @else {
-              <div class="w-full h-full flex items-center justify-center bg-gray-100">
-                <svg class="w-32 h-32 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            }
-
-            <!-- Discount Badge -->
-            @if (product()!.compareAtPrice != null && product()!.compareAtPrice! > product()!.price) {
-              <div class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                -{{ (((product()!.compareAtPrice! - product()!.price) / product()!.compareAtPrice!) * 100) | number:'1.0-0' }}% OFF
-              </div>
-            }
-          </div>
-
-          <!-- Thumbnail Gallery -->
-          @if (product()!.images.length > 1) {
-            <div class="grid grid-cols-4 gap-4">
-              @for (image of product()!.images; track image.id) {
-                <button
-                  (click)="selectImage(image)"
-                  [class.ring-2]="selectedImage().id === image.id"
-                  [class.ring-primary]="selectedImage().id === image.id"
-                  class="aspect-square bg-white rounded-lg overflow-hidden hover:opacity-75 transition-opacity"
-                >
-                  <img
-                    [src]="image.url"
-                    [alt]="image.altText || product()!.name"
-                    class="w-full h-full object-cover"
-                  >
-                </button>
-              }
-            </div>
-          }
+        <!-- Gallery -->
+        <div>
+          <app-product-gallery
+            [images]="product()!.images"
+            [productName]="product()!.name"
+            [discountPercent]="discountPercent()"
+          />
         </div>
 
         <!-- Product Info -->
-        <div class="space-y-6">
-          <!-- Title and Price -->
+        <div class="space-y-5">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ product()!.name }}</h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ product()!.name }}</h1>
 
-            <div class="flex items-baseline gap-3 mb-4">
+            <!-- Rating summary + social proof -->
+            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-1">
+              @if (totalReviews() > 0) {
+                <button class="flex items-center gap-1.5 group" (click)="scrollToReviews()">
+                  <span class="flex text-lg leading-none">
+                    @for (filled of ratingStars(); track $index) {
+                      <span [class.text-amber-400]="filled" [class.text-gray-300]="!filled">★</span>
+                    }
+                  </span>
+                  <span class="font-semibold text-gray-900">{{ averageRating() | number:'1.1-1' }}</span>
+                  <span class="text-sm text-gray-500 group-hover:text-primary underline-offset-2 group-hover:underline">
+                    ({{ totalReviews() }} {{ totalReviews() === 1 ? 'review' : 'reviews' }})
+                  </span>
+                </button>
+                @if (totalVerified() > 0) {
+                  <span class="inline-flex items-center gap-1 text-sm text-green-700 font-medium">
+                    ✓ {{ totalVerified() }} verified {{ totalVerified() === 1 ? 'purchase' : 'purchases' }}
+                  </span>
+                }
+              } @else {
+                <button class="text-sm text-gray-500 hover:text-primary" (click)="scrollToReviews()">
+                  ☆☆☆☆☆ Be the first to review
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- Price -->
+          <div class="border-t pt-5">
+            <div class="flex items-baseline gap-3">
               @if (effectivePrice()) {
                 <span class="text-4xl font-bold text-gray-900">
                   {{ effectivePrice()!.amount.toFixed(2) }} {{ effectivePrice()!.currency }}
                 </span>
               }
               @if (product()!.compareAtPrice != null && product()!.compareAtPrice! > product()!.price && !selectedVariant()?.priceOverride) {
-                <span class="text-xl text-gray-500 line-through">
-                  {{ product()!.compareAtPrice!.toFixed(2) }} EGP
-                </span>
+                <span class="text-xl text-gray-400 line-through">{{ product()!.compareAtPrice!.toFixed(2) }} EGP</span>
+                <span class="bg-red-100 text-red-700 text-sm font-bold px-2 py-0.5 rounded">-{{ discountPercent() }}%</span>
               }
             </div>
-
             @if (product()!.compareAtPrice != null && product()!.compareAtPrice! > product()!.price && !selectedVariant()?.priceOverride) {
-              <p class="text-green-600 font-semibold">
+              <p class="text-green-600 font-medium text-sm mt-1">
                 You save {{ (product()!.compareAtPrice! - product()!.price).toFixed(2) }} EGP
               </p>
             }
           </div>
 
-          <!-- Variant Selector -->
+          <!-- Variants -->
           @if (product()!.hasVariants && product()!.variantOptions?.length) {
-            <div class="border-t pt-6">
+            <div class="border-t pt-5">
               <app-variant-selector
                 [options]="product()!.variantOptions!"
                 [variants]="product()!.variants!"
@@ -118,168 +102,189 @@
             </div>
           }
 
-          <!-- Stock Status -->
-          <div>
+          <!-- Stock + SKU -->
+          <div class="flex items-center gap-4 text-sm">
             @if (!(product()!.hasVariants)) {
-              <!-- Non-variant product stock -->
               @if (product()!.inStock) {
-                <div class="flex items-center gap-2 text-green-600">
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="font-medium">In Stock</span>
-                </div>
+                <span class="inline-flex items-center gap-1.5 text-green-600 font-medium">
+                  <span class="w-2 h-2 rounded-full bg-green-500"></span> In Stock
+                </span>
               } @else {
-                <div class="flex items-center gap-2 text-red-600">
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="font-medium">Out of Stock</span>
-                </div>
+                <span class="inline-flex items-center gap-1.5 text-red-600 font-medium">
+                  <span class="w-2 h-2 rounded-full bg-red-500"></span> Out of Stock
+                </span>
               }
+            }
+            @if (selectedVariant()?.sku) {
+              <span class="text-gray-500">SKU: {{ selectedVariant()!.sku }}</span>
             }
           </div>
 
-          <!-- Description -->
-          @if (product()!.description) {
-            <div class="border-t pt-6">
-              <h2 class="text-lg font-semibold mb-3">Description</h2>
-              <p class="text-gray-600 whitespace-pre-line">{{ product()!.description }}</p>
-            </div>
-          }
-
-          <!-- WhatsApp Product Inquiry -->
-          @if (whatsAppService.isEnabled()) {
-            <div class="border-t pt-6">
-              <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div class="flex items-center justify-between gap-4">
-                  <div class="flex items-center gap-3">
-                    <div class="flex-shrink-0 w-10 h-10 bg-[#25D366] rounded-full flex items-center justify-center">
-                      <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
-                      </svg>
-                    </div>
-                    <div>
-                      <p class="font-semibold text-gray-900 text-sm">Have questions about this product?</p>
-                      <p class="text-xs text-gray-600">Chat with us on WhatsApp</p>
-                    </div>
-                  </div>
-                  <app-whatsapp-button
-                    variant="inline"
-                    [productName]="product()!.name"
-                    [productUrl]="productUrl()"
-                    text="Ask Us"
-                  />
-                </div>
-              </div>
-            </div>
-          }
-
           <!-- Add to Cart -->
           @if (canAddToCart() || requiresVariantSelection()) {
-            <div class="border-t pt-6 space-y-4">
+            <div class="space-y-4">
               @if (canAddToCart()) {
                 <div class="flex items-center gap-4">
-                  <label class="font-medium">Quantity:</label>
+                  <label class="font-medium text-sm">Quantity</label>
                   <div class="flex items-center border rounded-lg">
-                    <button
-                      (click)="decreaseQuantity()"
-                      [disabled]="quantity() <= 1"
-                      class="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                      </svg>
-                    </button>
-                    <input
-                      type="number"
-                      [(ngModel)]="quantity"
-                      [min]="1"
-                      [max]="effectiveStock()"
-                      class="w-16 text-center border-x py-2 focus:outline-none"
-                    >
-                    <button
-                      (click)="increaseQuantity()"
-                      [disabled]="quantity() >= effectiveStock()"
-                      class="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                      </svg>
-                    </button>
+                    <button (click)="decreaseQuantity()" [disabled]="quantity() <= 1"
+                            class="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 transition-colors">−</button>
+                    <input type="number" [(ngModel)]="quantity" [min]="1" [max]="effectiveStock()"
+                           class="w-16 text-center border-x py-2 focus:outline-none">
+                    <button (click)="increaseQuantity()" [disabled]="quantity() >= effectiveStock()"
+                            class="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 transition-colors">+</button>
                   </div>
                 </div>
               }
 
-              <button
-                (click)="addToCart()"
-                [disabled]="addingToCart() || !canAddToCart()"
-                class="w-full px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                @if (addingToCart()) {
-                  <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  Adding...
-                } @else if (requiresVariantSelection()) {
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                  </svg>
-                  Select Options
-                } @else {
-                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Add to Cart
-                }
+              <button (click)="addToCart()" [disabled]="addingToCart() || !canAddToCart()"
+                      class="w-full px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold text-lg disabled:opacity-50 flex items-center justify-center gap-2">
+                @if (addingToCart()) { Adding… }
+                @else if (requiresVariantSelection()) { Select Options }
+                @else { Add to Cart }
               </button>
 
               @if (showAddedMessage()) {
-                <div class="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-3">
-                  <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                  </svg>
-                  <span class="text-green-800 font-medium">Added to cart successfully!</span>
+                <div class="p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 font-medium text-sm">
+                  ✓ Added to cart successfully!
                 </div>
               }
             </div>
           } @else if (!isInStock()) {
-            <div class="border-t pt-6">
-              <div class="flex items-center gap-2 text-red-600 mb-4">
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                </svg>
-                <span class="font-medium">Out of Stock</span>
-              </div>
-              <button
-                disabled
-                class="w-full px-8 py-4 bg-gray-300 text-gray-500 rounded-lg font-semibold text-lg cursor-not-allowed"
-              >
-                Out of Stock
-              </button>
-            </div>
+            <button disabled class="w-full px-8 py-4 bg-gray-300 text-gray-500 rounded-lg font-semibold text-lg cursor-not-allowed">
+              Out of Stock
+            </button>
           }
 
-          <!-- SKU -->
-          @if (selectedVariant()?.sku) {
-            <div class="text-sm text-gray-600 border-t pt-6">
-              SKU: {{ selectedVariant()!.sku }}
+          <!-- Wishlist -->
+          <button
+            (click)="toggleWishlist()"
+            class="w-full px-6 py-3 rounded-lg border font-medium transition-colors flex items-center justify-center gap-2"
+            [class.bg-red-50]="isInWishlist()"
+            [class.border-red-200]="isInWishlist()"
+            [class.text-red-600]="isInWishlist()"
+            [class.border-gray-300]="!isInWishlist()"
+            [class.text-gray-700]="!isInWishlist()"
+          >
+            <svg class="w-5 h-5" [attr.fill]="isInWishlist() ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            {{ isInWishlist() ? 'Saved to Wishlist' : 'Add to Wishlist' }}
+          </button>
+
+          <!-- Trust badges -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 border-t pt-5">
+            <div class="flex flex-col items-center text-center gap-1">
+              <span class="text-2xl">🔒</span><span class="text-xs text-gray-600 font-medium">Secure Checkout</span>
+            </div>
+            <div class="flex flex-col items-center text-center gap-1">
+              <span class="text-2xl">🚚</span><span class="text-xs text-gray-600 font-medium">Fast Shipping</span>
+            </div>
+            <div class="flex flex-col items-center text-center gap-1">
+              <span class="text-2xl">↩️</span><span class="text-xs text-gray-600 font-medium">Easy Returns</span>
+            </div>
+            <div class="flex flex-col items-center text-center gap-1">
+              <span class="text-2xl">🛡️</span><span class="text-xs text-gray-600 font-medium">Warranty</span>
+            </div>
+          </div>
+
+          <!-- WhatsApp inquiry -->
+          @if (whatsAppService.isEnabled()) {
+            <div class="border-t pt-5">
+              <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between gap-4">
+                <div>
+                  <p class="font-semibold text-gray-900 text-sm">Have questions about this product?</p>
+                  <p class="text-xs text-gray-600">Chat with us on WhatsApp</p>
+                </div>
+                <app-whatsapp-button variant="inline" [productName]="product()!.name" [productUrl]="productUrl()" text="Ask Us" />
+              </div>
             </div>
           }
         </div>
       </div>
+
+      <!-- Tabs -->
+      <div class="mt-12 bg-white rounded-lg shadow-sm border border-gray-100">
+        <div class="flex border-b overflow-x-auto">
+          <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'description'" (click)="setTab('description')">Description</button>
+          <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'specifications'" (click)="setTab('specifications')">Specifications</button>
+          <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'reviews'" (click)="setTab('reviews')">
+            Reviews @if (totalReviews() > 0) { <span class="text-gray-400">({{ totalReviews() }})</span> }
+          </button>
+          <button class="tab-btn" [class.tab-btn--active]="activeTab() === 'shipping'" (click)="setTab('shipping')">Shipping &amp; Returns</button>
+        </div>
+
+        <div class="p-6 lg:p-8">
+          @switch (activeTab()) {
+            @case ('description') {
+              @if (product()!.description) {
+                <p class="text-gray-700 whitespace-pre-line leading-relaxed">{{ product()!.description }}</p>
+              } @else {
+                <p class="text-gray-400">No description available.</p>
+              }
+            }
+            @case ('specifications') {
+              @if (product()!.variantOptions?.length || selectedVariant()?.sku) {
+                <dl class="divide-y divide-gray-100">
+                  @if (selectedVariant()?.sku) {
+                    <div class="flex py-2.5"><dt class="w-40 text-gray-500">SKU</dt><dd class="font-medium text-gray-900">{{ selectedVariant()!.sku }}</dd></div>
+                  }
+                  @for (opt of product()!.variantOptions || []; track opt.name) {
+                    <div class="flex py-2.5"><dt class="w-40 text-gray-500">{{ opt.name }}</dt><dd class="font-medium text-gray-900">{{ opt.values.join(', ') }}</dd></div>
+                  }
+                </dl>
+              } @else {
+                <p class="text-gray-400">No specifications available.</p>
+              }
+            }
+            @case ('reviews') {
+              <app-product-reviews [productId]="product()!.id" />
+            }
+            @case ('shipping') {
+              <div class="space-y-4 text-gray-700 leading-relaxed">
+                <div><h3 class="font-semibold text-gray-900 mb-1">🚚 Shipping</h3><p class="text-sm">Orders are processed within 1–2 business days. Delivery times vary by location; you'll see the estimated date at checkout.</p></div>
+                <div><h3 class="font-semibold text-gray-900 mb-1">↩️ Returns</h3><p class="text-sm">Not satisfied? Return eligible items within 14 days of delivery in their original condition for a refund or exchange.</p></div>
+                <div><h3 class="font-semibold text-gray-900 mb-1">🛡️ Warranty</h3><p class="text-sm">Products are covered against manufacturing defects. Contact support for warranty claims.</p></div>
+              </div>
+            }
+          }
+        </div>
+      </div>
+
+      <!-- Recommendations -->
+      <app-product-row title="Frequently Bought Together" [products]="frequentlyBoughtTogether()" />
+      <app-product-row title="You May Also Like" [products]="relatedProducts()" />
+      <app-product-row title="Trending Now" [products]="trendingProducts()" />
+      <app-product-row title="Recently Viewed" [products]="recentlyViewed()" />
     </div>
   </div>
+
+  <!-- Sticky purchase bar -->
+  @if (showStickyBar()) {
+    <div class="sticky-bar-anim fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+      <div class="container mx-auto px-4 py-3 flex items-center gap-4">
+        @if (product()!.images?.length) {
+          <img [src]="product()!.images[0].url" [alt]="product()!.name" class="w-12 h-12 object-contain rounded border hidden sm:block" />
+        }
+        <div class="flex-1 min-w-0">
+          <p class="font-medium text-gray-900 truncate">{{ product()!.name }}</p>
+          @if (effectivePrice()) {
+            <p class="text-primary font-bold">{{ effectivePrice()!.amount.toFixed(2) }} {{ effectivePrice()!.currency }}</p>
+          }
+        </div>
+        <button (click)="addToCart()" [disabled]="addingToCart() || !canAddToCart()"
+                class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold disabled:opacity-50 whitespace-nowrap">
+          @if (requiresVariantSelection()) { Select Options } @else { Add to Cart }
+        </button>
+      </div>
+    </div>
+  }
 } @else if (!loading()) {
   <div class="min-h-screen bg-gray-50 flex items-center justify-center">
     <div class="text-center">
       <h1 class="text-2xl font-bold text-gray-900 mb-4">Product Not Found</h1>
       <p class="text-gray-600 mb-8">The product you're looking for doesn't exist or has been removed.</p>
-      <a
-        [routerLink]="['/products']"
-        class="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors"
-      >
+      <a [routerLink]="['/products']" class="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors">
         Browse All Products
       </a>
     </div>

@@ -10,6 +10,7 @@ import { RecentOrdersComponent } from './components/recent-orders/recent-orders.
 import { TopProductsComponent } from './components/top-products/top-products.component';
 import { QuickActionsComponent } from './components/quick-actions/quick-actions.component';
 import { LowStockAlertsComponent } from './components/low-stock-alerts/low-stock-alerts.component';
+import { MostWishlistedComponent } from './components/most-wishlisted/most-wishlisted.component';
 import { SetupGuideComponent } from '../setup-guide/setup-guide.component';
 
 @Component({
@@ -24,6 +25,7 @@ import { SetupGuideComponent } from '../setup-guide/setup-guide.component';
     TopProductsComponent,
     QuickActionsComponent,
     LowStockAlertsComponent,
+    MostWishlistedComponent,
     SetupGuideComponent
   ],
   templateUrl: './dashboard.component.html'
