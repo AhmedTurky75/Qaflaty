@@ -64,6 +64,7 @@ export class ShellComponent implements OnInit {
       { name: 'Active Carts', icon: 'cart', route: '/active-carts' },
       { name: 'Customers', icon: 'users', route: '/customers' },
       { name: 'Reviews', icon: 'star', route: '/reviews' },
+      { name: 'Promo Codes', icon: 'tag', route: '/promo-codes' },
       { name: 'Live Chat', icon: 'message-square', route: '/chat' },
       { name: 'Store Builder', icon: 'layout', route: '/store-builder' },
       { name: 'Settings', icon: 'settings', route: '/settings' }

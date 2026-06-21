@@ -23,6 +23,7 @@ export interface CreateOrderRequest {
   items: OrderItemRequest[];
   paymentMethod: string;
   notes?: string;
+  promoCode?: string;
 }
 
 export interface CustomerInfo {
@@ -83,6 +84,7 @@ export interface OrderPricing {
   subtotal: Money;
   deliveryFee: Money;
   total: Money;
+  discountAmount?: Money;
 }
 
 export interface DeliveryInfo {

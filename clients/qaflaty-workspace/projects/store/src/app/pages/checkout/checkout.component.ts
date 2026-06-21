@@ -8,6 +8,8 @@ import { OrderService } from '../../services/order.service';
 import { StoreService } from '../../services/store.service';
 import { ConfigService } from '../../services/config.service';
 import { CustomerAuthService, CustomerAddress } from '../../services/customer-auth.service';
+import { PromoService, PromoValidationResult } from '../../services/promo.service';
+import { FeatureService } from '../../services/feature.service';
 import { CreateOrderRequest, OrderCalculation, OrderStatus } from '../../models/order.model';
 import { PaymentMethodAdjustment } from 'shared';
 import { LocationPickerComponent, PickedLocation } from '../../components/shared/location-picker.component';
@@ -26,8 +28,17 @@ export class CheckoutComponent implements OnInit {
   private orderService = inject(OrderService);
   private storeService = inject(StoreService);
   private configService = inject(ConfigService);
+  private promoService = inject(PromoService);
+  private featureService = inject(FeatureService);
   private router = inject(Router);
   readonly authService = inject(CustomerAuthService);
+
+  // Promo code state
+  readonly promoEnabled = this.featureService.isPromoCodesEnabled;
+  promoInput = signal<string>('');
+  applyingPromo = signal<boolean>(false);
+  promoError = signal<string>('');
+  appliedPromo = signal<PromoValidationResult | null>(null);
 
   cart = this.cartService.cart;
   store = this.storeService.currentStore;
@@ -342,8 +353,62 @@ export class CheckoutComponent implements OnInit {
   getDisplayTotal(): string {
     if (this.calculatingOrder()) return '...';
     const calc = this.orderCalculation();
-    if (!calc) return `${this.cart().subtotal.amount.toFixed(2)} ${this.cart().subtotal.currency}`;
-    return `${calc.total.amount.toFixed(2)} ${calc.total.currency}`;
+    const currency = calc?.total.currency ?? this.cart().subtotal.currency;
+    const baseTotal = calc?.total.amount ?? this.cart().subtotal.amount;
+    const total = Math.max(0, baseTotal - this.effectiveDiscount());
+    return `${total.toFixed(2)} ${currency}`;
+  }
+
+  /** Discount applied to the displayed total, including free-shipping (resolved against the delivery fee). */
+  effectiveDiscount(): number {
+    const promo = this.appliedPromo();
+    if (!promo || !promo.isValid) return 0;
+    if (promo.freeShipping) {
+      return this.orderCalculation()?.deliveryFee.amount ?? 0;
+    }
+    return promo.discountAmount;
+  }
+
+  getDiscountDisplay(): string {
+    const calc = this.orderCalculation();
+    const currency = calc?.total.currency ?? this.cart().subtotal.currency;
+    return `-${this.effectiveDiscount().toFixed(2)} ${currency}`;
+  }
+
+  applyPromo(): void {
+    const code = this.promoInput().trim();
+    if (!code) return;
+
+    const items = this.cart().items.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      variantId: item.variantId
+    }));
+
+    this.applyingPromo.set(true);
+    this.promoError.set('');
+    this.promoService.validate(code, items).subscribe({
+      next: (result) => {
+        this.applyingPromo.set(false);
+        if (result.isValid) {
+          this.appliedPromo.set(result);
+        } else {
+          this.appliedPromo.set(null);
+          this.promoError.set(result.message ?? 'This promo code is not valid.');
+        }
+      },
+      error: () => {
+        this.applyingPromo.set(false);
+        this.appliedPromo.set(null);
+        this.promoError.set('Could not validate the promo code.');
+      }
+    });
+  }
+
+  removePromo(): void {
+    this.appliedPromo.set(null);
+    this.promoInput.set('');
+    this.promoError.set('');
   }
 
   submitOrder(): void {
@@ -402,7 +467,8 @@ export class CheckoutComponent implements OnInit {
           variantAttributes: item.variantAttributes
         })),
         paymentMethod: formValue.paymentMethod,
-        notes: formValue.notes || undefined
+        notes: formValue.notes || undefined,
+        promoCode: this.appliedPromo()?.isValid ? this.appliedPromo()!.code : undefined
       };
     } else {
       const countryCode = Number(formValue.countryCode);
@@ -433,7 +499,8 @@ export class CheckoutComponent implements OnInit {
           variantAttributes: item.variantAttributes
         })),
         paymentMethod: formValue.paymentMethod,
-        notes: formValue.notes || undefined
+        notes: formValue.notes || undefined,
+        promoCode: this.appliedPromo()?.isValid ? this.appliedPromo()!.code : undefined
       };
     }
 

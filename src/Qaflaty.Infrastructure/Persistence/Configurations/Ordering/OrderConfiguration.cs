@@ -58,6 +58,12 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                 money.Property(m => m.Currency).HasColumnName("delivery_fee_currency").HasConversion<string>();
             });
 
+            pricing.OwnsOne(p => p.DiscountAmount, money =>
+            {
+                money.Property(m => m.Amount).HasColumnName("discount_amount").HasColumnType("decimal(18,2)");
+                money.Property(m => m.Currency).HasColumnName("discount_currency").HasConversion<string>();
+            });
+
             pricing.OwnsOne(p => p.Total, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("total").HasColumnType("decimal(18,2)");
@@ -94,6 +100,10 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             notes.Property(n => n.CustomerNotes).HasColumnName("customer_notes").HasMaxLength(1000);
             notes.Property(n => n.MerchantNotes).HasColumnName("merchant_notes").HasMaxLength(2000);
         });
+
+        builder.Property(o => o.AppliedPromoCode)
+            .HasColumnName("applied_promo_code")
+            .HasMaxLength(40);
 
         builder.Property(o => o.CreatedAt)
             .HasColumnName("created_at");

@@ -76,7 +76,8 @@ public class StorefrontOrdersController : ApiController
                 item.ProductId, item.Quantity, item.VariantId)).ToList(),
             CountryCode: request.DeliveryAddress.CountryCode,
             CityId: request.DeliveryAddress.CityId,
-            DistrictId: request.DeliveryAddress.DistrictId);
+            DistrictId: request.DeliveryAddress.DistrictId,
+            PromoCode: request.PromoCode);
 
         var result = await Sender.Send(command, ct);
 

@@ -74,6 +74,7 @@ public static class DependencyInjection
         services.AddScoped<IDistrictRepository, DistrictRepository>();
         services.AddScoped<IProductPropertyDefinitionRepository, ProductPropertyDefinitionRepository>();
         services.AddScoped<IPaymentMethodDefinitionRepository, PaymentMethodDefinitionRepository>();
+        services.AddScoped<IPromoCodeRepository, PromoCodeRepository>();
 
         // Identity Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();

@@ -17,6 +17,7 @@ public sealed class Order : AggregateRoot<OrderId>
     public OrderStatus Status { get; private set; }
     public OrderSource Source { get; private set; }
     public OrderPricing Pricing { get; private set; } = null!;
+    public string? AppliedPromoCode { get; private set; }
     public PaymentInfo Payment { get; private set; } = null!;
     public DeliveryInfo Delivery { get; private set; } = null!;
     public OrderNotes Notes { get; private set; } = null!;
@@ -202,6 +203,21 @@ public sealed class Order : AggregateRoot<OrderId>
         return Result.Success();
     }
 
+    /// <summary>
+    /// Applies a promo-code discount to the order. Only allowed while the order is still Pending.
+    /// <paramref name="discountAmount"/> is the monetary reduction already computed by the promo code.
+    /// </summary>
+    public Result ApplyDiscount(string code, Money discountAmount)
+    {
+        if (Status != OrderStatus.Pending)
+            return Result.Failure(OrderingErrors.OrderAlreadyConfirmed);
+
+        AppliedPromoCode = code;
+        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee, discountAmount);
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
     public void AddMerchantNote(string note)
     {
         Notes.AddMerchantNote(note);
@@ -219,6 +235,6 @@ public sealed class Order : AggregateRoot<OrderId>
 
     private void RecalculatePricing()
     {
-        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee);
+        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee, Pricing.DiscountAmount);
     }
 }

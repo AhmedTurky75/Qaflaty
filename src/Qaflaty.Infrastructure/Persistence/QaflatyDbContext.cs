@@ -8,6 +8,7 @@ using Qaflaty.Domain.Catalog.Aggregates.District;
 using Qaflaty.Domain.Catalog.Aggregates.FaqItem;
 using Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
+using Qaflaty.Domain.Catalog.Aggregates.PromoCode;
 using Qaflaty.Domain.Catalog.Aggregates.Store;
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
 using Qaflaty.Domain.Communication.Aggregates.AiInteraction;
@@ -56,6 +57,8 @@ public class QaflatyDbContext : DbContext
     public DbSet<District> Districts => Set<District>();
     public DbSet<DeliveryZone> DeliveryZones => Set<DeliveryZone>();
     public DbSet<ProductPropertyDefinition> ProductPropertyDefinitions => Set<ProductPropertyDefinition>();
+    public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
+    public DbSet<PromoCodeRedemption> PromoCodeRedemptions => Set<PromoCodeRedemption>();
 
     // Ordering
     public DbSet<Order> Orders => Set<Order>();

@@ -27,7 +27,8 @@ public record OrderStatusChangeDto(
 public record OrderPricingDto(
     MoneyDto Subtotal,
     MoneyDto DeliveryFee,
-    MoneyDto Total
+    MoneyDto Total,
+    MoneyDto? DiscountAmount = null
 );
 
 public record PaymentInfoDto(
@@ -80,7 +81,8 @@ public record OrderDto(
     List<OrderStatusChangeDto> StatusHistory,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    string Source
+    string Source,
+    string? AppliedPromoCode = null
 );
 
 // --- Order list item (compact, for list views) ---

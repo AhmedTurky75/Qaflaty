@@ -40,7 +40,8 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
             new OrderPricingDto(
                 new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
                 new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
-                new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString())
+                new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString()),
+                new MoneyDto(order.Pricing.DiscountAmount.Amount, order.Pricing.DiscountAmount.Currency.ToString())
             ),
             new TrackOrderDeliveryDto(
                 order.Delivery.Address.ToSingleLine(),
