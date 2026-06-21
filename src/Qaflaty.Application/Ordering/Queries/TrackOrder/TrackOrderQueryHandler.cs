@@ -42,6 +42,7 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
             order.OrderNumber.Value,
             order.Status.ToString(),
             order.Items.Select(i => new TrackOrderItemDto(
+                i.ProductId.Value,
                 i.ProductName,
                 new MoneyDto(i.UnitPrice.Amount, i.UnitPrice.Currency.ToString()),
                 i.Quantity,

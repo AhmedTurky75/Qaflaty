@@ -72,6 +72,7 @@ export interface OrderTracking {
 }
 
 export interface OrderItemDto {
+  productId: string;
   productName: string;
   unitPrice: Money;
   quantity: number;

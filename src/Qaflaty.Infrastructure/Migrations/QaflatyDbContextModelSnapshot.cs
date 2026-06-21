@@ -1651,6 +1651,103 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("order_status_changes", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("MerchantNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("merchant_note");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("order_number");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("RefundTransactionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("refund_transaction_id");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("return_requests", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequestItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("product_name");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReturnRequestId");
+
+                    b.ToTable("return_request_items", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Cart.Cart", b =>
                 {
                     b.Property<Guid>("Id")
@@ -3837,6 +3934,68 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequest", b =>
+                {
+                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "RefundAmount", b1 =>
+                        {
+                            b1.Property<Guid>("ReturnRequestId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("refund_amount");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("refund_currency");
+
+                            b1.HasKey("ReturnRequestId");
+
+                            b1.ToTable("return_requests");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ReturnRequestId");
+                        });
+
+                    b.Navigation("RefundAmount")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequestItem", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequest", null)
+                        .WithMany("Items")
+                        .HasForeignKey("ReturnRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "UnitPrice", b1 =>
+                        {
+                            b1.Property<Guid>("ReturnRequestItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("unit_price");
+
+                            b1.Property<string>("Currency")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("unit_price_currency");
+
+                            b1.HasKey("ReturnRequestItemId");
+
+                            b1.ToTable("return_request_items");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ReturnRequestItemId");
+                        });
+
+                    b.Navigation("UnitPrice")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Cart.CartItem", b =>
                 {
                     b.HasOne("Qaflaty.Domain.Storefront.Aggregates.Cart.Cart", null)
@@ -3895,6 +4054,11 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Navigation("Items");
 
                     b.Navigation("StatusHistory");
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequest", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Cart.Cart", b =>

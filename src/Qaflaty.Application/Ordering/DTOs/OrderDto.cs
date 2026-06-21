@@ -102,6 +102,7 @@ public record OrderListDto(
 
 // --- Track order (public, no auth) ---
 public record TrackOrderItemDto(
+    Guid ProductId,
     string ProductName,
     MoneyDto UnitPrice,
     int Quantity,

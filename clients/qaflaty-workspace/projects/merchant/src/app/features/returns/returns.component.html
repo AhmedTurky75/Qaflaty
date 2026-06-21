@@ -1,0 +1,58 @@
+<div class="returns-page">
+  <header class="page-header">
+    <div>
+      <h1>Returns &amp; Refunds</h1>
+      <p class="subtitle">Review return requests and issue refunds.</p>
+    </div>
+  </header>
+
+  <div class="tabs">
+    @for (s of statuses; track s) {
+      <button class="tab" [class.active]="activeStatus() === s" (click)="setStatus(s)">
+        {{ s }}
+        @if (s === 'Requested' && pendingCount() > 0) { <span class="count">{{ pendingCount() }}</span> }
+      </button>
+    }
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (returns().length === 0) {
+    <div class="empty"><p>No {{ activeStatus().toLowerCase() }} returns.</p></div>
+  } @else {
+    <div class="cards">
+      @for (r of returns(); track r.id) {
+        <div class="card">
+          <div class="card-head">
+            <div>
+              <span class="order">{{ r.orderNumber }}</span>
+              <span class="badge {{ r.status.toLowerCase() }}">{{ r.status }}</span>
+            </div>
+            <span class="refund">{{ r.refundAmount.amount.toFixed(2) }} {{ r.refundAmount.currency }}</span>
+          </div>
+
+          <p class="reason"><strong>Reason:</strong> {{ r.reason }}</p>
+
+          <ul class="items">
+            @for (i of r.items; track i.productId) {
+              <li>{{ i.quantity }} × {{ i.productName }} — {{ i.lineTotal.amount.toFixed(2) }} {{ i.lineTotal.currency }}</li>
+            }
+          </ul>
+
+          @if (r.merchantNote) { <p class="note">Note: {{ r.merchantNote }}</p> }
+
+          <div class="card-actions">
+            @if (r.status === 'Requested') {
+              <button class="btn-primary" [disabled]="busyId() === r.id" (click)="approve(r)">Approve</button>
+              <button class="btn-secondary" [disabled]="busyId() === r.id" (click)="reject(r)">Reject</button>
+            } @else if (r.status === 'Approved') {
+              <button class="btn-primary" [disabled]="busyId() === r.id" (click)="refund(r)">Issue refund</button>
+            } @else if (r.status === 'Refunded' && r.refundTransactionId) {
+              <span class="muted">Txn: {{ r.refundTransactionId }}</span>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

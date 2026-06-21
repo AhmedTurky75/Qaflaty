@@ -76,6 +76,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/promo-codes/promo-codes.component').then(m => m.PromoCodesComponent)
       },
       {
+        path: 'returns',
+        canActivate: [storeGuard],
+        loadComponent: () => import('./features/returns/returns.component').then(m => m.ReturnsComponent)
+      },
+      {
         path: 'chat',
         canActivate: [storeGuard],
         children: [

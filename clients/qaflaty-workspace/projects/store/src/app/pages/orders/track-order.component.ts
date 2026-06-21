@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { OrderService } from '../../services/order.service';
+import { ReturnService } from '../../services/return.service';
 import { OrderTracking, OrderStatus } from '../../models/order.model';
 
 @Component({
@@ -14,6 +15,7 @@ import { OrderTracking, OrderStatus } from '../../models/order.model';
 })
 export class TrackOrderComponent {
   private orderService = inject(OrderService);
+  private returnService = inject(ReturnService);
   private route = inject(ActivatedRoute);
 
   order = signal<OrderTracking | null>(null);
@@ -21,6 +23,69 @@ export class TrackOrderComponent {
   contactInput = signal<string>('');
   loading = signal<boolean>(false);
   errorMessage = signal<string>('');
+
+  // Return-request state
+  showReturnForm = signal<boolean>(false);
+  returnQuantities = signal<Record<string, number>>({});
+  returnReason = signal<string>('');
+  submittingReturn = signal<boolean>(false);
+  returnError = signal<string>('');
+  returnSubmitted = signal<boolean>(false);
+
+  get canReturn(): boolean {
+    return this.order()?.status === OrderStatus.Delivered;
+  }
+
+  openReturnForm(): void {
+    const o = this.order();
+    if (!o) return;
+    const qty: Record<string, number> = {};
+    for (const item of o.items) qty[item.productId] = 0;
+    this.returnQuantities.set(qty);
+    this.returnReason.set('');
+    this.returnError.set('');
+    this.showReturnForm.set(true);
+  }
+
+  setReturnQty(productId: string, max: number, value: string): void {
+    let n = Number(value);
+    if (isNaN(n) || n < 0) n = 0;
+    if (n > max) n = max;
+    this.returnQuantities.update(q => ({ ...q, [productId]: n }));
+  }
+
+  submitReturn(): void {
+    const orderNumber = this.orderNumberInput().trim();
+    const contact = this.contactInput().trim();
+    const reason = this.returnReason().trim();
+
+    const items = Object.entries(this.returnQuantities())
+      .filter(([, qty]) => qty > 0)
+      .map(([productId, quantity]) => ({ productId, quantity }));
+
+    if (items.length === 0) {
+      this.returnError.set('Select at least one item to return.');
+      return;
+    }
+    if (!reason) {
+      this.returnError.set('Please tell us why you are returning these items.');
+      return;
+    }
+
+    this.submittingReturn.set(true);
+    this.returnError.set('');
+    this.returnService.requestGuestReturn(orderNumber, contact, items, reason).subscribe({
+      next: () => {
+        this.submittingReturn.set(false);
+        this.showReturnForm.set(false);
+        this.returnSubmitted.set(true);
+      },
+      error: (e) => {
+        this.submittingReturn.set(false);
+        this.returnError.set(e?.error?.message ?? 'Could not submit your return request.');
+      }
+    });
+  }
 
   ngOnInit() {
     // Check if order number + contact are in query params (e.g. from the confirmation page)
@@ -70,6 +135,9 @@ export class TrackOrderComponent {
     this.orderNumberInput.set('');
     this.contactInput.set('');
     this.errorMessage.set('');
+    this.showReturnForm.set(false);
+    this.returnSubmitted.set(false);
+    this.returnError.set('');
   }
 
   formatDate(dateString: string): string {
