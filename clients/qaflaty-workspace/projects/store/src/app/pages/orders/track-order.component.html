@@ -5,17 +5,28 @@
     <!-- Search Form -->
     @if (!order()) {
       <div class="bg-white rounded-lg shadow p-8 mb-8">
-        <h2 class="text-xl font-semibold mb-4">Enter Your Order Number</h2>
+        <h2 class="text-xl font-semibold mb-4">Enter Your Order Details</h2>
         <p class="text-gray-600 mb-6">
-          You can find your order number in the confirmation email or SMS we sent you.
+          Enter your order number and the email or phone you used to place it. You can find your
+          order number in the confirmation email or SMS we sent you.
         </p>
-        <form (ngSubmit)="trackOrder()" class="flex gap-4">
+        <form (ngSubmit)="trackOrder()" class="flex flex-col gap-4">
           <input
             type="text"
-            [(ngModel)]="orderNumberInput"
+            [ngModel]="orderNumberInput()"
+            (ngModelChange)="orderNumberInput.set($event)"
             name="orderNumber"
             placeholder="QAF-XXXXXX"
-            class="flex-1 px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-lg"
+            class="px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-lg"
+            required
+          >
+          <input
+            type="text"
+            [ngModel]="contactInput()"
+            (ngModelChange)="contactInput.set($event)"
+            name="contact"
+            placeholder="Email or phone used on the order"
+            class="px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-lg"
             required
           >
           <button

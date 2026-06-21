@@ -124,13 +124,14 @@ public class StorefrontOrdersController : ApiController
     }
 
     [HttpGet("track/{orderNumber}")]
-    public async Task<IActionResult> TrackOrder(string orderNumber, CancellationToken ct)
+    public async Task<IActionResult> TrackOrder(
+        string orderNumber, [FromQuery] string? contact, CancellationToken ct)
     {
         if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
             return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
 
         var result = await Sender.Send(
-            new TrackOrderQuery(_tenantContext.CurrentStoreId.Value.Value, orderNumber), ct);
+            new TrackOrderQuery(_tenantContext.CurrentStoreId.Value.Value, orderNumber, contact), ct);
         return HandleResult(result);
     }
 }

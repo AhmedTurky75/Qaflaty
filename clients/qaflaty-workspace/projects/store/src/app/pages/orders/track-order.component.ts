@@ -18,15 +18,18 @@ export class TrackOrderComponent {
 
   order = signal<OrderTracking | null>(null);
   orderNumberInput = signal<string>('');
+  contactInput = signal<string>('');
   loading = signal<boolean>(false);
   errorMessage = signal<string>('');
 
   ngOnInit() {
-    // Check if order number is in query params
+    // Check if order number + contact are in query params (e.g. from the confirmation page)
     this.route.queryParams.subscribe(params => {
       const orderNumber = params['orderNumber'];
-      if (orderNumber) {
-        this.orderNumberInput.set(orderNumber);
+      const contact = params['contact'];
+      if (orderNumber) this.orderNumberInput.set(orderNumber);
+      if (contact) this.contactInput.set(contact);
+      if (orderNumber && contact) {
         this.trackOrder();
       }
     });
@@ -34,15 +37,20 @@ export class TrackOrderComponent {
 
   trackOrder() {
     const orderNumber = this.orderNumberInput().trim();
+    const contact = this.contactInput().trim();
     if (!orderNumber) {
       this.errorMessage.set('Please enter an order number');
+      return;
+    }
+    if (!contact) {
+      this.errorMessage.set('Please enter the email or phone used on the order');
       return;
     }
 
     this.loading.set(true);
     this.errorMessage.set('');
 
-    this.orderService.trackOrder(orderNumber).subscribe({
+    this.orderService.trackOrder(orderNumber, contact).subscribe({
       next: (order) => {
         this.order.set(order);
         this.loading.set(false);
@@ -60,6 +68,7 @@ export class TrackOrderComponent {
   resetSearch() {
     this.order.set(null);
     this.orderNumberInput.set('');
+    this.contactInput.set('');
     this.errorMessage.set('');
   }
 
