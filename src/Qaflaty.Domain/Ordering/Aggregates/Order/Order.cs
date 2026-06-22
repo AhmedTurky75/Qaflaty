@@ -20,6 +20,7 @@ public sealed class Order : AggregateRoot<OrderId>
     public string? AppliedPromoCode { get; private set; }
     public PaymentInfo Payment { get; private set; } = null!;
     public DeliveryInfo Delivery { get; private set; } = null!;
+    public ShipmentInfo? Shipment { get; private set; }
     public OrderNotes Notes { get; private set; } = null!;
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -142,7 +143,11 @@ public sealed class Order : AggregateRoot<OrderId>
         return Result.Success();
     }
 
-    public Result Ship()
+    public Result Ship(
+        string? carrier = null,
+        string? trackingNumber = null,
+        string? trackingUrl = null,
+        DateTime? estimatedDeliveryDate = null)
     {
         if (Status != OrderStatus.Processing)
             return Result.Failure(OrderingErrors.InvalidStatusTransition);
@@ -150,6 +155,7 @@ public sealed class Order : AggregateRoot<OrderId>
         if (Payment.Method != PaymentMethod.CashOnDelivery && Payment.Status != PaymentStatus.Paid)
             return Result.Failure(OrderingErrors.PaymentRequired);
 
+        Shipment = ShipmentInfo.Create(carrier, trackingNumber, trackingUrl, estimatedDeliveryDate);
         ChangeStatus(OrderStatus.Shipped);
         RaiseDomainEvent(new OrderShippedEvent(Id));
         return Result.Success();

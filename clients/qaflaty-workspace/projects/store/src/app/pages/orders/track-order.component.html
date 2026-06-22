@@ -128,6 +128,40 @@
           </div>
         </div>
 
+        <!-- Shipment Info -->
+        @if (order()!.shipment; as shipment) {
+          <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-xl font-semibold mb-4">Shipment</h3>
+            <div class="space-y-3">
+              @if (shipment.carrier) {
+                <div>
+                  <p class="text-sm text-gray-600">Carrier</p>
+                  <p class="font-medium">{{ shipment.carrier }}</p>
+                </div>
+              }
+              @if (shipment.trackingNumber) {
+                <div>
+                  <p class="text-sm text-gray-600">Tracking Number</p>
+                  <p class="font-medium">
+                    @if (shipment.trackingUrl) {
+                      <a [href]="shipment.trackingUrl" target="_blank" rel="noopener"
+                         class="text-primary underline">{{ shipment.trackingNumber }}</a>
+                    } @else {
+                      {{ shipment.trackingNumber }}
+                    }
+                  </p>
+                </div>
+              }
+              @if (shipment.estimatedDeliveryDate) {
+                <div>
+                  <p class="text-sm text-gray-600">Estimated Delivery</p>
+                  <p class="font-medium">{{ formatDate(shipment.estimatedDeliveryDate) }}</p>
+                </div>
+              }
+            </div>
+          </div>
+        }
+
         <!-- Delivery Info -->
         <div class="bg-white rounded-lg shadow p-6">
           <h3 class="text-xl font-semibold mb-4">Delivery Information</h3>

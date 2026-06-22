@@ -71,7 +71,15 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
                 s.Notes
             )).ToList(),
             order.CreatedAt,
-            order.UpdatedAt
+            order.UpdatedAt,
+            order.Shipment is null
+                ? null
+                : new ShipmentDto(
+                    order.Shipment.Carrier,
+                    order.Shipment.TrackingNumber,
+                    order.Shipment.TrackingUrl,
+                    order.Shipment.ShippedAt,
+                    order.Shipment.EstimatedDeliveryDate)
         ));
     }
 

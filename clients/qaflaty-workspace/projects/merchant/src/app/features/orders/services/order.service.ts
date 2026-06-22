@@ -10,6 +10,13 @@ import {
   AddOrderNoteRequest
 } from 'shared';
 
+export interface ShipOrderRequest {
+  carrier?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+  estimatedDeliveryDate?: string | null;
+}
+
 export interface OrderFilters {
   search?: string;
   status?: OrderStatus;
@@ -82,8 +89,8 @@ export class OrderService {
     return this.http.patch<OrderDto>(`${this.API_URL}/${id}/process`, {});
   }
 
-  shipOrder(id: string): Observable<OrderDto> {
-    return this.http.patch<OrderDto>(`${this.API_URL}/${id}/ship`, {});
+  shipOrder(id: string, shipment?: ShipOrderRequest): Observable<OrderDto> {
+    return this.http.patch<OrderDto>(`${this.API_URL}/${id}/ship`, shipment ?? {});
   }
 
   deliverOrder(id: string): Observable<OrderDto> {

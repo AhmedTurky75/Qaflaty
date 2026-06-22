@@ -57,9 +57,15 @@ public class OrdersController : ApiController
     }
 
     [HttpPatch("{id:guid}/ship")]
-    public async Task<IActionResult> ShipOrder(Guid id, CancellationToken ct)
+    public async Task<IActionResult> ShipOrder(Guid id, [FromBody] ShipOrderRequest? request, CancellationToken ct)
     {
-        var result = await Sender.Send(new ShipOrderCommand(id), ct);
+        var command = new ShipOrderCommand(
+            id,
+            request?.Carrier,
+            request?.TrackingNumber,
+            request?.TrackingUrl,
+            request?.EstimatedDeliveryDate);
+        var result = await Sender.Send(command, ct);
         if (result.IsFailure) return HandleResult(result);
         return NoContent();
     }
@@ -98,3 +104,8 @@ public class OrdersController : ApiController
 
 public record CancelOrderRequest(string Reason);
 public record AddOrderNoteRequest(string Note);
+public record ShipOrderRequest(
+    string? Carrier,
+    string? TrackingNumber,
+    string? TrackingUrl,
+    DateTime? EstimatedDeliveryDate);

@@ -95,6 +95,15 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             delivery.Property(d => d.Instructions).HasColumnName("delivery_instructions").HasMaxLength(500);
         });
 
+        builder.OwnsOne(o => o.Shipment, shipment =>
+        {
+            shipment.Property(s => s.Carrier).HasColumnName("shipment_carrier").HasMaxLength(100);
+            shipment.Property(s => s.TrackingNumber).HasColumnName("shipment_tracking_number").HasMaxLength(100);
+            shipment.Property(s => s.TrackingUrl).HasColumnName("shipment_tracking_url").HasMaxLength(500);
+            shipment.Property(s => s.ShippedAt).HasColumnName("shipment_shipped_at");
+            shipment.Property(s => s.EstimatedDeliveryDate).HasColumnName("shipment_estimated_delivery");
+        });
+
         builder.OwnsOne(o => o.Notes, notes =>
         {
             notes.Property(n => n.CustomerNotes).HasColumnName("customer_notes").HasMaxLength(1000);

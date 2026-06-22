@@ -82,7 +82,8 @@ public record OrderDto(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     string Source,
-    string? AppliedPromoCode = null
+    string? AppliedPromoCode = null,
+    ShipmentDto? Shipment = null
 );
 
 // --- Order list item (compact, for list views) ---
@@ -119,6 +120,14 @@ public record TrackOrderPaymentDto(
     string Status
 );
 
+public record ShipmentDto(
+    string? Carrier,
+    string? TrackingNumber,
+    string? TrackingUrl,
+    DateTime ShippedAt,
+    DateTime? EstimatedDeliveryDate
+);
+
 public record OrderTrackingDto(
     string OrderNumber,
     string Status,
@@ -128,7 +137,8 @@ public record OrderTrackingDto(
     TrackOrderPaymentDto Payment,
     List<OrderStatusChangeDto> StatusHistory,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    ShipmentDto? Shipment = null
 );
 
 // --- Order calculation (pre-placement preview) ---

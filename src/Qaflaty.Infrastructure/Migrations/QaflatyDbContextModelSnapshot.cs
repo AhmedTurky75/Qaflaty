@@ -3875,6 +3875,42 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasForeignKey("OrderId");
                         });
 
+                    b.OwnsOne("Qaflaty.Domain.Ordering.ValueObjects.ShipmentInfo", "Shipment", b1 =>
+                        {
+                            b1.Property<Guid>("OrderId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Carrier")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("shipment_carrier");
+
+                            b1.Property<DateTime?>("EstimatedDeliveryDate")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("shipment_estimated_delivery");
+
+                            b1.Property<DateTime>("ShippedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("shipment_shipped_at");
+
+                            b1.Property<string>("TrackingNumber")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("shipment_tracking_number");
+
+                            b1.Property<string>("TrackingUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("shipment_tracking_url");
+
+                            b1.HasKey("OrderId");
+
+                            b1.ToTable("orders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId");
+                        });
+
                     b.Navigation("Delivery")
                         .IsRequired();
 
@@ -3889,6 +3925,8 @@ namespace Qaflaty.Infrastructure.Migrations
 
                     b.Navigation("Pricing")
                         .IsRequired();
+
+                    b.Navigation("Shipment");
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Order.OrderItem", b =>

@@ -98,7 +98,15 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
             order.CreatedAt,
             order.UpdatedAt,
             order.Source.ToString(),
-            order.AppliedPromoCode
+            order.AppliedPromoCode,
+            order.Shipment is null
+                ? null
+                : new ShipmentDto(
+                    order.Shipment.Carrier,
+                    order.Shipment.TrackingNumber,
+                    order.Shipment.TrackingUrl,
+                    order.Shipment.ShippedAt,
+                    order.Shipment.EstimatedDeliveryDate)
         ));
     }
 }
