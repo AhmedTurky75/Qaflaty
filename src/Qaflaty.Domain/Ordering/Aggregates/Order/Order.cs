@@ -22,6 +22,8 @@ public sealed class Order : AggregateRoot<OrderId>
     public DeliveryInfo Delivery { get; private set; } = null!;
     public ShipmentInfo? Shipment { get; private set; }
     public OrderNotes Notes { get; private set; } = null!;
+    public decimal TaxRate { get; private set; }
+    public bool PricesIncludeTax { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -41,7 +43,9 @@ public sealed class Order : AggregateRoot<OrderId>
         PaymentMethod paymentMethod,
         Money deliveryFee,
         string? customerNotes = null,
-        OrderSource source = OrderSource.Storefront)
+        OrderSource source = OrderSource.Storefront,
+        decimal taxRatePercent = 0m,
+        bool pricesIncludeTax = false)
     {
         var order = new Order
         {
@@ -54,7 +58,9 @@ public sealed class Order : AggregateRoot<OrderId>
             Delivery = delivery,
             Payment = PaymentInfo.Create(paymentMethod),
             Notes = OrderNotes.Create(customerNotes),
-            Pricing = OrderPricing.Calculate([], deliveryFee),
+            TaxRate = taxRatePercent,
+            PricesIncludeTax = pricesIncludeTax,
+            Pricing = OrderPricing.Calculate([], deliveryFee, null, taxRatePercent, pricesIncludeTax),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -219,7 +225,7 @@ public sealed class Order : AggregateRoot<OrderId>
             return Result.Failure(OrderingErrors.OrderAlreadyConfirmed);
 
         AppliedPromoCode = code;
-        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee, discountAmount);
+        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee, discountAmount, TaxRate, PricesIncludeTax);
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }
@@ -241,6 +247,6 @@ public sealed class Order : AggregateRoot<OrderId>
 
     private void RecalculatePricing()
     {
-        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee, Pricing.DiscountAmount);
+        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee, Pricing.DiscountAmount, TaxRate, PricesIncludeTax);
     }
 }

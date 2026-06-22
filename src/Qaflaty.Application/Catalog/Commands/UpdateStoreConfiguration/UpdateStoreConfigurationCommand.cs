@@ -15,5 +15,6 @@ public record UpdateStoreConfigurationCommand(
     string HeaderVariant,
     string FooterVariant,
     string ProductCardVariant,
-    string ProductGridVariant
+    string ProductGridVariant,
+    TaxSettingsDto? TaxSettings = null
 ) : ICommand<StoreConfigurationDto>;

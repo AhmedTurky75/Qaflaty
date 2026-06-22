@@ -469,6 +469,14 @@
                   <span class="font-medium text-green-600">{{ getDiscountDisplay() }}</span>
                 </div>
               }
+              @if (orderCalculation()?.taxLabel && (orderCalculation()?.tax?.amount ?? 0) > 0) {
+                <div class="flex justify-between text-sm">
+                  <span class="text-gray-600">
+                    {{ orderCalculation()!.taxLabel }}{{ orderCalculation()!.pricesIncludeTax ? ' (included)' : '' }}
+                  </span>
+                  <span class="font-medium">{{ getDisplayTax() }}</span>
+                </div>
+              }
               <div class="flex justify-between text-lg font-bold pt-3 border-t">
                 <span>Total</span>
                 <span>{{ getDisplayTotal() }}</span>

@@ -15,6 +15,9 @@ export interface OrderCalculation {
   paymentAdjustment: Money;
   paymentAdjustmentLabel?: string;
   total: Money;
+  tax?: Money;
+  taxLabel?: string | null;
+  pricesIncludeTax?: boolean;
 }
 
 export interface CreateOrderRequest {
@@ -95,6 +98,7 @@ export interface OrderPricing {
   deliveryFee: Money;
   total: Money;
   discountAmount?: Money;
+  taxAmount?: Money;
 }
 
 export interface DeliveryInfo {

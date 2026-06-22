@@ -28,7 +28,8 @@ public record OrderPricingDto(
     MoneyDto Subtotal,
     MoneyDto DeliveryFee,
     MoneyDto Total,
-    MoneyDto? DiscountAmount = null
+    MoneyDto? DiscountAmount = null,
+    MoneyDto? TaxAmount = null
 );
 
 public record PaymentInfoDto(
@@ -148,7 +149,10 @@ public record CalculateOrderDto(
     MoneyDto DeliveryFee,
     MoneyDto PaymentAdjustment,
     string? PaymentAdjustmentLabel,
-    MoneyDto Total
+    MoneyDto Total,
+    MoneyDto? Tax = null,
+    string? TaxLabel = null,
+    bool PricesIncludeTax = false
 );
 
 // --- Stats ---

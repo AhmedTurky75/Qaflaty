@@ -108,6 +108,16 @@ public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStor
             request.ProductCardVariant,
             request.ProductGridVariant);
 
+        // Update tax settings when provided (omitted = leave unchanged)
+        if (request.TaxSettings is not null)
+        {
+            configuration.UpdateTaxSettings(TaxSettings.Create(
+                request.TaxSettings.Enabled,
+                request.TaxSettings.Rate,
+                request.TaxSettings.PricesIncludeTax,
+                request.TaxSettings.Label));
+        }
+
         _configurationRepository.Update(configuration);
 
         var dto = MapToDto(configuration, defMap);
@@ -180,6 +190,11 @@ public class UpdateStoreConfigurationCommandHandler : ICommandHandler<UpdateStor
                     def?.DefaultLabel ?? a.PaymentMethodKey, def?.DefaultDescription ?? string.Empty);
             }).ToList(),
             config.CreatedAt,
-            config.UpdatedAt);
+            config.UpdatedAt,
+            new TaxSettingsDto(
+                config.TaxSettings.Enabled,
+                config.TaxSettings.Rate,
+                config.TaxSettings.PricesIncludeTax,
+                config.TaxSettings.Label));
     }
 }

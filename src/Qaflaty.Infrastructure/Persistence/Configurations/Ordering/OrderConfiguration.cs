@@ -64,6 +64,12 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                 money.Property(m => m.Currency).HasColumnName("discount_currency").HasConversion<string>();
             });
 
+            pricing.OwnsOne(p => p.TaxAmount, money =>
+            {
+                money.Property(m => m.Amount).HasColumnName("tax_amount").HasColumnType("decimal(18,2)");
+                money.Property(m => m.Currency).HasColumnName("tax_currency").HasConversion<string>();
+            });
+
             pricing.OwnsOne(p => p.Total, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("total").HasColumnType("decimal(18,2)");
@@ -113,6 +119,13 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(o => o.AppliedPromoCode)
             .HasColumnName("applied_promo_code")
             .HasMaxLength(40);
+
+        builder.Property(o => o.TaxRate)
+            .HasColumnName("tax_rate")
+            .HasColumnType("decimal(5,2)");
+
+        builder.Property(o => o.PricesIncludeTax)
+            .HasColumnName("prices_include_tax");
 
         builder.Property(o => o.CreatedAt)
             .HasColumnName("created_at");

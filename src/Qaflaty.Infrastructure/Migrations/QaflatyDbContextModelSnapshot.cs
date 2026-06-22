@@ -1504,6 +1504,10 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("customer_id");
 
+                    b.Property<bool>("PricesIncludeTax")
+                        .HasColumnType("boolean")
+                        .HasColumnName("prices_include_tax");
+
                     b.Property<string>("Source")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -1518,6 +1522,10 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid")
                         .HasColumnName("store_id");
+
+                    b.Property<decimal>("TaxRate")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("tax_rate");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -3045,6 +3053,37 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasForeignKey("StoreConfigurationId");
                         });
 
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.TaxSettings", "TaxSettings", b1 =>
+                        {
+                            b1.Property<Guid>("StoreConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<bool>("Enabled")
+                                .HasColumnType("boolean")
+                                .HasColumnName("tax_enabled");
+
+                            b1.Property<string>("Label")
+                                .IsRequired()
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)")
+                                .HasColumnName("tax_label");
+
+                            b1.Property<bool>("PricesIncludeTax")
+                                .HasColumnType("boolean")
+                                .HasColumnName("tax_prices_include");
+
+                            b1.Property<decimal>("Rate")
+                                .HasColumnType("decimal(5,2)")
+                                .HasColumnName("tax_rate");
+
+                            b1.HasKey("StoreConfigurationId");
+
+                            b1.ToTable("store_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreConfigurationId");
+                        });
+
                     b.OwnsMany("Qaflaty.Domain.Catalog.ValueObjects.PaymentMethodAdjustment", "PaymentMethodAdjustments", b1 =>
                         {
                             b1.Property<Guid>("Id")
@@ -3113,6 +3152,9 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("SocialLinks")
+                        .IsRequired();
+
+                    b.Navigation("TaxSettings")
                         .IsRequired();
                 });
 
@@ -3803,6 +3845,28 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasForeignKey("OrderPricingOrderId");
                                 });
 
+                            b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "TaxAmount", b2 =>
+                                {
+                                    b2.Property<Guid>("OrderPricingOrderId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasColumnType("decimal(18,2)")
+                                        .HasColumnName("tax_amount");
+
+                                    b2.Property<string>("Currency")
+                                        .IsRequired()
+                                        .HasColumnType("text")
+                                        .HasColumnName("tax_currency");
+
+                                    b2.HasKey("OrderPricingOrderId");
+
+                                    b2.ToTable("orders");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("OrderPricingOrderId");
+                                });
+
                             b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "Total", b2 =>
                                 {
                                     b2.Property<Guid>("OrderPricingOrderId")
@@ -3832,6 +3896,9 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .IsRequired();
 
                             b1.Navigation("Subtotal")
+                                .IsRequired();
+
+                            b1.Navigation("TaxAmount")
                                 .IsRequired();
 
                             b1.Navigation("Total")

@@ -369,6 +369,12 @@ export class CheckoutComponent implements OnInit {
     return promo.discountAmount;
   }
 
+  getDisplayTax(): string {
+    const calc = this.orderCalculation();
+    if (!calc?.tax) return '';
+    return `${calc.tax.amount.toFixed(2)} ${calc.tax.currency}`;
+  }
+
   getDiscountDisplay(): string {
     const calc = this.orderCalculation();
     const currency = calc?.total.currency ?? this.cart().subtotal.currency;

@@ -190,6 +190,11 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         // Create delivery info
         var deliveryInfo = DeliveryInfo.Create(addressResult.Value, request.DeliveryInstructions);
 
+        // Resolve the store's tax configuration (applied to the order pricing).
+        var taxSettings = storeConfigForPayment?.TaxSettings;
+        var taxRate = taxSettings?.EffectiveRate ?? 0m;
+        var pricesIncludeTax = taxSettings?.PricesIncludeTax ?? false;
+
         // Create order (stays in Pending until OTP is verified)
         var orderResult = Order.Create(
             storeId,
@@ -199,7 +204,9 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             paymentMethod,
             deliveryFee,
             request.CustomerNotes,
-            request.Source);
+            request.Source,
+            taxRate,
+            pricesIncludeTax);
 
         if (orderResult.IsFailure)
             return Result.Failure<OrderDto>(orderResult.Error);
@@ -363,7 +370,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
             new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
             new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString()),
-            new MoneyDto(order.Pricing.DiscountAmount.Amount, order.Pricing.DiscountAmount.Currency.ToString())
+            new MoneyDto(order.Pricing.DiscountAmount.Amount, order.Pricing.DiscountAmount.Currency.ToString()),
+            new MoneyDto(order.Pricing.TaxAmount.Amount, order.Pricing.TaxAmount.Currency.ToString())
         ),
         new PaymentInfoDto(
             order.Payment.Method.ToString(),

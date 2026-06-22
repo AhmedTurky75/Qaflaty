@@ -22,6 +22,7 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public string ProductCardVariant { get; private set; } = null!;
     public string ProductGridVariant { get; private set; } = null!;
     public SearchSettings SearchSettings { get; private set; } = null!;
+    public TaxSettings TaxSettings { get; private set; } = null!;
 
     // Reviews & ratings policy (master on/off lives in FeatureToggles.Reviews)
     public bool ReviewsRequirePurchase { get; private set; }
@@ -57,6 +58,7 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
             ProductCardVariant = "card-standard",
             ProductGridVariant = "grid-standard",
             SearchSettings = SearchSettings.CreateDefault(),
+            TaxSettings = TaxSettings.CreateDefault(),
             ReviewsRequirePurchase = true,
             ReviewsAutoApprove = false,
             ReviewsAllowEditing = true,
@@ -89,6 +91,13 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
         ReviewsRequirePurchase = requirePurchase;
         ReviewsAutoApprove = autoApprove;
         ReviewsAllowEditing = allowEditing;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateTaxSettings(TaxSettings taxSettings)
+    {
+        TaxSettings = taxSettings;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }
