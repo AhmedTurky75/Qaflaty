@@ -1,4 +1,3 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -6,6 +5,8 @@ using Qaflaty.Api.Middleware;
 using Qaflaty.Application;
 using Qaflaty.Infrastructure;
 using Serilog;
+using System.Security.Claims;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -120,15 +121,15 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("ManagerOrAbove", policy =>
         policy.RequireRole("merchant")
-              .RequireClaim("role", "Owner", "Admin", "Manager"));
+              .RequireClaim(ClaimTypes.Role, "Owner", "Admin", "Manager"));
 
     options.AddPolicy("AdminOrAbove", policy =>
         policy.RequireRole("merchant")
-              .RequireClaim("role", "Owner", "Admin"));
+              .RequireClaim(ClaimTypes.Role, "Owner", "Admin"));
 
     options.AddPolicy("OwnerPolicy", policy =>
         policy.RequireRole("merchant")
-              .RequireClaim("role", "Owner"));
+              .RequireClaim(ClaimTypes.Role, "Owner"));
 
     // Permission-based policies
     options.AddPolicy("CanManageProducts", policy =>
@@ -165,7 +166,7 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("CanManageUsers", policy =>
         policy.RequireRole("merchant")
-              .RequireClaim("role", "Owner"));
+              .RequireClaim(ClaimTypes.Role, "Owner"));
 });
 
 // Antiforgery (CSRF protection)
