@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+clients/
+tests/
+docs/
+scripts/
+.git/
+.github/
+*.md
+*.user
+nul
