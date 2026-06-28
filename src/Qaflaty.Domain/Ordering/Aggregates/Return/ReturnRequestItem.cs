@@ -6,13 +6,13 @@ namespace Qaflaty.Domain.Ordering.Aggregates.Return;
 
 public sealed class ReturnRequestItem : Entity<Guid>
 {
-    public ReturnRequestId ReturnRequestId { get; private set; }
-    public ProductId ProductId { get; private set; }
-    public string ProductName { get; private set; } = null!;
-    public Money UnitPrice { get; private set; } = null!;
-    public int Quantity { get; private set; }
+    public ReturnRequestId ReturnRequestId { get; private set; } // Parent return request this item belongs to
+    public ProductId ProductId { get; private set; } // Product being returned
+    public string ProductName { get; private set; } = null!; // Snapshot of the product name from the original order
+    public Money UnitPrice { get; private set; } = null!; // Snapshot of the unit price paid (basis for the refund)
+    public int Quantity { get; private set; } // Number of units being returned (1..originally ordered quantity)
 
-    public Money LineTotal => UnitPrice.Multiply(Quantity);
+    public Money LineTotal => UnitPrice.Multiply(Quantity); // Computed refund for this line = unit price × returned quantity
 
     private ReturnRequestItem() : base(Guid.NewGuid()) { }
 

@@ -4,7 +4,7 @@ namespace Qaflaty.Domain.Identity.ValueObjects;
 
 public sealed class HashedPassword : ValueObject
 {
-    public string Value { get; }
+    public string Value { get; } // The stored password hash string (bcrypt); compared via IPasswordHasher, never reversible
 
     private HashedPassword(string value) => Value = value;
 

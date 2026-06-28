@@ -6,11 +6,11 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class OrderPricing : ValueObject
 {
-    public Money Subtotal { get; private set; } = null!;
-    public Money DeliveryFee { get; private set; } = null!;
-    public Money DiscountAmount { get; private set; } = null!;
-    public Money TaxAmount { get; private set; } = null!;
-    public Money Total { get; private set; } = null!;
+    public Money Subtotal { get; private set; } = null!; // Sum of all line-item totals before delivery, discount, and tax
+    public Money DeliveryFee { get; private set; } = null!; // Shipping cost added to the order
+    public Money DiscountAmount { get; private set; } = null!; // Total discount applied (e.g. from a promo code), capped at the gross amount
+    public Money TaxAmount { get; private set; } = null!; // Tax/VAT portion — added on top, or the contained portion when prices include tax
+    public Money Total { get; private set; } = null!; // Final amount the customer pays = subtotal + delivery − discount (+ tax if exclusive)
 
     private OrderPricing() { }
 

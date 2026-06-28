@@ -10,17 +10,17 @@ public sealed class PageConfiguration : AggregateRoot<PageConfigurationId>
 {
     private readonly List<SectionConfiguration> _sections = [];
 
-    public StoreId StoreId { get; private set; }
-    public PageType PageType { get; private set; }
-    public string Slug { get; private set; } = null!;
-    public BilingualText Title { get; private set; } = null!;
-    public bool IsEnabled { get; private set; }
-    public PageSeoSettings SeoSettings { get; private set; } = null!;
-    public string? ContentJson { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store this page belongs to
+    public PageType PageType { get; private set; } // Which storefront page this configures (Home, About, Contact, custom, etc.)
+    public string Slug { get; private set; } = null!; // URL slug of the page, e.g. "about-us"
+    public BilingualText Title { get; private set; } = null!; // Page title in Arabic + English
+    public bool IsEnabled { get; private set; } // Whether the page is published/visible; GetStorefrontPages returns only enabled pages
+    public PageSeoSettings SeoSettings { get; private set; } = null!; // Per-page SEO meta (title, description, og:image, robots flags)
+    public string? ContentJson { get; private set; } // Optional serialized free-form page content (for pages not built from sections)
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the page config was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last page change
 
-    public IReadOnlyList<SectionConfiguration> Sections => _sections.AsReadOnly();
+    public IReadOnlyList<SectionConfiguration> Sections => _sections.AsReadOnly(); // Ordered builder sections that compose the page (hero, product grid, banner, etc.)
 
     private PageConfiguration() : base(PageConfigurationId.Empty) { }
 

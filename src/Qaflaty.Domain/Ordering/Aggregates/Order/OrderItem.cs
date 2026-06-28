@@ -8,12 +8,12 @@ namespace Qaflaty.Domain.Ordering.Aggregates.Order;
 
 public sealed class OrderItem : Entity<OrderItemId>
 {
-    public ProductId ProductId { get; private set; }
-    public string ProductName { get; private set; } = null!;  // Snapshot
-    public Money UnitPrice { get; private set; } = null!;      // Snapshot
-    public int Quantity { get; private set; }
+    public ProductId ProductId { get; private set; } // Product purchased in this line
+    public string ProductName { get; private set; } = null!;  // Snapshot of the product name at order time (so later renames don't change history), e.g. "Blue T-Shirt"
+    public Money UnitPrice { get; private set; } = null!;      // Snapshot of the price per unit at order time (immutable record of what was charged)
+    public int Quantity { get; private set; } // Number of units ordered (must be > 0)
 
-    public Money Total => UnitPrice * Quantity;
+    public Money Total => UnitPrice * Quantity; // Computed line total = unit price × quantity
 
     private OrderItem() : base(OrderItemId.Empty) { }
 

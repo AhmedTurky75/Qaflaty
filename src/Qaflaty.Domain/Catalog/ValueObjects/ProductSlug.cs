@@ -7,7 +7,7 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed partial class ProductSlug : ValueObject
 {
-    public string Value { get; }
+    public string Value { get; } // The validated product slug (lowercase a-z0-9-, 3–100 chars), e.g. "blue-cotton-tshirt"
 
     private ProductSlug(string value) => Value = value;
 

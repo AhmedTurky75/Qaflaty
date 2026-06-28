@@ -9,11 +9,11 @@ namespace Qaflaty.Domain.Storefront.Aggregates.ProductView;
 /// </summary>
 public sealed class ProductView : AggregateRoot<ProductViewId>
 {
-    public StoreId StoreId { get; private set; }
-    public ProductId ProductId { get; private set; }
-    public StoreCustomerId? CustomerId { get; private set; }
-    public string? SessionId { get; private set; }
-    public DateTime ViewedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store the viewed product belongs to
+    public ProductId ProductId { get; private set; } // Product that was viewed
+    public StoreCustomerId? CustomerId { get; private set; } // Logged-in viewer; null for anonymous visitors
+    public string? SessionId { get; private set; } // Anonymous session identifier when there is no logged-in customer
+    public DateTime ViewedAt { get; private set; } // UTC timestamp of the page view
 
     private ProductView() : base(ProductViewId.Empty) { }
 

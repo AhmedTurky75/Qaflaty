@@ -4,13 +4,13 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class FeatureToggles : ValueObject
 {
-    public bool Wishlist { get; private set; }
-    public bool Reviews { get; private set; }
-    public bool PromoCodes { get; private set; }
-    public bool Newsletter { get; private set; }
-    public bool ProductSearch { get; private set; }
-    public bool SocialLinks { get; private set; }
-    public bool Analytics { get; private set; }
+    public bool Wishlist { get; private set; } // Enables the customer wishlist feature on the storefront
+    public bool Reviews { get; private set; } // Enables product reviews & ratings
+    public bool PromoCodes { get; private set; } // Enables promo/discount code entry at checkout
+    public bool Newsletter { get; private set; } // Enables newsletter signup capture
+    public bool ProductSearch { get; private set; } // Enables the product search bar (on by default)
+    public bool SocialLinks { get; private set; } // Enables display of social media links in the storefront
+    public bool Analytics { get; private set; } // Enables analytics/tracking integration
 
     private FeatureToggles() { }
 

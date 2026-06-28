@@ -6,12 +6,12 @@ namespace Qaflaty.Domain.Communication.Entities;
 
 public sealed class ChatMessage : Entity<ChatMessageId>
 {
-    public ChatConversationId ConversationId { get; private set; }
-    public MessageSenderType SenderType { get; private set; }
-    public string? SenderId { get; private set; } // CustomerId, MerchantId, or "Bot"
-    public string Content { get; private set; } = string.Empty;
-    public DateTime SentAt { get; private set; }
-    public DateTime? ReadAt { get; private set; }
+    public ChatConversationId ConversationId { get; private set; } // Conversation this message belongs to
+    public MessageSenderType SenderType { get; private set; } // Who sent it: Customer / Merchant / Bot
+    public string? SenderId { get; private set; } // Id of the sender — CustomerId, MerchantId, or "Bot"
+    public string Content { get; private set; } = string.Empty; // The message text body
+    public DateTime SentAt { get; private set; } // UTC timestamp when the message was sent
+    public DateTime? ReadAt { get; private set; } // UTC timestamp when the recipient read it; null while unread
 
     private ChatMessage() { } // EF Core
 

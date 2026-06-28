@@ -16,24 +16,24 @@ public sealed class ProductReview : AggregateRoot<ProductReviewId>
     public const int MaxCommentLength = 4000;
     public const int MaxTitleLength = 200;
 
-    public StoreId StoreId { get; private set; }
-    public ProductId ProductId { get; private set; }
-    public StoreCustomerId CustomerId { get; private set; }
-    public string CustomerName { get; private set; } = null!;
-    public OrderId? OrderId { get; private set; }
-    public int Rating { get; private set; }
-    public string? Title { get; private set; }
-    public string? Comment { get; private set; }
-    public ReviewStatus Status { get; private set; }
-    public bool IsVerifiedPurchase { get; private set; }
-    public bool IsPinned { get; private set; }
-    public int HelpfulCount { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
-    public DateTime? ApprovedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store the reviewed product belongs to
+    public ProductId ProductId { get; private set; } // Product being reviewed
+    public StoreCustomerId CustomerId { get; private set; } // Customer who wrote the review
+    public string CustomerName { get; private set; } = null!; // Snapshot of the reviewer's display name shown publicly
+    public OrderId? OrderId { get; private set; } // Linked delivered order proving purchase; null for non-verified reviews
+    public int Rating { get; private set; } // Star rating from 1 to 5
+    public string? Title { get; private set; } // Optional short review headline (max 200 chars)
+    public string? Comment { get; private set; } // Optional review body text (max 4000 chars); empty means rating-only
+    public ReviewStatus Status { get; private set; } // Moderation state: Pending / Approved / Rejected / Hidden
+    public bool IsVerifiedPurchase { get; private set; } // True when linked to a real delivered order (shows a "verified" badge)
+    public bool IsPinned { get; private set; } // Whether the merchant pinned this review to the top
+    public int HelpfulCount { get; private set; } // How many shoppers marked the review as helpful
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the review was submitted
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last change
+    public DateTime? ApprovedAt { get; private set; } // UTC timestamp when approved; null while not approved
 
-    private readonly List<ProductReviewMedia> _media = [];
-    public IReadOnlyList<ProductReviewMedia> Media => _media.AsReadOnly();
+    private readonly List<ProductReviewMedia> _media = []; // Backing list of attached photos/videos
+    public IReadOnlyList<ProductReviewMedia> Media => _media.AsReadOnly(); // Images/videos the customer attached to the review
 
     private ProductReview() : base(ProductReviewId.Empty) { }
 

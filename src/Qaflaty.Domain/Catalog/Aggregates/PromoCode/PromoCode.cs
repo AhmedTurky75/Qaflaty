@@ -16,21 +16,21 @@ public sealed class PromoCode : AggregateRoot<PromoCodeId>
     public const int MaxCodeLength = 40;
     public const int MaxDescriptionLength = 500;
 
-    public StoreId StoreId { get; private set; }
-    public string Code { get; private set; } = null!;
-    public string? Description { get; private set; }
-    public PromoDiscountType DiscountType { get; private set; }
-    public decimal Value { get; private set; }
-    public decimal? MinimumOrderAmount { get; private set; }
-    public decimal? MaxDiscountAmount { get; private set; }
-    public DateTime? StartsAt { get; private set; }
-    public DateTime? ExpiresAt { get; private set; }
-    public int? UsageLimit { get; private set; }
-    public int? UsageLimitPerCustomer { get; private set; }
-    public int TimesUsed { get; private set; }
-    public bool IsActive { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store that owns this coupon (codes are unique per store)
+    public string Code { get; private set; } = null!; // The coupon code shoppers type, stored uppercased, e.g. "SUMMER20"
+    public string? Description { get; private set; } // Optional internal note describing the promotion
+    public PromoDiscountType DiscountType { get; private set; } // How the discount is applied: Percentage / FixedAmount / FreeShipping
+    public decimal Value { get; private set; } // Discount magnitude — percent for Percentage, money for FixedAmount, 0 for FreeShipping, e.g. 20
+    public decimal? MinimumOrderAmount { get; private set; } // Minimum subtotal required to use the code; null = no minimum, e.g. 100
+    public decimal? MaxDiscountAmount { get; private set; } // Cap on the discount for percentage codes; null = uncapped, e.g. 50
+    public DateTime? StartsAt { get; private set; } // UTC start of validity window; null = active immediately
+    public DateTime? ExpiresAt { get; private set; } // UTC end of validity window; null = never expires
+    public int? UsageLimit { get; private set; } // Total redemptions allowed across all customers; null = unlimited
+    public int? UsageLimitPerCustomer { get; private set; } // Max redemptions per single customer; null = unlimited
+    public int TimesUsed { get; private set; } // Running count of how many times the code has been redeemed
+    public bool IsActive { get; private set; } // Whether the code is currently enabled by the merchant
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the code was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last change
 
     private PromoCode() : base(PromoCodeId.Empty) { }
 

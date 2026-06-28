@@ -9,10 +9,10 @@ public sealed class PhoneNumber : ValueObject
     private static readonly PhoneNumberUtil PhoneUtil = PhoneNumberUtil.GetInstance();
 
     /// <summary>ISO 3166-1 alpha-2 region code, e.g. "EG", "SA". Null for legacy data.</summary>
-    public string? CountryCode { get; private init; }
+    public string? CountryCode { get; private init; } // Region the number was validated against, e.g. "SA"
 
     /// <summary>Full E.164 representation, e.g. "+201012345678".</summary>
-    public string Value { get; private init; } = string.Empty;
+    public string Value { get; private init; } = string.Empty; // The validated phone in E.164 format, e.g. "+966500000000"
 
     private PhoneNumber() { }
 

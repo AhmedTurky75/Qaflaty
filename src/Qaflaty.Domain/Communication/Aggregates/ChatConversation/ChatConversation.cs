@@ -9,17 +9,17 @@ public sealed class ChatConversation : AggregateRoot<ChatConversationId>
 {
     private readonly List<ChatMessage> _messages = new();
 
-    public StoreId StoreId { get; private set; }
-    public StoreCustomerId? CustomerId { get; private set; }
-    public string? GuestSessionId { get; private set; }
-    public ConversationStatus Status { get; private set; }
-    public DateTime StartedAt { get; private set; }
-    public DateTime? ClosedAt { get; private set; }
-    public DateTime? LastMessageAt { get; private set; }
-    public int UnreadMerchantMessages { get; private set; }
-    public int UnreadCustomerMessages { get; private set; }
+    public StoreId StoreId { get; private set; } // Store this conversation belongs to
+    public StoreCustomerId? CustomerId { get; private set; } // Logged-in customer in the chat; null for guests
+    public string? GuestSessionId { get; private set; } // Guest session identifier when no customer is logged in (exactly one of CustomerId/GuestSessionId is set)
+    public ConversationStatus Status { get; private set; } // Conversation state: Active / Closed / Archived
+    public DateTime StartedAt { get; private set; } // UTC timestamp when the conversation began
+    public DateTime? ClosedAt { get; private set; } // UTC timestamp when it was closed/archived; null while active
+    public DateTime? LastMessageAt { get; private set; } // UTC timestamp of the most recent message (for sorting inbox)
+    public int UnreadMerchantMessages { get; private set; } // Count of messages the merchant hasn't read yet (from customer/bot)
+    public int UnreadCustomerMessages { get; private set; } // Count of messages the customer hasn't read yet (from merchant)
 
-    public IReadOnlyCollection<ChatMessage> Messages => _messages.AsReadOnly();
+    public IReadOnlyCollection<ChatMessage> Messages => _messages.AsReadOnly(); // All messages in the conversation, in send order
 
     private ChatConversation() { } // EF Core
 

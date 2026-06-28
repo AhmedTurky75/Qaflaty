@@ -10,13 +10,13 @@ namespace Qaflaty.Domain.Catalog.Aggregates.PromoCode;
 /// </summary>
 public sealed class PromoCodeRedemption : AggregateRoot<PromoCodeRedemptionId>
 {
-    public PromoCodeId PromoCodeId { get; private set; }
-    public StoreId StoreId { get; private set; }
-    public OrderId OrderId { get; private set; }
-    public CustomerId CustomerId { get; private set; }
-    public string Code { get; private set; } = null!;
-    public decimal DiscountAmount { get; private set; }
-    public DateTime RedeemedAt { get; private set; }
+    public PromoCodeId PromoCodeId { get; private set; } // The promo code that was redeemed
+    public StoreId StoreId { get; private set; } // Store the redemption happened in
+    public OrderId OrderId { get; private set; } // Order the code was applied to
+    public CustomerId CustomerId { get; private set; } // Customer who redeemed it (keyed by phone, counts guests and members alike)
+    public string Code { get; private set; } = null!; // Snapshot of the code text at redemption time, e.g. "SUMMER20"
+    public decimal DiscountAmount { get; private set; } // Actual money discounted by this redemption, e.g. 20.00
+    public DateTime RedeemedAt { get; private set; } // UTC timestamp of the redemption
 
     private PromoCodeRedemption() : base(PromoCodeRedemptionId.Empty) { }
 

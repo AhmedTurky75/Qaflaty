@@ -6,12 +6,12 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class ProductInventory : ValueObject
 {
-    public int Quantity { get; private set; }
-    public string? Sku { get; }
-    public bool TrackInventory { get; }
+    public int Quantity { get; private set; } // Units currently available to sell; decremented on reserve, incremented on restock
+    public string? Sku { get; } // Stock Keeping Unit code identifying this product for inventory, e.g. "TSHIRT-BLU-001"
+    public bool TrackInventory { get; } // When false, the product is treated as always in stock (no quantity enforcement, e.g. digital goods)
 
-    public bool InStock => !TrackInventory || Quantity > 0;
-    public bool LowStock => TrackInventory && Quantity > 0 && Quantity <= 5;
+    public bool InStock => !TrackInventory || Quantity > 0; // True if purchasable now (untracked items are always in stock)
+    public bool LowStock => TrackInventory && Quantity > 0 && Quantity <= 5; // True when stock is running low (1–5 units left) for UI warnings
 
     private ProductInventory(int quantity, string? sku, bool trackInventory)
     {

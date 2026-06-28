@@ -15,21 +15,21 @@ public sealed class ReturnRequest : AggregateRoot<ReturnRequestId>
 {
     public const int MaxReasonLength = 1000;
 
-    public StoreId StoreId { get; private set; }
-    public OrderId OrderId { get; private set; }
-    public CustomerId CustomerId { get; private set; }
-    public string OrderNumber { get; private set; } = null!;
-    public ReturnStatus Status { get; private set; }
-    public string Reason { get; private set; } = null!;
-    public Money RefundAmount { get; private set; } = null!;
-    public string? MerchantNote { get; private set; }
-    public string? RefundTransactionId { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
-    public DateTime? ResolvedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store the return belongs to
+    public OrderId OrderId { get; private set; } // Order being returned
+    public CustomerId CustomerId { get; private set; } // Customer who requested the return
+    public string OrderNumber { get; private set; } = null!; // Snapshot of the human-readable order number, e.g. "QAF-048213"
+    public ReturnStatus Status { get; private set; } // Return lifecycle: Requested → Approved → Refunded (or Rejected/Cancelled)
+    public string Reason { get; private set; } = null!; // Customer's reason for the return (max 1000 chars)
+    public Money RefundAmount { get; private set; } = null!; // Total refund computed from the returned items
+    public string? MerchantNote { get; private set; } // Merchant's note on approval/rejection
+    public string? RefundTransactionId { get; private set; } // Payment processor reference for the issued refund; null until refunded
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the return was requested
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last change
+    public DateTime? ResolvedAt { get; private set; } // UTC timestamp when the return reached a terminal state (refunded/rejected/cancelled)
 
-    private readonly List<ReturnRequestItem> _items = [];
-    public IReadOnlyList<ReturnRequestItem> Items => _items.AsReadOnly();
+    private readonly List<ReturnRequestItem> _items = []; // Backing list of returned line items
+    public IReadOnlyList<ReturnRequestItem> Items => _items.AsReadOnly(); // The specific order items and quantities being returned
 
     private ReturnRequest() : base(ReturnRequestId.Empty) { }
 

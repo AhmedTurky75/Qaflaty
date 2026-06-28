@@ -11,10 +11,10 @@ public sealed class TaxSettings : ValueObject
 {
     public const int MaxLabelLength = 30;
 
-    public bool Enabled { get; private set; }
-    public decimal Rate { get; private set; }
-    public bool PricesIncludeTax { get; private set; }
-    public string Label { get; private set; } = "VAT";
+    public bool Enabled { get; private set; } // Whether tax/VAT is applied to orders at all
+    public decimal Rate { get; private set; } // Tax percentage, 0–100, e.g. 15 for 15% VAT
+    public bool PricesIncludeTax { get; private set; } // True = catalog prices already include tax; false = tax added on top at checkout
+    public string Label { get; private set; } = "VAT"; // Display label for the tax line, e.g. "VAT" or "GST" (max 30 chars)
 
     private TaxSettings() { }
 

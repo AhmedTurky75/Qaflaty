@@ -4,8 +4,8 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class OrderNotes : ValueObject
 {
-    public string? CustomerNotes { get; private set; }
-    public string? MerchantNotes { get; private set; }
+    public string? CustomerNotes { get; private set; } // Note left by the customer at checkout, e.g. "Gift wrap please"
+    public string? MerchantNotes { get; private set; } // Internal merchant notes (newline-appended); not shown to the customer
 
     private OrderNotes() { }
 

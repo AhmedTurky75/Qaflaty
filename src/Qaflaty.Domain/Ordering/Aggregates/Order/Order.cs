@@ -11,27 +11,27 @@ namespace Qaflaty.Domain.Ordering.Aggregates.Order;
 
 public sealed class Order : AggregateRoot<OrderId>
 {
-    public StoreId StoreId { get; private set; }
-    public CustomerId CustomerId { get; private set; }
-    public OrderNumber OrderNumber { get; private set; } = null!;
-    public OrderStatus Status { get; private set; }
-    public OrderSource Source { get; private set; }
-    public OrderPricing Pricing { get; private set; } = null!;
-    public string? AppliedPromoCode { get; private set; }
-    public PaymentInfo Payment { get; private set; } = null!;
-    public DeliveryInfo Delivery { get; private set; } = null!;
-    public ShipmentInfo? Shipment { get; private set; }
-    public OrderNotes Notes { get; private set; } = null!;
-    public decimal TaxRate { get; private set; }
-    public bool PricesIncludeTax { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store (tenant) the order was placed in
+    public CustomerId CustomerId { get; private set; } // Customer who placed the order
+    public OrderNumber OrderNumber { get; private set; } = null!; // Human-readable unique order reference shown to customer, e.g. "ORD-2026-000123"
+    public OrderStatus Status { get; private set; } // Order lifecycle state: Pending → Confirmed → Processing → Shipped → Delivered (or Cancelled)
+    public OrderSource Source { get; private set; } // Channel the order originated from, e.g. Storefront (online) or Manual (merchant-entered)
+    public OrderPricing Pricing { get; private set; } = null!; // Computed totals value object: subtotal, delivery fee, discount, tax, grand total
+    public string? AppliedPromoCode { get; private set; } // Promo/discount code applied to the order, if any, e.g. "SUMMER20"
+    public PaymentInfo Payment { get; private set; } = null!; // Payment value object: method (COD/card/…), status (Pending/Paid/Failed/Refunded), transaction id
+    public DeliveryInfo Delivery { get; private set; } = null!; // Delivery value object: recipient contact + shipping address
+    public ShipmentInfo? Shipment { get; private set; } // Shipment tracking value object set once shipped: carrier, tracking number/URL, ETA; null until shipped
+    public OrderNotes Notes { get; private set; } = null!; // Notes value object holding customer note + merchant-internal notes
+    public decimal TaxRate { get; private set; } // Tax/VAT percentage applied to this order at placement time, e.g. 15 for 15%
+    public bool PricesIncludeTax { get; private set; } // Whether item prices are tax-inclusive (true) or tax is added on top (false)
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the order was created/placed
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last change to the order
 
-    private readonly List<OrderItem> _items = [];
-    public IReadOnlyList<OrderItem> Items => _items.AsReadOnly();
+    private readonly List<OrderItem> _items = []; // Backing list of line items
+    public IReadOnlyList<OrderItem> Items => _items.AsReadOnly(); // Line items of the order, each a product + quantity + captured unit price
 
-    private readonly List<OrderStatusChange> _statusHistory = [];
-    public IReadOnlyList<OrderStatusChange> StatusHistory => _statusHistory.AsReadOnly();
+    private readonly List<OrderStatusChange> _statusHistory = []; // Backing list of status transitions
+    public IReadOnlyList<OrderStatusChange> StatusHistory => _statusHistory.AsReadOnly(); // Audit trail of every status transition with timestamp, actor, and optional note
 
     private Order() : base(OrderId.Empty) { }
 

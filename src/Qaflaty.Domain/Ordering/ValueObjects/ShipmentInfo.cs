@@ -8,11 +8,11 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 /// </summary>
 public sealed class ShipmentInfo : ValueObject
 {
-    public string? Carrier { get; private set; }
-    public string? TrackingNumber { get; private set; }
-    public string? TrackingUrl { get; private set; }
-    public DateTime ShippedAt { get; private set; }
-    public DateTime? EstimatedDeliveryDate { get; private set; }
+    public string? Carrier { get; private set; } // Shipping carrier name, e.g. "Aramex", "SMSA"
+    public string? TrackingNumber { get; private set; } // Carrier tracking number for the shipment
+    public string? TrackingUrl { get; private set; } // Direct URL where the customer can track the shipment
+    public DateTime ShippedAt { get; private set; } // UTC timestamp when the order was marked shipped
+    public DateTime? EstimatedDeliveryDate { get; private set; } // Optional expected delivery date communicated to the customer
 
     private ShipmentInfo() { }
 

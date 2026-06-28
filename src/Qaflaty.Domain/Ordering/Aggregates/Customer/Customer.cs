@@ -7,11 +7,11 @@ namespace Qaflaty.Domain.Ordering.Aggregates.Customer;
 
 public sealed class Customer : AggregateRoot<CustomerId>
 {
-    public StoreId StoreId { get; private set; }
-    public CustomerContact Contact { get; private set; } = null!;
-    public Address Address { get; private set; } = null!;
-    public string? Notes { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store this customer record belongs to (customers are per-store)
+    public CustomerContact Contact { get; private set; } = null!; // Name, phone, and optional email of the customer
+    public Address Address { get; private set; } = null!; // The customer's default delivery address
+    public string? Notes { get; private set; } // Internal merchant notes about the customer (newline-appended)
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the customer record was created
 
     private Customer() : base(CustomerId.Empty) { }
 

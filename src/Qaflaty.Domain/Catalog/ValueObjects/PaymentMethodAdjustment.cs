@@ -9,12 +9,12 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 /// </summary>
 public sealed class PaymentMethodAdjustment
 {
-    public Guid Id { get; private set; }
+    public Guid Id { get; private set; } // Stable identifier for this adjustment entry
 
     /// <summary>The payment method key, e.g. "COD", "Visa". Matches PaymentMethodDefinition.Key.</summary>
     public string PaymentMethodKey { get; private set; } = null!;
 
-    public FeeAdjustmentType AdjustmentType { get; private set; }
+    public FeeAdjustmentType AdjustmentType { get; private set; } // Whether Value is a Fixed monetary amount or a Percentage of subtotal
 
     /// <summary>
     /// The adjustment amount.

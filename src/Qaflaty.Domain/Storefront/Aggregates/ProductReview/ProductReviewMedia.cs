@@ -6,10 +6,10 @@ namespace Qaflaty.Domain.Storefront.Aggregates.ProductReview;
 
 public sealed class ProductReviewMedia : Entity<Guid>
 {
-    public ProductReviewId ReviewId { get; private set; }
-    public string Url { get; private set; } = null!;
-    public ReviewMediaType Type { get; private set; }
-    public int SortOrder { get; private set; }
+    public ProductReviewId ReviewId { get; private set; } // Parent review this media belongs to
+    public string Url { get; private set; } = null!; // Public URL of the uploaded image/video
+    public ReviewMediaType Type { get; private set; } // Whether the media is an Image or a Video
+    public int SortOrder { get; private set; } // Display order of the media within the review (lower = first)
 
     private ProductReviewMedia() : base(Guid.Empty) { }
 

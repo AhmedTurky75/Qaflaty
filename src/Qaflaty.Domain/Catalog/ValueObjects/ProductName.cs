@@ -6,7 +6,7 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class ProductName : ValueObject
 {
-    public string Value { get; }
+    public string Value { get; } // The validated product name (1–200 chars, trimmed), e.g. "Blue Cotton T-Shirt"
 
     private ProductName(string value) => Value = value;
 

@@ -6,12 +6,12 @@ namespace Qaflaty.Domain.Storefront.Aggregates.Wishlist;
 
 public sealed class Wishlist : AggregateRoot<WishlistId>
 {
-    public StoreCustomerId CustomerId { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public StoreCustomerId CustomerId { get; private set; } // Customer who owns this wishlist
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the wishlist was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last change
 
-    private readonly List<WishlistItem> _items = [];
-    public IReadOnlyList<WishlistItem> Items => _items.AsReadOnly();
+    private readonly List<WishlistItem> _items = []; // Backing list of saved products
+    public IReadOnlyList<WishlistItem> Items => _items.AsReadOnly(); // Products the customer has saved for later
 
     private Wishlist() : base(WishlistId.Empty) { }
 

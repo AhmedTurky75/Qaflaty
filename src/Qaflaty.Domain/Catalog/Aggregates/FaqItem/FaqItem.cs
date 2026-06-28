@@ -7,13 +7,13 @@ namespace Qaflaty.Domain.Catalog.Aggregates.FaqItem;
 
 public sealed class FaqItem : Entity<FaqItemId>
 {
-    public StoreId StoreId { get; private set; }
-    public BilingualText Question { get; private set; } = null!;
-    public BilingualText Answer { get; private set; } = null!;
-    public int SortOrder { get; private set; }
-    public bool IsPublished { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store this FAQ entry belongs to
+    public BilingualText Question { get; private set; } = null!; // The FAQ question in Arabic + English
+    public BilingualText Answer { get; private set; } = null!; // The FAQ answer in Arabic + English
+    public int SortOrder { get; private set; } // Display order among FAQ items (lower = first)
+    public bool IsPublished { get; private set; } // Whether the item is visible on the storefront FAQ page
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the FAQ item was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last change
 
     private FaqItem() : base(FaqItemId.Empty) { }
 

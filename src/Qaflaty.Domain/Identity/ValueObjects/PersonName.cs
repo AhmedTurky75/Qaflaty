@@ -6,10 +6,10 @@ namespace Qaflaty.Domain.Identity.ValueObjects;
 
 public sealed class PersonName : ValueObject
 {
-    public string FirstName { get; private set; } = string.Empty;
-    public string LastName { get; private set; } = string.Empty;
-    public string FullName => $"{FirstName} {LastName}";
-    public string Value => FullName;
+    public string FirstName { get; private set; } = string.Empty; // Given name (2–50 chars), e.g. "Ahmed"
+    public string LastName { get; private set; } = string.Empty; // Family name (2–50 chars), e.g. "Ali"
+    public string FullName => $"{FirstName} {LastName}"; // Convenience full name, e.g. "Ahmed Ali"
+    public string Value => FullName; // Alias of FullName used where value objects expose a single Value
 
     // Parameterless constructor for EF Core
     private PersonName() { }

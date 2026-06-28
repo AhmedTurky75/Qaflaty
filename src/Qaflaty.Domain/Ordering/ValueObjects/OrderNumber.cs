@@ -7,7 +7,7 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed partial class OrderNumber : ValueObject
 {
-    public string Value { get; }
+    public string Value { get; } // The order reference string in the format "QAF-NNNNNN", e.g. "QAF-048213"
 
     private OrderNumber(string value) => Value = value;
 

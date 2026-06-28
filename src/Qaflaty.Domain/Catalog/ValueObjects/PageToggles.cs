@@ -4,13 +4,13 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class PageToggles : ValueObject
 {
-    public bool AboutPage { get; private set; }
-    public bool ContactPage { get; private set; }
-    public bool FaqPage { get; private set; }
-    public bool TermsPage { get; private set; }
-    public bool PrivacyPage { get; private set; }
-    public bool ShippingReturnsPage { get; private set; }
-    public bool CartPage { get; private set; }
+    public bool AboutPage { get; private set; } // Whether the "About" page is enabled/visible in the storefront
+    public bool ContactPage { get; private set; } // Whether the "Contact" page is enabled/visible
+    public bool FaqPage { get; private set; } // Whether the "FAQ" page is enabled/visible
+    public bool TermsPage { get; private set; } // Whether the "Terms & Conditions" page is enabled/visible
+    public bool PrivacyPage { get; private set; } // Whether the "Privacy Policy" page is enabled/visible
+    public bool ShippingReturnsPage { get; private set; } // Whether the "Shipping & Returns" page is enabled/visible
+    public bool CartPage { get; private set; } // Whether the dedicated cart page is enabled (on by default)
 
     private PageToggles() { }
 

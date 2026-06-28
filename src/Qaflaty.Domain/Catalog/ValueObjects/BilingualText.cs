@@ -4,8 +4,8 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class BilingualText : ValueObject
 {
-    public string Arabic { get; }
-    public string English { get; }
+    public string Arabic { get; } // The Arabic (ar) version of the text, e.g. "قميص قطني"
+    public string English { get; } // The English (en) version of the text, e.g. "Cotton Shirt"
 
     private BilingualText(string arabic, string english)
     {

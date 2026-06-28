@@ -9,34 +9,34 @@ namespace Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
 
 public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
 {
-    public StoreId StoreId { get; private set; }
-    public PageToggles PageToggles { get; private set; } = null!;
-    public FeatureToggles FeatureToggles { get; private set; } = null!;
-    public CustomerAuthSettings CustomerAuthSettings { get; private set; } = null!;
-    public CommunicationSettings CommunicationSettings { get; private set; } = null!;
-    public AiAssistantSettings AiAssistantSettings { get; private set; } = null!;
-    public LocalizationSettings LocalizationSettings { get; private set; } = null!;
-    public SocialLinks SocialLinks { get; private set; } = null!;
-    public string HeaderVariant { get; private set; } = null!;
-    public string FooterVariant { get; private set; } = null!;
-    public string ProductCardVariant { get; private set; } = null!;
-    public string ProductGridVariant { get; private set; } = null!;
-    public SearchSettings SearchSettings { get; private set; } = null!;
-    public TaxSettings TaxSettings { get; private set; } = null!;
+    public StoreId StoreId { get; private set; } // The store this configuration belongs to (one config per store)
+    public PageToggles PageToggles { get; private set; } = null!; // Which static storefront pages (About, Contact, FAQ, etc.) are enabled
+    public FeatureToggles FeatureToggles { get; private set; } = null!; // Which storefront features (wishlist, reviews, promo codes, etc.) are enabled
+    public CustomerAuthSettings CustomerAuthSettings { get; private set; } = null!; // Customer login/registration policy (auth mode, OTP on order, etc.)
+    public CommunicationSettings CommunicationSettings { get; private set; } = null!; // WhatsApp / live-chat / AI chatbot communication options
+    public AiAssistantSettings AiAssistantSettings { get; private set; } = null!; // Configuration for the AI shopping assistant (model, persona, limits)
+    public LocalizationSettings LocalizationSettings { get; private set; } = null!; // Default language, bilingual toggle, and text direction
+    public SocialLinks SocialLinks { get; private set; } = null!; // Social media profile URLs shown in the storefront
+    public string HeaderVariant { get; private set; } = null!; // Selected header layout theme id, e.g. "header-minimal"
+    public string FooterVariant { get; private set; } = null!; // Selected footer layout theme id, e.g. "footer-standard"
+    public string ProductCardVariant { get; private set; } = null!; // Selected product card style id, e.g. "card-standard"
+    public string ProductGridVariant { get; private set; } = null!; // Selected product grid layout id, e.g. "grid-standard"
+    public SearchSettings SearchSettings { get; private set; } = null!; // Storefront search behaviour configuration
+    public TaxSettings TaxSettings { get; private set; } = null!; // Tax/VAT configuration (rate, whether prices include tax)
 
     // Reviews & ratings policy (master on/off lives in FeatureToggles.Reviews)
-    public bool ReviewsRequirePurchase { get; private set; }
-    public bool ReviewsAutoApprove { get; private set; }
-    public bool ReviewsAllowEditing { get; private set; }
+    public bool ReviewsRequirePurchase { get; private set; } // When true, only customers who bought the product may review it
+    public bool ReviewsAutoApprove { get; private set; } // When true, reviews are published immediately without merchant moderation
+    public bool ReviewsAllowEditing { get; private set; } // When true, customers may edit their submitted reviews
 
     // Recommendations: when true, related products use the merchant's manual selection.
-    public bool RelatedProductsManual { get; private set; }
+    public bool RelatedProductsManual { get; private set; } // True = merchant hand-picks related products; false = auto-generated recommendations
 
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the configuration was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last configuration change
 
-    private readonly List<PaymentMethodAdjustment> _paymentMethodAdjustments = [];
-    public IReadOnlyList<PaymentMethodAdjustment> PaymentMethodAdjustments => _paymentMethodAdjustments.AsReadOnly();
+    private readonly List<PaymentMethodAdjustment> _paymentMethodAdjustments = []; // Backing list of per-method fee/enable adjustments
+    public IReadOnlyList<PaymentMethodAdjustment> PaymentMethodAdjustments => _paymentMethodAdjustments.AsReadOnly(); // Per-payment-method settings: enabled flag + optional surcharge, e.g. COD enabled with +5 SAR fee
 
     private StoreConfiguration() : base(StoreConfigurationId.Empty) { }
 
