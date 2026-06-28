@@ -151,7 +151,7 @@ export class ProductReviewsComponent implements OnInit {
       comment: this.formComment().trim() || null
     };
 
-    const obs = existing
+    const obs: import('rxjs').Observable<unknown> = existing
       ? this.reviewService.updateReview(existing.id, body)
       : this.reviewService.submitReview(this.productId, body);
 
@@ -163,7 +163,7 @@ export class ProductReviewsComponent implements OnInit {
         this.load();
         this.loadMyReview();
       },
-      error: (err) => {
+      error: (err: any) => {
         this.submitting.set(false);
         this.errorMessage.set(err?.error?.message ?? 'Could not save your review. Please try again.');
       }

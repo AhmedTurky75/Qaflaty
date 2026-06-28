@@ -2,7 +2,6 @@ using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Common.Primitives;
 using Qaflaty.Domain.Common.ValueObjects;
-using Qaflaty.Domain.Ordering.Aggregates.Order;
 using Qaflaty.Domain.Ordering.Enums;
 using Qaflaty.Domain.Ordering.Errors;
 
@@ -39,7 +38,7 @@ public sealed class ReturnRequest : AggregateRoot<ReturnRequestId>
     /// quantity being returned; each is validated against what was actually ordered.
     /// </summary>
     public static Result<ReturnRequest> Create(
-        Order order,
+        Order.Order order,
         IReadOnlyCollection<(ProductId ProductId, int Quantity)> selections,
         string reason)
     {
