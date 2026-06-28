@@ -131,6 +131,16 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
                 .HasColumnType("jsonb");
         });
 
+        // Tax / VAT settings - owned value object
+        builder.OwnsOne(sc => sc.TaxSettings, tax =>
+        {
+            tax.Property(t => t.Enabled).HasColumnName("tax_enabled");
+            tax.Property(t => t.Rate).HasColumnName("tax_rate").HasColumnType("decimal(5,2)");
+            tax.Property(t => t.PricesIncludeTax).HasColumnName("tax_prices_include");
+            tax.Property(t => t.Label).HasColumnName("tax_label").HasMaxLength(30);
+        });
+        builder.Navigation(sc => sc.TaxSettings).IsRequired();
+
         // Reviews & ratings policy
         builder.Property(sc => sc.ReviewsRequirePurchase).HasColumnName("reviews_require_purchase");
         builder.Property(sc => sc.ReviewsAutoApprove).HasColumnName("reviews_auto_approve");

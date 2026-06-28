@@ -17,9 +17,13 @@ public sealed class Order : AggregateRoot<OrderId>
     public OrderStatus Status { get; private set; }
     public OrderSource Source { get; private set; }
     public OrderPricing Pricing { get; private set; } = null!;
+    public string? AppliedPromoCode { get; private set; }
     public PaymentInfo Payment { get; private set; } = null!;
     public DeliveryInfo Delivery { get; private set; } = null!;
+    public ShipmentInfo? Shipment { get; private set; }
     public OrderNotes Notes { get; private set; } = null!;
+    public decimal TaxRate { get; private set; }
+    public bool PricesIncludeTax { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -39,7 +43,9 @@ public sealed class Order : AggregateRoot<OrderId>
         PaymentMethod paymentMethod,
         Money deliveryFee,
         string? customerNotes = null,
-        OrderSource source = OrderSource.Storefront)
+        OrderSource source = OrderSource.Storefront,
+        decimal taxRatePercent = 0m,
+        bool pricesIncludeTax = false)
     {
         var order = new Order
         {
@@ -52,7 +58,9 @@ public sealed class Order : AggregateRoot<OrderId>
             Delivery = delivery,
             Payment = PaymentInfo.Create(paymentMethod),
             Notes = OrderNotes.Create(customerNotes),
-            Pricing = OrderPricing.Calculate([], deliveryFee),
+            TaxRate = taxRatePercent,
+            PricesIncludeTax = pricesIncludeTax,
+            Pricing = OrderPricing.Calculate([], deliveryFee, null, taxRatePercent, pricesIncludeTax),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -141,7 +149,11 @@ public sealed class Order : AggregateRoot<OrderId>
         return Result.Success();
     }
 
-    public Result Ship()
+    public Result Ship(
+        string? carrier = null,
+        string? trackingNumber = null,
+        string? trackingUrl = null,
+        DateTime? estimatedDeliveryDate = null)
     {
         if (Status != OrderStatus.Processing)
             return Result.Failure(OrderingErrors.InvalidStatusTransition);
@@ -149,6 +161,7 @@ public sealed class Order : AggregateRoot<OrderId>
         if (Payment.Method != PaymentMethod.CashOnDelivery && Payment.Status != PaymentStatus.Paid)
             return Result.Failure(OrderingErrors.PaymentRequired);
 
+        Shipment = ShipmentInfo.Create(carrier, trackingNumber, trackingUrl, estimatedDeliveryDate);
         ChangeStatus(OrderStatus.Shipped);
         RaiseDomainEvent(new OrderShippedEvent(Id));
         return Result.Success();
@@ -202,6 +215,21 @@ public sealed class Order : AggregateRoot<OrderId>
         return Result.Success();
     }
 
+    /// <summary>
+    /// Applies a promo-code discount to the order. Only allowed while the order is still Pending.
+    /// <paramref name="discountAmount"/> is the monetary reduction already computed by the promo code.
+    /// </summary>
+    public Result ApplyDiscount(string code, Money discountAmount)
+    {
+        if (Status != OrderStatus.Pending)
+            return Result.Failure(OrderingErrors.OrderAlreadyConfirmed);
+
+        AppliedPromoCode = code;
+        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee, discountAmount, TaxRate, PricesIncludeTax);
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
     public void AddMerchantNote(string note)
     {
         Notes.AddMerchantNote(note);
@@ -219,6 +247,6 @@ public sealed class Order : AggregateRoot<OrderId>
 
     private void RecalculatePricing()
     {
-        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee);
+        Pricing = OrderPricing.Calculate(_items, Pricing.DeliveryFee, Pricing.DiscountAmount, TaxRate, PricesIncludeTax);
     }
 }

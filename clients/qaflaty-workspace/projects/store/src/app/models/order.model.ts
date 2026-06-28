@@ -15,6 +15,9 @@ export interface OrderCalculation {
   paymentAdjustment: Money;
   paymentAdjustmentLabel?: string;
   total: Money;
+  tax?: Money;
+  taxLabel?: string | null;
+  pricesIncludeTax?: boolean;
 }
 
 export interface CreateOrderRequest {
@@ -23,6 +26,7 @@ export interface CreateOrderRequest {
   items: OrderItemRequest[];
   paymentMethod: string;
   notes?: string;
+  promoCode?: string;
 }
 
 export interface CustomerInfo {
@@ -58,6 +62,14 @@ export interface OrderResponse {
   createdAt: string;
 }
 
+export interface Shipment {
+  carrier?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+  shippedAt: string;
+  estimatedDeliveryDate?: string | null;
+}
+
 export interface OrderTracking {
   orderNumber: string;
   status: OrderStatus;
@@ -68,9 +80,11 @@ export interface OrderTracking {
   statusHistory: OrderStatusChange[];
   createdAt: string;
   updatedAt: string;
+  shipment?: Shipment | null;
 }
 
 export interface OrderItemDto {
+  productId: string;
   productName: string;
   unitPrice: Money;
   quantity: number;
@@ -83,6 +97,8 @@ export interface OrderPricing {
   subtotal: Money;
   deliveryFee: Money;
   total: Money;
+  discountAmount?: Money;
+  taxAmount?: Money;
 }
 
 export interface DeliveryInfo {

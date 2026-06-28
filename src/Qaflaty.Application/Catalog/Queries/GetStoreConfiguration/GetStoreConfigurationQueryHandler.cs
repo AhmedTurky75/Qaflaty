@@ -81,5 +81,10 @@ public class GetStoreConfigurationQueryHandler : IQueryHandler<GetStoreConfigura
                 def?.DefaultLabel ?? a.PaymentMethodKey, def?.DefaultDescription ?? string.Empty);
         }).ToList(),
         config.CreatedAt,
-        config.UpdatedAt);
+        config.UpdatedAt,
+        new TaxSettingsDto(
+            config.TaxSettings.Enabled,
+            config.TaxSettings.Rate,
+            config.TaxSettings.PricesIncludeTax,
+            config.TaxSettings.Label));
 }

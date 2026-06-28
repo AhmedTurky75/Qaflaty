@@ -8,6 +8,7 @@ using Qaflaty.Domain.Catalog.Aggregates.District;
 using Qaflaty.Domain.Catalog.Aggregates.FaqItem;
 using Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
+using Qaflaty.Domain.Catalog.Aggregates.PromoCode;
 using Qaflaty.Domain.Catalog.Aggregates.Store;
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
 using Qaflaty.Domain.Communication.Aggregates.AiInteraction;
@@ -19,6 +20,7 @@ using Qaflaty.Domain.Identity.Aggregates.Merchant;
 using Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
 using Qaflaty.Domain.Ordering.Aggregates.Customer;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
+using Qaflaty.Domain.Ordering.Aggregates.Return;
 using Qaflaty.Domain.Storefront.Aggregates.Wishlist;
 using Qaflaty.Domain.Storefront.Aggregates.Cart;
 using Qaflaty.Domain.Storefront.Aggregates.ProductReview;
@@ -56,12 +58,16 @@ public class QaflatyDbContext : DbContext
     public DbSet<District> Districts => Set<District>();
     public DbSet<DeliveryZone> DeliveryZones => Set<DeliveryZone>();
     public DbSet<ProductPropertyDefinition> ProductPropertyDefinitions => Set<ProductPropertyDefinition>();
+    public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
+    public DbSet<PromoCodeRedemption> PromoCodeRedemptions => Set<PromoCodeRedemption>();
 
     // Ordering
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<OrderOtp> OrderOtps => Set<OrderOtp>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<ReturnRequest> ReturnRequests => Set<ReturnRequest>();
+    public DbSet<ReturnRequestItem> ReturnRequestItems => Set<ReturnRequestItem>();
 
     // Storefront
     public DbSet<Wishlist> Wishlists => Set<Wishlist>();

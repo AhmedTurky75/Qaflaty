@@ -82,6 +82,31 @@ import { StoreContextService } from '../../core/services/store-context.service';
         </div>
       </div>
 
+      <!-- Tax / VAT Section -->
+      @if (localConfig.taxSettings) {
+        <div class="bg-white rounded-lg shadow p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Tax / VAT</h3>
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium text-gray-700">Enable tax</label>
+              <input type="checkbox" [(ngModel)]="localConfig.taxSettings.enabled" (change)="onConfigChange()" class="h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium text-gray-700">Label</label>
+              <input type="text" [(ngModel)]="localConfig.taxSettings.label" (change)="onConfigChange()" placeholder="VAT" class="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium text-gray-700">Rate (%)</label>
+              <input type="number" min="0" max="100" step="0.01" [(ngModel)]="localConfig.taxSettings.rate" (change)="onConfigChange()" class="w-40 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            </div>
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium text-gray-700">Prices already include tax</label>
+              <input type="checkbox" [(ngModel)]="localConfig.taxSettings.pricesIncludeTax" (change)="onConfigChange()" class="h-5 w-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500" />
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- Customer Auth Settings Section -->
       <div class="bg-white rounded-lg shadow p-6">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">Customer Authentication</h3>

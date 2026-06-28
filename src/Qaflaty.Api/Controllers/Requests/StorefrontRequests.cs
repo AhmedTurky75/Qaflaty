@@ -5,7 +5,8 @@ public record PlaceOrderRequest(
     AddressRequest DeliveryAddress,
     string PaymentMethod,
     List<OrderItemRequest> Items,
-    string? Notes
+    string? Notes,
+    string? PromoCode = null
 );
 
 public record CustomerInfoRequest(

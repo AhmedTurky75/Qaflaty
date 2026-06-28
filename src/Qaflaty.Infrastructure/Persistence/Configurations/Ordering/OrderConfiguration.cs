@@ -58,6 +58,18 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
                 money.Property(m => m.Currency).HasColumnName("delivery_fee_currency").HasConversion<string>();
             });
 
+            pricing.OwnsOne(p => p.DiscountAmount, money =>
+            {
+                money.Property(m => m.Amount).HasColumnName("discount_amount").HasColumnType("decimal(18,2)");
+                money.Property(m => m.Currency).HasColumnName("discount_currency").HasConversion<string>();
+            });
+
+            pricing.OwnsOne(p => p.TaxAmount, money =>
+            {
+                money.Property(m => m.Amount).HasColumnName("tax_amount").HasColumnType("decimal(18,2)");
+                money.Property(m => m.Currency).HasColumnName("tax_currency").HasConversion<string>();
+            });
+
             pricing.OwnsOne(p => p.Total, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("total").HasColumnType("decimal(18,2)");
@@ -89,11 +101,31 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             delivery.Property(d => d.Instructions).HasColumnName("delivery_instructions").HasMaxLength(500);
         });
 
+        builder.OwnsOne(o => o.Shipment, shipment =>
+        {
+            shipment.Property(s => s.Carrier).HasColumnName("shipment_carrier").HasMaxLength(100);
+            shipment.Property(s => s.TrackingNumber).HasColumnName("shipment_tracking_number").HasMaxLength(100);
+            shipment.Property(s => s.TrackingUrl).HasColumnName("shipment_tracking_url").HasMaxLength(500);
+            shipment.Property(s => s.ShippedAt).HasColumnName("shipment_shipped_at");
+            shipment.Property(s => s.EstimatedDeliveryDate).HasColumnName("shipment_estimated_delivery");
+        });
+
         builder.OwnsOne(o => o.Notes, notes =>
         {
             notes.Property(n => n.CustomerNotes).HasColumnName("customer_notes").HasMaxLength(1000);
             notes.Property(n => n.MerchantNotes).HasColumnName("merchant_notes").HasMaxLength(2000);
         });
+
+        builder.Property(o => o.AppliedPromoCode)
+            .HasColumnName("applied_promo_code")
+            .HasMaxLength(40);
+
+        builder.Property(o => o.TaxRate)
+            .HasColumnName("tax_rate")
+            .HasColumnType("decimal(5,2)");
+
+        builder.Property(o => o.PricesIncludeTax)
+            .HasColumnName("prices_include_tax");
 
         builder.Property(o => o.CreatedAt)
             .HasColumnName("created_at");

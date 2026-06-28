@@ -248,7 +248,8 @@ export class BuilderLayoutComponent implements OnInit {
       headerVariant: currentConfig.headerVariant,
       footerVariant: currentConfig.footerVariant,
       productCardVariant: currentConfig.productCardVariant,
-      productGridVariant: currentConfig.productGridVariant
+      productGridVariant: currentConfig.productGridVariant,
+      taxSettings: currentConfig.taxSettings
     };
 
     this.saving.set(true);

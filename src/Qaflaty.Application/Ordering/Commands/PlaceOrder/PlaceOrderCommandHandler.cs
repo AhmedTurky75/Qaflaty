@@ -2,6 +2,7 @@ using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.DTOs;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
+using Qaflaty.Domain.Catalog.Aggregates.PromoCode;
 using Qaflaty.Domain.Catalog.Enums;
 using Qaflaty.Domain.Catalog.Repositories;
 using OrderingPaymentMethod = Qaflaty.Domain.Ordering.Enums.PaymentMethod;
@@ -31,6 +32,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly IEmailService _emailService;
     private readonly IOtpSettings _otpSettings;
     private readonly IStoreConfigurationRepository _storeConfigRepository;
+    private readonly IPromoCodeRepository _promoCodeRepository;
 
     public PlaceOrderCommandHandler(
         IOrderRepository orderRepository,
@@ -42,7 +44,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         IOrderOtpRepository otpRepository,
         IEmailService emailService,
         IOtpSettings otpSettings,
-        IStoreConfigurationRepository storeConfigRepository)
+        IStoreConfigurationRepository storeConfigRepository,
+        IPromoCodeRepository promoCodeRepository)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
@@ -54,6 +57,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         _emailService = emailService;
         _otpSettings = otpSettings;
         _storeConfigRepository = storeConfigRepository;
+        _promoCodeRepository = promoCodeRepository;
     }
 
     public async Task<Result<OrderDto>> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -186,6 +190,11 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         // Create delivery info
         var deliveryInfo = DeliveryInfo.Create(addressResult.Value, request.DeliveryInstructions);
 
+        // Resolve the store's tax configuration (applied to the order pricing).
+        var taxSettings = storeConfigForPayment?.TaxSettings;
+        var taxRate = taxSettings?.EffectiveRate ?? 0m;
+        var pricesIncludeTax = taxSettings?.PricesIncludeTax ?? false;
+
         // Create order (stays in Pending until OTP is verified)
         var orderResult = Order.Create(
             storeId,
@@ -195,7 +204,9 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             paymentMethod,
             deliveryFee,
             request.CustomerNotes,
-            request.Source);
+            request.Source,
+            taxRate,
+            pricesIncludeTax);
 
         if (orderResult.IsFailure)
             return Result.Failure<OrderDto>(orderResult.Error);
@@ -230,6 +241,39 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
 
             if (addResult.IsFailure)
                 return Result.Failure<OrderDto>(addResult.Error);
+        }
+
+        // Apply a promo code if one was supplied. Validation and discount calculation are owned by
+        // the PromoCode aggregate so the rules cannot be bypassed here.
+        if (!string.IsNullOrWhiteSpace(request.PromoCode))
+        {
+            var promo = await _promoCodeRepository.GetByCodeAsync(storeId, request.PromoCode, cancellationToken);
+            if (promo == null)
+                return Result.Failure<OrderDto>(new Error("PromoCode.NotFound", "Promo code not found"));
+
+            var customerRedemptions = await _promoCodeRepository.CountCustomerRedemptionsAsync(
+                promo.Id, customer.Id, cancellationToken);
+
+            var subtotal = order.Pricing.Subtotal.Amount;
+            var validation = promo.Validate(subtotal, DateTime.UtcNow, customerRedemptions);
+            if (validation.IsFailure)
+                return Result.Failure<OrderDto>(validation.Error);
+
+            var discountValue = promo.CalculateDiscount(subtotal, deliveryFee.Amount);
+            var discountResult = Money.Create(discountValue, order.Pricing.Subtotal.Currency);
+            if (discountResult.IsFailure)
+                return Result.Failure<OrderDto>(discountResult.Error);
+
+            var applyResult = order.ApplyDiscount(promo.Code, discountResult.Value);
+            if (applyResult.IsFailure)
+                return Result.Failure<OrderDto>(applyResult.Error);
+
+            promo.RecordRedemption();
+            _promoCodeRepository.Update(promo);
+
+            var redemption = PromoCodeRedemption.Create(
+                promo.Id, storeId, order.Id, customer.Id, promo.Code, discountValue);
+            await _promoCodeRepository.AddRedemptionAsync(redemption, cancellationToken);
         }
 
         await _orderRepository.AddAsync(order, cancellationToken);
@@ -325,7 +369,9 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         new OrderPricingDto(
             new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
             new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
-            new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString())
+            new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString()),
+            new MoneyDto(order.Pricing.DiscountAmount.Amount, order.Pricing.DiscountAmount.Currency.ToString()),
+            new MoneyDto(order.Pricing.TaxAmount.Amount, order.Pricing.TaxAmount.Currency.ToString())
         ),
         new PaymentInfoDto(
             order.Payment.Method.ToString(),
@@ -356,6 +402,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         )).ToList(),
         order.CreatedAt,
         order.UpdatedAt,
-        order.Source.ToString()
+        order.Source.ToString(),
+        order.AppliedPromoCode
     );
 }
