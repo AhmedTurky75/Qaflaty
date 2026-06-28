@@ -1,17 +1,26 @@
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Qaflaty.Application.Common.Interfaces;
 
 namespace Qaflaty.Infrastructure.Services.Identity;
 
 public class CookieAuthService : ICookieAuthService
 {
-    private static readonly CookieOptions DefaultOptions = new()
+    private readonly CookieOptions DefaultOptions;
+
+    public CookieAuthService(IWebHostEnvironment env)
     {
-        HttpOnly = true,
-        SameSite = SameSiteMode.None,
-        Secure = true,
-        Path = "/"
-    };
+        var isDevelopment = env.IsDevelopment();
+        DefaultOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            // SameSite=None requires Secure=true per browser spec; in dev use Lax over plain HTTP
+            SameSite = isDevelopment ? SameSiteMode.Lax : SameSiteMode.None,
+            Secure = !isDevelopment,
+            Path = "/"
+        };
+    }
 
     // Legacy methods kept for backward compatibility — delegate to merchant cookies
     public void SetAuthCookies(HttpContext context, string accessToken, string refreshToken, bool isSecure = false)
