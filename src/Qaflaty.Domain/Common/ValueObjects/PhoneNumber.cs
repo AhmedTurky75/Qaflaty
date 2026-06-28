@@ -54,22 +54,6 @@ public sealed class PhoneNumber : ValueObject
         }
     }
 
-    /// <summary>
-    /// Create from an already-formatted E.164 string (for migration / internal use).
-    /// No region validation is applied.
-    /// </summary>
-    public static Result<PhoneNumber> CreateFromE164(string e164)
-    {
-        if (string.IsNullOrWhiteSpace(e164))
-            return Result.Failure<PhoneNumber>(new Error("PhoneNumber.Empty", "Phone number is required"));
-
-        if (!e164.StartsWith('+'))
-            return Result.Failure<PhoneNumber>(new Error("PhoneNumber.InvalidE164",
-                "E.164 phone numbers must start with '+'"));
-
-        return Result.Success(new PhoneNumber { Value = e164 });
-    }
-
     protected override IEnumerable<object?> GetEqualityComponents()
     {
         yield return Value;
