@@ -4,10 +4,10 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class ProductImage : ValueObject
 {
-    public Guid Id { get; }
-    public string Url { get; }
-    public string? AltText { get; }
-    public int SortOrder { get; private set; }
+    public Guid Id { get; } // Stable identifier for the image (used to reorder/remove a specific image)
+    public string Url { get; } // Public URL/path of the image file, e.g. "/uploads/products/abc.jpg"
+    public string? AltText { get; } // Optional accessibility alt text / SEO description of the image
+    public int SortOrder { get; private set; } // Position in the gallery (0 = first/primary); controls display order
 
     private ProductImage() { Id = Guid.Empty; Url = string.Empty; } // required by EF Core JSON deserialization
 

@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { OrderService } from '../services/order.service';
+import { OrderService, ShipOrderRequest } from '../services/order.service';
 import { StatusBadgeComponent } from '../components/status-badge/status-badge.component';
 import { OrderTimelineComponent } from '../components/order-timeline/order-timeline.component';
 import { OrderDto, OrderStatus, PaymentStatus } from 'shared';
@@ -31,6 +31,13 @@ export class OrderDetailComponent implements OnInit {
   // Add note modal
   showNoteModal = signal(false);
   newNote = signal('');
+
+  // Ship order modal
+  showShipModal = signal(false);
+  shipCarrier = signal('');
+  shipTrackingNumber = signal('');
+  shipTrackingUrl = signal('');
+  shipEstimatedDelivery = signal('');
 
   OrderStatus = OrderStatus;
   PaymentStatus = PaymentStatus;
@@ -118,14 +125,32 @@ export class OrderDetailComponent implements OnInit {
   }
 
   onShipOrder(): void {
+    this.shipCarrier.set('');
+    this.shipTrackingNumber.set('');
+    this.shipTrackingUrl.set('');
+    this.shipEstimatedDelivery.set('');
+    this.showShipModal.set(true);
+  }
+
+  confirmShipOrder(): void {
     const order = this.order();
     if (!order) return;
 
+    const request: ShipOrderRequest = {
+      carrier: this.shipCarrier().trim() || null,
+      trackingNumber: this.shipTrackingNumber().trim() || null,
+      trackingUrl: this.shipTrackingUrl().trim() || null,
+      estimatedDeliveryDate: this.shipEstimatedDelivery()
+        ? new Date(this.shipEstimatedDelivery()).toISOString()
+        : null
+    };
+
     this.actionLoading.set(true);
-    this.orderService.shipOrder(order.id).subscribe({
+    this.orderService.shipOrder(order.id, request).subscribe({
       next: (updatedOrder) => {
         this.order.set(updatedOrder);
         this.actionLoading.set(false);
+        this.showShipModal.set(false);
       },
       error: (err) => {
         alert(`Failed to ship order: ${err.message}`);

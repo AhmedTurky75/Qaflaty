@@ -60,7 +60,11 @@ public static class DependencyInjection
         services.AddScoped<IFaqItemRepository, FaqItemRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
         services.AddScoped<IWishlistRepository, WishlistRepository>();
+        services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
+        services.AddScoped<IProductViewRepository, ProductViewRepository>();
+        services.AddScoped<IRelatedProductRepository, RelatedProductRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IChatConversationRepository, ChatConversationRepository>();
         services.AddScoped<IAiInteractionLogRepository, AiInteractionLogRepository>();
@@ -71,6 +75,7 @@ public static class DependencyInjection
         services.AddScoped<IDistrictRepository, DistrictRepository>();
         services.AddScoped<IProductPropertyDefinitionRepository, ProductPropertyDefinitionRepository>();
         services.AddScoped<IPaymentMethodDefinitionRepository, PaymentMethodDefinitionRepository>();
+        services.AddScoped<IPromoCodeRepository, PromoCodeRepository>();
 
         // Identity Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();

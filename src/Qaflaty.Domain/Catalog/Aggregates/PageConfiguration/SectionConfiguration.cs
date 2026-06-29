@@ -6,13 +6,13 @@ namespace Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 
 public sealed class SectionConfiguration : Entity<SectionConfigurationId>
 {
-    public PageConfigurationId PageConfigurationId { get; private set; }
-    public SectionType SectionType { get; private set; }
-    public string VariantId { get; private set; } = null!;
-    public bool IsEnabled { get; private set; }
-    public int SortOrder { get; private set; }
-    public string? ContentJson { get; private set; }
-    public string? SettingsJson { get; private set; }
+    public PageConfigurationId PageConfigurationId { get; private set; } // Parent page this section belongs to
+    public SectionType SectionType { get; private set; } // Kind of section, e.g. Hero, ProductGrid, Banner, Testimonials
+    public string VariantId { get; private set; } = null!; // Selected visual variant of the section type, e.g. "hero-full-image"
+    public bool IsEnabled { get; private set; } // Whether this section is rendered on the page
+    public int SortOrder { get; private set; } // Vertical position of the section within the page (lower = higher up)
+    public string? ContentJson { get; private set; } // Serialized editable content for the section (headings, items, images)
+    public string? SettingsJson { get; private set; } // Serialized layout/style settings for the section (colors, spacing, etc.)
 
     private SectionConfiguration() : base(SectionConfigurationId.Empty) { }
 

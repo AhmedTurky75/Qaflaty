@@ -26,5 +26,6 @@ public record PlaceOrderCommand(
     int CountryCode = 0,
     int? CityId = null,
     int? DistrictId = null,
-    OrderSource Source = OrderSource.Storefront
+    OrderSource Source = OrderSource.Storefront,
+    string? PromoCode = null
 ) : ICommand<OrderDto>;

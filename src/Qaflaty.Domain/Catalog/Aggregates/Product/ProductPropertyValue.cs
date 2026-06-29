@@ -10,8 +10,8 @@ namespace Qaflaty.Domain.Catalog.Aggregates.Product;
 /// </summary>
 public sealed class ProductPropertyValue : Entity<Guid>
 {
-    public ProductId ProductId { get; private set; }
-    public ProductPropertyDefinitionId DefinitionId { get; private set; }
+    public ProductId ProductId { get; private set; } // Product this property value is assigned to
+    public ProductPropertyDefinitionId DefinitionId { get; private set; } // The property definition this value fills in (links to ProductPropertyDefinition)
 
     /// <summary>
     /// Serialized value string.

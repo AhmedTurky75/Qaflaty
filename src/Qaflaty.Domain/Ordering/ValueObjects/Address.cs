@@ -6,12 +6,12 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class Address : ValueObject
 {
-    public string Street { get; private set; } = null!;
-    public string City { get; private set; } = null!;
-    public string? District { get; private set; }
-    public string? PostalCode { get; private set; }
-    public string Country { get; private set; } = null!;
-    public string? AdditionalInfo { get; private set; }
+    public string Street { get; private set; } = null!; // Street address line, e.g. "King Fahd Rd, Building 12"
+    public string City { get; private set; } = null!; // City name, e.g. "Riyadh"
+    public string? District { get; private set; } // Optional district/neighborhood, e.g. "Al Olaya"
+    public string? PostalCode { get; private set; } // Optional postal/ZIP code, e.g. "12211"
+    public string Country { get; private set; } = null!; // Country name, defaults to "Saudi Arabia"
+    public string? AdditionalInfo { get; private set; } // Optional extra address detail, e.g. "Apartment 5, 2nd floor"
 
     private Address() { }
 

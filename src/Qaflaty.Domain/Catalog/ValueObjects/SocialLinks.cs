@@ -4,12 +4,12 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class SocialLinks : ValueObject
 {
-    public string? Facebook { get; private set; }
-    public string? Instagram { get; private set; }
-    public string? Twitter { get; private set; }
-    public string? TikTok { get; private set; }
-    public string? Snapchat { get; private set; }
-    public string? YouTube { get; private set; }
+    public string? Facebook { get; private set; } // Facebook page URL, e.g. "https://facebook.com/mystore"
+    public string? Instagram { get; private set; } // Instagram profile URL, e.g. "https://instagram.com/mystore"
+    public string? Twitter { get; private set; } // X/Twitter profile URL
+    public string? TikTok { get; private set; } // TikTok profile URL
+    public string? Snapchat { get; private set; } // Snapchat profile URL
+    public string? YouTube { get; private set; } // YouTube channel URL
 
     private SocialLinks() { }
 

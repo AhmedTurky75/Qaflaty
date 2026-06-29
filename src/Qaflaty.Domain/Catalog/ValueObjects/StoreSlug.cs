@@ -9,7 +9,7 @@ public sealed partial class StoreSlug : ValueObject
 {
     private static readonly string[] ReservedSlugs = ["www", "api", "admin", "app", "mail", "ftp", "smtp", "cdn", "static", "assets"];
 
-    public string Value { get; }
+    public string Value { get; } // The validated slug (lowercase, a-z0-9-, not a reserved word), e.g. "my-shop"
 
     private StoreSlug(string value) => Value = value;
 

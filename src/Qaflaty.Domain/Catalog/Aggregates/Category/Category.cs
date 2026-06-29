@@ -8,12 +8,12 @@ namespace Qaflaty.Domain.Catalog.Aggregates.Category;
 
 public sealed class Category : AggregateRoot<CategoryId>
 {
-    public StoreId StoreId { get; private set; }
-    public CategoryId? ParentId { get; private set; }
-    public CategoryName Name { get; private set; } = null!;
-    public CategorySlug Slug { get; private set; } = null!;
-    public int SortOrder { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store (tenant) the category belongs to
+    public CategoryId? ParentId { get; private set; } // Parent category for nesting; null means a top-level category (supports a category tree)
+    public CategoryName Name { get; private set; } = null!; // Display name of the category, e.g. "Men's Shoes"
+    public CategorySlug Slug { get; private set; } = null!; // URL-friendly identifier for the category, e.g. "mens-shoes"
+    public int SortOrder { get; private set; } // Manual ordering position among sibling categories (lower = first)
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the category was created
 
     private Category() : base(CategoryId.Empty) { }
 

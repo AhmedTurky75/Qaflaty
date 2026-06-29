@@ -7,14 +7,14 @@ public sealed class OrderOtp
     public const int ExpiryMinutes = 10;
     public const int MaxAttempts = 5;
 
-    public Guid Id { get; private set; }
-    public OrderId OrderId { get; private set; }
-    public string Code { get; private set; } = null!;
-    public string Email { get; private set; } = null!;
-    public DateTime CreatedAt { get; private set; }
-    public DateTime ExpiresAt { get; private set; }
-    public bool IsUsed { get; private set; }
-    public int AttemptCount { get; private set; }
+    public Guid Id { get; private set; } // Primary key of the OTP record
+    public OrderId OrderId { get; private set; } // Order this OTP confirms
+    public string Code { get; private set; } = null!; // The 6-digit one-time code emailed to the customer, e.g. "048213"
+    public string Email { get; private set; } = null!; // Email address the code was sent to
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the code was generated
+    public DateTime ExpiresAt { get; private set; } // UTC expiry (CreatedAt + 10 minutes); after this the code is invalid
+    public bool IsUsed { get; private set; } // True once the code has been successfully verified or invalidated
+    public int AttemptCount { get; private set; } // Number of verification attempts made (max 5 before lockout)
 
     private OrderOtp() { }
 

@@ -102,7 +102,9 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
         new OrderPricingDto(
             new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
             new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
-            new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString())
+            new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString()),
+            new MoneyDto(order.Pricing.DiscountAmount.Amount, order.Pricing.DiscountAmount.Currency.ToString()),
+            new MoneyDto(order.Pricing.TaxAmount.Amount, order.Pricing.TaxAmount.Currency.ToString())
         ),
         new PaymentInfoDto(
             order.Payment.Method.ToString(),
@@ -133,6 +135,7 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
         )).ToList(),
         order.CreatedAt,
         order.UpdatedAt,
-        OrderSource.Storefront.ToString()
+        OrderSource.Storefront.ToString(),
+        order.AppliedPromoCode
     );
 }

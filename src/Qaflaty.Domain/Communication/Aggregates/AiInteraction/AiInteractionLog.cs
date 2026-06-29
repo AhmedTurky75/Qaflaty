@@ -10,20 +10,20 @@ namespace Qaflaty.Domain.Communication.Aggregates.AiInteraction;
 /// </summary>
 public sealed class AiInteractionLog : AggregateRoot<AiInteractionId>
 {
-    public StoreId StoreId { get; private set; }
-    public ChatConversationId ConversationId { get; private set; }
-    public AiInteractionType Type { get; private set; }
+    public StoreId StoreId { get; private set; } // Store the interaction occurred in
+    public ChatConversationId ConversationId { get; private set; } // Conversation the interaction is part of
+    public AiInteractionType Type { get; private set; } // Kind of interaction: Reply / ProductSuggested / CartAdd / OrderPlaced
 
     /// <summary>The customer question for <see cref="AiInteractionType.Reply"/> interactions.</summary>
-    public string? Query { get; private set; }
+    public string? Query { get; private set; } // Customer's question text (Reply only), truncated to 500 chars
 
     /// <summary>The product involved for ProductSuggested / CartAdd interactions.</summary>
-    public Guid? ProductId { get; private set; }
+    public Guid? ProductId { get; private set; } // Product referenced by a suggestion/cart-add interaction
 
     /// <summary>Number of knowledge documents retrieved (Reply interactions). 0 indicates a knowledge gap.</summary>
-    public int DocumentsRetrieved { get; private set; }
+    public int DocumentsRetrieved { get; private set; } // RAG documents found for the query; 0 flags a knowledge gap
 
-    public DateTime CreatedAt { get; private set; }
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the interaction was logged
 
     private AiInteractionLog() { } // EF Core
 

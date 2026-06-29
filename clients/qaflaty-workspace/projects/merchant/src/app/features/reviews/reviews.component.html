@@ -1,0 +1,99 @@
+<div class="reviews-page">
+  <header class="page-head">
+    <h1>Ratings &amp; Reviews</h1>
+    <p class="subtitle">Moderate customer reviews and configure review policy for your store.</p>
+  </header>
+
+  <!-- Settings -->
+  @if (settings(); as s) {
+    <section class="card settings">
+      <h2>Review settings</h2>
+      <div class="settings-grid">
+        <label class="toggle">
+          <input type="checkbox" [ngModel]="s.reviewsEnabled"
+                 (ngModelChange)="updateSetting('reviewsEnabled', $event)" />
+          <span><strong>Enable reviews &amp; ratings</strong><small>Show reviews on the storefront and allow customers to submit them.</small></span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" [ngModel]="s.requirePurchase"
+                 (ngModelChange)="updateSetting('requirePurchase', $event)" />
+          <span><strong>Require purchase</strong><small>Only customers with a delivered order can review.</small></span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" [ngModel]="s.autoApprove"
+                 (ngModelChange)="updateSetting('autoApprove', $event)" />
+          <span><strong>Auto-approve</strong><small>Publish new reviews immediately without moderation.</small></span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" [ngModel]="s.allowEditing"
+                 (ngModelChange)="updateSetting('allowEditing', $event)" />
+          <span><strong>Allow editing</strong><small>Let customers edit their submitted reviews.</small></span>
+        </label>
+      </div>
+      <div class="settings-actions">
+        <button class="btn btn-primary" (click)="saveSettings()" [disabled]="savingSettings()">
+          {{ savingSettings() ? 'Saving…' : 'Save settings' }}
+        </button>
+        @if (settingsSaved()) { <span class="saved">✓ Saved</span> }
+      </div>
+    </section>
+  }
+
+  <!-- Status tabs -->
+  <div class="tabs">
+    @for (st of statuses; track st) {
+      <button class="tab" [class.tab--active]="activeStatus() === st" (click)="selectStatus(st)">
+        {{ st }}
+        @if (st === 'Pending' && pendingCount() > 0) { <span class="badge">{{ pendingCount() }}</span> }
+      </button>
+    }
+  </div>
+
+  <!-- List -->
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (reviews().length === 0) {
+    <p class="muted">No {{ activeStatus().toLowerCase() }} reviews.</p>
+  } @else {
+    <div class="review-cards">
+      @for (r of reviews(); track r.id) {
+        <article class="card review-card">
+          <div class="rc-head">
+            <div>
+              <span class="rc-name">{{ r.customerName }}</span>
+              @if (r.isVerifiedPurchase) { <span class="chip chip--verified">✓ Verified</span> }
+              @if (r.isPinned) { <span class="chip chip--pinned">Pinned</span> }
+              <span class="chip chip--status">{{ r.status }}</span>
+            </div>
+            <div class="rc-stars">
+              @for (on of starArray(r.rating); track $index) {
+                <span class="star" [class.on]="on">★</span>
+              }
+            </div>
+          </div>
+          @if (r.title) { <h3 class="rc-title">{{ r.title }}</h3> }
+          @if (r.comment) { <p class="rc-comment">{{ r.comment }}</p> }
+          @if (r.media.length) {
+            <div class="rc-media">
+              @for (m of r.media; track m.url) {
+                <img [src]="m.url" alt="" />
+              }
+            </div>
+          }
+          <div class="rc-meta">{{ r.createdAt | date:'medium' }} · 👍 {{ r.helpfulCount }}</div>
+
+          <div class="rc-actions">
+            @if (r.status !== 'Approved') { <button class="btn btn-success" (click)="approve(r)">Approve</button> }
+            @if (r.status !== 'Rejected') { <button class="btn btn-danger" (click)="reject(r)">Reject</button> }
+            @if (r.status === 'Approved') { <button class="btn btn-ghost" (click)="hide(r)">Hide</button> }
+            @if (r.isPinned) {
+              <button class="btn btn-ghost" (click)="unpin(r)">Unpin</button>
+            } @else {
+              <button class="btn btn-ghost" (click)="pin(r)">Pin</button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>

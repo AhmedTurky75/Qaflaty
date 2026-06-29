@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -8,11 +8,19 @@ import { Product, ProductVariant } from '../../models/product.model';
 import { VariantSelectorComponent } from '../../components/products/variant-selector.component';
 import { WhatsAppButtonComponent } from '../../components/shared/whatsapp-button.component';
 import { WhatsAppService } from '../../services/whatsapp.service';
+import { ProductReviewsComponent } from '../../components/reviews/product-reviews.component';
+import { ProductRowComponent } from '../../components/recommendations/product-row.component';
+import { ProductGalleryComponent } from '../../components/products/product-gallery.component';
+import { RecommendationService } from '../../services/recommendation.service';
+import { ReviewService } from '../../services/review.service';
+import { WishlistService } from '../../services/wishlist.service';
+
+type ProductTab = 'description' | 'specifications' | 'reviews' | 'shipping';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent, WhatsAppButtonComponent],
+  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent, WhatsAppButtonComponent, ProductReviewsComponent, ProductRowComponent, ProductGalleryComponent],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.css']
 })
@@ -20,14 +28,32 @@ export class ProductDetailComponent {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
   private route = inject(ActivatedRoute);
+  private recommendations = inject(RecommendationService);
+  private reviewService = inject(ReviewService);
+  private wishlistService = inject(WishlistService);
   whatsAppService = inject(WhatsAppService);
 
   product = signal<Product | null>(null);
+
+  // Rating summary (for header + social proof)
+  averageRating = signal<number>(0);
+  totalReviews = signal<number>(0);
+  totalVerified = signal<number>(0);
+
+  // UI state
+  activeTab = signal<ProductTab>('description');
+  showStickyBar = signal<boolean>(false);
   loading = signal<boolean>(true);
   quantity = signal<number>(1);
   addingToCart = signal<boolean>(false);
   showAddedMessage = signal<boolean>(false);
   selectedVariant = signal<ProductVariant | null>(null);
+
+  // Recommendation sections
+  relatedProducts = signal<Product[]>([]);
+  frequentlyBoughtTogether = signal<Product[]>([]);
+  recentlyViewed = signal<Product[]>([]);
+  trendingProducts = signal<Product[]>([]);
 
   selectedImage = computed(() => {
     const prod = this.product();
@@ -98,6 +124,43 @@ export class ProductDetailComponent {
     return window.location.href;
   });
 
+  // Computed: discount percent for gallery / badges
+  discountPercent = computed(() => {
+    const prod = this.product();
+    if (!prod || prod.compareAtPrice == null || prod.compareAtPrice <= prod.price) return null;
+    return Math.round(((prod.compareAtPrice - prod.price) / prod.compareAtPrice) * 100);
+  });
+
+  // Filled-star booleans for the header rating summary
+  ratingStars = computed(() => {
+    const avg = Math.round(this.averageRating());
+    return [1, 2, 3, 4, 5].map(i => i <= avg);
+  });
+
+  setTab(tab: ProductTab) {
+    this.activeTab.set(tab);
+  }
+
+  isInWishlist(): boolean {
+    const prod = this.product();
+    return prod ? this.wishlistService.isInWishlist(prod.id, this.selectedVariant()?.id) : false;
+  }
+
+  toggleWishlist() {
+    const prod = this.product();
+    if (prod) this.wishlistService.toggle(prod, this.selectedVariant() ?? undefined);
+  }
+
+  scrollToReviews() {
+    this.activeTab.set('reviews');
+    setTimeout(() => document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' }), 50);
+  }
+
+  @HostListener('window:scroll')
+  onScroll() {
+    this.showStickyBar.set(window.scrollY > 600);
+  }
+
   ngOnInit() {
     this.route.params.subscribe(params => {
       const slug = params['slug'];
@@ -113,11 +176,48 @@ export class ProductDetailComponent {
       next: (product) => {
         this.product.set(product);
         this.loading.set(false);
+        this.loadRecommendations(product.id);
+        this.loadRatingSummary(product.id);
       },
       error: (error) => {
         console.error('Failed to load product:', error);
         this.loading.set(false);
       }
+    });
+  }
+
+  private loadRatingSummary(productId: string) {
+    this.reviewService.getReviews(productId, { page: 1, pageSize: 1 }).subscribe({
+      next: (res) => {
+        this.averageRating.set(res.summary.averageRating);
+        this.totalReviews.set(res.summary.totalReviews);
+        this.totalVerified.set(res.summary.totalVerified);
+      },
+      error: () => {}
+    });
+  }
+
+  private loadRecommendations(productId: string) {
+    // Track this view (fire-and-forget), then load recently-viewed which depends on it.
+    this.recommendations.trackView(productId).subscribe({
+      next: () => this.recommendations.getRecentlyViewed(12).subscribe({
+        next: (items) => this.recentlyViewed.set(items.filter(p => p.id !== productId)),
+        error: () => {}
+      }),
+      error: () => {}
+    });
+
+    this.recommendations.getRelated(productId, 8).subscribe({
+      next: (items) => this.relatedProducts.set(items),
+      error: () => {}
+    });
+    this.recommendations.getFrequentlyBoughtTogether(productId, 4).subscribe({
+      next: (items) => this.frequentlyBoughtTogether.set(items),
+      error: () => {}
+    });
+    this.recommendations.getTrending(8).subscribe({
+      next: (items) => this.trendingProducts.set(items.filter(p => p.id !== productId)),
+      error: () => {}
     });
   }
 

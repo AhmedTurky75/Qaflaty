@@ -5,15 +5,15 @@ namespace Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
 
 public sealed class CustomerRefreshToken : Entity<Guid>
 {
-    public StoreCustomerId StoreCustomerId { get; private set; }
-    public string Token { get; private set; } = null!;
-    public DateTime ExpiresAt { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime? RevokedAt { get; private set; }
+    public StoreCustomerId StoreCustomerId { get; private set; } // Customer this refresh token was issued to
+    public string Token { get; private set; } = null!; // The opaque refresh token string presented to renew access tokens
+    public DateTime ExpiresAt { get; private set; } // UTC expiry after which the token can no longer be used
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the token was issued
+    public DateTime? RevokedAt { get; private set; } // UTC timestamp when revoked (e.g. logout); null if still valid
 
-    public bool IsRevoked => RevokedAt.HasValue;
-    public bool IsExpired => DateTime.UtcNow >= ExpiresAt;
-    public bool IsActive => !IsRevoked && !IsExpired;
+    public bool IsRevoked => RevokedAt.HasValue; // True once the token has been revoked
+    public bool IsExpired => DateTime.UtcNow >= ExpiresAt; // True once past the expiry time
+    public bool IsActive => !IsRevoked && !IsExpired; // True when still usable (neither revoked nor expired)
 
     private CustomerRefreshToken() : base(Guid.Empty) { }
 

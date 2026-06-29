@@ -11,34 +11,34 @@ namespace Qaflaty.Domain.Catalog.Aggregates.Product;
 
 public sealed class Product : AggregateRoot<ProductId>
 {
-    public StoreId StoreId { get; private set; }
-    public CategoryId? CategoryId { get; private set; }
-    public ProductName Name { get; private set; } = null!;
-    public ProductSlug Slug { get; private set; } = null!;
-    public string? Description { get; private set; }
-    public ProductPricing Pricing { get; private set; } = null!;
-    public ProductInventory Inventory { get; private set; } = null!;
-    public ProductStatus Status { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Owning store (tenant) this product belongs to; every product is scoped to exactly one store
+    public CategoryId? CategoryId { get; private set; } // Optional category the product is filed under; null means uncategorized
+    public ProductName Name { get; private set; } = null!; // Display name of the product, e.g. "T-Shirt", "iPhone 15"
+    public ProductSlug Slug { get; private set; } = null!; // URL-friendly unique identifier used in storefront links, e.g. "blue-cotton-tshirt"
+    public string? Description { get; private set; } // Long-form product description / details shown on the product page; optional
+    public ProductPricing Pricing { get; private set; } = null!; // Price value object holding base price, optional compare-at (sale) price, and currency
+    public ProductInventory Inventory { get; private set; } = null!; // Stock value object: on-hand quantity, reserved quantity, backorder policy (for non-variant products)
+    public ProductStatus Status { get; private set; } // Lifecycle state: Draft / Active / Inactive — controls storefront visibility
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the product was first created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last modification to the product
 
-    private readonly List<ProductImage> _images = [];
-    public IReadOnlyList<ProductImage> Images => _images.AsReadOnly();
+    private readonly List<ProductImage> _images = []; // Backing collection of product images (gallery)
+    public IReadOnlyList<ProductImage> Images => _images.AsReadOnly(); // Read-only product image gallery with sort order, e.g. main photo + thumbnails
 
     // Variant Support
-    private readonly List<VariantOption> _variantOptions = [];
-    public IReadOnlyList<VariantOption> VariantOptions => _variantOptions.AsReadOnly();
+    private readonly List<VariantOption> _variantOptions = []; // Backing list of variant dimensions
+    public IReadOnlyList<VariantOption> VariantOptions => _variantOptions.AsReadOnly(); // Variant dimensions/axes the product varies along, e.g. "Color": [Red, Blue], "Size": [S, M, L]
 
-    private readonly List<ProductVariant> _variants = [];
-    public IReadOnlyList<ProductVariant> Variants => _variants.AsReadOnly();
+    private readonly List<ProductVariant> _variants = []; // Backing list of concrete sellable variants
+    public IReadOnlyList<ProductVariant> Variants => _variants.AsReadOnly(); // Concrete purchasable combinations, each with its own SKU/stock/price, e.g. "Red / Large"
 
-    private readonly List<InventoryMovement> _inventoryMovements = [];
-    public IReadOnlyList<InventoryMovement> InventoryMovements => _inventoryMovements.AsReadOnly();
+    private readonly List<InventoryMovement> _inventoryMovements = []; // Backing list of stock ledger entries
+    public IReadOnlyList<InventoryMovement> InventoryMovements => _inventoryMovements.AsReadOnly(); // Audit trail of every stock change (sale, restock, adjustment), e.g. "-1 on sale", "+50 restock"
 
-    private readonly List<ProductPropertyValue> _propertyValues = [];
-    public IReadOnlyList<ProductPropertyValue> PropertyValues => _propertyValues.AsReadOnly();
+    private readonly List<ProductPropertyValue> _propertyValues = []; // Backing list of custom property values
+    public IReadOnlyList<ProductPropertyValue> PropertyValues => _propertyValues.AsReadOnly(); // Custom attribute values assigned to this product, e.g. "Material": "Cotton", "Brand": "Nike"
 
-    public bool HasVariants => _variantOptions.Count > 0;
+    public bool HasVariants => _variantOptions.Count > 0; // True when the product is sold in multiple variants (has at least one variant option defined)
 
     private Product() : base(ProductId.Empty) { }
 

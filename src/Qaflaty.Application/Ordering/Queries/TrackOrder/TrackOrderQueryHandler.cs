@@ -11,10 +11,14 @@ namespace Qaflaty.Application.Ordering.Queries.TrackOrder;
 public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTrackingDto>
 {
     private readonly IOrderRepository _orderRepository;
+    private readonly ICustomerRepository _customerRepository;
 
-    public TrackOrderQueryHandler(IOrderRepository orderRepository)
+    public TrackOrderQueryHandler(
+        IOrderRepository orderRepository,
+        ICustomerRepository customerRepository)
     {
         _orderRepository = orderRepository;
+        _customerRepository = customerRepository;
     }
 
     public async Task<Result<OrderTrackingDto>> Handle(TrackOrderQuery request, CancellationToken cancellationToken)
@@ -28,10 +32,17 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
         if (order == null)
             return Result.Failure<OrderTrackingDto>(OrderingErrors.OrderNotFound);
 
+        // A guessable order number is not proof of ownership: require the email or phone captured on
+        // the order. A mismatch returns the same "not found" so existence can't be probed.
+        var customer = await _customerRepository.GetByIdAsync(order.CustomerId, cancellationToken);
+        if (customer == null || !ContactMatches(customer.Contact, request.Contact))
+            return Result.Failure<OrderTrackingDto>(OrderingErrors.OrderNotFound);
+
         return Result.Success(new OrderTrackingDto(
             order.OrderNumber.Value,
             order.Status.ToString(),
             order.Items.Select(i => new TrackOrderItemDto(
+                i.ProductId.Value,
                 i.ProductName,
                 new MoneyDto(i.UnitPrice.Amount, i.UnitPrice.Currency.ToString()),
                 i.Quantity,
@@ -40,7 +51,9 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
             new OrderPricingDto(
                 new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
                 new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
-                new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString())
+                new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString()),
+                new MoneyDto(order.Pricing.DiscountAmount.Amount, order.Pricing.DiscountAmount.Currency.ToString()),
+                new MoneyDto(order.Pricing.TaxAmount.Amount, order.Pricing.TaxAmount.Currency.ToString())
             ),
             new TrackOrderDeliveryDto(
                 order.Delivery.Address.ToSingleLine(),
@@ -59,7 +72,44 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
                 s.Notes
             )).ToList(),
             order.CreatedAt,
-            order.UpdatedAt
+            order.UpdatedAt,
+            order.Shipment is null
+                ? null
+                : new ShipmentDto(
+                    order.Shipment.Carrier,
+                    order.Shipment.TrackingNumber,
+                    order.Shipment.TrackingUrl,
+                    order.Shipment.ShippedAt,
+                    order.Shipment.EstimatedDeliveryDate)
         ));
     }
+
+    /// <summary>
+    /// True when the supplied value matches the order's captured email (case-insensitive) or phone
+    /// (compared on digits only, tolerating country-code/formatting differences).
+    /// </summary>
+    private static bool ContactMatches(CustomerContact contact, string? provided)
+    {
+        if (string.IsNullOrWhiteSpace(provided))
+            return false;
+
+        provided = provided.Trim();
+
+        if (contact.Email != null &&
+            string.Equals(contact.Email.Value, provided, StringComparison.OrdinalIgnoreCase))
+            return true;
+
+        var providedDigits = DigitsOnly(provided);
+        var phoneDigits = DigitsOnly(contact.Phone.Value);
+        if (providedDigits.Length >= 6 &&
+            (phoneDigits == providedDigits ||
+             phoneDigits.EndsWith(providedDigits, StringComparison.Ordinal) ||
+             providedDigits.EndsWith(phoneDigits, StringComparison.Ordinal)))
+            return true;
+
+        return false;
+    }
+
+    private static string DigitsOnly(string value)
+        => new(value.Where(char.IsDigit).ToArray());
 }

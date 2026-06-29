@@ -14,6 +14,10 @@ export const PRODUCT_ROUTES: Routes = [
     loadComponent: () => import('./category-management/category-management.component').then(m => m.CategoryManagementComponent)
   },
   {
+    path: ':id/related',
+    loadComponent: () => import('./related-products/related-products.component').then(m => m.RelatedProductsComponent)
+  },
+  {
     path: ':id',
     loadComponent: () => import('./product-form/product-form.component').then(m => m.ProductFormComponent)
   }

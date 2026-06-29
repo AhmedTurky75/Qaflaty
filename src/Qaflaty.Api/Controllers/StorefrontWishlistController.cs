@@ -4,6 +4,7 @@ using Qaflaty.Api.Common;
 using Qaflaty.Application.Storefront.Commands.AddToWishlist;
 using Qaflaty.Application.Storefront.Commands.RemoveFromWishlist;
 using Qaflaty.Application.Storefront.Queries.GetCustomerWishlist;
+using Qaflaty.Application.Storefront.Queries.GetWishlistCount;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Api.Controllers;
@@ -23,6 +24,19 @@ public class StorefrontWishlistController : ApiController
 
         var query = new GetCustomerWishlistQuery(customerId.Value);
         var result = await Sender.Send(query, ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("count")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetCount(CancellationToken ct)
+    {
+        var customerId = CurrentUserService.CustomerId;
+        if (customerId == null)
+            return Unauthorized();
+
+        var result = await Sender.Send(new GetWishlistCountQuery(customerId.Value), ct);
         return HandleResult(result);
     }
 

@@ -6,7 +6,7 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class StoreName : ValueObject
 {
-    public string Value { get; }
+    public string Value { get; } // The validated store name string (1–100 chars, trimmed), e.g. "Qaflaty Boutique"
 
     private StoreName(string value) => Value = value;
 

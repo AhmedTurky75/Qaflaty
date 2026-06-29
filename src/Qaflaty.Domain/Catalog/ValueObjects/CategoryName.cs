@@ -6,7 +6,7 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class CategoryName : ValueObject
 {
-    public string Value { get; }
+    public string Value { get; } // The validated category name (1–100 chars, trimmed), e.g. "Men's Shoes"
 
     private CategoryName(string value) => Value = value;
 

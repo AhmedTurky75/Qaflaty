@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Qaflaty.Api.Common;
 using Qaflaty.Api.Middleware;
 using Qaflaty.Application;
 using Qaflaty.Infrastructure;
@@ -29,7 +30,11 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 });
 
 // Add services to the container
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // Enforce tenant isolation: the route {storeId} must match the token's store_id claim.
+        options.Filters.Add<StoreScopeAuthorizationFilter>();
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;

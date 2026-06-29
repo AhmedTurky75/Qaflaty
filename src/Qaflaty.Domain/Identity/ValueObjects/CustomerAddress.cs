@@ -4,24 +4,24 @@ namespace Qaflaty.Domain.Identity.ValueObjects;
 
 public sealed class CustomerAddress
 {
-    public Guid Id { get; private set; }
-    public string Label { get; private set; } = string.Empty;
-    public string Street { get; private set; } = string.Empty;
-    public string City { get; private set; } = string.Empty;
-    public string State { get; private set; } = string.Empty;
-    public string PostalCode { get; private set; } = string.Empty;
-    public string Country { get; private set; } = string.Empty;
-    public bool IsDefault { get; private set; }
-    public decimal Latitude { get; private set; }
-    public decimal Longitude { get; private set; }
+    public Guid Id { get; private set; } // Stable identifier of this saved address entry
+    public string Label { get; private set; } = string.Empty; // Friendly label chosen by the customer, e.g. "Home", "Work"
+    public string Street { get; private set; } = string.Empty; // Street address line
+    public string City { get; private set; } = string.Empty; // City name, e.g. "Jeddah"
+    public string State { get; private set; } = string.Empty; // State/province/region (optional)
+    public string PostalCode { get; private set; } = string.Empty; // Postal/ZIP code (optional)
+    public string Country { get; private set; } = string.Empty; // Country name
+    public bool IsDefault { get; private set; } // Whether this is the customer's default shipping address
+    public decimal Latitude { get; private set; } // Map latitude of the address for geolocation/delivery
+    public decimal Longitude { get; private set; } // Map longitude of the address for geolocation/delivery
     /// <summary>ISO 3166-1 numeric country code (e.g. 682 = Saudi Arabia). Matches geo-data IDs used by delivery zones.</summary>
-    public int CountryCode { get; private set; }
+    public int CountryCode { get; private set; } // Numeric country id linking to seeded Country geo-data
     /// <summary>City ID from the shared geo-data list. Null if zone is country-level.</summary>
-    public int? CityId { get; private set; }
+    public int? CityId { get; private set; } // Numeric city id linking to seeded City geo-data
     /// <summary>District ID from the shared geo-data list. Null if zone is city- or country-level.</summary>
-    public int? DistrictId { get; private set; }
-    public bool IsDeleted { get; private set; }
-    public DateTime? DeletedAt { get; private set; }
+    public int? DistrictId { get; private set; } // Numeric district id linking to seeded District geo-data
+    public bool IsDeleted { get; private set; } // Soft-delete flag; deleted addresses are hidden but retained
+    public DateTime? DeletedAt { get; private set; } // UTC timestamp when the address was soft-deleted
 
     private CustomerAddress() { }
 

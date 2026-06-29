@@ -1,0 +1,68 @@
+<div class="gallery">
+  <!-- Main image -->
+  <div class="gallery__main"
+       (touchstart)="onTouchStart($event)"
+       (touchend)="onTouchEnd($event)">
+    @if (current()) {
+      <img
+        class="gallery__img"
+        [src]="current()!.url"
+        [alt]="current()!.altText || productName()"
+        (click)="openFullscreen()"
+      />
+      @if (discountPercent()) {
+        <span class="gallery__badge">-{{ discountPercent() }}% OFF</span>
+      }
+      <button type="button" class="gallery__expand" (click)="openFullscreen()" aria-label="Expand image">⤢</button>
+    } @else {
+      <div class="gallery__placeholder">🛍️</div>
+    }
+
+    @if (hasMultiple()) {
+      <button type="button" class="gallery__nav gallery__nav--prev" (click)="prev()" aria-label="Previous image">‹</button>
+      <button type="button" class="gallery__nav gallery__nav--next" (click)="next()" aria-label="Next image">›</button>
+    }
+  </div>
+
+  <!-- Thumbnails -->
+  @if (hasMultiple()) {
+    <div class="gallery__thumbs">
+      @for (img of images(); track img.id; let i = $index) {
+        <button type="button" class="gallery__thumb"
+                [class.gallery__thumb--active]="i === currentIndex()"
+                (click)="select(i)">
+          <img [src]="img.url" [alt]="img.altText || productName()" loading="lazy" />
+        </button>
+      }
+    </div>
+  }
+</div>
+
+<!-- Fullscreen modal -->
+@if (fullscreen() && current()) {
+  <div class="lightbox" (click)="closeFullscreen()">
+    <button type="button" class="lightbox__close" (click)="closeFullscreen()" aria-label="Close">✕</button>
+
+    @if (hasMultiple()) {
+      <button type="button" class="lightbox__nav lightbox__nav--prev"
+              (click)="prev(); $event.stopPropagation()" aria-label="Previous">‹</button>
+      <button type="button" class="lightbox__nav lightbox__nav--next"
+              (click)="next(); $event.stopPropagation()" aria-label="Next">›</button>
+    }
+
+    <div #stage class="lightbox__stage"
+         [class.lightbox__stage--zoomed]="zoomed()"
+         (click)="$event.stopPropagation(); toggleZoom()"
+         (mousemove)="onPointerMove($event, stage)">
+      <img
+        class="lightbox__img"
+        [src]="current()!.url"
+        [alt]="current()!.altText || productName()"
+        [style.transform]="zoomed() ? 'scale(2.2)' : 'scale(1)'"
+        [style.transformOrigin]="origin().x + '% ' + origin().y + '%'"
+      />
+    </div>
+
+    <div class="lightbox__hint">{{ zoomed() ? 'Click to zoom out' : 'Click to zoom · ← → to navigate · Esc to close' }}</div>
+  </div>
+}

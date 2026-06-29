@@ -127,6 +127,13 @@ export interface SearchSettings {
   allowedSortOptions: string[];
 }
 
+export interface TaxSettings {
+  enabled: boolean;
+  rate: number;
+  pricesIncludeTax: boolean;
+  label: string;
+}
+
 export interface StoreConfigurationDto {
   id: string;
   storeId: string;
@@ -145,6 +152,7 @@ export interface StoreConfigurationDto {
   paymentMethodAdjustments: PaymentMethodAdjustment[];
   createdAt: string;
   updatedAt: string;
+  taxSettings?: TaxSettings;
 }
 
 export interface FilterablePropertyDefinition {
@@ -177,6 +185,7 @@ export interface StorefrontConfigDto {
   searchSettings: SearchSettings;
   paymentMethodAdjustments: PaymentMethodAdjustment[];
   filterablePropertyDefinitions: FilterablePropertyDefinition[];
+  taxSettings?: TaxSettings;
 }
 
 export interface AiAssistantStatusDto {
@@ -248,6 +257,7 @@ export interface UpdateStoreConfigurationRequest {
   footerVariant: string;
   productCardVariant: string;
   productGridVariant: string;
+  taxSettings?: TaxSettings;
 }
 
 export interface SetPaymentMethodAdjustmentsRequest {

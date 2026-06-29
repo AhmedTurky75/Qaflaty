@@ -35,7 +35,11 @@ public class ShipOrderCommandHandler : ICommandHandler<ShipOrderCommand>
         if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
             return Result.Failure(new Error("Order.Unauthorized", "You don't have access to this order"));
 
-        var result = order.Ship();
+        var result = order.Ship(
+            request.Carrier,
+            request.TrackingNumber,
+            request.TrackingUrl,
+            request.EstimatedDeliveryDate);
         if (result.IsFailure)
             return result;
 

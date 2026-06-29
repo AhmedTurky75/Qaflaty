@@ -5,12 +5,12 @@ namespace Qaflaty.Domain.Storefront.Aggregates.Cart;
 
 public sealed class CartItem : Entity<Guid>
 {
-    public CartId CartId { get; private set; }
-    public ProductId ProductId { get; private set; }
-    public Guid? VariantId { get; private set; }
-    public int Quantity { get; private set; }
-    public DateTime AddedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public CartId CartId { get; private set; } // Parent cart this item belongs to
+    public ProductId ProductId { get; private set; } // Product added to the cart
+    public Guid? VariantId { get; private set; } // Chosen variant of the product; null when the product has no variants
+    public int Quantity { get; private set; } // Number of units of this product/variant in the cart
+    public DateTime AddedAt { get; private set; } // UTC timestamp when the item was first added
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last quantity change
 
     private CartItem() : base(Guid.Empty) { }
 

@@ -7,7 +7,7 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed partial class StoreBranding : ValueObject
 {
-    public string? LogoUrl { get; }
+    public string? LogoUrl { get; } // Primary store logo URL shown in the header, e.g. "/uploads/logo.png"
 
     /// <summary>Alternate logo (e.g. dark mode or compact variant).</summary>
     public string? SecondaryLogoUrl { get; }
@@ -21,7 +21,7 @@ public sealed partial class StoreBranding : ValueObject
     /// <summary>Open Graph / social share image URL (recommended 1200×630).</summary>
     public string? OgImageUrl { get; }
 
-    public string PrimaryColor { get; }
+    public string PrimaryColor { get; } // Main brand color as a hex code, used for buttons/links, e.g. "#3B82F6"
 
     /// <summary>Secondary brand colour used for accents, buttons, etc.</summary>
     public string? SecondaryColor { get; }

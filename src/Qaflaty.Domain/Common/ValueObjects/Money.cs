@@ -5,8 +5,8 @@ namespace Qaflaty.Domain.Common.ValueObjects;
 
 public sealed class Money : ValueObject
 {
-    public decimal Amount { get; private init; }
-    public Currency Currency { get; private init; }
+    public decimal Amount { get; private init; } // Monetary amount, always non-negative (validated in Create), e.g. 199.99
+    public Currency Currency { get; private init; } // Currency of the amount; defaults to SAR. Arithmetic across different currencies is rejected
 
     private Money(decimal amount, Currency currency)
     {

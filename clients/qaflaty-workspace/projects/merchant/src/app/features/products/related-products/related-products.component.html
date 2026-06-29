@@ -1,0 +1,54 @@
+<div class="related-page">
+  <div class="head">
+    <a class="back" [routerLink]="['/products', productId()]">&larr; Back to product</a>
+    <h1>Related Products</h1>
+    <p class="subtitle">Choose which products appear in the "You May Also Like" section.</p>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else {
+    <div class="card mode-card">
+      <label class="toggle">
+        <input type="checkbox" [ngModel]="manualMode()" (ngModelChange)="manualMode.set($event)" />
+        <span>
+          <strong>Use manual related products (store-wide)</strong>
+          <small>When off, related products are chosen automatically by category and attributes. When on, your selection below is used.</small>
+        </span>
+      </label>
+    </div>
+
+    <div class="card" [class.disabled]="!manualMode()">
+      <div class="picker-head">
+        <h2>Selected ({{ selectedCount() }})</h2>
+        <input class="search" type="text" placeholder="Search products…"
+               [ngModel]="search()" (ngModelChange)="search.set($event)" />
+      </div>
+
+      <div class="product-grid">
+        @for (p of filtered(); track p.id) {
+          <button type="button" class="product"
+                  [class.product--selected]="isSelected(p.id)"
+                  (click)="toggle(p.id)">
+            <div class="product__img">
+              @if (imageUrl(p)) { <img [src]="imageUrl(p)" [alt]="p.name" /> }
+              @else { <div class="ph">📦</div> }
+              @if (isSelected(p.id)) { <span class="check">✓</span> }
+            </div>
+            <div class="product__name">{{ p.name }}</div>
+            <div class="product__price">{{ p.price | currency:'EGP':'symbol':'1.2-2' }}</div>
+          </button>
+        }
+      </div>
+
+      @if (filtered().length === 0) { <p class="muted">No products found.</p> }
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Save' }}
+      </button>
+      @if (saved()) { <span class="saved">✓ Saved</span> }
+    </div>
+  }
+</div>

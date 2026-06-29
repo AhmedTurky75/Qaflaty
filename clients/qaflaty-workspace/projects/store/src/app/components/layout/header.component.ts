@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { StoreService } from '../../services/store.service';
 import { CartService } from '../../services/cart.service';
 import { CategoryService } from '../../services/category.service';
+import { WishlistService } from '../../services/wishlist.service';
 import { Category } from '../../models/category.model';
 
 @Component({
@@ -18,9 +19,11 @@ export class HeaderComponent {
   private storeService = inject(StoreService);
   private cartService = inject(CartService);
   private categoryService = inject(CategoryService);
+  private wishlistService = inject(WishlistService);
 
   store = this.storeService.currentStore;
   itemCount = this.cartService.itemCount;
+  wishlistCount = this.wishlistService.count;
   categories = signal<Category[]>([]);
   searchQuery = signal<string>('');
   showMobileMenu = signal<boolean>(false);
@@ -28,6 +31,7 @@ export class HeaderComponent {
 
   ngOnInit() {
     this.loadCategories();
+    this.wishlistService.load();
   }
 
   loadCategories() {

@@ -19,6 +19,18 @@ public class WishlistRepository : IWishlistRepository
             .Include(w => w.Items)
             .FirstOrDefaultAsync(w => w.CustomerId == customerId, ct);
 
+    public async Task<IReadOnlyList<(Guid ProductId, int Count)>> GetWishlistCountsByProductAsync(CancellationToken ct = default)
+    {
+        var grouped = await _context.WishlistItems
+            .GroupBy(i => i.ProductId)
+            .Select(g => new { ProductId = g.Key, Count = g.Count() })
+            .ToListAsync(ct);
+
+        return grouped
+            .Select(x => (x.ProductId.Value, x.Count))
+            .ToList();
+    }
+
     public async Task AddAsync(Wishlist wishlist, CancellationToken ct = default)
         => await _context.Wishlists.AddAsync(wishlist, ct);
 

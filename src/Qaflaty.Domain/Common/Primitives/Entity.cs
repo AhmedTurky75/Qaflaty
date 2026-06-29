@@ -3,7 +3,7 @@ namespace Qaflaty.Domain.Common.Primitives;
 public abstract class Entity<TId> : IEquatable<Entity<TId>>
     where TId : notnull
 {
-    public TId Id { get; protected init; } = default!;
+    public TId Id { get; protected init; } = default!; // Strongly-typed primary key of the entity (e.g. ProductId, OrderId); identity used for equality
 
     protected Entity(TId id)
     {

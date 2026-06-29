@@ -10,28 +10,28 @@ namespace Qaflaty.Domain.Catalog.Aggregates.Product;
 /// </summary>
 public sealed class ProductPropertyDefinition : AggregateRoot<ProductPropertyDefinitionId>
 {
-    public StoreId StoreId { get; private set; }
+    public StoreId StoreId { get; private set; } // Store that owns this custom property template
 
     /// <summary>Internal machine-readable key, e.g. "material".</summary>
-    public string Name { get; private set; } = null!;
+    public string Name { get; private set; } = null!; // Normalized lowercase key used in code/filters, e.g. "material"
 
     /// <summary>Human-readable label shown on the storefront, e.g. "Material".</summary>
-    public string DisplayName { get; private set; } = null!;
+    public string DisplayName { get; private set; } = null!; // Label shown to customers, e.g. "Material"
 
-    public ProductPropertyType Type { get; private set; }
+    public ProductPropertyType Type { get; private set; } // Data type of the property: Text / Number / Boolean / SingleChoice / MultiChoice
 
     /// <summary>Allowed options for SingleChoice / MultiChoice types. Empty for other types.</summary>
-    public List<string> Options { get; private set; } = [];
+    public List<string> Options { get; private set; } = []; // Selectable values for choice types, e.g. ["Cotton","Wool","Silk"]
 
-    public bool IsRequired { get; private set; }
+    public bool IsRequired { get; private set; } // Whether merchants must set this property when creating a product
 
     /// <summary>When true, this property appears as a filter option in storefront search.</summary>
-    public bool IsFilterable { get; private set; }
+    public bool IsFilterable { get; private set; } // Whether customers can filter the catalog by this property
 
-    public int SortOrder { get; private set; }
+    public int SortOrder { get; private set; } // Display order among property definitions (lower = first)
 
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the definition was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last change
 
     private ProductPropertyDefinition() : base(ProductPropertyDefinitionId.Empty) { }
 
