@@ -300,7 +300,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         else
         {
             // OTP not required — confirm the order immediately
-            order.Confirm();
+            order.Confirm("Customer");
         }
 
         return Result.Success(MapToDto(order, customer));

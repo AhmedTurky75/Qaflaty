@@ -35,7 +35,7 @@ public class ProcessOrderCommandHandler : ICommandHandler<ProcessOrderCommand>
         if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
             return Result.Failure(new Error("Order.Unauthorized", "You don't have access to this order"));
 
-        var result = order.Process();
+        var result = order.Process(_currentUserService.Email ?? "System");
         if (result.IsFailure)
             return result;
 

@@ -123,7 +123,7 @@ public sealed class Order : AggregateRoot<OrderId>
         return result;
     }
 
-    public Result Confirm()
+    public Result Confirm(string changedBy)
     {
         if (Status != OrderStatus.Pending)
             return Result.Failure(OrderingErrors.InvalidStatusTransition);
@@ -131,7 +131,7 @@ public sealed class Order : AggregateRoot<OrderId>
         if (!_items.Any())
             return Result.Failure(OrderingErrors.EmptyOrder);
 
-        ChangeStatus(OrderStatus.Confirmed);
+        ChangeStatus(OrderStatus.Confirmed, changedBy);
         RaiseDomainEvent(new OrderConfirmedEvent(Id));
 
         var itemSnapshots = _items.Select(i => new OrderItemSnapshot(i.ProductId, i.Quantity)).ToList();
@@ -140,16 +140,17 @@ public sealed class Order : AggregateRoot<OrderId>
         return Result.Success();
     }
 
-    public Result Process()
+    public Result Process(string changedBy)
     {
         if (Status != OrderStatus.Confirmed)
             return Result.Failure(OrderingErrors.InvalidStatusTransition);
 
-        ChangeStatus(OrderStatus.Processing);
+        ChangeStatus(OrderStatus.Processing, changedBy);
         return Result.Success();
     }
 
     public Result Ship(
+        string changedBy,
         string? carrier = null,
         string? trackingNumber = null,
         string? trackingUrl = null,
@@ -162,27 +163,27 @@ public sealed class Order : AggregateRoot<OrderId>
             return Result.Failure(OrderingErrors.PaymentRequired);
 
         Shipment = ShipmentInfo.Create(carrier, trackingNumber, trackingUrl, estimatedDeliveryDate);
-        ChangeStatus(OrderStatus.Shipped);
+        ChangeStatus(OrderStatus.Shipped, changedBy);
         RaiseDomainEvent(new OrderShippedEvent(Id));
         return Result.Success();
     }
 
-    public Result Deliver()
+    public Result Deliver(string changedBy)
     {
         if (Status != OrderStatus.Shipped)
             return Result.Failure(OrderingErrors.InvalidStatusTransition);
 
-        ChangeStatus(OrderStatus.Delivered);
+        ChangeStatus(OrderStatus.Delivered, changedBy);
         RaiseDomainEvent(new OrderDeliveredEvent(Id));
         return Result.Success();
     }
 
-    public Result Cancel(string reason)
+    public Result Cancel(string reason, string changedBy)
     {
         if (Status == OrderStatus.Delivered || Status == OrderStatus.Cancelled)
             return Result.Failure(OrderingErrors.InvalidStatusTransition);
 
-        ChangeStatus(OrderStatus.Cancelled, reason);
+        ChangeStatus(OrderStatus.Cancelled, changedBy, reason);
         RaiseDomainEvent(new OrderCancelledEvent(Id, reason));
         return Result.Success();
     }
@@ -236,10 +237,9 @@ public sealed class Order : AggregateRoot<OrderId>
         UpdatedAt = DateTime.UtcNow;
     }
 
-    private void ChangeStatus(OrderStatus newStatus, string? notes = null)
+    private void ChangeStatus(OrderStatus newStatus, string changedBy, string? notes = null)
     {
-        //Question : Why always changedBy = "System" ?
-        var statusChange = OrderStatusChange.Create(Status, newStatus, "System", notes);
+        var statusChange = OrderStatusChange.Create(Status, newStatus, changedBy, notes);
         _statusHistory.Add(statusChange);
         Status = newStatus;
         UpdatedAt = DateTime.UtcNow;

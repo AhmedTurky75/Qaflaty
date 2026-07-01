@@ -35,7 +35,7 @@ public class DeliverOrderCommandHandler : ICommandHandler<DeliverOrderCommand>
         if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
             return Result.Failure(new Error("Order.Unauthorized", "You don't have access to this order"));
 
-        var result = order.Deliver();
+        var result = order.Deliver(_currentUserService.Email ?? "System");
         if (result.IsFailure)
             return result;
 

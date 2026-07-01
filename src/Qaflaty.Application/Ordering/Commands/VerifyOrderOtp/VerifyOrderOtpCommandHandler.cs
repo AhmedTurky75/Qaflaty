@@ -67,7 +67,7 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
             return Result.Failure<OrderDto>(OrderingErrors.OtpInvalid);
         }
 
-        var confirmResult = order.Confirm();
+        var confirmResult = order.Confirm("Customer");
         if (confirmResult.IsFailure)
             return Result.Failure<OrderDto>(confirmResult.Error);
 

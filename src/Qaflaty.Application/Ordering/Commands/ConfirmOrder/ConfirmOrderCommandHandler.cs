@@ -36,7 +36,7 @@ public class ConfirmOrderCommandHandler : ICommandHandler<ConfirmOrderCommand>
         if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
             return Result.Failure(new Error("Order.Unauthorized", "You don't have access to this order"));
 
-        var result = order.Confirm();
+        var result = order.Confirm(_currentUserService.Email ?? "System");
         if (result.IsFailure)
             return result;
 

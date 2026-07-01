@@ -36,6 +36,7 @@ public class ShipOrderCommandHandler : ICommandHandler<ShipOrderCommand>
             return Result.Failure(new Error("Order.Unauthorized", "You don't have access to this order"));
 
         var result = order.Ship(
+            _currentUserService.Email ?? "System",
             request.Carrier,
             request.TrackingNumber,
             request.TrackingUrl,
