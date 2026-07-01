@@ -9,9 +9,9 @@ namespace Qaflaty.Api.Common;
 /// Global authorization filter that enforces tenant isolation on every
 /// <c>api/stores/{storeId}/...</c> route. The merchant access token is store-less
 /// (it carries a <c>merchant_id</c> but no <c>store_id</c>/<c>role</c> claim), so
-/// ownership cannot be checked from claims alone. This filter loads the store named
-/// in the route and rejects the request unless its <c>MerchantId</c> matches the
-/// caller's <c>merchant_id</c> — i.e. the caller is the store's owner.
+/// ownership cannot be checked from claims alone. This filter rejects the request
+/// unless the caller can access the store named in the route — i.e. they own it
+/// (<c>Store.MerchantId</c>) or hold an active team assignment to it.
 /// </summary>
 /// <remarks>
 /// The filter only acts when a <c>storeId</c> route value is present and the caller
@@ -51,11 +51,12 @@ public sealed class StoreScopeAuthorizationFilter : IAsyncAuthorizationFilter
         if (merchantIdClaim is null || !Guid.TryParse(merchantIdClaim.Value, out var merchantId))
             return;
 
-        var store = await _storeRepository.GetByIdAsync(new StoreId(routeStoreId));
+        var canAccess = await _storeRepository.CanMerchantAccessStoreAsync(
+            new MerchantId(merchantId), new StoreId(routeStoreId));
 
-        // Store missing or owned by someone else → the caller is not the owner.
-        // Returning 403 (rather than 404) also avoids leaking which store ids exist.
-        if (store is null || store.MerchantId.Value != merchantId)
+        // Not the owner and not an active team assignee. Returning 403 (rather than
+        // 404) also avoids leaking which store ids exist.
+        if (!canAccess)
         {
             context.Result = new ObjectResult(new
             {
