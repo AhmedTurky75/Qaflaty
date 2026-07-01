@@ -230,6 +230,15 @@ export class CustomerAuthService {
   private clearAuth(): void {
     localStorage.removeItem('customer');
     this._customer.set(null);
+    // Reset per-customer state held in root singletons so the next user (or guest)
+    // in this tab doesn't inherit it. Lazy-loaded to avoid a circular dependency
+    // (both services inject CustomerAuthService).
+    import('./wishlist.service').then(({ WishlistService }) => {
+      this.injector.get(WishlistService).clear();
+    });
+    import('./cart.service').then(({ CartService }) => {
+      this.injector.get(CartService).resetForLogout();
+    });
     this.router.navigate(['/']);
   }
 

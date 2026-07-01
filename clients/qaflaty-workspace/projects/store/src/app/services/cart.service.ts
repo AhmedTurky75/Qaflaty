@@ -215,6 +215,18 @@ export class CartService {
   }
 
   /**
+   * Resets the in-memory cart on logout, then reloads the guest cart from the
+   * backend. Unlike clear(), this does NOT delete the cart on the server — the
+   * customer's authenticated cart is left intact for their next login.
+   * Must be called after the customer signal has been cleared so loadFromBackend
+   * fetches the guest cart rather than the (now stale) authenticated one.
+   */
+  resetForLogout(): void {
+    this.cartItems.set([]);
+    this.loadFromBackend();
+  }
+
+  /**
    * Get item by product ID and optional variant ID
    */
   getItem(productId: string, variantId?: string): CartItem | undefined {
