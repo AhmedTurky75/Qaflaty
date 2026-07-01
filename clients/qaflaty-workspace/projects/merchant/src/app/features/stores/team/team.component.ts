@@ -403,7 +403,7 @@ export class TeamComponent implements OnInit {
     newPassword: ['', [Validators.required, Validators.minLength(8)]]
   });
 
-  private get storeId() { return this.authService.storeId(); }
+  private get storeId() { return this.storeContext.currentStoreId(); }
   private get apiBase() { return `${environment.apiUrl}/stores/${this.storeId}/team`; }
 
   ngOnInit(): void { this.loadMembers(); }
