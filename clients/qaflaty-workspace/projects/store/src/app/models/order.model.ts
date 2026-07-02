@@ -42,6 +42,7 @@ export interface DeliveryAddress {
   district?: string;
   additionalInstructions?: string;
   countryCode?: number;
+  country?: string; // Country name resolved from countryCode (so the order stores the customer's country, not a default)
   cityId?: number;
   districtId?: number;
 }

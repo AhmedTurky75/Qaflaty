@@ -92,7 +92,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         var addressResult = Address.Create(
             request.Street,
             request.City,
-            request.District);
+            request.District,
+            country: request.Country);
 
         if (addressResult.IsFailure)
             return Result.Failure<OrderDto>(addressResult.Error);

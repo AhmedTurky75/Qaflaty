@@ -23,7 +23,8 @@ public record AddressRequest(
     string? AdditionalInstructions,
     int CountryCode = 0,
     int? CityId = null,
-    int? DistrictId = null
+    int? DistrictId = null,
+    string? Country = null // Country name chosen by the customer (resolved client-side from CountryCode)
 );
 
 public record OrderItemRequest(
