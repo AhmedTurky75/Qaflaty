@@ -65,6 +65,7 @@ public class ProductsController : ApiController
         var command = new CreateProductCommand(
             storeId,
             request.Name,
+            request.NameAr,
             request.Slug,
             request.Description,
             request.Price.Amount,
@@ -100,6 +101,7 @@ public class ProductsController : ApiController
         var command = new UpdateProductCommand(
             id,
             request.Name,
+            request.NameAr,
             request.Slug,
             request.Description,
             request.Price.Amount,
@@ -304,6 +306,7 @@ public record MoneyInput(decimal Amount, string Currency = "SAR");
 
 public record CreateProductRequest(
     string Name,
+    string? NameAr,
     string Slug,
     string? Description,
     MoneyInput Price,
@@ -317,6 +320,7 @@ public record CreateProductRequest(
 
 public record UpdateProductRequest(
     string Name,
+    string? NameAr,
     string Slug,
     string? Description,
     MoneyInput Price,

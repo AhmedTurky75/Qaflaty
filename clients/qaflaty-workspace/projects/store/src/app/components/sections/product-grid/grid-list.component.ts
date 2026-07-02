@@ -38,7 +38,7 @@ import { RouterLink } from '@angular/router';
                       @if (product.images?.length > 0) {
                         <img
                           [src]="product.images[0].url"
-                          [alt]="product.name"
+                          [alt]="i18n.nameFor(product.name, product.nameAr)"
                           class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       } @else {
@@ -56,7 +56,7 @@ import { RouterLink } from '@angular/router';
                     <div>
                       <a [routerLink]="['/products', product.slug]">
                         <h3 class="text-xl font-bold text-gray-900 mb-2 hover:text-[var(--primary-color)] transition-colors">
-                          {{ product.name }}
+                          {{ i18n.nameFor(product.name, product.nameAr) }}
                         </h3>
                       </a>
                       @if (product.description) {

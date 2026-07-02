@@ -24,7 +24,7 @@
           <li class="text-gray-400">/</li>
           <li><a [routerLink]="['/products']" class="text-gray-600 hover:text-primary">Products</a></li>
           <li class="text-gray-400">/</li>
-          <li class="text-gray-900 font-medium truncate max-w-[200px]">{{ product()!.name }}</li>
+          <li class="text-gray-900 font-medium truncate max-w-[200px]">{{ displayName() }}</li>
         </ol>
       </nav>
 
@@ -33,7 +33,7 @@
         <div>
           <app-product-gallery
             [images]="product()!.images"
-            [productName]="product()!.name"
+            [productName]="displayName()"
             [discountPercent]="discountPercent()"
           />
         </div>
@@ -41,7 +41,7 @@
         <!-- Product Info -->
         <div class="space-y-5">
           <div>
-            <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ product()!.name }}</h1>
+            <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ displayName() }}</h1>
 
             <!-- Rating summary + social proof -->
             <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-1">
@@ -196,7 +196,7 @@
                   <p class="font-semibold text-gray-900 text-sm">Have questions about this product?</p>
                   <p class="text-xs text-gray-600">Chat with us on WhatsApp</p>
                 </div>
-                <app-whatsapp-button variant="inline" [productName]="product()!.name" [productUrl]="productUrl()" text="Ask Us" />
+                <app-whatsapp-button variant="inline" [productName]="displayName()" [productUrl]="productUrl()" text="Ask Us" />
               </div>
             </div>
           }
@@ -264,10 +264,10 @@
     <div class="sticky-bar-anim fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
       <div class="container mx-auto px-4 py-3 flex items-center gap-4">
         @if (product()!.images?.length) {
-          <img [src]="product()!.images[0].url" [alt]="product()!.name" class="w-12 h-12 object-contain rounded border hidden sm:block" />
+          <img [src]="product()!.images[0].url" [alt]="displayName()" class="w-12 h-12 object-contain rounded border hidden sm:block" />
         }
         <div class="flex-1 min-w-0">
-          <p class="font-medium text-gray-900 truncate">{{ product()!.name }}</p>
+          <p class="font-medium text-gray-900 truncate">{{ displayName() }}</p>
           @if (effectivePrice()) {
             <p class="text-primary font-bold">{{ effectivePrice()!.amount.toFixed(2) }} {{ effectivePrice()!.currency }}</p>
           }

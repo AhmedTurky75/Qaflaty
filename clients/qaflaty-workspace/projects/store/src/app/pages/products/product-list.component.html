@@ -4,7 +4,7 @@
     <!-- Page Header -->
     <div class="mb-6">
       <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">
-        {{ currentCategory() ? currentCategory()!.name : 'All Products' }}
+        {{ currentCategory() ? i18n.nameFor(currentCategory()!.name, currentCategory()!.nameAr) : 'All Products' }}
       </h1>
     </div>
 
@@ -135,7 +135,7 @@
                         ? 'bg-primary text-white border-primary'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'"
                     >
-                      {{ category.name }}
+                      {{ i18n.nameFor(category.name, category.nameAr) }}
                     </button>
                   }
                 </div>
@@ -289,7 +289,7 @@
 
           @if (selectedCategory() && currentCategory()) {
             <span class="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-              {{ currentCategory()!.name }}
+              {{ i18n.nameFor(currentCategory()!.name, currentCategory()!.nameAr) }}
               <button
                 (click)="filterByCategory(null)"
                 class="hover:bg-primary/20 rounded-full p-0.5 transition-colors"

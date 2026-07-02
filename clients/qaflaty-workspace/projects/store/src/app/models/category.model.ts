@@ -3,6 +3,7 @@ export interface Category {
   storeId: string;
   parentId?: string;
   name: string;
+  nameAr?: string;
   slug: string;
   sortOrder: number;
   createdAt: string;

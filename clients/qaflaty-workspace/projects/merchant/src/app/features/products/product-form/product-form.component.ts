@@ -53,6 +53,7 @@ export class ProductFormComponent implements OnInit {
   constructor() {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
+      nameAr: ['', [Validators.maxLength(200)]],
       slug: ['', Validators.required],
       description: ['', Validators.maxLength(2000)],
       categoryId: [''],
@@ -132,6 +133,7 @@ export class ProductFormComponent implements OnInit {
       next: (product) => {
         this.productForm.patchValue({
           name: product.name,
+          nameAr: product.nameAr || '',
           slug: product.slug,
           description: product.description,
           categoryId: product.categoryId || '',
@@ -191,6 +193,7 @@ export class ProductFormComponent implements OnInit {
     const formValue = this.productForm.value;
     const productData = {
       name: formValue.name,
+      nameAr: formValue.nameAr || undefined,
       slug: formValue.slug,
       description: formValue.description || undefined,
       categoryId: formValue.categoryId || undefined,
@@ -256,6 +259,10 @@ export class ProductFormComponent implements OnInit {
 
   get name() {
     return this.productForm.get('name');
+  }
+
+  get nameAr() {
+    return this.productForm.get('nameAr');
   }
 
   get slug() {

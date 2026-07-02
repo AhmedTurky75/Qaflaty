@@ -4,6 +4,7 @@ export interface ProductListDto {
   id: string;
   slug: string;
   name: string;
+  nameAr?: string;
   price: number;
   quantity: number;
   status: string;
@@ -21,6 +22,7 @@ export interface ProductDto {
   id: string;
   slug: string;
   name: string;
+  nameAr?: string;
   description?: string;
   price: number;
   compareAtPrice?: number;
@@ -57,6 +59,7 @@ export interface ProductImageInput {
 
 export interface CreateProductRequest {
   name: string;
+  nameAr?: string;
   slug: string;
   description?: string;
   categoryId?: string;
@@ -71,6 +74,7 @@ export interface CreateProductRequest {
 
 export interface UpdateProductRequest {
   name: string;
+  nameAr?: string;
   slug: string;
   description?: string;
   price: Money;
@@ -105,6 +109,7 @@ export interface ProductVariantDto {
 export interface ProductWithVariantsDto {
   id: string;
   name: string;
+  nameAr?: string;
   slug: string;
   description?: string;
   price: number;

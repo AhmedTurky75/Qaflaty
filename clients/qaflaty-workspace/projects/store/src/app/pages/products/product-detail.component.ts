@@ -14,6 +14,7 @@ import { ProductGalleryComponent } from '../../components/products/product-galle
 import { RecommendationService } from '../../services/recommendation.service';
 import { ReviewService } from '../../services/review.service';
 import { WishlistService } from '../../services/wishlist.service';
+import { I18nService } from '../../services/i18n.service';
 
 type ProductTab = 'description' | 'specifications' | 'reviews' | 'shipping';
 
@@ -32,8 +33,10 @@ export class ProductDetailComponent {
   private reviewService = inject(ReviewService);
   private wishlistService = inject(WishlistService);
   whatsAppService = inject(WhatsAppService);
+  private i18n = inject(I18nService);
 
   product = signal<Product | null>(null);
+  displayName = computed(() => this.i18n.nameFor(this.product()?.name, this.product()?.nameAr));
 
   // Rating summary (for header + social proof)
   averageRating = signal<number>(0);

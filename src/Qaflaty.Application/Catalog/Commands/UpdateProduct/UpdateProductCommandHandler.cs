@@ -28,7 +28,7 @@ public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand,
             return Result.Failure<ProductDto>(CatalogErrors.ProductNotFound);
 
         // Validate name
-        var nameResult = ProductName.Create(request.Name);
+        var nameResult = ProductName.Create(request.Name, request.NameAr);
         if (nameResult.IsFailure)
             return Result.Failure<ProductDto>(nameResult.Error);
 
@@ -111,6 +111,7 @@ public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand,
             product.Id.Value,
             product.Slug.Value,
             product.Name.Value,
+            product.Name.Arabic,
             product.Description,
             product.Pricing.Price.Amount,
             product.Pricing.CompareAtPrice?.Amount,

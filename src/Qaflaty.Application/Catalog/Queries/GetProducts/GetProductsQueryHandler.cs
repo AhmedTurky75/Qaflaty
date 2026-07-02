@@ -59,6 +59,7 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Paginated
             p.Id.Value,
             p.Slug.Value,
             p.Name.Value,
+            p.Name.Arabic,
             p.Pricing.Price.Amount,
             p.Inventory.Quantity,
             p.Status.ToString(),

@@ -9,6 +9,7 @@ import { FeatureService } from '../../services/feature.service';
 import { Product, ProductFilter, ProductSortBy } from '../../models/product.model';
 import { Category } from '../../models/category.model';
 import { ProductCardComponent } from '../../components/products/product-card.component';
+import { I18nService } from '../../services/i18n.service';
 import { FilterablePropertyDefinition } from 'shared';
 
 @Component({
@@ -23,6 +24,7 @@ export class ProductListComponent {
   private categoryService = inject(CategoryService);
   private configService = inject(ConfigService);
   readonly featureService = inject(FeatureService);
+  readonly i18n = inject(I18nService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
 

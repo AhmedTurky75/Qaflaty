@@ -103,6 +103,7 @@ public class GetStorefrontProductsQueryHandler : IQueryHandler<GetStorefrontProd
             p.Id.Value,
             p.Slug.Value,
             p.Name.Value,
+            p.Name.Arabic,
             p.Description,
             p.Pricing.Price.Amount,
             p.Pricing.CompareAtPrice?.Amount,

@@ -33,6 +33,7 @@ export class CategoryManagementComponent implements OnInit {
   constructor() {
     this.categoryForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      nameAr: ['', [Validators.maxLength(100)]],
       slug: ['', Validators.required],
       parentId: ['']
     });
@@ -102,6 +103,7 @@ export class CategoryManagementComponent implements OnInit {
     this.editingCategoryId.set(category.id);
     this.categoryForm.patchValue({
       name: category.name,
+      nameAr: category.nameAr || '',
       slug: category.slug,
       parentId: category.parentId || ''
     });
@@ -135,6 +137,7 @@ export class CategoryManagementComponent implements OnInit {
     const formValue = this.categoryForm.value;
     const categoryData = {
       name: formValue.name,
+      nameAr: formValue.nameAr || undefined,
       slug: formValue.slug,
       parentId: formValue.parentId || undefined
     };
@@ -143,6 +146,7 @@ export class CategoryManagementComponent implements OnInit {
       // Update existing category
       this.categoryService.updateCategory(storeId, this.editingCategoryId()!, {
         name: categoryData.name,
+        nameAr: categoryData.nameAr,
         parentId: categoryData.parentId || null
       }).subscribe({
         next: () => {
@@ -178,6 +182,10 @@ export class CategoryManagementComponent implements OnInit {
 
   get name() {
     return this.categoryForm.get('name');
+  }
+
+  get nameAr() {
+    return this.categoryForm.get('nameAr');
   }
 
   get slug() {

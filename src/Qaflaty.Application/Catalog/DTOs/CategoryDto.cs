@@ -3,6 +3,7 @@ namespace Qaflaty.Application.Catalog.DTOs;
 public record CategoryDto(
     Guid Id,
     string Name,
+    string NameAr,
     string Slug,
     Guid? ParentId,
     int SortOrder,
@@ -12,6 +13,7 @@ public record CategoryDto(
 public record CategoryTreeDto(
     Guid Id,
     string Name,
+    string NameAr,
     string Slug,
     List<CategoryTreeDto> Children
 );

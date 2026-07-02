@@ -39,6 +39,7 @@ public class GetCategoriesQueryHandler : IQueryHandler<GetCategoriesQuery, List<
             .Select(c => new CategoryDto(
                 c.Id.Value,
                 c.Name.Value,
+                c.Name.Arabic,
                 c.Slug.Value,
                 c.ParentId?.Value,
                 c.SortOrder,

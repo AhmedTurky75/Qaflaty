@@ -6,6 +6,7 @@ namespace Qaflaty.Application.Catalog.Commands.CreateProduct;
 public record CreateProductCommand(
     Guid StoreId,
     string Name,
+    string? NameAr,
     string Slug,
     string? Description,
     decimal Price,

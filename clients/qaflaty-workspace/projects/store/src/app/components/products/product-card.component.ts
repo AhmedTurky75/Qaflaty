@@ -3,6 +3,7 @@ import { RouterLink, Router } from '@angular/router';
 import { CurrencyPipe, NgClass } from '@angular/common';
 import { FeatureService } from '../../services/feature.service';
 import { CartService } from '../../services/cart.service';
+import { I18nService } from '../../services/i18n.service';
 
 @Component({
   selector: 'app-product-card',
@@ -17,7 +18,7 @@ import { CartService } from '../../services/cart.service';
             @if (product().images?.length > 0) {
               <img
                 [src]="product().images[0].url"
-                [alt]="product().name"
+                [alt]="displayName()"
                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             } @else {
@@ -32,7 +33,7 @@ import { CartService } from '../../services/cart.service';
         <div class="p-4">
           <a [routerLink]="['/products', product().slug]" class="block">
             <h3 class="text-base font-semibold text-gray-800 mb-2 hover:text-[var(--primary-color)] transition-colors line-clamp-2">
-              {{ product().name }}
+              {{ displayName() }}
             </h3>
           </a>
           <div class="mb-4">
@@ -73,7 +74,7 @@ import { CartService } from '../../services/cart.service';
           @if (product().images?.length > 0) {
             <img
               [src]="product().images[0].url"
-              [alt]="product().name"
+              [alt]="displayName()"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
           } @else {
@@ -103,7 +104,7 @@ import { CartService } from '../../services/cart.service';
         </div>
         <div class="p-3">
           <h3 class="text-sm font-medium text-gray-800 group-hover:text-[var(--primary-color)] transition-colors line-clamp-2">
-            {{ product().name }}
+            {{ displayName() }}
           </h3>
         </div>
       </a>
@@ -117,7 +118,7 @@ import { CartService } from '../../services/cart.service';
             @if (product().images?.length > 0) {
               <img
                 [src]="product().images[0].url"
-                [alt]="product().name"
+                [alt]="displayName()"
                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
               />
             } @else {
@@ -137,7 +138,7 @@ import { CartService } from '../../services/cart.service';
         <div class="p-4 flex flex-col flex-grow">
           <a [routerLink]="['/products', product().slug]" class="block">
             <h3 class="text-base font-semibold text-gray-800 mb-2 hover:text-[var(--primary-color)] transition-colors line-clamp-2">
-              {{ product().name }}
+              {{ displayName() }}
             </h3>
           </a>
           <!-- Star Rating Placeholder -->
@@ -193,7 +194,7 @@ import { CartService } from '../../services/cart.service';
         @if (product().images?.length > 0) {
           <img
             [src]="product().images[0].url"
-            [alt]="product().name"
+            [alt]="displayName()"
             class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
         } @else {
@@ -209,7 +210,7 @@ import { CartService } from '../../services/cart.service';
         <div class="absolute inset-0 flex flex-col justify-end p-4">
           <div class="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
             <h3 class="text-base font-bold text-white mb-2 line-clamp-2">
-              {{ product().name }}
+              {{ displayName() }}
             </h3>
             <div class="flex items-center justify-between">
               @if (isOnSale()) {
@@ -265,8 +266,10 @@ export class ProductCardComponent {
   private featureService = inject(FeatureService);
   private cartService = inject(CartService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   variant = this.featureService.productCardVariant;
+  displayName = computed(() => this.i18n.nameFor(this.product().name, this.product().nameAr));
   isInCart = computed(() => this.cartService.hasItem(this.product().id));
 
   addToCart(event: Event): void {

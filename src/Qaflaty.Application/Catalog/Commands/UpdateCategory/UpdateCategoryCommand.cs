@@ -6,5 +6,6 @@ namespace Qaflaty.Application.Catalog.Commands.UpdateCategory;
 public record UpdateCategoryCommand(
     Guid CategoryId,
     string Name,
+    string? NameAr,
     Guid? ParentId
 ) : ICommand<CategoryDto>;

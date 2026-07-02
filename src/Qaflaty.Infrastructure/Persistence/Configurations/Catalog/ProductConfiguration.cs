@@ -29,10 +29,15 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.OwnsOne(p => p.Name, name =>
         {
-            name.Property(n => n.Value)
+            name.Property(n => n.English)
                 .HasColumnName("name")
                 .HasMaxLength(200)
                 .IsRequired();
+            name.Property(n => n.Arabic)
+                .HasColumnName("name_ar")
+                .HasMaxLength(200)
+                .IsRequired();
+            name.Ignore(n => n.Value);
         });
 
         builder.OwnsOne(p => p.Slug, slug =>

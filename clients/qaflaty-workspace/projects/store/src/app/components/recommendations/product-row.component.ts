@@ -1,7 +1,8 @@
-import { Component, input } from '@angular/core';
+import { Component, input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Product } from '../../models/product.model';
+import { I18nService } from '../../services/i18n.service';
 
 @Component({
   selector: 'app-product-row',
@@ -16,7 +17,7 @@ import { Product } from '../../models/product.model';
             <a class="rec-card" [routerLink]="['/products', p.slug]">
               <div class="rec-card__img">
                 @if (p.images?.length) {
-                  <img [src]="p.images[0].url" [alt]="p.images[0].altText || p.name" loading="lazy" />
+                  <img [src]="p.images[0].url" [alt]="p.images[0].altText || i18n.nameFor(p.name, p.nameAr)" loading="lazy" />
                 } @else {
                   <div class="rec-card__placeholder">🛍️</div>
                 }
@@ -24,7 +25,7 @@ import { Product } from '../../models/product.model';
                   <span class="rec-card__badge">-{{ discount(p) }}%</span>
                 }
               </div>
-              <div class="rec-card__name">{{ p.name }}</div>
+              <div class="rec-card__name">{{ i18n.nameFor(p.name, p.nameAr) }}</div>
               <div class="rec-card__price">
                 <span class="now">{{ p.price | currency:'EGP':'symbol':'1.2-2' }}</span>
                 @if (p.compareAtPrice && p.compareAtPrice > p.price) {
@@ -62,6 +63,7 @@ import { Product } from '../../models/product.model';
   `]
 })
 export class ProductRowComponent {
+  i18n = inject(I18nService);
   title = input<string>('');
   products = input<Product[]>([]);
 

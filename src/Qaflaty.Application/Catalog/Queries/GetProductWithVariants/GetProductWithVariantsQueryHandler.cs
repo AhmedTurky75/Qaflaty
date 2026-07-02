@@ -42,6 +42,7 @@ public class GetProductWithVariantsQueryHandler : IQueryHandler<GetProductWithVa
         var dto = new ProductWithVariantsDto(
             product.Id.Value,
             product.Name.Value,
+            product.Name.Arabic,
             product.Slug.Value,
             product.Description,
             product.Pricing.Price.Amount,

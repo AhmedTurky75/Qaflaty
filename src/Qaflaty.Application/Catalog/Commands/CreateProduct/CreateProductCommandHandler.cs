@@ -39,7 +39,7 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
             return Result.Failure<ProductDto>(new Error("Product.Unauthorized", "You don't have access to this store"));
 
         // Create product name
-        var nameResult = ProductName.Create(request.Name);
+        var nameResult = ProductName.Create(request.Name, request.NameAr);
         if (nameResult.IsFailure)
             return Result.Failure<ProductDto>(nameResult.Error);
 
@@ -118,6 +118,7 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
             product.Id.Value,
             product.Slug.Value,
             product.Name.Value,
+            product.Name.Arabic,
             product.Description,
             product.Pricing.Price.Amount,
             product.Pricing.CompareAtPrice?.Amount,

@@ -2130,7 +2130,13 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<Guid>("CategoryId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Value")
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("name_ar");
+
+                            b1.Property<string>("English")
                                 .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)")
@@ -2428,7 +2434,13 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<Guid>("ProductId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Value")
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("name_ar");
+
+                            b1.Property<string>("English")
                                 .IsRequired()
                                 .HasMaxLength(200)
                                 .HasColumnType("character varying(200)")

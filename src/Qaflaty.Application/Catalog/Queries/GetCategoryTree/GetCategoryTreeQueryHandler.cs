@@ -43,6 +43,7 @@ public class GetCategoryTreeQueryHandler : IQueryHandler<GetCategoryTreeQuery, L
             .Select(c => new CategoryTreeDto(
                 c.Id.Value,
                 c.Name.Value,
+                c.Name.Arabic,
                 c.Slug.Value,
                 BuildTree(lookup, c.Id.Value)
             )).ToList();

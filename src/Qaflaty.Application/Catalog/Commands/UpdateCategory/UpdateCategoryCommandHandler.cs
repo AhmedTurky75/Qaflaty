@@ -26,7 +26,7 @@ public class UpdateCategoryCommandHandler : ICommandHandler<UpdateCategoryComman
         if (category == null)
             return Result.Failure<CategoryDto>(new Error("Category.NotFound", "Category not found"));
 
-        var nameResult = CategoryName.Create(request.Name);
+        var nameResult = CategoryName.Create(request.Name, request.NameAr);
         if (nameResult.IsFailure)
             return Result.Failure<CategoryDto>(nameResult.Error);
 
@@ -47,6 +47,7 @@ public class UpdateCategoryCommandHandler : ICommandHandler<UpdateCategoryComman
         var dto = new CategoryDto(
             category.Id.Value,
             category.Name.Value,
+            category.Name.Arabic,
             category.Slug.Value,
             category.ParentId?.Value,
             category.SortOrder,

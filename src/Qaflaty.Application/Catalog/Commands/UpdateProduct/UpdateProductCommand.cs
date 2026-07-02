@@ -6,6 +6,7 @@ namespace Qaflaty.Application.Catalog.Commands.UpdateProduct;
 public record UpdateProductCommand(
     Guid ProductId,
     string Name,
+    string? NameAr,
     string Slug,
     string? Description,
     decimal Price,

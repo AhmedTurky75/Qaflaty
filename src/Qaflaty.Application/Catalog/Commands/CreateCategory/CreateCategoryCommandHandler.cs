@@ -36,7 +36,7 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
             return Result.Failure<CategoryDto>(new Error("Category.Unauthorized", "You don't have access to this store"));
 
         // Create category name
-        var nameResult = CategoryName.Create(request.Name);
+        var nameResult = CategoryName.Create(request.Name, request.NameAr);
         if (nameResult.IsFailure)
             return Result.Failure<CategoryDto>(nameResult.Error);
 
@@ -70,6 +70,7 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
         var dto = new CategoryDto(
             category.Id.Value,
             category.Name.Value,
+            category.Name.Arabic,
             category.Slug.Value,
             category.ParentId?.Value,
             category.SortOrder,
