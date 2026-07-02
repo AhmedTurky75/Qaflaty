@@ -56,7 +56,7 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
             HeaderVariant = "header-minimal",
             FooterVariant = "footer-standard",
             ProductCardVariant = "card-standard",
-            ProductGridVariant = "grid-standard",
+            ProductGridVariant = "grid-3",
             SearchSettings = SearchSettings.CreateDefault(),
             TaxSettings = TaxSettings.CreateDefault(),
             ReviewsRequirePurchase = true,
