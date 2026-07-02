@@ -20,6 +20,7 @@ interface PromoForm {
   expiresAt: string;
   usageLimit: number | null;
   usageLimitPerCustomer: number | null;
+  unlimitedPerCustomer: boolean;
 }
 
 @Component({
@@ -81,7 +82,8 @@ export class PromoCodesComponent implements OnInit {
       startsAt: c.startsAt ? c.startsAt.substring(0, 10) : '',
       expiresAt: c.expiresAt ? c.expiresAt.substring(0, 10) : '',
       usageLimit: c.usageLimit ?? null,
-      usageLimitPerCustomer: c.usageLimitPerCustomer ?? null
+      usageLimitPerCustomer: c.usageLimitPerCustomer ?? 1,
+      unlimitedPerCustomer: c.usageLimitPerCustomer == null
     });
     this.error.set(null);
     this.showForm.set(true);
@@ -107,7 +109,8 @@ export class PromoCodesComponent implements OnInit {
       startsAt: f.startsAt ? new Date(f.startsAt).toISOString() : null,
       expiresAt: f.expiresAt ? new Date(f.expiresAt).toISOString() : null,
       usageLimit: f.usageLimit,
-      usageLimitPerCustomer: f.usageLimitPerCustomer
+      usageLimitPerCustomer: f.unlimitedPerCustomer ? null : (f.usageLimitPerCustomer ?? 1),
+      unlimitedPerCustomer: f.unlimitedPerCustomer
     };
 
     this.saving.set(true);
@@ -162,7 +165,8 @@ export class PromoCodesComponent implements OnInit {
       startsAt: '',
       expiresAt: '',
       usageLimit: null,
-      usageLimitPerCustomer: null
+      usageLimitPerCustomer: 1,
+      unlimitedPerCustomer: false
     };
   }
 }

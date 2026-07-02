@@ -41,7 +41,8 @@ public class MerchantPromoCodesController : ApiController
             request.StartsAt,
             request.ExpiresAt,
             request.UsageLimit,
-            request.UsageLimitPerCustomer);
+            request.UsageLimitPerCustomer,
+            request.UnlimitedPerCustomer);
 
         var result = await Sender.Send(command, ct);
         return HandleResult(result);
@@ -65,7 +66,8 @@ public class MerchantPromoCodesController : ApiController
             request.StartsAt,
             request.ExpiresAt,
             request.UsageLimit,
-            request.UsageLimitPerCustomer);
+            request.UsageLimitPerCustomer,
+            request.UnlimitedPerCustomer);
 
         var result = await Sender.Send(command, ct);
         return HandleResult(result);
@@ -111,7 +113,8 @@ public record CreatePromoCodeRequest(
     DateTime? StartsAt,
     DateTime? ExpiresAt,
     int? UsageLimit,
-    int? UsageLimitPerCustomer);
+    int? UsageLimitPerCustomer,
+    bool UnlimitedPerCustomer = false);
 
 public record UpdatePromoCodeRequest(
     string? Description,
@@ -122,6 +125,7 @@ public record UpdatePromoCodeRequest(
     DateTime? StartsAt,
     DateTime? ExpiresAt,
     int? UsageLimit,
-    int? UsageLimitPerCustomer);
+    int? UsageLimitPerCustomer,
+    bool UnlimitedPerCustomer = false);
 
 public record TogglePromoCodeRequest(bool IsActive);

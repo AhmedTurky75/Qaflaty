@@ -35,6 +35,9 @@ export interface SavePromoCodeRequest {
   expiresAt?: string | null;
   usageLimit?: number | null;
   usageLimitPerCustomer?: number | null;
+  // When true, the per-customer limit is stored as unlimited (null); otherwise an
+  // unspecified usageLimitPerCustomer defaults to 1 on the server.
+  unlimitedPerCustomer?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
