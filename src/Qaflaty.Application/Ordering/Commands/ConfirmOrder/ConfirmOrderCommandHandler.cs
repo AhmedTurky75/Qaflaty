@@ -33,7 +33,9 @@ public class ConfirmOrderCommandHandler : ICommandHandler<ConfirmOrderCommand>
 
         // Verify merchant owns the store
         var store = await _storeRepository.GetByIdAsync(order.StoreId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure(new Error("Order.Unauthorized", "You don't have access to this order"));
 
         var result = order.Confirm(_currentUserService.Email ?? "System");

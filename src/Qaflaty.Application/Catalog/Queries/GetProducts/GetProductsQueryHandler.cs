@@ -29,7 +29,9 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Paginated
         // Verify store ownership
         var storeId = new StoreId(request.StoreId);
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<PaginatedList<ProductListDto>>(Error.Unauthorized);
 
         var products = await _productRepository.GetByStoreIdAsync(storeId, cancellationToken);

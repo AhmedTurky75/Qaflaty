@@ -36,7 +36,9 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
             return Result.Failure<OrderDto>(OrderingErrors.OrderNotFound);
 
         var store = await _storeRepository.GetByIdAsync(order.StoreId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<OrderDto>(Error.Unauthorized);
 
         var customer = await _customerRepository.GetByIdAsync(order.CustomerId, cancellationToken);

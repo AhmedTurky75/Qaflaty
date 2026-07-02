@@ -33,7 +33,9 @@ public class GetStoreCustomersQueryHandler : IQueryHandler<GetStoreCustomersQuer
         var storeId = new StoreId(request.StoreId);
 
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<PaginatedList<CustomerListDto>>(Error.Unauthorized);
 
         var customers = await _customerRepository.GetByStoreIdAsync(storeId, cancellationToken);
