@@ -112,5 +112,7 @@ public record StorefrontConfigDto(
     SearchSettingsDto SearchSettings,
     List<PaymentMethodAdjustmentDto> PaymentMethodAdjustments,
     List<FilterablePropertyDefinitionDto> FilterablePropertyDefinitions,
-    TaxSettingsDto? TaxSettings = null
+    TaxSettingsDto? TaxSettings = null,
+    string Currency = "EGP",
+    string CurrencySymbol = "ج.م"
 );

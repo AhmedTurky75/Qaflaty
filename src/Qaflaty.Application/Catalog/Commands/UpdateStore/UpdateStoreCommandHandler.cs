@@ -83,7 +83,9 @@ public sealed class UpdateStoreCommandHandler : ICommandHandler<UpdateStoreComma
             ),
             CustomDomain: store.CustomDomain,
             CreatedAt: store.CreatedAt,
-            UpdatedAt: store.UpdatedAt
+            UpdatedAt: store.UpdatedAt,
+            Currency: store.Currency.Code,
+            CurrencySymbol: store.Currency.Symbol
         );
 
         return Result.Success(storeDto);

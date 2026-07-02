@@ -20,13 +20,11 @@ public class UpdateProductVariantCommandHandler : ICommandHandler<UpdateProductV
         if (product == null)
             return Result.Failure(new Error("Product.NotFound", "Product not found"));
 
-        // Create price override if provided
+        // Create price override if provided (always in the store currency the product uses)
         Money? priceOverride = null;
         if (request.PriceOverride.HasValue)
         {
-            var currency = string.IsNullOrWhiteSpace(request.PriceOverrideCurrency)
-                ? Currency.SAR
-                : Enum.Parse<Currency>(request.PriceOverrideCurrency);
+            var currency = product.Pricing.Price.Currency;
 
             var moneyResult = Money.Create(request.PriceOverride.Value, currency);
             if (moneyResult.IsFailure)

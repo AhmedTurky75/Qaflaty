@@ -12,7 +12,9 @@ public record StoreDto(
     DeliverySettingsDto DeliverySettings,
     string? CustomDomain,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    string Currency = "EGP",
+    string CurrencySymbol = "ج.م"
 );
 
 public record StoreBrandingDto(
@@ -50,5 +52,7 @@ public record StorePublicDto(
     string? Description,
     StoreBrandingDto Branding,
     string Status,
-    DeliverySettingsDto DeliverySettings
+    DeliverySettingsDto DeliverySettings,
+    string Currency = "EGP",
+    string CurrencySymbol = "ج.م"
 );

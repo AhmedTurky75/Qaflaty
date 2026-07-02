@@ -10,5 +10,6 @@ public record CreateStoreCommand(
     string? LogoUrl = null,
     string PrimaryColor = "#4F46E5",
     decimal DeliveryFee = 0,
-    decimal? FreeDeliveryThreshold = null
+    decimal? FreeDeliveryThreshold = null,
+    string Currency = "EGP"
 ) : ICommand<StoreDto>;

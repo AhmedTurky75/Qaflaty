@@ -51,7 +51,8 @@ public class StoresController : ApiController
             request.LogoUrl,
             request.PrimaryColor,
             request.DeliveryFee,
-            request.FreeDeliveryThreshold);
+            request.FreeDeliveryThreshold,
+            request.Currency);
 
         var result = await Sender.Send(command, cancellationToken);
 
@@ -169,7 +170,8 @@ public record CreateStoreRequest(
     string? LogoUrl = null,
     string PrimaryColor = "#4F46E5",
     decimal DeliveryFee = 0,
-    decimal? FreeDeliveryThreshold = null);
+    decimal? FreeDeliveryThreshold = null,
+    string Currency = "EGP");
 
 public record UpdateStoreRequest(
     string Name,

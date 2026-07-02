@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Ordering.Aggregates.Return;
+using Qaflaty.Infrastructure.Persistence.Converters;
 
 namespace Qaflaty.Infrastructure.Persistence.Configurations.Ordering;
 
@@ -32,7 +33,7 @@ public class ReturnRequestItemConfiguration : IEntityTypeConfiguration<ReturnReq
         builder.OwnsOne(i => i.UnitPrice, money =>
         {
             money.Property(m => m.Amount).HasColumnName("unit_price").HasColumnType("decimal(18,2)");
-            money.Property(m => m.Currency).HasColumnName("unit_price_currency").HasConversion<string>();
+            money.Property(m => m.Currency).HasColumnName("unit_price_currency").HasConversion(new CurrencyConverter());
         });
 
         builder.Navigation(i => i.UnitPrice).IsRequired();

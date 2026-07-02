@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
+using Qaflaty.Infrastructure.Persistence.Converters;
 
 namespace Qaflaty.Infrastructure.Persistence.Configurations.Ordering;
 
@@ -29,7 +30,7 @@ public class OrderItemConfiguration : IEntityTypeConfiguration<OrderItem>
         builder.OwnsOne(oi => oi.UnitPrice, money =>
         {
             money.Property(m => m.Amount).HasColumnName("unit_price").HasColumnType("decimal(18,2)");
-            money.Property(m => m.Currency).HasColumnName("unit_price_currency").HasConversion<string>();
+            money.Property(m => m.Currency).HasColumnName("unit_price_currency").HasConversion(new CurrencyConverter());
         });
 
         builder.Property(oi => oi.Quantity)

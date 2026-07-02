@@ -16,6 +16,19 @@ import {
   InventoryMovementDto
 } from 'shared';
 
+export interface ImportRowError {
+  row: number;
+  message: string;
+}
+
+export interface ImportProductsResult {
+  totalRows: number;
+  created: number;
+  failed: number;
+  categoriesCreated: number;
+  errors: ImportRowError[];
+}
+
 export interface ProductFilters {
   search?: string;
   categoryId?: string;
@@ -87,6 +100,13 @@ export class ProductService {
 
   deleteProduct(storeId: string, id: string): Observable<void> {
     return this.http.delete<void>(`${this.storeUrl(storeId)}/${id}`);
+  }
+
+  /** Bulk-import products from a CSV file (categories are auto-created; no images). */
+  importProducts(storeId: string, file: File): Observable<ImportProductsResult> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<ImportProductsResult>(`${this.storeUrl(storeId)}/import`, form);
   }
 
   // ============ Product Properties ============

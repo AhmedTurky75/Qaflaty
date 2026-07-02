@@ -22,14 +22,14 @@ public class UpdateDeliverySettingsCommandHandler : ICommandHandler<UpdateDelive
         if (store == null)
             return Result.Failure(new Error("Store.NotFound", "Store not found"));
 
-        var deliveryFeeResult = Money.Create(request.DeliveryFee);
+        var deliveryFeeResult = Money.Create(request.DeliveryFee, store.Currency);
         if (deliveryFeeResult.IsFailure)
             return Result.Failure(deliveryFeeResult.Error);
 
         Money? freeThreshold = null;
         if (request.FreeDeliveryThreshold.HasValue)
         {
-            var thresholdResult = Money.Create(request.FreeDeliveryThreshold.Value);
+            var thresholdResult = Money.Create(request.FreeDeliveryThreshold.Value, store.Currency);
             if (thresholdResult.IsFailure)
                 return Result.Failure(thresholdResult.Error);
             freeThreshold = thresholdResult.Value;

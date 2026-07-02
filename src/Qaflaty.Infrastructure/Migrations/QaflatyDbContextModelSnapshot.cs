@@ -419,6 +419,50 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("faq_items", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.LayoutVariant.LayoutVariant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("code");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_en");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Type", "Code")
+                        .IsUnique();
+
+                    b.ToTable("layout_variants", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
                 {
                     b.Property<Guid>("Id")
@@ -801,50 +845,6 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("product_variants", (string)null);
                 });
 
-            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.LayoutVariant.LayoutVariant", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(60)
-                        .HasColumnType("character varying(60)")
-                        .HasColumnName("code");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("is_active");
-
-                    b.Property<string>("NameAr")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name_ar");
-
-                    b.Property<string>("NameEn")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("name_en");
-
-                    b.Property<int>("SortOrder")
-                        .HasColumnType("integer")
-                        .HasColumnName("sort_order");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("integer")
-                        .HasColumnName("type");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Type", "Code")
-                        .IsUnique();
-
-                    b.ToTable("layout_variants", (string)null);
-                });
-
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PromoCode.PromoCode", b =>
                 {
                     b.Property<Guid>("Id")
@@ -976,6 +976,12 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
 
                     b.Property<string>("CustomDomain")
                         .HasMaxLength(255)
@@ -1879,63 +1885,6 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("cart_items", (string)null);
                 });
 
-            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("customer_id");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId")
-                        .IsUnique();
-
-                    b.ToTable("wishlists", (string)null);
-                });
-
-            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.WishlistItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("AddedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("added_at");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("product_id");
-
-                    b.Property<Guid?>("VariantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("variant_id");
-
-                    b.Property<Guid>("WishlistId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("wishlist_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WishlistId", "ProductId", "VariantId")
-                        .IsUnique();
-
-                    b.ToTable("wishlist_items", (string)null);
-                });
-
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2008,12 +1957,12 @@ namespace Qaflaty.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("StoreId");
+
                     b.HasIndex("CustomerId", "ProductId")
                         .IsUnique();
 
                     b.HasIndex("ProductId", "Status");
-
-                    b.HasIndex("StoreId");
 
                     b.ToTable("product_reviews", (string)null);
                 });
@@ -2121,6 +2070,63 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("related_product_links", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.ToTable("wishlists", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.WishlistItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("added_at");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<Guid?>("VariantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("variant_id");
+
+                    b.Property<Guid>("WishlistId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wishlist_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WishlistId", "ProductId", "VariantId")
+                        .IsUnique();
+
+                    b.ToTable("wishlist_items", (string)null);
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Category.Category", b =>
@@ -4166,20 +4172,20 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.WishlistItem", b =>
-                {
-                    b.HasOne("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", null)
-                        .WithMany("Items")
-                        .HasForeignKey("WishlistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReviewMedia", b =>
                 {
                     b.HasOne("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", null)
                         .WithMany("Media")
                         .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.WishlistItem", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", null)
+                        .WithMany("Items")
+                        .HasForeignKey("WishlistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -4227,14 +4233,14 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
-                {
-                    b.Navigation("Items");
-                });
-
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", b =>
                 {
                     b.Navigation("Media");
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

@@ -53,15 +53,16 @@ public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand,
         if (updateInfoResult.IsFailure)
             return Result.Failure<ProductDto>(updateInfoResult.Error);
 
-        // Update pricing
-        var priceResult = Money.Create(request.Price);
+        // Update pricing (preserve the store currency the product already uses)
+        var currency = product.Pricing.Price.Currency;
+        var priceResult = Money.Create(request.Price, currency);
         if (priceResult.IsFailure)
             return Result.Failure<ProductDto>(priceResult.Error);
 
         Money? compareAtPrice = null;
         if (request.CompareAtPrice.HasValue)
         {
-            var compareResult = Money.Create(request.CompareAtPrice.Value);
+            var compareResult = Money.Create(request.CompareAtPrice.Value, currency);
             if (compareResult.IsFailure)
                 return Result.Failure<ProductDto>(compareResult.Error);
             compareAtPrice = compareResult.Value;

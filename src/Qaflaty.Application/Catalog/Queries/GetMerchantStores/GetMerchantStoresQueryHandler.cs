@@ -45,7 +45,9 @@ public class GetMerchantStoresQueryHandler : IQueryHandler<GetMerchantStoresQuer
                     : null),
             s.CustomDomain,
             s.CreatedAt,
-            s.UpdatedAt
+            s.UpdatedAt,
+            s.Currency.Code,
+            s.Currency.Symbol
         )).ToList());
     }
 }

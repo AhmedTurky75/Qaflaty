@@ -53,7 +53,7 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
                     if (!districtZone.IsDeliveryEnabled)
                         isDeliveryAvailable = false;
                     else if (districtZone.CustomDeliveryFee.HasValue)
-                        deliveryFee = Money.Create(districtZone.CustomDeliveryFee.Value).Value;
+                        deliveryFee = Money.Create(districtZone.CustomDeliveryFee.Value, store.Currency).Value;
                 }
             }
 
@@ -66,7 +66,7 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
                     if (!cityZone.IsDeliveryEnabled)
                         isDeliveryAvailable = false;
                     else if (cityZone.CustomDeliveryFee.HasValue)
-                        deliveryFee = Money.Create(cityZone.CustomDeliveryFee.Value).Value;
+                        deliveryFee = Money.Create(cityZone.CustomDeliveryFee.Value, store.Currency).Value;
                 }
             }
 
@@ -79,13 +79,13 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
                     if (!countryZone.IsDeliveryEnabled)
                         isDeliveryAvailable = false;
                     else if (countryZone.CustomDeliveryFee.HasValue)
-                        deliveryFee = Money.Create(countryZone.CustomDeliveryFee.Value).Value;
+                        deliveryFee = Money.Create(countryZone.CustomDeliveryFee.Value, store.Currency).Value;
                 }
             }
         }
 
-        // Calculate subtotal from current catalog prices
-        var currency = deliveryFee.Currency;
+        // Calculate subtotal from current catalog prices (store currency governs the whole order)
+        var currency = store.Currency;
         var subtotal = Money.Zero(currency);
 
         foreach (var item in request.Items)

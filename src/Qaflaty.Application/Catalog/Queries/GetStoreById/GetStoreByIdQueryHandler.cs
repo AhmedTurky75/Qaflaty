@@ -41,6 +41,8 @@ public class GetStoreByIdQueryHandler : IQueryHandler<GetStoreByIdQuery, StoreDt
                     : null),
             store.CustomDomain,
             store.CreatedAt,
-            store.UpdatedAt));
+            store.UpdatedAt,
+            store.Currency.Code,
+            store.Currency.Symbol));
     }
 }

@@ -154,7 +154,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
                         return Result.Failure<OrderDto>(new Error("Order.DeliveryNotAvailable",
                             "Delivery is not available to your selected district"));
                     if (districtZone.CustomDeliveryFee.HasValue)
-                        deliveryFee = Money.Create(districtZone.CustomDeliveryFee.Value).Value;
+                        deliveryFee = Money.Create(districtZone.CustomDeliveryFee.Value, store.Currency).Value;
                 }
             }
 
@@ -168,7 +168,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
                         return Result.Failure<OrderDto>(new Error("Order.DeliveryNotAvailable",
                             "Delivery is not available to your selected city"));
                     if (cityZone.CustomDeliveryFee.HasValue)
-                        deliveryFee = Money.Create(cityZone.CustomDeliveryFee.Value).Value;
+                        deliveryFee = Money.Create(cityZone.CustomDeliveryFee.Value, store.Currency).Value;
                 }
             }
 
@@ -182,7 +182,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
                         return Result.Failure<OrderDto>(new Error("Order.DeliveryNotAvailable",
                             "Delivery is not available to your country"));
                     if (countryZone.CustomDeliveryFee.HasValue)
-                        deliveryFee = Money.Create(countryZone.CustomDeliveryFee.Value).Value;
+                        deliveryFee = Money.Create(countryZone.CustomDeliveryFee.Value, store.Currency).Value;
                 }
             }
         }

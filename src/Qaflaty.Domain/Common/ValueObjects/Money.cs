@@ -6,7 +6,7 @@ namespace Qaflaty.Domain.Common.ValueObjects;
 public sealed class Money : ValueObject
 {
     public decimal Amount { get; private init; } // Monetary amount, always non-negative (validated in Create), e.g. 199.99
-    public Currency Currency { get; private init; } // Currency of the amount; defaults to SAR. Arithmetic across different currencies is rejected
+    public Currency Currency { get; private init; } // Currency of the amount (the owning store's currency). Arithmetic across different currencies is rejected
 
     private Money(decimal amount, Currency currency)
     {
@@ -14,15 +14,15 @@ public sealed class Money : ValueObject
         Currency = currency;
     }
 
-    public static Result<Money> Create(decimal amount, Currency currency = Currency.SAR)
+    public static Result<Money> Create(decimal amount, Currency? currency = null)
     {
         if (amount < 0)
             return Result.Failure<Money>(new Error("Money.NegativeAmount", "Amount cannot be negative"));
 
-        return Result.Success(new Money(amount, currency));
+        return Result.Success(new Money(amount, currency ?? Currency.Default));
     }
 
-    public static Money Zero(Currency currency = Currency.SAR) => new(0, currency);
+    public static Money Zero(Currency? currency = null) => new(0, currency ?? Currency.Default);
 
     public Money Add(Money other)
     {

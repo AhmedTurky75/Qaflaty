@@ -114,7 +114,9 @@ public class GetStorefrontConfigQueryHandler : IQueryHandler<GetStorefrontConfig
                 config.TaxSettings.Enabled,
                 config.TaxSettings.Rate,
                 config.TaxSettings.PricesIncludeTax,
-                config.TaxSettings.Label));
+                config.TaxSettings.Label),
+            store.Currency.Code,
+            store.Currency.Symbol);
 
         return Result.Success(dto);
     }
