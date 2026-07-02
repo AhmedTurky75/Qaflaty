@@ -53,15 +53,15 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
         if (!isSlugAvailable)
             return Result.Failure<ProductDto>(new Error("Product.SlugTaken", "This slug is already taken"));
 
-        // Create pricing (always in the owning store's currency)
-        var priceResult = Money.Create(request.Price, store.Currency);
+        // Create pricing (amounts are implicitly in the store's single currency)
+        var priceResult = Money.Create(request.Price);
         if (priceResult.IsFailure)
             return Result.Failure<ProductDto>(priceResult.Error);
 
         Money? compareAtPrice = null;
         if (request.CompareAtPrice.HasValue)
         {
-            var compareResult = Money.Create(request.CompareAtPrice.Value, store.Currency);
+            var compareResult = Money.Create(request.CompareAtPrice.Value);
             if (compareResult.IsFailure)
                 return Result.Failure<ProductDto>(compareResult.Error);
             compareAtPrice = compareResult.Value;

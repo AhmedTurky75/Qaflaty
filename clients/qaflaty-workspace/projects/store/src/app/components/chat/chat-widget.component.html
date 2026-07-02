@@ -150,7 +150,7 @@
                         }
                         <div class="ai-suggestion-info">
                           <a [routerLink]="['/products', p.slug]" class="ai-suggestion-name">{{ p.name }}</a>
-                          <div class="ai-suggestion-price">{{ p.price | currency:p.currency:'symbol':'1.2-2' }}</div>
+                          <div class="ai-suggestion-price">{{ p.price | storePrice }}</div>
                         </div>
                         <button type="button" class="ai-suggestion-add" (click)="addSuggestion(p)">
                           {{ t('add_to_cart') }}

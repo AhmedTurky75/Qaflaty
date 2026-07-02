@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, signal, computed, effect } from
 import { CommonModule } from '@angular/common';
 import { VariantOption, ProductVariant } from '../../models/product.model';
 import { Money } from '../../models/store.model';
+import { StorePricePipe } from '../../pipes/store-price.pipe';
 
 @Component({
   selector: 'app-variant-selector',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, StorePricePipe],
   template: `
     <div class="space-y-4">
       @for (option of variantOptions(); track option.name) {
@@ -91,7 +92,7 @@ import { Money } from '../../models/store.model';
         <div class="pt-4 border-t">
           @if (selectedVariant()!.priceOverride) {
             <div class="text-lg font-semibold text-primary">
-              {{ formatPrice(selectedVariant()!.priceOverride!) }}
+              {{ selectedVariant()!.priceOverride!.amount | storePrice }}
             </div>
           }
           <div class="text-sm text-gray-600">
@@ -255,10 +256,6 @@ export class VariantSelectorComponent {
     };
 
     return colorMap[colorName.toLowerCase()] || '#9ca3af';
-  }
-
-  formatPrice(price: Money): string {
-    return `${price.amount.toFixed(2)} ${price.currency}`;
   }
 
   // Public method to reset selection

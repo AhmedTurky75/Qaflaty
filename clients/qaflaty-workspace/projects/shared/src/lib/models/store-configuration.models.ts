@@ -186,6 +186,10 @@ export interface StorefrontConfigDto {
   paymentMethodAdjustments: PaymentMethodAdjustment[];
   filterablePropertyDefinitions: FilterablePropertyDefinition[];
   taxSettings?: TaxSettings;
+  /** ISO 4217 code of the store's single currency, e.g. "EGP". */
+  currency: string;
+  /** Display symbol for the store currency, e.g. "ج.م". */
+  currencySymbol: string;
 }
 
 export interface AiAssistantStatusDto {

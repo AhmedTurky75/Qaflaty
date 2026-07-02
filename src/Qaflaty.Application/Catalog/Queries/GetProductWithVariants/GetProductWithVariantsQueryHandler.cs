@@ -8,10 +8,14 @@ namespace Qaflaty.Application.Catalog.Queries.GetProductWithVariants;
 public class GetProductWithVariantsQueryHandler : IQueryHandler<GetProductWithVariantsQuery, ProductWithVariantsDto>
 {
     private readonly IProductRepository _productRepository;
+    private readonly IStoreRepository _storeRepository;
 
-    public GetProductWithVariantsQueryHandler(IProductRepository productRepository)
+    public GetProductWithVariantsQueryHandler(
+        IProductRepository productRepository,
+        IStoreRepository storeRepository)
     {
         _productRepository = productRepository;
+        _storeRepository = storeRepository;
     }
 
     public async Task<Result<ProductWithVariantsDto>> Handle(GetProductWithVariantsQuery request, CancellationToken cancellationToken)
@@ -20,6 +24,9 @@ public class GetProductWithVariantsQueryHandler : IQueryHandler<GetProductWithVa
         if (product == null)
             return Result.Failure<ProductWithVariantsDto>(
                 new Error("Product.NotFound", "Product not found"));
+
+        var store = await _storeRepository.GetByIdAsync(product.StoreId, cancellationToken);
+        var currencyCode = store?.Currency.Code ?? "EGP";
 
         var variantOptions = product.VariantOptions
             .Select(vo => new VariantOptionDto(vo.Name, vo.Values))
@@ -32,7 +39,7 @@ public class GetProductWithVariantsQueryHandler : IQueryHandler<GetProductWithVa
                 v.Attributes,
                 v.Sku,
                 v.PriceOverride?.Amount,
-                v.PriceOverride?.Currency.ToString(),
+                v.PriceOverride != null ? currencyCode : null,
                 v.Quantity,
                 v.AllowBackorder,
                 v.CreatedAt,
@@ -46,7 +53,7 @@ public class GetProductWithVariantsQueryHandler : IQueryHandler<GetProductWithVa
             product.Slug.Value,
             product.Description,
             product.Pricing.Price.Amount,
-            product.Pricing.Price.Currency.ToString(),
+            currencyCode,
             product.HasVariants,
             variantOptions,
             variants);

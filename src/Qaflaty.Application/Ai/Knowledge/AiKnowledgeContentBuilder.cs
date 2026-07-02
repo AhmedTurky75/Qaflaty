@@ -45,7 +45,7 @@ public static class AiKnowledgeContentBuilder
             drafts.Add(BuildFaq(faq));
 
         foreach (var product in products)
-            drafts.Add(BuildProduct(product, categoryNames, propertyDefinitions));
+            drafts.Add(BuildProduct(product, store.Currency.Code, categoryNames, propertyDefinitions));
 
         return drafts;
     }
@@ -108,6 +108,7 @@ public static class AiKnowledgeContentBuilder
 
     private static AiKnowledgeDraft BuildProduct(
         Product product,
+        string currencyCode,
         IReadOnlyDictionary<Guid, string> categoryNames,
         IReadOnlyDictionary<Guid, ProductPropertyDefinition> propertyDefinitions)
     {
@@ -122,9 +123,9 @@ public static class AiKnowledgeContentBuilder
             sb.AppendLine($"Description: {product.Description}");
 
         var price = product.Pricing.Price;
-        sb.AppendLine($"Price: {price.Amount:0.##} {price.Currency}");
+        sb.AppendLine($"Price: {price.Amount:0.##} {currencyCode}");
         if (product.Pricing.HasDiscount && product.Pricing.CompareAtPrice is { } compareAt)
-            sb.AppendLine($"Was: {compareAt.Amount:0.##} {compareAt.Currency} (on sale)");
+            sb.AppendLine($"Was: {compareAt.Amount:0.##} {currencyCode} (on sale)");
 
         sb.AppendLine($"Availability: {DescribeStock(product)}");
 
@@ -139,7 +140,7 @@ public static class AiKnowledgeContentBuilder
             ["productId"] = product.Id.Value.ToString(),
             ["slug"] = product.Slug.Value,
             ["price"] = price.Amount.ToString("0.##", CultureInfo.InvariantCulture),
-            ["currency"] = price.Currency.ToString(),
+            ["currency"] = currencyCode,
             ["inStock"] = product.Inventory.InStock.ToString()
         };
 

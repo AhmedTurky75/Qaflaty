@@ -21,13 +21,11 @@ public class AddProductVariantCommandHandler : ICommandHandler<AddProductVariant
         if (product == null)
             return Result.Failure<Guid>(new Error("Product.NotFound", "Product not found"));
 
-        // Create price override if provided (always in the store currency the product uses)
+        // Create price override if provided (amounts are implicitly in the store's single currency)
         Money? priceOverride = null;
         if (request.PriceOverride.HasValue)
         {
-            var currency = product.Pricing.Price.Currency;
-
-            var moneyResult = Money.Create(request.PriceOverride.Value, currency);
+            var moneyResult = Money.Create(request.PriceOverride.Value);
             if (moneyResult.IsFailure)
                 return Result.Failure<Guid>(moneyResult.Error);
 

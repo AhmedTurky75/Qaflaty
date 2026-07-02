@@ -58,13 +58,11 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             pricing.OwnsOne(pr => pr.Price, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("price").HasColumnType("decimal(18,2)");
-                money.Property(m => m.Currency).HasColumnName("price_currency").HasConversion(new CurrencyConverter());
             });
 
             pricing.OwnsOne(pr => pr.CompareAtPrice, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("compare_at_price").HasColumnType("decimal(18,2)");
-                money.Property(m => m.Currency).HasColumnName("compare_at_price_currency").HasConversion(new CurrencyConverter());
             });
         });
 

@@ -72,12 +72,12 @@ public sealed class UpdateStoreCommandHandler : ICommandHandler<UpdateStoreComma
             DeliverySettings: new DeliverySettingsDto(
                 DeliveryFee: new MoneyDto(
                     Amount: store.DeliverySettings.DeliveryFee.Amount,
-                    Currency: store.DeliverySettings.DeliveryFee.Currency.ToString()
+                    Currency: store.Currency.Code
                 ),
                 FreeDeliveryThreshold: store.DeliverySettings.FreeDeliveryThreshold is not null
                     ? new MoneyDto(
                         Amount: store.DeliverySettings.FreeDeliveryThreshold.Amount,
-                        Currency: store.DeliverySettings.FreeDeliveryThreshold.Currency.ToString()
+                        Currency: store.Currency.Code
                     )
                     : null
             ),

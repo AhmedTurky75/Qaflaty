@@ -12,11 +12,16 @@ public class GetCustomerCartQueryHandler : IQueryHandler<GetCustomerCartQuery, C
 {
     private readonly ICartRepository _cartRepository;
     private readonly IProductRepository _productRepository;
+    private readonly IStoreRepository _storeRepository;
 
-    public GetCustomerCartQueryHandler(ICartRepository cartRepository, IProductRepository productRepository)
+    public GetCustomerCartQueryHandler(
+        ICartRepository cartRepository,
+        IProductRepository productRepository,
+        IStoreRepository storeRepository)
     {
         _cartRepository = cartRepository;
         _productRepository = productRepository;
+        _storeRepository = storeRepository;
     }
 
     public async Task<Result<CartDto?>> Handle(GetCustomerCartQuery request, CancellationToken cancellationToken)
@@ -24,6 +29,11 @@ public class GetCustomerCartQueryHandler : IQueryHandler<GetCustomerCartQuery, C
         var cart = await CartOwnerResolver.ResolveExistingCartAsync(request.Owner, _cartRepository, cancellationToken);
         if (cart == null)
             return Result.Success<CartDto?>(null);
+
+        var store = cart.StoreId is { } storeId
+            ? await _storeRepository.GetByIdAsync(storeId, cancellationToken)
+            : null;
+        var currencyCode = store?.Currency.Code ?? "EGP";
 
         var items = new List<CartItemDetailsDto>();
 
@@ -55,7 +65,7 @@ public class GetCustomerCartQueryHandler : IQueryHandler<GetCustomerCartQuery, C
                 item.VariantId,
                 variantAttributes,
                 unitPrice.Amount,
-                unitPrice.Currency.ToString(),
+                currencyCode,
                 item.Quantity,
                 product.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url,
                 maxQuantity,

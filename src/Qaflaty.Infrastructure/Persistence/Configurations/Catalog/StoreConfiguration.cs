@@ -101,13 +101,11 @@ public class StoreConfiguration : IEntityTypeConfiguration<Store>
             ds.OwnsOne(d => d.DeliveryFee, fee =>
             {
                 fee.Property(f => f.Amount).HasColumnName("delivery_fee").HasColumnType("decimal(18,2)");
-                fee.Property(f => f.Currency).HasColumnName("delivery_fee_currency").HasConversion(new CurrencyConverter());
             });
 
             ds.OwnsOne(d => d.FreeDeliveryThreshold, threshold =>
             {
                 threshold.Property(t => t.Amount).HasColumnName("free_delivery_threshold").HasColumnType("decimal(18,2)");
-                threshold.Property(t => t.Currency).HasColumnName("free_delivery_threshold_currency").HasConversion(new CurrencyConverter());
             });
         });
 

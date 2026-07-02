@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Product } from '../../models/product.model';
 import { I18nService } from '../../services/i18n.service';
+import { StorePricePipe } from '../../pipes/store-price.pipe';
 
 @Component({
   selector: 'app-product-row',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, StorePricePipe],
   template: `
     @if (products().length > 0) {
       <section class="rec-row">
@@ -27,9 +28,9 @@ import { I18nService } from '../../services/i18n.service';
               </div>
               <div class="rec-card__name">{{ i18n.nameFor(p.name, p.nameAr) }}</div>
               <div class="rec-card__price">
-                <span class="now">{{ p.price | currency:'EGP':'symbol':'1.2-2' }}</span>
+                <span class="now">{{ p.price | storePrice }}</span>
                 @if (p.compareAtPrice && p.compareAtPrice > p.price) {
-                  <span class="was">{{ p.compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}</span>
+                  <span class="was">{{ p.compareAtPrice | storePrice }}</span>
                 }
               </div>
             </a>

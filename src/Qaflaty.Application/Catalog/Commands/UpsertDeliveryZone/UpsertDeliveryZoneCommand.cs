@@ -11,6 +11,5 @@ public record UpsertDeliveryZoneCommand(
     string Level,          // "Country", "City", or "District"
     int ReferenceId,       // country_id / city_id / district_id
     bool IsDeliveryEnabled,
-    decimal? CustomDeliveryFee,
-    string? FeeCurrency
+    decimal? CustomDeliveryFee
 ) : ICommand<DeliveryZoneDto>;

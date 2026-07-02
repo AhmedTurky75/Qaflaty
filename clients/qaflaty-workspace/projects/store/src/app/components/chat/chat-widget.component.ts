@@ -8,11 +8,12 @@ import { FeatureService } from '../../services/feature.service';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 import { Product } from '../../models/product.model';
 import { CreateOrderRequest, OrderResponse } from '../../models/order.model';
+import { StorePricePipe } from '../../pipes/store-price.pipe';
 
 @Component({
   selector: 'app-chat-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, StorePricePipe],
   templateUrl: './chat-widget.component.html',
   styleUrls: ['./chat-widget.component.css']
 })

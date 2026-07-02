@@ -39,10 +39,6 @@ public class ProductVariantConfiguration : IEntityTypeConfiguration<ProductVaria
             money.Property(m => m.Amount)
                 .HasColumnName("price_override")
                 .HasColumnType("decimal(18,2)");
-
-            money.Property(m => m.Currency)
-                .HasColumnName("price_override_currency")
-                .HasConversion(new CurrencyConverter());
         });
 
         builder.Property(v => v.Quantity)

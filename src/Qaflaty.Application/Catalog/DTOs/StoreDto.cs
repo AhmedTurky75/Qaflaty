@@ -29,7 +29,7 @@ public record StoreBrandingDto(
 
 public record MoneyDto(
     decimal Amount,
-    string Currency = "SAR"
+    string Currency = "EGP"
 );
 
 public record DeliverySettingsDto(

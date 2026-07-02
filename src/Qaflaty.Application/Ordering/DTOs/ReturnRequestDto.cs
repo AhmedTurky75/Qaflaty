@@ -28,22 +28,22 @@ public record ReturnRequestDto(
 
 public static class ReturnRequestMapper
 {
-    public static ReturnRequestDto ToDto(this ReturnRequest r) => new(
+    public static ReturnRequestDto ToDto(this ReturnRequest r, string currencyCode = "EGP") => new(
         r.Id.Value,
         r.OrderId.Value,
         r.OrderNumber,
         r.CustomerId.Value,
         r.Status.ToString(),
         r.Reason,
-        new MoneyDto(r.RefundAmount.Amount, r.RefundAmount.Currency.ToString()),
+        new MoneyDto(r.RefundAmount.Amount, currencyCode),
         r.MerchantNote,
         r.RefundTransactionId,
         r.Items.Select(i => new ReturnRequestItemDto(
             i.ProductId.Value,
             i.ProductName,
-            new MoneyDto(i.UnitPrice.Amount, i.UnitPrice.Currency.ToString()),
+            new MoneyDto(i.UnitPrice.Amount, currencyCode),
             i.Quantity,
-            new MoneyDto(i.LineTotal.Amount, i.LineTotal.Currency.ToString())
+            new MoneyDto(i.LineTotal.Amount, currencyCode)
         )).ToList(),
         r.CreatedAt,
         r.ResolvedAt);

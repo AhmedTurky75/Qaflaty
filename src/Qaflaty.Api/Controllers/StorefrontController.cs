@@ -47,10 +47,12 @@ public class StorefrontController : ApiController
                 store.Branding.SecondaryColor),
             Status: store.Status.ToString(),
             DeliverySettings: new DeliverySettingsDto(
-                new MoneyDto(store.DeliverySettings.DeliveryFee.Amount, store.DeliverySettings.DeliveryFee.Currency.ToString()),
+                new MoneyDto(store.DeliverySettings.DeliveryFee.Amount, store.Currency.Code),
                 store.DeliverySettings.FreeDeliveryThreshold != null
-                    ? new MoneyDto(store.DeliverySettings.FreeDeliveryThreshold.Amount, store.DeliverySettings.FreeDeliveryThreshold.Currency.ToString())
-                    : null));
+                    ? new MoneyDto(store.DeliverySettings.FreeDeliveryThreshold.Amount, store.Currency.Code)
+                    : null),
+            Currency: store.Currency.Code,
+            CurrencySymbol: store.Currency.Symbol);
 
         return Ok(storeDto);
     }

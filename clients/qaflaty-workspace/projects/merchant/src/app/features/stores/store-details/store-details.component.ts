@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { StoreService } from '../services/store.service';
 import { ColorPickerComponent } from '../components/color-picker/color-picker.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
-import { StoreDto, Currency } from 'shared';
+import { StoreDto } from 'shared';
 
 @Component({
   selector: 'app-store-details',
@@ -31,8 +31,6 @@ export class StoreDetailsComponent implements OnInit {
   brandingForm!: FormGroup;
   deliveryForm!: FormGroup;
 
-  Currency = Currency;
-
   ngOnInit(): void {
     const storeId = this.route.snapshot.paramMap.get('id');
     if (storeId) {
@@ -56,11 +54,12 @@ export class StoreDetailsComponent implements OnInit {
       secondaryColor: [store.branding.secondaryColor || '']
     });
 
+    // Currency is a locked store-level setting; the delivery fee always uses it.
     this.deliveryForm = this.fb.group({
       deliveryFeeAmount: [store.deliverySettings.deliveryFee.amount, [Validators.required, Validators.min(0)]],
-      deliveryFeeCurrency: [store.deliverySettings.deliveryFee.currency],
+      deliveryFeeCurrency: [store.currency],
       freeDeliveryThresholdAmount: [store.deliverySettings.freeDeliveryThreshold?.amount || null, Validators.min(0)],
-      freeDeliveryThresholdCurrency: [store.deliverySettings.freeDeliveryThreshold?.currency || Currency.SAR]
+      freeDeliveryThresholdCurrency: [store.currency]
     });
   }
 

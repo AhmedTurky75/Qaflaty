@@ -75,17 +75,17 @@
             <div class="flex items-baseline gap-3">
               @if (effectivePrice()) {
                 <span class="text-4xl font-bold text-gray-900">
-                  {{ effectivePrice()!.amount.toFixed(2) }} {{ effectivePrice()!.currency }}
+                  {{ effectivePrice()!.amount | storePrice }}
                 </span>
               }
               @if (product()!.compareAtPrice != null && product()!.compareAtPrice! > product()!.price && !selectedVariant()?.priceOverride) {
-                <span class="text-xl text-gray-400 line-through">{{ product()!.compareAtPrice!.toFixed(2) }} EGP</span>
+                <span class="text-xl text-gray-400 line-through">{{ product()!.compareAtPrice! | storePrice }}</span>
                 <span class="bg-red-100 text-red-700 text-sm font-bold px-2 py-0.5 rounded">-{{ discountPercent() }}%</span>
               }
             </div>
             @if (product()!.compareAtPrice != null && product()!.compareAtPrice! > product()!.price && !selectedVariant()?.priceOverride) {
               <p class="text-green-600 font-medium text-sm mt-1">
-                You save {{ (product()!.compareAtPrice! - product()!.price).toFixed(2) }} EGP
+                You save {{ (product()!.compareAtPrice! - product()!.price) | storePrice }}
               </p>
             }
           </div>
@@ -96,7 +96,7 @@
               <app-variant-selector
                 [options]="product()!.variantOptions!"
                 [variants]="product()!.variants!"
-                [basePrice]="{ amount: product()!.price, currency: 'EGP' }"
+                [basePrice]="{ amount: product()!.price, currency: currency() }"
                 (variantSelected)="onVariantSelected($event)"
               />
             </div>

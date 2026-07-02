@@ -47,7 +47,6 @@ public class ReturnRequestConfiguration : IEntityTypeConfiguration<ReturnRequest
         builder.OwnsOne(r => r.RefundAmount, money =>
         {
             money.Property(m => m.Amount).HasColumnName("refund_amount").HasColumnType("decimal(18,2)");
-            money.Property(m => m.Currency).HasColumnName("refund_currency").HasConversion(new CurrencyConverter());
         });
 
         builder.Navigation(r => r.RefundAmount).IsRequired();

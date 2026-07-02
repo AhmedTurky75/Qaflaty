@@ -28,8 +28,7 @@ public class DeliveryZonesController : ApiController
             request.Level,
             request.ReferenceId,
             request.IsDeliveryEnabled,
-            request.CustomDeliveryFee,
-            request.FeeCurrency);
+            request.CustomDeliveryFee);
 
         var result = await Sender.Send(command, ct);
         return HandleResult(result);
@@ -61,5 +60,4 @@ public record UpsertDeliveryZoneRequest(
     string Level,
     int ReferenceId,
     bool IsDeliveryEnabled,
-    decimal? CustomDeliveryFee,
-    string? FeeCurrency);
+    decimal? CustomDeliveryFee);

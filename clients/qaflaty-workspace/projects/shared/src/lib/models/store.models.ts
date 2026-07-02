@@ -11,6 +11,18 @@ export interface StoreDto {
   deliverySettings: DeliverySettings;
   createdAt: string;
   updatedAt: string;
+  /** ISO 4217 code of the store's single currency (set once at creation, then locked). */
+  currency: string;
+  /** Display symbol for the store currency, e.g. "ج.م". */
+  currencySymbol: string;
+}
+
+/** One ISO 4217 currency option, served by GET /api/currencies for the store-creation picker. */
+export interface CurrencyOption {
+  code: string;
+  symbol: string;
+  name: string;
+  decimalDigits: number;
 }
 
 export interface StoreBranding {
@@ -30,9 +42,11 @@ export interface DeliverySettings {
 
 export interface Money {
   amount: number;
-  currency: Currency;
+  /** ISO 4217 code. Always the owning store's single currency. */
+  currency: string;
 }
 
+/** @deprecated Currency is now a store-level ISO 4217 string code; kept for backward compatibility. */
 export enum Currency {
   SAR = 'SAR',
   USD = 'USD'
@@ -49,6 +63,8 @@ export interface CreateStoreRequest {
   slug: string;
   name: string;
   description?: string;
+  /** ISO 4217 currency code chosen at creation; locked afterward. Defaults to EGP. */
+  currency?: string;
 }
 
 export interface UpdateStoreRequest {

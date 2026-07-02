@@ -159,14 +159,12 @@
                     class="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                     [class.border-red-500]="price?.invalid && price?.touched"
                   />
-                  <select
-                    formControlName="currency"
-                    class="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                  <span
+                    class="inline-flex items-center px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600 text-sm font-medium"
+                    title="Prices use your store's currency"
                   >
-                    @for (option of currencyOptions; track option.value) {
-                      <option [value]="option.value">{{ option.label }}</option>
-                    }
-                  </select>
+                    {{ storeCurrency() }}
+                  </span>
                 </div>
                 @if (price?.invalid && price?.touched) {
                   <p class="mt-1 text-sm text-red-600">

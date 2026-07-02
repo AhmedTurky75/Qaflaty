@@ -66,8 +66,7 @@ public sealed class ReturnRequest : AggregateRoot<ReturnRequestId>
             UpdatedAt = now
         };
 
-        var currency = order.Pricing.Total.Currency;
-        var refund = Money.Zero(currency);
+        var refund = Money.Zero();
 
         foreach (var (productId, quantity) in selections)
         {

@@ -1,12 +1,12 @@
 import { Component, input, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../services/i18n.service';
-import { CurrencyPipe } from '@angular/common';
+import { StorePricePipe } from '../../pipes/store-price.pipe';
 
 @Component({
   selector: 'app-card-detailed',
   standalone: true,
-  imports: [RouterLink, CurrencyPipe],
+  imports: [RouterLink, StorePricePipe],
   template: `
     <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300 flex flex-col h-full">
       <a [routerLink]="['/products', product().slug]" class="block">
@@ -55,10 +55,10 @@ import { CurrencyPipe } from '@angular/common';
           @if (product().pricing?.salePrice && product().pricing.salePrice < product().pricing.regularPrice) {
             <div class="flex items-center gap-2">
               <span class="text-xl font-bold text-blue-600">
-                {{ product().pricing.salePrice | currency:'EGP':'symbol':'1.2-2' }}
+                {{ product().pricing.salePrice | storePrice }}
               </span>
               <span class="text-sm text-gray-500 line-through">
-                {{ product().pricing.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                {{ product().pricing.regularPrice | storePrice }}
               </span>
               <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded-full font-semibold">
                 -{{ Math.round((1 - product().pricing.salePrice / product().pricing.regularPrice) * 100) }}%
@@ -66,7 +66,7 @@ import { CurrencyPipe } from '@angular/common';
             </div>
           } @else {
             <span class="text-xl font-bold text-gray-800">
-              {{ product().pricing?.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+              {{ product().pricing?.regularPrice | storePrice }}
             </span>
           }
         </div>

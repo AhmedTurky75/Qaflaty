@@ -135,7 +135,7 @@ public class ImportProductsCommandHandler : ICommandHandler<ImportProductsComman
 
             var slug = await BuildUniqueProductSlugAsync(storeId, nameEn, usedProductSlugs, cancellationToken);
 
-            var priceResult = Money.Create(price, store.Currency);
+            var priceResult = Money.Create(price);
             if (priceResult.IsFailure)
             {
                 errors.Add(new ImportRowErrorDto(row.RowNumber, priceResult.Error.Message));
@@ -145,7 +145,7 @@ public class ImportProductsCommandHandler : ICommandHandler<ImportProductsComman
             Money? compareMoney = null;
             if (compareAt.HasValue)
             {
-                var cm = Money.Create(compareAt.Value, store.Currency);
+                var cm = Money.Create(compareAt.Value);
                 if (cm.IsFailure)
                 {
                     errors.Add(new ImportRowErrorDto(row.RowNumber, cm.Error.Message));

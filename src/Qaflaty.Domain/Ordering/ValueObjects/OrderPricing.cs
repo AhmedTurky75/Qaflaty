@@ -35,13 +35,11 @@ public sealed class OrderPricing : ValueObject
         decimal taxRatePercent = 0m,
         bool pricesIncludeTax = false)
     {
-        var currency = deliveryFee.Currency;
-
         var subtotal = items.Aggregate(
-            Money.Zero(currency),
+            Money.Zero(),
             (acc, item) => acc.Add(item.Total));
 
-        var discount = discountAmount ?? Money.Zero(currency);
+        var discount = discountAmount ?? Money.Zero();
 
         var gross = subtotal.Add(deliveryFee);
         var effectiveDiscount = discount.Amount > gross.Amount ? gross : discount;
@@ -67,8 +65,8 @@ public sealed class OrderPricing : ValueObject
             }
         }
 
-        var tax = Money.Create(taxValue, currency).Value;
-        var total = Money.Create(totalValue, currency).Value;
+        var tax = Money.Create(taxValue).Value;
+        var total = Money.Create(totalValue).Value;
 
         return new OrderPricing(subtotal, deliveryFee, effectiveDiscount, tax, total);
     }

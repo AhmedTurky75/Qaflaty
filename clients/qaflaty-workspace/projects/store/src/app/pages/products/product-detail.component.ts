@@ -15,19 +15,22 @@ import { RecommendationService } from '../../services/recommendation.service';
 import { ReviewService } from '../../services/review.service';
 import { WishlistService } from '../../services/wishlist.service';
 import { I18nService } from '../../services/i18n.service';
+import { ConfigService } from '../../services/config.service';
+import { StorePricePipe } from '../../pipes/store-price.pipe';
 
 type ProductTab = 'description' | 'specifications' | 'reviews' | 'shipping';
 
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent, WhatsAppButtonComponent, ProductReviewsComponent, ProductRowComponent, ProductGalleryComponent],
+  imports: [CommonModule, RouterModule, FormsModule, VariantSelectorComponent, WhatsAppButtonComponent, ProductReviewsComponent, ProductRowComponent, ProductGalleryComponent, StorePricePipe],
   templateUrl: './product-detail.component.html',
   styleUrls: ['./product-detail.component.css']
 })
 export class ProductDetailComponent {
   private productService = inject(ProductService);
   private cartService = inject(CartService);
+  private config = inject(ConfigService);
   private route = inject(ActivatedRoute);
   private recommendations = inject(RecommendationService);
   private reviewService = inject(ReviewService);
@@ -74,8 +77,11 @@ export class ProductDetailComponent {
     if (variant?.priceOverride) {
       return variant.priceOverride;
     }
-    return { amount: prod.price, currency: 'EGP' };
+    return { amount: prod.price, currency: this.currency() };
   });
+
+  /** The store's single currency code, read from storefront config. */
+  currency = computed(() => this.config.config()?.currency ?? 'EGP');
 
   // Computed: effective stock (variant quantity or base quantity)
   effectiveStock = computed(() => {

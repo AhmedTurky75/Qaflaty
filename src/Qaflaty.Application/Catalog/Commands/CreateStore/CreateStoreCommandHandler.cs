@@ -54,14 +54,14 @@ public class CreateStoreCommandHandler : ICommandHandler<CreateStoreCommand, Sto
         var currency = Currency.FromCode(request.Currency);
 
         // Create delivery settings (always in the store currency)
-        var deliveryFeeResult = Money.Create(request.DeliveryFee, currency);
+        var deliveryFeeResult = Money.Create(request.DeliveryFee);
         if (deliveryFeeResult.IsFailure)
             return Result.Failure<StoreDto>(deliveryFeeResult.Error);
 
         Money? freeThreshold = null;
         if (request.FreeDeliveryThreshold.HasValue)
         {
-            var thresholdResult = Money.Create(request.FreeDeliveryThreshold.Value, currency);
+            var thresholdResult = Money.Create(request.FreeDeliveryThreshold.Value);
             if (thresholdResult.IsFailure)
                 return Result.Failure<StoreDto>(thresholdResult.Error);
             freeThreshold = thresholdResult.Value;

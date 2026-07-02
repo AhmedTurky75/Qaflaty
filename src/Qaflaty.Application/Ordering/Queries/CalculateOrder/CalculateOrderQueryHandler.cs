@@ -53,7 +53,7 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
                     if (!districtZone.IsDeliveryEnabled)
                         isDeliveryAvailable = false;
                     else if (districtZone.CustomDeliveryFee.HasValue)
-                        deliveryFee = Money.Create(districtZone.CustomDeliveryFee.Value, store.Currency).Value;
+                        deliveryFee = Money.Create(districtZone.CustomDeliveryFee.Value).Value;
                 }
             }
 
@@ -66,7 +66,7 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
                     if (!cityZone.IsDeliveryEnabled)
                         isDeliveryAvailable = false;
                     else if (cityZone.CustomDeliveryFee.HasValue)
-                        deliveryFee = Money.Create(cityZone.CustomDeliveryFee.Value, store.Currency).Value;
+                        deliveryFee = Money.Create(cityZone.CustomDeliveryFee.Value).Value;
                 }
             }
 
@@ -79,14 +79,14 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
                     if (!countryZone.IsDeliveryEnabled)
                         isDeliveryAvailable = false;
                     else if (countryZone.CustomDeliveryFee.HasValue)
-                        deliveryFee = Money.Create(countryZone.CustomDeliveryFee.Value, store.Currency).Value;
+                        deliveryFee = Money.Create(countryZone.CustomDeliveryFee.Value).Value;
                 }
             }
         }
 
         // Calculate subtotal from current catalog prices (store currency governs the whole order)
-        var currency = store.Currency;
-        var subtotal = Money.Zero(currency);
+        var currencyStr = store.Currency.Code;
+        var subtotal = Money.Zero();
 
         foreach (var item in request.Items)
         {
@@ -124,7 +124,7 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
             }
         }
 
-        var effectiveDeliveryFee = isDeliveryAvailable ? deliveryFee : Money.Zero(currency);
+        var effectiveDeliveryFee = isDeliveryAvailable ? deliveryFee : Money.Zero();
 
         // Tax preview — mirrors OrderPricing: applied to (subtotal + delivery), excluding promo/payment adjustment.
         var taxSettings = config?.TaxSettings;
@@ -146,7 +146,6 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
         }
 
         var totalAmount = subtotal.Amount + effectiveDeliveryFee.Amount + paymentAdjustmentAmount + taxableTotalAddition;
-        var currencyStr = currency.ToString();
 
         return Result.Success(new CalculateOrderDto(
             isDeliveryAvailable,
