@@ -161,12 +161,8 @@ builder.Services.AddAuthorization(options =>
               }));
 
     options.AddPolicy("CanManageStore", policy =>
-        policy.RequireRole("merchant")
-              .RequireAssertion(ctx =>
-              {
-                  var perms = ctx.User.FindFirst("permissions")?.Value ?? "";
-                  return perms.Contains("ManageStore");
-              }));
+        policy.RequireRole("merchant"));
+  
 
     options.AddPolicy("CanManageUsers", policy =>
         policy.RequireRole("merchant")
