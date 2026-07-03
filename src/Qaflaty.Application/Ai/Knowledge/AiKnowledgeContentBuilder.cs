@@ -17,7 +17,8 @@ public sealed record AiKnowledgeDraft(
     string Type,
     string Title,
     string Content,
-    IReadOnlyDictionary<string, string>? Metadata = null);
+    IReadOnlyDictionary<string, string>? Metadata = null,
+    string? NameForEmbedding = null);
 
 /// <summary>
 /// Converts a store's structured data (profile, social links, FAQ, products) into
@@ -168,12 +169,18 @@ public static class AiKnowledgeContentBuilder
         if (image is not null && !string.IsNullOrWhiteSpace(image.Url))
             metadata["imageUrl"] = image.Url;
 
+        // Name-only text for the secondary embedding. Both languages are included so an Arabic
+        // or English query matches the product name directly, letting the model handle
+        // morphological variants (prefixes/articles) that exact string matching cannot.
+        var nameForEmbedding = hasArabicName ? $"{englishName}\n{arabicName}" : englishName;
+
         return new AiKnowledgeDraft(
             $"product-{product.Id.Value}",
             AiKnowledgeDocumentType.Product,
             englishName,
             sb.ToString().Trim(),
-            metadata);
+            metadata,
+            nameForEmbedding);
     }
 
     private static string DescribeStock(Product product)

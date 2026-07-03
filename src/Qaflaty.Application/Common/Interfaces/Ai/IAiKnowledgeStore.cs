@@ -10,7 +10,13 @@ public interface IAiKnowledgeStore
     /// <summary>Atomically replaces all knowledge documents for a store.</summary>
     void ReplaceStoreDocuments(Guid storeId, IReadOnlyList<AiKnowledgeDocument> documents);
 
-    /// <summary>Returns the most similar documents for the given query embedding within a store.</summary>
+    /// <summary>
+    /// Returns the most similar documents for the given query embedding within a store.
+    /// Product documents carry a second, name-only embedding; their final score blends the
+    /// full-content similarity with the name similarity (weighted toward the name) so an
+    /// explicitly-named product is ranked first among otherwise near-identical siblings —
+    /// the model matches morphological variants (e.g. "بشوكولاتة" ≈ "شوكولاتة") on its own.
+    /// </summary>
     IReadOnlyList<AiKnowledgeSearchResult> Search(
         Guid storeId,
         float[] queryEmbedding,

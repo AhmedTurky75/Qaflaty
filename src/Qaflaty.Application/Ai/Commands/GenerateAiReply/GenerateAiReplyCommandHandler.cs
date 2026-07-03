@@ -98,7 +98,8 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
             var query = Truncate(latestCustomerMessage.Content, 2000);
             var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(
                 query, AiEmbeddingInputType.Query, cancellationToken);
-            context = _knowledgeStore.Search(conversation.StoreId.Value, queryEmbedding, topK: 5, minScore: 0.2);
+            context = _knowledgeStore.Search(
+                conversation.StoreId.Value, queryEmbedding, topK: 5, minScore: 0.2);
         }
         catch (Exception ex)
         {
