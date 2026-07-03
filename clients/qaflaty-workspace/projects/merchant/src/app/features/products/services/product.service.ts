@@ -33,6 +33,7 @@ export interface ProductFilters {
   search?: string;
   categoryId?: string;
   status?: ProductStatus;
+  inStock?: boolean;
   page?: number;
   limit?: number;
 }
@@ -60,7 +61,7 @@ export class ProductService {
     let params = new HttpParams();
 
     if (filters?.search) {
-      params = params.set('search', filters.search);
+      params = params.set('searchTerm', filters.search);
     }
     if (filters?.categoryId) {
       params = params.set('categoryId', filters.categoryId);
@@ -68,11 +69,14 @@ export class ProductService {
     if (filters?.status) {
       params = params.set('status', filters.status);
     }
+    if (filters?.inStock !== undefined) {
+      params = params.set('inStock', filters.inStock.toString());
+    }
     if (filters?.page) {
-      params = params.set('page', filters.page.toString());
+      params = params.set('pageNumber', filters.page.toString());
     }
     if (filters?.limit) {
-      params = params.set('limit', filters.limit.toString());
+      params = params.set('pageSize', filters.limit.toString());
     }
 
     return this.http.get<PaginatedProducts>(this.storeUrl(storeId), { params });

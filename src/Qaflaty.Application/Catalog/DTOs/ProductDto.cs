@@ -25,6 +25,8 @@ public record ProductListDto(
     string NameAr,
     decimal Price,
     int Quantity,
+    bool TrackInventory,
+    bool InStock,
     string Status,
     string? FirstImageUrl
 );

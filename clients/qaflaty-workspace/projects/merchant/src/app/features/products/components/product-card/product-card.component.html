@@ -5,7 +5,7 @@
       <img
         [src]="product.firstImageUrl"
         [alt]="product.name"
-        class="w-full h-full object-cover"
+        class="w-full h-full object-contain"
       />
     } @else {
       <div class="w-full h-full flex items-center justify-center text-gray-400">
@@ -35,8 +35,11 @@
     </div>
 
     <!-- Stock Info -->
-    <div class="text-sm text-gray-600 mb-4">
-      Qty: {{ product.quantity }}
+    <div class="flex items-center gap-2 text-sm text-gray-600 mb-4">
+      <span>Qty: {{ product.quantity }}</span>
+      <span [class]="'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ' + (product.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800')">
+        {{ product.inStock ? 'In Stock' : 'Out of Stock' }}
+      </span>
     </div>
 
     <!-- Actions -->

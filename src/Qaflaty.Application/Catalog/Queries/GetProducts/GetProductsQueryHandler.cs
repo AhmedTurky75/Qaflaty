@@ -55,6 +55,11 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Paginated
             query = query.Where(p => p.Status.ToString().Equals(request.Status, StringComparison.OrdinalIgnoreCase));
         }
 
+        if (request.InStock.HasValue)
+        {
+            query = query.Where(p => p.Inventory.InStock == request.InStock.Value);
+        }
+
         var dtos = query.Select(p => new ProductListDto(
             p.Id.Value,
             p.Slug.Value,
@@ -62,6 +67,8 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Paginated
             p.Name.Arabic,
             p.Pricing.Price.Amount,
             p.Inventory.Quantity,
+            p.Inventory.TrackInventory,
+            p.Inventory.InStock,
             p.Status.ToString(),
             p.Images.FirstOrDefault()?.Url
         ));

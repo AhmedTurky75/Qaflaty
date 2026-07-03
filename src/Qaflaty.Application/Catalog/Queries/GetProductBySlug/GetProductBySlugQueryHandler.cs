@@ -38,7 +38,7 @@ public class GetProductBySlugQueryHandler : IQueryHandler<GetProductBySlugQuery,
             product.Description,
             product.Pricing.Price.Amount,
             product.Pricing.CompareAtPrice?.Amount,
-            product.Inventory.Quantity > 0,
+            product.Inventory.InStock,
             product.Images.Select(i => new ProductImageDto(
                 i.Id,
                 i.Url,

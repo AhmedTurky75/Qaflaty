@@ -29,6 +29,7 @@ export class ProductListComponent implements OnInit {
   // Filters
   searchQuery = signal('');
   selectedStatus = signal<ProductStatus | ''>('');
+  selectedStock = signal<'' | 'true' | 'false'>('');
   selectedCategory = signal('');
 
   // Pagination
@@ -44,6 +45,11 @@ export class ProductListComponent implements OnInit {
     { value: ProductStatus.Active, label: 'Active' },
     { value: ProductStatus.Inactive, label: 'Inactive' },
     { value: ProductStatus.Draft, label: 'Draft' }
+  ];
+  stockOptions = [
+    { value: '', label: 'All Stock' },
+    { value: 'true', label: 'In Stock' },
+    { value: 'false', label: 'Out of Stock' }
   ];
 
   // View mode
@@ -103,6 +109,9 @@ export class ProductListComponent implements OnInit {
     }
     if (this.selectedStatus()) {
       filters.status = this.selectedStatus() as ProductStatus;
+    }
+    if (this.selectedStock()) {
+      filters.inStock = this.selectedStock() === 'true';
     }
     if (this.selectedCategory()) {
       filters.categoryId = this.selectedCategory();

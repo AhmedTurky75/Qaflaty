@@ -34,11 +34,12 @@ public class ProductsController : ApiController
         [FromQuery] string? searchTerm,
         [FromQuery] Guid? categoryId,
         [FromQuery] string? status,
+        [FromQuery] bool? inStock,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var query = new GetProductsQuery(storeId, searchTerm, categoryId, status, pageNumber, pageSize);
+        var query = new GetProductsQuery(storeId, searchTerm, categoryId, status, pageNumber, pageSize, inStock);
         var result = await Sender.Send(query, cancellationToken);
         return HandleResult(result);
     }

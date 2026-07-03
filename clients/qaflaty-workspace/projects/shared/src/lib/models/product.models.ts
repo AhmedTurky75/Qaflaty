@@ -7,6 +7,8 @@ export interface ProductListDto {
   nameAr?: string;
   price: number;
   quantity: number;
+  trackInventory: boolean;
+  inStock: boolean;
   status: string;
   firstImageUrl?: string;
 }
@@ -29,6 +31,7 @@ export interface ProductDto {
   quantity: number;
   sku?: string;
   trackInventory?: boolean;
+  inStock?: boolean;
   status: string;
   categoryId?: string;
   images?: ProductImage[];
