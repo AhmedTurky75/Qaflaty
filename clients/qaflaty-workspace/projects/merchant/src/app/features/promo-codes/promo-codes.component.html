@@ -123,10 +123,17 @@
                    (ngModelChange)="updateForm('usageLimit', $event)" />
           </div>
           <div class="field">
-            <label>Per-customer limit (optional)</label>
+            <label>Uses per customer</label>
             <input type="number" min="1"
                    [ngModel]="form().usageLimitPerCustomer"
+                   [disabled]="form().unlimitedPerCustomer"
                    (ngModelChange)="updateForm('usageLimitPerCustomer', $event)" />
+            <label class="checkbox">
+              <input type="checkbox"
+                     [ngModel]="form().unlimitedPerCustomer"
+                     (ngModelChange)="updateForm('unlimitedPerCustomer', $event)" />
+              No limit per customer
+            </label>
           </div>
         </div>
 

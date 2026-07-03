@@ -9,6 +9,9 @@ public static class AiKnowledgeDocumentType
 
 /// <summary>
 /// A single embedded chunk of store knowledge held in the in-memory vector store.
+/// <see cref="Embedding"/> is the full-content vector. <see cref="NameEmbedding"/> is an
+/// optional second vector over the product name alone; when present, search blends the two
+/// (weighted toward the name) so an explicitly-named product outranks near-identical siblings.
 /// </summary>
 public sealed record AiKnowledgeDocument(
     string Id,
@@ -17,7 +20,8 @@ public sealed record AiKnowledgeDocument(
     string Title,
     string Content,
     float[] Embedding,
-    IReadOnlyDictionary<string, string>? Metadata = null);
+    IReadOnlyDictionary<string, string>? Metadata = null,
+    float[]? NameEmbedding = null);
 
 public sealed record AiKnowledgeSearchResult(AiKnowledgeDocument Document, double Score);
 

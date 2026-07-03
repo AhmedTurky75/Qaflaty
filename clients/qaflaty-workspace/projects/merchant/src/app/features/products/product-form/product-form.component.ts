@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
@@ -9,7 +9,7 @@ import { ImageUploadComponent, ImageItem } from '../components/image-upload/imag
 import { VariantManagerComponent } from '../components/variant-manager/variant-manager.component';
 import { InventoryHistoryComponent } from '../components/inventory-history/inventory-history.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
-import { CategoryDto, ProductStatus, Currency, ProductPropertyDefinitionDto } from 'shared';
+import { CategoryDto, ProductStatus, ProductPropertyDefinitionDto } from 'shared';
 
 @Component({
   selector: 'app-product-form',
@@ -45,19 +45,18 @@ export class ProductFormComponent implements OnInit {
     { value: ProductStatus.Inactive, label: 'Inactive' }
   ];
 
-  currencyOptions = [
-    { value: Currency.SAR, label: 'SAR' },
-    { value: Currency.USD, label: 'USD' }
-  ];
+  /** The store's single currency — prices are entered in this; there is no per-product currency. */
+  storeCurrency = computed(() => this.storeContext.currentStore()?.currency ?? 'EGP');
 
   constructor() {
     this.productForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(200)]],
+      nameAr: ['', [Validators.maxLength(200)]],
       slug: ['', Validators.required],
       description: ['', Validators.maxLength(2000)],
       categoryId: [''],
       price: [0, [Validators.required, Validators.min(0)]],
-      currency: [Currency.SAR, Validators.required],
+      currency: [this.storeContext.currentStore()?.currency ?? 'EGP', Validators.required],
       compareAtPrice: [null, Validators.min(0)],
       quantity: [0, [Validators.required, Validators.min(0)]],
       sku: [''],
@@ -132,6 +131,7 @@ export class ProductFormComponent implements OnInit {
       next: (product) => {
         this.productForm.patchValue({
           name: product.name,
+          nameAr: product.nameAr || '',
           slug: product.slug,
           description: product.description,
           categoryId: product.categoryId || '',
@@ -191,6 +191,7 @@ export class ProductFormComponent implements OnInit {
     const formValue = this.productForm.value;
     const productData = {
       name: formValue.name,
+      nameAr: formValue.nameAr || undefined,
       slug: formValue.slug,
       description: formValue.description || undefined,
       categoryId: formValue.categoryId || undefined,
@@ -256,6 +257,10 @@ export class ProductFormComponent implements OnInit {
 
   get name() {
     return this.productForm.get('name');
+  }
+
+  get nameAr() {
+    return this.productForm.get('nameAr');
   }
 
   get slug() {

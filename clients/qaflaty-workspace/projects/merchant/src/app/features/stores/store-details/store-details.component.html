@@ -391,13 +391,9 @@
                     />
                   </div>
                   <div>
-                    <select
-                      formControlName="deliveryFeeCurrency"
-                      class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    >
-                      <option [value]="Currency.SAR">SAR</option>
-                      <option [value]="Currency.USD">USD</option>
-                    </select>
+                    <span class="flex items-center h-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600 text-sm font-medium">
+                      {{ store()?.currency }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -419,13 +415,9 @@
                     />
                   </div>
                   <div>
-                    <select
-                      formControlName="freeDeliveryThresholdCurrency"
-                      class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    >
-                      <option [value]="Currency.SAR">SAR</option>
-                      <option [value]="Currency.USD">USD</option>
-                    </select>
+                    <span class="flex items-center h-full px-3 py-2 border border-gray-200 rounded-md bg-gray-50 text-gray-600 text-sm font-medium">
+                      {{ store()?.currency }}
+                    </span>
                   </div>
                 </div>
                 <p class="mt-1 text-xs text-gray-500">

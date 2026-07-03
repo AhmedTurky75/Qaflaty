@@ -33,11 +33,13 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
         // Verify store ownership
         var storeId = new StoreId(request.StoreId);
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<ProductDto>(new Error("Product.Unauthorized", "You don't have access to this store"));
 
         // Create product name
-        var nameResult = ProductName.Create(request.Name);
+        var nameResult = ProductName.Create(request.Name, request.NameAr);
         if (nameResult.IsFailure)
             return Result.Failure<ProductDto>(nameResult.Error);
 
@@ -51,7 +53,7 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
         if (!isSlugAvailable)
             return Result.Failure<ProductDto>(new Error("Product.SlugTaken", "This slug is already taken"));
 
-        // Create pricing
+        // Create pricing (amounts are implicitly in the store's single currency)
         var priceResult = Money.Create(request.Price);
         if (priceResult.IsFailure)
             return Result.Failure<ProductDto>(priceResult.Error);
@@ -116,6 +118,7 @@ public class CreateProductCommandHandler : ICommandHandler<CreateProductCommand,
             product.Id.Value,
             product.Slug.Value,
             product.Name.Value,
+            product.Name.Arabic,
             product.Description,
             product.Pricing.Price.Amount,
             product.Pricing.CompareAtPrice?.Amount,

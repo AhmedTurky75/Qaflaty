@@ -10,5 +10,6 @@ public record GetProductsQuery(
     Guid? CategoryId,
     string? Status,
     int PageNumber = 1,
-    int PageSize = 20
+    int PageSize = 20,
+    bool? InStock = null
 ) : IQuery<PaginatedList<ProductListDto>>;

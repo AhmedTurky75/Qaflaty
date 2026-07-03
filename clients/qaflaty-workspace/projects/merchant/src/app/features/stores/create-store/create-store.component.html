@@ -77,6 +77,26 @@
         </p>
       </div>
 
+      <!-- Currency (set once, then locked) -->
+      <div>
+        <label for="currency" class="block text-sm font-medium text-gray-700">
+          Store Currency *
+        </label>
+        <select
+          id="currency"
+          formControlName="currency"
+          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+        >
+          @for (c of currencies(); track c.code) {
+            <option [value]="c.code">{{ c.code }} — {{ c.name }} ({{ c.symbol }})</option>
+          }
+        </select>
+        <p class="mt-1 text-xs text-amber-600 font-medium">
+          ⚠ Chosen once and locked afterward. Every product price, delivery fee, and tax in this
+          store will use this currency — a store cannot mix currencies.
+        </p>
+      </div>
+
       <!-- Error Message -->
       @if (error()) {
         <div class="rounded-md bg-red-50 p-4">

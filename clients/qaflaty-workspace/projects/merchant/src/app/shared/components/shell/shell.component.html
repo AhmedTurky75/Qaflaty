@@ -9,29 +9,29 @@
 
   <!-- Sidebar -->
   <aside
-    class="fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0"
+    class="fixed inset-y-0 left-0 z-30 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col"
     [class.-translate-x-full]="!sidebarOpen()"
   >
     <!-- Logo -->
-    <div class="flex items-center justify-center h-16 px-4 bg-primary-600">
+    <div class="flex-shrink-0 flex items-center justify-center h-16 px-4 bg-primary-600">
       <h1 class="text-2xl font-bold text-white">Qaflaty</h1>
     </div>
 
     <!-- Store Switcher -->
-    <div class="mt-4">
+    <div class="flex-shrink-0 mt-4">
       <app-store-switcher></app-store-switcher>
     </div>
 
     <!-- Navigation -->
-    <nav class="px-3">
+    <nav class="flex-1 overflow-y-auto px-3 py-2">
       @for (item of navigationItems(); track item.route) {
         <a
           [routerLink]="item.route"
           routerLinkActive="bg-primary-50 text-primary-700"
-          class="flex items-center px-4 py-3 mb-2 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors relative"
+          class="flex items-center px-4 py-2 mb-0.5 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors relative"
           (click)="sidebarOpen.set(false)"
         >
-          <span class="text-2xl mr-3">
+          <span class="text-xl mr-3">
             @switch (item.icon) {
               @case ('home') { 🏠 }
               @case ('store') { 🏪 }
@@ -59,7 +59,7 @@
     </nav>
 
     <!-- User info at bottom -->
-    <div class="absolute bottom-0 w-full p-4 border-t border-gray-200">
+    <div class="flex-shrink-0 w-full p-4 border-t border-gray-200">
       @if (currentMerchant(); as merchant) {
         <div class="flex items-center">
           <div class="flex-shrink-0">

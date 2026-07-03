@@ -92,7 +92,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         var addressResult = Address.Create(
             request.Street,
             request.City,
-            request.District);
+            request.District,
+            country: request.Country);
 
         if (addressResult.IsFailure)
             return Result.Failure<OrderDto>(addressResult.Error);
@@ -260,7 +261,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
                 return Result.Failure<OrderDto>(validation.Error);
 
             var discountValue = promo.CalculateDiscount(subtotal, deliveryFee.Amount);
-            var discountResult = Money.Create(discountValue, order.Pricing.Subtotal.Currency);
+            var discountResult = Money.Create(discountValue);
             if (discountResult.IsFailure)
                 return Result.Failure<OrderDto>(discountResult.Error);
 
@@ -300,10 +301,10 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         else
         {
             // OTP not required — confirm the order immediately
-            order.Confirm();
+            order.Confirm("Customer");
         }
 
-        return Result.Success(MapToDto(order, customer));
+        return Result.Success(MapToDto(order, customer, store.Currency.Code));
     }
 
     private static OrderingPaymentMethod MapToOrderingPaymentMethod(string key) =>
@@ -348,7 +349,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         </html>
         """;
 
-    private static OrderDto MapToDto(Order order, Customer customer) => new(
+    private static OrderDto MapToDto(Order order, Customer customer, string currencyCode) => new(
         order.Id.Value,
         order.StoreId.Value,
         order.CustomerId.Value,
@@ -362,16 +363,16 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             i.Id.Value,
             i.ProductId.Value,
             i.ProductName,
-            new MoneyDto(i.UnitPrice.Amount, i.UnitPrice.Currency.ToString()),
+            new MoneyDto(i.UnitPrice.Amount, currencyCode),
             i.Quantity,
-            new MoneyDto(i.Total.Amount, i.Total.Currency.ToString())
+            new MoneyDto(i.Total.Amount, currencyCode)
         )).ToList(),
         new OrderPricingDto(
-            new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
-            new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
-            new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString()),
-            new MoneyDto(order.Pricing.DiscountAmount.Amount, order.Pricing.DiscountAmount.Currency.ToString()),
-            new MoneyDto(order.Pricing.TaxAmount.Amount, order.Pricing.TaxAmount.Currency.ToString())
+            new MoneyDto(order.Pricing.Subtotal.Amount, currencyCode),
+            new MoneyDto(order.Pricing.DeliveryFee.Amount, currencyCode),
+            new MoneyDto(order.Pricing.Total.Amount, currencyCode),
+            new MoneyDto(order.Pricing.DiscountAmount.Amount, currencyCode),
+            new MoneyDto(order.Pricing.TaxAmount.Amount, currencyCode)
         ),
         new PaymentInfoDto(
             order.Payment.Method.ToString(),

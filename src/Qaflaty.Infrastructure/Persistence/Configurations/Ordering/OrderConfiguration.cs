@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
+using Qaflaty.Infrastructure.Persistence.Converters;
 
 namespace Qaflaty.Infrastructure.Persistence.Configurations.Ordering;
 
@@ -49,31 +50,26 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             pricing.OwnsOne(p => p.Subtotal, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("subtotal").HasColumnType("decimal(18,2)");
-                money.Property(m => m.Currency).HasColumnName("subtotal_currency").HasConversion<string>();
             });
 
             pricing.OwnsOne(p => p.DeliveryFee, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("delivery_fee").HasColumnType("decimal(18,2)");
-                money.Property(m => m.Currency).HasColumnName("delivery_fee_currency").HasConversion<string>();
             });
 
             pricing.OwnsOne(p => p.DiscountAmount, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("discount_amount").HasColumnType("decimal(18,2)");
-                money.Property(m => m.Currency).HasColumnName("discount_currency").HasConversion<string>();
             });
 
             pricing.OwnsOne(p => p.TaxAmount, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("tax_amount").HasColumnType("decimal(18,2)");
-                money.Property(m => m.Currency).HasColumnName("tax_currency").HasConversion<string>();
             });
 
             pricing.OwnsOne(p => p.Total, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("total").HasColumnType("decimal(18,2)");
-                money.Property(m => m.Currency).HasColumnName("total_currency").HasConversion<string>();
             });
         });
 

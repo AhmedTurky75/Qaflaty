@@ -29,10 +29,7 @@ public sealed class DeliveryZone : AggregateRoot<DeliveryZoneId>
     /// <summary>
     /// Optional custom delivery fee. When null, the parent zone's fee (or store default) applies.
     /// </summary>
-    public decimal? CustomDeliveryFee { get; private set; } // Zone-specific override fee; null falls back to parent zone / store default, e.g. 25.00
-
-    /// <summary>Currency for the custom fee (ISO 4217, e.g. "SAR", "EGP").</summary>
-    public string? FeeCurrency { get; private set; } // ISO 4217 currency of CustomDeliveryFee, e.g. "SAR"
+    public decimal? CustomDeliveryFee { get; private set; } // Zone-specific override fee, in the store's single currency; null falls back to parent zone / store default, e.g. 25.00
 
     public DateTime CreatedAt { get; private set; } // UTC timestamp when the zone was created
     public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last change
@@ -44,8 +41,7 @@ public sealed class DeliveryZone : AggregateRoot<DeliveryZoneId>
         DeliveryZoneLevel level,
         int referenceId,
         bool isDeliveryEnabled = true,
-        decimal? customDeliveryFee = null,
-        string? feeCurrency = null)
+        decimal? customDeliveryFee = null)
     {
         if (customDeliveryFee.HasValue && customDeliveryFee.Value < 0)
             return Result.Failure<DeliveryZone>(
@@ -59,13 +55,12 @@ public sealed class DeliveryZone : AggregateRoot<DeliveryZoneId>
             ReferenceId = referenceId,
             IsDeliveryEnabled = isDeliveryEnabled,
             CustomDeliveryFee = customDeliveryFee,
-            FeeCurrency = feeCurrency,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });
     }
 
-    public Result Update(bool isDeliveryEnabled, decimal? customDeliveryFee, string? feeCurrency)
+    public Result Update(bool isDeliveryEnabled, decimal? customDeliveryFee)
     {
         if (customDeliveryFee.HasValue && customDeliveryFee.Value < 0)
             return Result.Failure(
@@ -73,7 +68,6 @@ public sealed class DeliveryZone : AggregateRoot<DeliveryZoneId>
 
         IsDeliveryEnabled = isDeliveryEnabled;
         CustomDeliveryFee = customDeliveryFee;
-        FeeCurrency = feeCurrency;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

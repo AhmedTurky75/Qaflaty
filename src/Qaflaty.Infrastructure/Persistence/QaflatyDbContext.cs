@@ -6,6 +6,7 @@ using Qaflaty.Domain.Catalog.Aggregates.Country;
 using Qaflaty.Domain.Catalog.Aggregates.DeliveryZone;
 using Qaflaty.Domain.Catalog.Aggregates.District;
 using Qaflaty.Domain.Catalog.Aggregates.FaqItem;
+using Qaflaty.Domain.Catalog.Aggregates.LayoutVariant;
 using Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
 using Qaflaty.Domain.Catalog.Aggregates.PromoCode;
@@ -60,6 +61,7 @@ public class QaflatyDbContext : DbContext
     public DbSet<ProductPropertyDefinition> ProductPropertyDefinitions => Set<ProductPropertyDefinition>();
     public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
     public DbSet<PromoCodeRedemption> PromoCodeRedemptions => Set<PromoCodeRedemption>();
+    public DbSet<LayoutVariant> LayoutVariants => Set<LayoutVariant>();
 
     // Ordering
     public DbSet<Order> Orders => Set<Order>();

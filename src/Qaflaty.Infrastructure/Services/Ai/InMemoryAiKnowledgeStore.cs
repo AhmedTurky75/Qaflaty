@@ -20,6 +20,13 @@ public sealed class InMemoryAiKnowledgeStore : IAiKnowledgeStore
         _stores[storeId] = knowledge;
     }
 
+    // When a document carries a name-only embedding, its final score is a weighted blend of the
+    // name similarity and the full-content similarity. Product docs are near-identical (same
+    // template/category) so content scores cluster tightly; leaning on the name lets an
+    // explicitly-named product win, while the content term still rewards attribute/context matches.
+    private const double NameScoreWeight = 0.65;
+    private const double ContentScoreWeight = 0.35;
+
     public IReadOnlyList<AiKnowledgeSearchResult> Search(
         Guid storeId,
         float[] queryEmbedding,
@@ -34,11 +41,23 @@ public sealed class InMemoryAiKnowledgeStore : IAiKnowledgeStore
             return Array.Empty<AiKnowledgeSearchResult>();
 
         return knowledge.Documents
-            .Select(doc => new AiKnowledgeSearchResult(doc, CosineSimilarity(queryEmbedding, queryNorm, doc.Embedding)))
+            .Select(doc => new AiKnowledgeSearchResult(doc, ScoreDocument(queryEmbedding, queryNorm, doc)))
             .Where(r => r.Score >= minScore)
             .OrderByDescending(r => r.Score)
             .Take(topK)
             .ToList();
+    }
+
+    private static double ScoreDocument(float[] query, double queryNorm, AiKnowledgeDocument doc)
+    {
+        var contentScore = CosineSimilarity(query, queryNorm, doc.Embedding);
+
+        // Non-product docs (no name vector) are scored on content alone.
+        if (doc.NameEmbedding is not { Length: > 0 })
+            return contentScore;
+
+        var nameScore = CosineSimilarity(query, queryNorm, doc.NameEmbedding);
+        return NameScoreWeight * nameScore + ContentScoreWeight * contentScore;
     }
 
     public bool HasKnowledge(Guid storeId) =>

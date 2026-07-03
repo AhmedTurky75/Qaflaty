@@ -40,11 +40,6 @@ public class DeliveryZoneConfiguration : IEntityTypeConfiguration<DeliveryZone>
             .HasColumnType("decimal(10,2)")
             .IsRequired(false);
 
-        builder.Property(z => z.FeeCurrency)
-            .HasColumnName("fee_currency")
-            .HasMaxLength(3)
-            .IsRequired(false);
-
         builder.Property(z => z.CreatedAt).HasColumnName("created_at");
         builder.Property(z => z.UpdatedAt).HasColumnName("updated_at");
 

@@ -15,5 +15,8 @@ public record UpdatePromoCodeCommand(
     DateTime? StartsAt,
     DateTime? ExpiresAt,
     int? UsageLimit,
-    int? UsageLimitPerCustomer
+    int? UsageLimitPerCustomer,
+    // See CreatePromoCodeCommand: only when true is the per-customer limit stored as null
+    // (unlimited); otherwise an unspecified value defaults to 1.
+    bool UnlimitedPerCustomer = false
 ) : ICommand<PromoCodeDto>;

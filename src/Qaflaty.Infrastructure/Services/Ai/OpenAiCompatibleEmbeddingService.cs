@@ -28,14 +28,18 @@ public sealed class OpenAiCompatibleEmbeddingService : IAiEmbeddingService
 
     public bool IsConfigured => _options.IsConfigured;
 
-    public async Task<float[]> GenerateEmbeddingAsync(string input, CancellationToken cancellationToken = default)
+    public async Task<float[]> GenerateEmbeddingAsync(
+        string input,
+        AiEmbeddingInputType inputType = AiEmbeddingInputType.Document,
+        CancellationToken cancellationToken = default)
     {
-        var result = await GenerateEmbeddingsAsync(new[] { input }, cancellationToken);
+        var result = await GenerateEmbeddingsAsync(new[] { input }, inputType, cancellationToken);
         return result.Count > 0 ? result[0] : Array.Empty<float>();
     }
 
     public async Task<IReadOnlyList<float[]>> GenerateEmbeddingsAsync(
         IReadOnlyList<string> inputs,
+        AiEmbeddingInputType inputType = AiEmbeddingInputType.Document,
         CancellationToken cancellationToken = default)
     {
         if (!IsConfigured)
@@ -44,10 +48,11 @@ public sealed class OpenAiCompatibleEmbeddingService : IAiEmbeddingService
         if (inputs.Count == 0)
             return Array.Empty<float[]>();
 
+        var model = _options.EffectiveEmbeddingModel;
         var request = new EmbeddingRequest
         {
-            Model = _options.EffectiveEmbeddingModel,
-            Input = inputs.ToList()
+            Model = model,
+            Input = inputs.Select(text => ApplyTaskPrefix(model, inputType, text)).ToList()
         };
 
         using var response = await _httpClient.PostAsJsonAsync(
@@ -71,6 +76,23 @@ public sealed class OpenAiCompatibleEmbeddingService : IAiEmbeddingService
     }
 
     private string BuildUrl(string path) => $"{_options.EffectiveEndpoint.TrimEnd('/')}/{path}";
+
+    /// <summary>
+    /// nomic-embed-text is asymmetric and is trained with mandatory task-instruction prefixes:
+    /// documents must be prefixed with "search_document: " and queries with "search_query: ".
+    /// Without them, query and document vectors do not share a retrieval space and cosine
+    /// similarity returns semantically-wrong matches. Other models (OpenAI, all-minilm, bge, …)
+    /// use different or no prefixes, so this is scoped to nomic models only.
+    /// </summary>
+    private static string ApplyTaskPrefix(string model, AiEmbeddingInputType inputType, string text)
+    {
+        if (model.IndexOf("nomic", StringComparison.OrdinalIgnoreCase) < 0)
+            return text;
+
+        return inputType == AiEmbeddingInputType.Query
+            ? $"search_query: {text}"
+            : $"search_document: {text}";
+    }
 
     private static readonly JsonSerializerOptions JsonOptions = new()
     {

@@ -32,10 +32,13 @@ public class ShipOrderCommandHandler : ICommandHandler<ShipOrderCommand>
             return Result.Failure(OrderingErrors.OrderNotFound);
 
         var store = await _storeRepository.GetByIdAsync(order.StoreId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure(new Error("Order.Unauthorized", "You don't have access to this order"));
 
         var result = order.Ship(
+            _currentUserService.Email ?? "System",
             request.Carrier,
             request.TrackingNumber,
             request.TrackingUrl,

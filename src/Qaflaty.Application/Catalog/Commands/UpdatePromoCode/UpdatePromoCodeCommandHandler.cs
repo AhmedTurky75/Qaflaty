@@ -25,6 +25,12 @@ public class UpdatePromoCodeCommandHandler : ICommandHandler<UpdatePromoCodeComm
         if (promo is null || promo.StoreId != request.StoreId)
             return Result.Failure<PromoCodeDto>(PromoCodeErrors.NotFound);
 
+        // Safe default: an unspecified per-customer limit becomes 1. Unlimited is only
+        // honoured when the merchant explicitly opts in via UnlimitedPerCustomer.
+        var usageLimitPerCustomer = request.UnlimitedPerCustomer
+            ? (int?)null
+            : request.UsageLimitPerCustomer ?? 1;
+
         var result = promo.Update(
             request.Description,
             discountType,
@@ -34,7 +40,7 @@ public class UpdatePromoCodeCommandHandler : ICommandHandler<UpdatePromoCodeComm
             request.StartsAt,
             request.ExpiresAt,
             request.UsageLimit,
-            request.UsageLimitPerCustomer);
+            usageLimitPerCustomer);
 
         if (result.IsFailure)
             return Result.Failure<PromoCodeDto>(result.Error);

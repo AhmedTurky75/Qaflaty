@@ -25,6 +25,12 @@ public class CreatePromoCodeCommandHandler : ICommandHandler<CreatePromoCodeComm
         if (await _promoCodeRepository.CodeExistsAsync(request.StoreId, request.Code, ct))
             return Result.Failure<PromoCodeDto>(PromoCodeErrors.CodeAlreadyExists);
 
+        // Safe default: an unspecified per-customer limit becomes 1. Unlimited is only
+        // honoured when the merchant explicitly opts in via UnlimitedPerCustomer.
+        var usageLimitPerCustomer = request.UnlimitedPerCustomer
+            ? (int?)null
+            : request.UsageLimitPerCustomer ?? 1;
+
         var result = PromoCode.Create(
             request.StoreId,
             request.Code,
@@ -36,7 +42,7 @@ public class CreatePromoCodeCommandHandler : ICommandHandler<CreatePromoCodeComm
             request.StartsAt,
             request.ExpiresAt,
             request.UsageLimit,
-            request.UsageLimitPerCustomer);
+            usageLimitPerCustomer);
 
         if (result.IsFailure)
             return Result.Failure<PromoCodeDto>(result.Error);

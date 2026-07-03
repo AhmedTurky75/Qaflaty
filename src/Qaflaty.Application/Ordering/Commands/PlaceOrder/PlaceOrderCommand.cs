@@ -19,6 +19,7 @@ public record PlaceOrderCommand(
     string Street,
     string City,
     string? District,
+    string? Country,
     string? DeliveryInstructions,
     string? CustomerNotes,
     string PaymentMethod,

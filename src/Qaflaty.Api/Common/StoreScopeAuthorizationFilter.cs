@@ -1,24 +1,35 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Qaflaty.Domain.Catalog.Repositories;
+using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Api.Common;
 
 /// <summary>
 /// Global authorization filter that enforces tenant isolation on every
-/// <c>api/stores/{storeId}/...</c> route. A merchant's access token carries a
-/// single <c>store_id</c> claim describing the store they are currently operating
-/// in; this filter rejects any request whose route <c>storeId</c> does not match
-/// that claim, preventing a merchant from acting on a store they do not belong to.
+/// <c>api/stores/{storeId}/...</c> route. The merchant access token is store-less
+/// (it carries a <c>merchant_id</c> but no <c>store_id</c>/<c>role</c> claim), so
+/// ownership cannot be checked from claims alone. This filter rejects the request
+/// unless the caller can access the store named in the route — i.e. they own it
+/// (<c>Store.MerchantId</c>) or hold an active team assignment to it.
 /// </summary>
 /// <remarks>
-/// The filter only enforces when both a <c>storeId</c> route value and a
-/// <c>store_id</c> claim are present, so it has no effect on non-store-scoped
-/// routes, customer/storefront routes, or unauthenticated requests — those are
-/// handled by the standard <c>[Authorize]</c> policies.
+/// The filter only acts when a <c>storeId</c> route value is present and the caller
+/// is an authenticated merchant, so it has no effect on non-store-scoped routes,
+/// customer/storefront routes, or unauthenticated requests — those are handled by the
+/// standard <c>[Authorize]</c> policies, which run in the authorization middleware
+/// before this filter.
 /// </remarks>
-public sealed class StoreScopeAuthorizationFilter : IAuthorizationFilter
+public sealed class StoreScopeAuthorizationFilter : IAsyncAuthorizationFilter
 {
-    public void OnAuthorization(AuthorizationFilterContext context)
+    private readonly IStoreRepository _storeRepository;
+
+    public StoreScopeAuthorizationFilter(IStoreRepository storeRepository)
+    {
+        _storeRepository = storeRepository;
+    }
+
+    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         // Not a store-scoped route — nothing to enforce.
         if (!context.RouteData.Values.TryGetValue("storeId", out var routeStoreIdValue)
@@ -34,15 +45,18 @@ public sealed class StoreScopeAuthorizationFilter : IAuthorizationFilter
         if (user.Identity?.IsAuthenticated != true)
             return;
 
-        var storeClaim = user.FindFirst("store_id");
-
-        // No store context on the token (e.g. pre-store-selection merchant token,
-        // or a customer token). Defer to the route's own [Authorize] policies,
-        // which require the store-context claims for these endpoints anyway.
-        if (storeClaim is null || string.IsNullOrWhiteSpace(storeClaim.Value))
+        // Only merchant tokens carry merchant_id. A non-merchant (e.g. customer) token
+        // can never own a store; defer to the endpoint's [Authorize] policy to reject it.
+        var merchantIdClaim = user.FindFirst("merchant_id");
+        if (merchantIdClaim is null || !Guid.TryParse(merchantIdClaim.Value, out var merchantId))
             return;
 
-        if (!Guid.TryParse(storeClaim.Value, out var tokenStoreId) || tokenStoreId != routeStoreId)
+        var canAccess = await _storeRepository.CanMerchantAccessStoreAsync(
+            new MerchantId(merchantId), new StoreId(routeStoreId));
+
+        // Not the owner and not an active team assignee. Returning 403 (rather than
+        // 404) also avoids leaking which store ids exist.
+        if (!canAccess)
         {
             context.Result = new ObjectResult(new
             {

@@ -5,13 +5,14 @@ import { Money } from '../models/store.model';
 import { CartApiService } from './cart-api.service';
 import { CustomerAuthService } from './customer-auth.service';
 import { GuestSessionService } from './guest-session.service';
+import { ConfigService } from './config.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CartService {
   private cartItems = signal<CartItem[]>([]);
-  private deliveryFee = signal<Money>({ amount: 0, currency: 'SAR' });
+  private deliveryFee = signal<Money>({ amount: 0, currency: 'EGP' });
   private freeDeliveryThreshold = signal<Money | null>(null);
 
   cartLoading = signal(false);
@@ -19,6 +20,12 @@ export class CartService {
   private cartApi = inject(CartApiService);
   private authService = inject(CustomerAuthService);
   private guestSession = inject(GuestSessionService);
+  private config = inject(ConfigService);
+
+  /** The store's single currency code; every cart Money carries it. */
+  private get currency(): string {
+    return this.config.config()?.currency ?? 'EGP';
+  }
 
   private get isLoggedIn(): boolean {
     return this.authService.isAuthenticated();
@@ -33,7 +40,7 @@ export class CartService {
     const total = this.cartItems().reduce((sum, item) =>
       sum + (item.unitPrice.amount * item.quantity), 0
     );
-    return { amount: total, currency: 'SAR' };
+    return { amount: total, currency: this.currency };
   });
 
   total = computed(() => {
@@ -45,7 +52,7 @@ export class CartService {
 
     return {
       amount: subtotalAmount + deliveryAmount,
-      currency: 'SAR'
+      currency: this.currency
     };
   });
 
@@ -58,7 +65,7 @@ export class CartService {
     items: this.cartItems(),
     subtotal: this.subtotal(),
     deliveryFee: this.isFreeDelivery()
-      ? { amount: 0, currency: 'SAR' }
+      ? { amount: 0, currency: this.currency }
       : this.deliveryFee(),
     total: this.total(),
     itemCount: this.itemCount()
@@ -131,7 +138,7 @@ export class CartService {
       getCartItemKey(item.productId, item.variantId) === itemKey
     );
 
-    const unitPrice = variant?.priceOverride ?? { amount: product.price, currency: 'SAR' };
+    const unitPrice = variant?.priceOverride ?? { amount: product.price, currency: this.currency };
     const maxQty = variant?.quantity ?? 99;
 
     if (existingIndex >= 0) {
@@ -212,6 +219,18 @@ export class CartService {
     } else {
       this.cartApi.clearGuestCart();
     }
+  }
+
+  /**
+   * Resets the in-memory cart on logout, then reloads the guest cart from the
+   * backend. Unlike clear(), this does NOT delete the cart on the server — the
+   * customer's authenticated cart is left intact for their next login.
+   * Must be called after the customer signal has been cleared so loadFromBackend
+   * fetches the guest cart rather than the (now stale) authenticated one.
+   */
+  resetForLogout(): void {
+    this.cartItems.set([]);
+    this.loadFromBackend();
   }
 
   /**

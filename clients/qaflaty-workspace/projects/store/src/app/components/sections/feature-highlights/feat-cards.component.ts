@@ -25,7 +25,7 @@ import { SectionConfigurationDto } from 'shared';
 export class FeatCardsComponent {
   config = input.required<SectionConfigurationDto>();
   features = [
-    { title: 'Free Shipping', description: 'On orders over 200 SAR' },
+    { title: 'Free Shipping', description: 'On all qualifying orders' },
     { title: 'Secure Payment', description: '100% secure checkout' },
     { title: 'Easy Returns', description: '30-day return policy' },
     { title: '24/7 Support', description: 'Always here to help' }

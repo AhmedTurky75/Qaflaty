@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Ordering.Errors;
@@ -12,13 +13,16 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
 {
     private readonly IOrderRepository _orderRepository;
     private readonly ICustomerRepository _customerRepository;
+    private readonly IStoreRepository _storeRepository;
 
     public TrackOrderQueryHandler(
         IOrderRepository orderRepository,
-        ICustomerRepository customerRepository)
+        ICustomerRepository customerRepository,
+        IStoreRepository storeRepository)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
+        _storeRepository = storeRepository;
     }
 
     public async Task<Result<OrderTrackingDto>> Handle(TrackOrderQuery request, CancellationToken cancellationToken)
@@ -38,22 +42,25 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
         if (customer == null || !ContactMatches(customer.Contact, request.Contact))
             return Result.Failure<OrderTrackingDto>(OrderingErrors.OrderNotFound);
 
+        var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
+        var currencyCode = store?.Currency.Code ?? "EGP";
+
         return Result.Success(new OrderTrackingDto(
             order.OrderNumber.Value,
             order.Status.ToString(),
             order.Items.Select(i => new TrackOrderItemDto(
                 i.ProductId.Value,
                 i.ProductName,
-                new MoneyDto(i.UnitPrice.Amount, i.UnitPrice.Currency.ToString()),
+                new MoneyDto(i.UnitPrice.Amount, currencyCode),
                 i.Quantity,
-                new MoneyDto(i.Total.Amount, i.Total.Currency.ToString())
+                new MoneyDto(i.Total.Amount, currencyCode)
             )).ToList(),
             new OrderPricingDto(
-                new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
-                new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
-                new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString()),
-                new MoneyDto(order.Pricing.DiscountAmount.Amount, order.Pricing.DiscountAmount.Currency.ToString()),
-                new MoneyDto(order.Pricing.TaxAmount.Amount, order.Pricing.TaxAmount.Currency.ToString())
+                new MoneyDto(order.Pricing.Subtotal.Amount, currencyCode),
+                new MoneyDto(order.Pricing.DeliveryFee.Amount, currencyCode),
+                new MoneyDto(order.Pricing.Total.Amount, currencyCode),
+                new MoneyDto(order.Pricing.DiscountAmount.Amount, currencyCode),
+                new MoneyDto(order.Pricing.TaxAmount.Amount, currencyCode)
             ),
             new TrackOrderDeliveryDto(
                 order.Delivery.Address.ToSingleLine(),

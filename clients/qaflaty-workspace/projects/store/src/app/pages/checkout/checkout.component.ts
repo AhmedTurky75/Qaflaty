@@ -463,6 +463,7 @@ export class CheckoutComponent implements OnInit {
           district: undefined,
           additionalInstructions: formValue.additionalInstructions || undefined,
           countryCode: selectedAddr.countryCode,
+          country: selectedAddr.country || this.countries.find(c => c.isoNumeric === selectedAddr.countryCode)?.name,
           cityId: selectedAddr.cityId,
           districtId: selectedAddr.districtId
         },
@@ -481,6 +482,7 @@ export class CheckoutComponent implements OnInit {
       const cityId = formValue.cityId ? Number(formValue.cityId) : undefined;
       const districtId = formValue.districtId ? Number(formValue.districtId) : undefined;
       const city = cityId ? this.guestCities().find(c => c.id === cityId) : undefined;
+      const country = this.countries.find(c => c.isoNumeric === countryCode);
 
       request = {
         customerInfo: {
@@ -495,6 +497,7 @@ export class CheckoutComponent implements OnInit {
           district: undefined,
           additionalInstructions: formValue.additionalInstructions || undefined,
           countryCode,
+          country: country?.name,
           cityId,
           districtId
         },

@@ -54,8 +54,12 @@ export class ShellComponent implements OnInit {
   }
 
   navigationItems = computed(() => {
-    const role = this.authService.role();
-    const isAdminOrAbove = role === 'Owner' || role === 'Admin';
+    // This app uses a store-less token (no select-store / role claim). The merchant's
+    // authority comes from owning the currently-selected store, so gate the Team
+    // section on ownership of the active store rather than a (never-set) role signal.
+    const merchant = this.authService.currentMerchant();
+    const currentStore = this.storeContext.currentStore();
+    const isStoreOwner = !!merchant && !!currentStore && currentStore.merchantId === merchant.id;
     const items = [
       { name: 'Dashboard', icon: 'home', route: '/dashboard' },
       { name: 'Stores', icon: 'store', route: '/stores' },
@@ -70,7 +74,7 @@ export class ShellComponent implements OnInit {
       { name: 'Store Builder', icon: 'layout', route: '/store-builder' },
       { name: 'Settings', icon: 'settings', route: '/settings' }
     ];
-    if (isAdminOrAbove) {
+    if (isStoreOwner) {
       items.splice(2, 0, { name: 'Team', icon: 'team', route: '/stores/team' });
     }
     return items;

@@ -35,6 +35,19 @@ export class StoreContextService {
     });
   }
 
+  /**
+   * Clears all store context state. Must be called on logout so the next user
+   * doesn't inherit the previous user's stores — the service is a root singleton
+   * that otherwise survives until a full page reload.
+   */
+  reset(): void {
+    this.stores.set([]);
+    this.currentStore.set(null);
+    this.loading.set(false);
+    this.initialized.set(false);
+    localStorage.removeItem(this.STORE_KEY);
+  }
+
   selectStore(storeId: string): void {
     const store = this.stores().find(s => s.id === storeId);
     if (store) {

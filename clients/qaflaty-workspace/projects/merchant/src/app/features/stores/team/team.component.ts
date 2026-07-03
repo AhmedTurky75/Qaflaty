@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/services/auth.service';
+import { StoreContextService } from '../../../core/services/store-context.service';
 
 interface TeamMember {
   merchantId: string;
@@ -358,6 +359,7 @@ export class TeamComponent implements OnInit {
   private http = inject(HttpClient);
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
+  private storeContext = inject(StoreContextService);
 
   members = signal<TeamMember[]>([]);
   loading = signal(true);
@@ -374,7 +376,11 @@ export class TeamComponent implements OnInit {
 
   roles = ASSIGNABLE_ROLES;
 
-  isOwner = computed(() => this.authService.role() === 'Owner');
+  isOwner = computed(() => {
+    const merchant = this.authService.currentMerchant();
+    const currentStore = this.storeContext.currentStore();
+    return !!merchant && !!currentStore && currentStore.merchantId === merchant.id;
+  });
 
   roleLegend = [
     { role: 'Owner', cls: 'bg-purple-100 text-purple-800', desc: 'Full access, manages team' },
@@ -397,7 +403,7 @@ export class TeamComponent implements OnInit {
     newPassword: ['', [Validators.required, Validators.minLength(8)]]
   });
 
-  private get storeId() { return this.authService.storeId(); }
+  private get storeId() { return this.storeContext.currentStoreId(); }
   private get apiBase() { return `${environment.apiUrl}/stores/${this.storeId}/team`; }
 
   ngOnInit(): void { this.loadMembers(); }

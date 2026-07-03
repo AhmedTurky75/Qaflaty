@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Ordering.Aggregates.Return;
+using Qaflaty.Infrastructure.Persistence.Converters;
 
 namespace Qaflaty.Infrastructure.Persistence.Configurations.Ordering;
 
@@ -46,7 +47,6 @@ public class ReturnRequestConfiguration : IEntityTypeConfiguration<ReturnRequest
         builder.OwnsOne(r => r.RefundAmount, money =>
         {
             money.Property(m => m.Amount).HasColumnName("refund_amount").HasColumnType("decimal(18,2)");
-            money.Property(m => m.Currency).HasColumnName("refund_currency").HasConversion<string>();
         });
 
         builder.Navigation(r => r.RefundAmount).IsRequired();

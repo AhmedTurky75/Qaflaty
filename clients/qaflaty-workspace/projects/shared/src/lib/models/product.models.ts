@@ -4,8 +4,11 @@ export interface ProductListDto {
   id: string;
   slug: string;
   name: string;
+  nameAr?: string;
   price: number;
   quantity: number;
+  trackInventory: boolean;
+  inStock: boolean;
   status: string;
   firstImageUrl?: string;
 }
@@ -21,12 +24,14 @@ export interface ProductDto {
   id: string;
   slug: string;
   name: string;
+  nameAr?: string;
   description?: string;
   price: number;
   compareAtPrice?: number;
   quantity: number;
   sku?: string;
   trackInventory?: boolean;
+  inStock?: boolean;
   status: string;
   categoryId?: string;
   images?: ProductImage[];
@@ -57,6 +62,7 @@ export interface ProductImageInput {
 
 export interface CreateProductRequest {
   name: string;
+  nameAr?: string;
   slug: string;
   description?: string;
   categoryId?: string;
@@ -71,6 +77,7 @@ export interface CreateProductRequest {
 
 export interface UpdateProductRequest {
   name: string;
+  nameAr?: string;
   slug: string;
   description?: string;
   price: Money;
@@ -105,6 +112,7 @@ export interface ProductVariantDto {
 export interface ProductWithVariantsDto {
   id: string;
   name: string;
+  nameAr?: string;
   slug: string;
   description?: string;
   price: number;

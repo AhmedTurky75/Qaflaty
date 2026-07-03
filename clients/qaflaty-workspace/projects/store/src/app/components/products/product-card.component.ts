@@ -1,13 +1,15 @@
 import { Component, input, inject, computed } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
-import { CurrencyPipe, NgClass } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { FeatureService } from '../../services/feature.service';
 import { CartService } from '../../services/cart.service';
+import { I18nService } from '../../services/i18n.service';
+import { StorePricePipe } from '../../pipes/store-price.pipe';
 
 @Component({
   selector: 'app-product-card',
   standalone: true,
-  imports: [RouterLink, CurrencyPipe, NgClass],
+  imports: [RouterLink, StorePricePipe, NgClass],
   template: `
     <!-- ───────── STANDARD ───────── -->
     @if (variant() === 'card-standard') {
@@ -17,8 +19,8 @@ import { CartService } from '../../services/cart.service';
             @if (product().images?.length > 0) {
               <img
                 [src]="product().images[0].url"
-                [alt]="product().name"
-                class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                [alt]="displayName()"
+                class="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
               />
             } @else {
               <div class="w-full h-full flex items-center justify-center text-gray-300">
@@ -32,22 +34,22 @@ import { CartService } from '../../services/cart.service';
         <div class="p-4">
           <a [routerLink]="['/products', product().slug]" class="block">
             <h3 class="text-base font-semibold text-gray-800 mb-2 hover:text-[var(--primary-color)] transition-colors line-clamp-2">
-              {{ product().name }}
+              {{ displayName() }}
             </h3>
           </a>
           <div class="mb-4">
             @if (isOnSale()) {
               <div class="flex items-center gap-2">
                 <span class="text-lg font-bold text-[var(--primary-color)]">
-                  {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().price | storePrice }}
                 </span>
                 <span class="text-sm text-gray-400 line-through">
-                  {{ product().compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().compareAtPrice | storePrice }}
                 </span>
               </div>
             } @else {
               <span class="text-lg font-bold text-gray-800">
-                {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
+                {{ product().price | storePrice }}
               </span>
             }
           </div>
@@ -73,8 +75,8 @@ import { CartService } from '../../services/cart.service';
           @if (product().images?.length > 0) {
             <img
               [src]="product().images[0].url"
-              [alt]="product().name"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              [alt]="displayName()"
+              class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
           } @else {
             <div class="w-full h-full flex items-center justify-center text-gray-300">
@@ -88,22 +90,22 @@ import { CartService } from '../../services/cart.service';
             @if (isOnSale()) {
               <div class="text-center">
                 <div class="text-xl font-bold text-white mb-1">
-                  {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().price | storePrice }}
                 </div>
                 <div class="text-sm text-white/70 line-through">
-                  {{ product().compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().compareAtPrice | storePrice }}
                 </div>
               </div>
             } @else {
               <div class="text-xl font-bold text-white">
-                {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
+                {{ product().price | storePrice }}
               </div>
             }
           </div>
         </div>
         <div class="p-3">
           <h3 class="text-sm font-medium text-gray-800 group-hover:text-[var(--primary-color)] transition-colors line-clamp-2">
-            {{ product().name }}
+            {{ displayName() }}
           </h3>
         </div>
       </a>
@@ -117,8 +119,8 @@ import { CartService } from '../../services/cart.service';
             @if (product().images?.length > 0) {
               <img
                 [src]="product().images[0].url"
-                [alt]="product().name"
-                class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                [alt]="displayName()"
+                class="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
               />
             } @else {
               <div class="w-full h-full flex items-center justify-center text-gray-300">
@@ -137,7 +139,7 @@ import { CartService } from '../../services/cart.service';
         <div class="p-4 flex flex-col flex-grow">
           <a [routerLink]="['/products', product().slug]" class="block">
             <h3 class="text-base font-semibold text-gray-800 mb-2 hover:text-[var(--primary-color)] transition-colors line-clamp-2">
-              {{ product().name }}
+              {{ displayName() }}
             </h3>
           </a>
           <!-- Star Rating Placeholder -->
@@ -159,15 +161,15 @@ import { CartService } from '../../services/cart.service';
               @if (isOnSale()) {
                 <div class="flex items-center gap-2">
                   <span class="text-lg font-bold text-[var(--primary-color)]">
-                    {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
+                    {{ product().price | storePrice }}
                   </span>
                   <span class="text-sm text-gray-400 line-through">
-                    {{ product().compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}
+                    {{ product().compareAtPrice | storePrice }}
                   </span>
                 </div>
               } @else {
                 <span class="text-lg font-bold text-gray-800">
-                  {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().price | storePrice }}
                 </span>
               }
             </div>
@@ -188,13 +190,13 @@ import { CartService } from '../../services/cart.service';
     @else if (variant() === 'card-overlay') {
       <a
         [routerLink]="['/products', product().slug]"
-        class="group block relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 aspect-[3/4]"
+        class="group block relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 aspect-[3/4] bg-gray-100"
       >
         @if (product().images?.length > 0) {
           <img
             [src]="product().images[0].url"
-            [alt]="product().name"
-            class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            [alt]="displayName()"
+            class="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
           />
         } @else {
           <div class="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-300">
@@ -209,21 +211,21 @@ import { CartService } from '../../services/cart.service';
         <div class="absolute inset-0 flex flex-col justify-end p-4">
           <div class="transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
             <h3 class="text-base font-bold text-white mb-2 line-clamp-2">
-              {{ product().name }}
+              {{ displayName() }}
             </h3>
             <div class="flex items-center justify-between">
               @if (isOnSale()) {
                 <div class="flex items-center gap-2">
                   <span class="text-lg font-bold text-white">
-                    {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
+                    {{ product().price | storePrice }}
                   </span>
                   <span class="text-sm text-white/60 line-through">
-                    {{ product().compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}
+                    {{ product().compareAtPrice | storePrice }}
                   </span>
                 </div>
               } @else {
                 <span class="text-lg font-bold text-white">
-                  {{ product().price | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().price | storePrice }}
                 </span>
               }
               <!-- Cart icon on hover -->
@@ -265,8 +267,10 @@ export class ProductCardComponent {
   private featureService = inject(FeatureService);
   private cartService = inject(CartService);
   private router = inject(Router);
+  private i18n = inject(I18nService);
 
   variant = this.featureService.productCardVariant;
+  displayName = computed(() => this.i18n.nameFor(this.product().name, this.product().nameAr));
   isInCart = computed(() => this.cartService.hasItem(this.product().id));
 
   addToCart(event: Event): void {

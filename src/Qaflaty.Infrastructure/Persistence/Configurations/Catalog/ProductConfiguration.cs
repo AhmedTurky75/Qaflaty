@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
 using Qaflaty.Domain.Common.Identifiers;
+using Qaflaty.Infrastructure.Persistence.Converters;
 
 namespace Qaflaty.Infrastructure.Persistence.Configurations.Catalog;
 
@@ -29,10 +30,15 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
 
         builder.OwnsOne(p => p.Name, name =>
         {
-            name.Property(n => n.Value)
+            name.Property(n => n.English)
                 .HasColumnName("name")
                 .HasMaxLength(200)
                 .IsRequired();
+            name.Property(n => n.Arabic)
+                .HasColumnName("name_ar")
+                .HasMaxLength(200)
+                .IsRequired();
+            name.Ignore(n => n.Value);
         });
 
         builder.OwnsOne(p => p.Slug, slug =>
@@ -52,13 +58,11 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
             pricing.OwnsOne(pr => pr.Price, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("price").HasColumnType("decimal(18,2)");
-                money.Property(m => m.Currency).HasColumnName("price_currency").HasConversion<string>();
             });
 
             pricing.OwnsOne(pr => pr.CompareAtPrice, money =>
             {
                 money.Property(m => m.Amount).HasColumnName("compare_at_price").HasColumnType("decimal(18,2)");
-                money.Property(m => m.Currency).HasColumnName("compare_at_price_currency").HasConversion<string>();
             });
         });
 

@@ -30,11 +30,13 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
         // Verify store ownership
         var storeId = new StoreId(request.StoreId);
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<CategoryDto>(new Error("Category.Unauthorized", "You don't have access to this store"));
 
         // Create category name
-        var nameResult = CategoryName.Create(request.Name);
+        var nameResult = CategoryName.Create(request.Name, request.NameAr);
         if (nameResult.IsFailure)
             return Result.Failure<CategoryDto>(nameResult.Error);
 
@@ -68,6 +70,7 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
         var dto = new CategoryDto(
             category.Id.Value,
             category.Name.Value,
+            category.Name.Arabic,
             category.Slug.Value,
             category.ParentId?.Value,
             category.SortOrder,

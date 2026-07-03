@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, throwError, share } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { StoreContextService } from './store-context.service';
 import {
   MerchantDto,
   LoginRequest,
@@ -18,6 +19,7 @@ import {
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
+  private storeContext = inject(StoreContextService);
 
   // Signals for reactive state
   currentMerchant = signal<MerchantDto | null>(this.loadStoredMerchant());
@@ -147,6 +149,7 @@ export class AuthService {
     this.storeId.set(null);
     this.role.set(null);
     this.permissions.set([]);
+    this.storeContext.reset();
     this.router.navigate(['/auth/login']);
   }
 }

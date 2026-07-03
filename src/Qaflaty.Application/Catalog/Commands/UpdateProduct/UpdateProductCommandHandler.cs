@@ -28,7 +28,7 @@ public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand,
             return Result.Failure<ProductDto>(CatalogErrors.ProductNotFound);
 
         // Validate name
-        var nameResult = ProductName.Create(request.Name);
+        var nameResult = ProductName.Create(request.Name, request.NameAr);
         if (nameResult.IsFailure)
             return Result.Failure<ProductDto>(nameResult.Error);
 
@@ -53,7 +53,7 @@ public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand,
         if (updateInfoResult.IsFailure)
             return Result.Failure<ProductDto>(updateInfoResult.Error);
 
-        // Update pricing
+        // Update pricing (amounts are implicitly in the store's single currency)
         var priceResult = Money.Create(request.Price);
         if (priceResult.IsFailure)
             return Result.Failure<ProductDto>(priceResult.Error);
@@ -111,6 +111,7 @@ public class UpdateProductCommandHandler : ICommandHandler<UpdateProductCommand,
             product.Id.Value,
             product.Slug.Value,
             product.Name.Value,
+            product.Name.Arabic,
             product.Description,
             product.Pricing.Price.Amount,
             product.Pricing.CompareAtPrice?.Amount,

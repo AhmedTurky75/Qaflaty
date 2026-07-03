@@ -313,11 +313,6 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("decimal(10,2)")
                         .HasColumnName("custom_delivery_fee");
 
-                    b.Property<string>("FeeCurrency")
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)")
-                        .HasColumnName("fee_currency");
-
                     b.Property<bool>("IsDeliveryEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -417,6 +412,50 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.HasIndex("StoreId", "SortOrder");
 
                     b.ToTable("faq_items", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.LayoutVariant.LayoutVariant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("code");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_en");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Type", "Code")
+                        .IsUnique();
+
+                    b.ToTable("layout_variants", (string)null);
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
@@ -932,6 +971,12 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
 
                     b.Property<string>("CustomDomain")
                         .HasMaxLength(255)
@@ -1835,63 +1880,6 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("cart_items", (string)null);
                 });
 
-            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_at");
-
-                    b.Property<Guid>("CustomerId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("customer_id");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("updated_at");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CustomerId")
-                        .IsUnique();
-
-                    b.ToTable("wishlists", (string)null);
-                });
-
-            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.WishlistItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<DateTime>("AddedAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("added_at");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("product_id");
-
-                    b.Property<Guid?>("VariantId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("variant_id");
-
-                    b.Property<Guid>("WishlistId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("wishlist_id");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("WishlistId", "ProductId", "VariantId")
-                        .IsUnique();
-
-                    b.ToTable("wishlist_items", (string)null);
-                });
-
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1964,12 +1952,12 @@ namespace Qaflaty.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("StoreId");
+
                     b.HasIndex("CustomerId", "ProductId")
                         .IsUnique();
 
                     b.HasIndex("ProductId", "Status");
-
-                    b.HasIndex("StoreId");
 
                     b.ToTable("product_reviews", (string)null);
                 });
@@ -2079,6 +2067,63 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("related_product_links", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId")
+                        .IsUnique();
+
+                    b.ToTable("wishlists", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.WishlistItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("AddedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("added_at");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<Guid?>("VariantId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("variant_id");
+
+                    b.Property<Guid>("WishlistId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("wishlist_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("WishlistId", "ProductId", "VariantId")
+                        .IsUnique();
+
+                    b.ToTable("wishlist_items", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Category.Category", b =>
                 {
                     b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.CategoryName", "Name", b1 =>
@@ -2086,7 +2131,13 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<Guid>("CategoryId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Value")
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("name_ar");
+
+                            b1.Property<string>("English")
                                 .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)")
@@ -2384,7 +2435,13 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<Guid>("ProductId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Value")
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("name_ar");
+
+                            b1.Property<string>("English")
                                 .IsRequired()
                                 .HasMaxLength(200)
                                 .HasColumnType("character varying(200)")
@@ -2419,11 +2476,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("compare_at_price");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("compare_at_price_currency");
-
                                     b2.HasKey("ProductPricingProductId");
 
                                     b2.ToTable("products");
@@ -2440,11 +2492,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                     b2.Property<decimal>("Amount")
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("price");
-
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("price_currency");
 
                                     b2.HasKey("ProductPricingProductId");
 
@@ -2548,11 +2595,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("decimal(18,2)")
                                 .HasColumnName("price_override");
 
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("price_override_currency");
-
                             b1.HasKey("ProductVariantId");
 
                             b1.ToTable("product_variants");
@@ -2587,11 +2629,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("delivery_fee");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("delivery_fee_currency");
-
                                     b2.HasKey("DeliverySettingsStoreId");
 
                                     b2.ToTable("stores");
@@ -2608,11 +2645,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                     b2.Property<decimal>("Amount")
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("free_delivery_threshold");
-
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("free_delivery_threshold_currency");
 
                                     b2.HasKey("DeliverySettingsStoreId");
 
@@ -3788,11 +3820,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("delivery_fee");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("delivery_fee_currency");
-
                                     b2.HasKey("OrderPricingOrderId");
 
                                     b2.ToTable("orders");
@@ -3809,11 +3836,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                     b2.Property<decimal>("Amount")
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("discount_amount");
-
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("discount_currency");
 
                                     b2.HasKey("OrderPricingOrderId");
 
@@ -3832,11 +3854,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("subtotal");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("subtotal_currency");
-
                                     b2.HasKey("OrderPricingOrderId");
 
                                     b2.ToTable("orders");
@@ -3854,11 +3871,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("tax_amount");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("tax_currency");
-
                                     b2.HasKey("OrderPricingOrderId");
 
                                     b2.ToTable("orders");
@@ -3875,11 +3887,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                     b2.Property<decimal>("Amount")
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("total");
-
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("total_currency");
 
                                     b2.HasKey("OrderPricingOrderId");
 
@@ -4013,11 +4020,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("decimal(18,2)")
                                 .HasColumnName("unit_price");
 
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("unit_price_currency");
-
                             b1.HasKey("OrderItemId");
 
                             b1.ToTable("order_items");
@@ -4050,11 +4052,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("decimal(18,2)")
                                 .HasColumnName("refund_amount");
 
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("refund_currency");
-
                             b1.HasKey("ReturnRequestId");
 
                             b1.ToTable("return_requests");
@@ -4084,11 +4081,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("decimal(18,2)")
                                 .HasColumnName("unit_price");
 
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("unit_price_currency");
-
                             b1.HasKey("ReturnRequestItemId");
 
                             b1.ToTable("return_request_items");
@@ -4110,20 +4102,20 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.WishlistItem", b =>
-                {
-                    b.HasOne("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", null)
-                        .WithMany("Items")
-                        .HasForeignKey("WishlistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReviewMedia", b =>
                 {
                     b.HasOne("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", null)
                         .WithMany("Media")
                         .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.WishlistItem", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", null)
+                        .WithMany("Items")
+                        .HasForeignKey("WishlistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -4171,14 +4163,14 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Navigation("Items");
                 });
 
-            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
-                {
-                    b.Navigation("Items");
-                });
-
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", b =>
                 {
                     b.Navigation("Media");
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

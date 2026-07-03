@@ -96,8 +96,10 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         try
         {
             var query = Truncate(latestCustomerMessage.Content, 2000);
-            var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query, cancellationToken);
-            context = _knowledgeStore.Search(conversation.StoreId.Value, queryEmbedding, topK: 5, minScore: 0.2);
+            var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(
+                query, AiEmbeddingInputType.Query, cancellationToken);
+            context = _knowledgeStore.Search(
+                conversation.StoreId.Value, queryEmbedding, topK: 5, minScore: 0.2);
         }
         catch (Exception ex)
         {
@@ -138,7 +140,13 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
 
         var botMessage = conversation.AddMessage(MessageSenderType.Bot, BotSenderId, Truncate(replyText, 2000));
 
-        var suggestedProducts = BuildSuggestedProducts(context);
+        // Only surface (and log) product suggestions when the assistant actually answered from
+        // store knowledge. When it falls back to the "no information" reply, the retrieved context
+        // is not a genuine recommendation, so showing cards / logging suggestions would be misleading.
+        var gaveRealReply = !string.Equals(replyText, AiPromptBuilder.NoInformationReply, StringComparison.Ordinal);
+        var suggestedProducts = gaveRealReply
+            ? BuildSuggestedProducts(context)
+            : Array.Empty<AiSuggestedProductDto>();
 
         // Record analytics: the reply (with retrieved-doc count for knowledge-gap tracking)
         // plus one record per recommended product.
@@ -190,6 +198,7 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         metadata.TryGetValue("slug", out var slug);
         metadata.TryGetValue("currency", out var currency);
         metadata.TryGetValue("imageUrl", out var imageUrl);
+        metadata.TryGetValue("nameAr", out var nameAr);
 
         decimal price = 0;
         if (metadata.TryGetValue("price", out var priceRaw))
@@ -202,6 +211,7 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         return new AiSuggestedProductDto(
             productId,
             doc.Title,
+            string.IsNullOrWhiteSpace(nameAr) ? doc.Title : nameAr,
             slug ?? string.Empty,
             price,
             currency ?? string.Empty,

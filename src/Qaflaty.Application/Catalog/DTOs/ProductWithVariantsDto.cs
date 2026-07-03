@@ -3,6 +3,7 @@ namespace Qaflaty.Application.Catalog.DTOs;
 public record ProductWithVariantsDto(
     Guid Id,
     string Name,
+    string NameAr,
     string Slug,
     string? Description,
     decimal Price,

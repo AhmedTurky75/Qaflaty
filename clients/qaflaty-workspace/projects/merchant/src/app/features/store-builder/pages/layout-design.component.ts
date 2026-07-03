@@ -1,8 +1,9 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { StoreContextService } from '../../../core/services/store-context.service';
-import { BuilderService } from '../services/builder.service';
+import { BuilderService, LayoutVariantDto } from '../services/builder.service';
 import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
 
 @Component({
@@ -46,10 +47,9 @@ import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
                     [(ngModel)]="localConfig!.headerVariant"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                   >
-                    <option value="Centered">Centered</option>
-                    <option value="LeftAligned">Left Aligned</option>
-                    <option value="MinimalCentered">Minimal</option>
-                    <option value="SplitNavigation">Split Navigation</option>
+                    @for (v of headerVariants(); track v.id) {
+                      <option [value]="v.code">{{ v.nameEn }}</option>
+                    }
                   </select>
                 </div>
                 <div>
@@ -58,10 +58,9 @@ import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
                     [(ngModel)]="localConfig!.footerVariant"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                   >
-                    <option value="FourColumn">Standard (Four Column)</option>
-                    <option value="ThreeColumn">Centered (Three Column)</option>
-                    <option value="Minimal">Minimal</option>
-                    <option value="Stacked">Stacked</option>
+                    @for (v of footerVariants(); track v.id) {
+                      <option [value]="v.code">{{ v.nameEn }}</option>
+                    }
                   </select>
                 </div>
                 <div>
@@ -70,10 +69,9 @@ import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
                     [(ngModel)]="localConfig!.productCardVariant"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                   >
-                    <option value="Standard">Standard</option>
-                    <option value="Compact">Compact</option>
-                    <option value="Detailed">Detailed</option>
-                    <option value="WithHover">With Hover</option>
+                    @for (v of cardVariants(); track v.id) {
+                      <option [value]="v.code">{{ v.nameEn }}</option>
+                    }
                   </select>
                 </div>
                 <div>
@@ -82,10 +80,9 @@ import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
                     [(ngModel)]="localConfig!.productGridVariant"
                     class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
                   >
-                    <option value="TwoColumn">Two Columns</option>
-                    <option value="ThreeColumn">Three Columns</option>
-                    <option value="FourColumn">Four Columns</option>
-                    <option value="Masonry">Masonry</option>
+                    @for (v of gridVariants(); track v.id) {
+                      <option [value]="v.code">{{ v.nameEn }}</option>
+                    }
                   </select>
                 </div>
               </div>
@@ -127,7 +124,34 @@ export class LayoutDesignComponent implements OnInit {
   loadErr = signal<string | null>(null);
   saveErr = signal<string | null>(null);
 
+  variants = signal<LayoutVariantDto[]>([]);
+  headerVariants = computed(() => this.variants().filter(v => v.type === 'Header'));
+  footerVariants = computed(() => this.variants().filter(v => v.type === 'Footer'));
+  cardVariants = computed(() => this.variants().filter(v => v.type === 'ProductCard'));
+  gridVariants = computed(() => this.variants().filter(v => v.type === 'ProductGrid'));
+
   localConfig: StoreConfigurationDto | null = null;
+
+  // Stored values from before the catalog existed used PascalCase ids that the storefront no
+  // longer matches. Normalise them to the canonical codes so the dropdown pre-selects correctly;
+  // saving then persists the canonical code and the drift is gone. Mirrors the storefront's
+  // feature.service legacy maps (one per slot — the PascalCase ids overlap between slots).
+  private readonly legacyHeader: Record<string, string> = {
+    Centered: 'header-centered', LeftAligned: 'header-full',
+    MinimalCentered: 'header-minimal', SplitNavigation: 'header-sidebar',
+  };
+  private readonly legacyFooter: Record<string, string> = {
+    FourColumn: 'footer-standard', ThreeColumn: 'footer-centered',
+    Minimal: 'footer-minimal', Stacked: 'footer-standard',
+  };
+  private readonly legacyCard: Record<string, string> = {
+    Standard: 'card-standard', Compact: 'card-minimal',
+    Detailed: 'card-detailed', WithHover: 'card-overlay',
+  };
+  private readonly legacyGrid: Record<string, string> = {
+    TwoColumn: 'grid-2', ThreeColumn: 'grid-3', FourColumn: 'grid-4',
+    Masonry: 'grid-masonry', 'grid-standard': 'grid-3',
+  };
 
   ngOnInit(): void {
     const storeId = this.storeContext.currentStoreId();
@@ -136,9 +160,18 @@ export class LayoutDesignComponent implements OnInit {
       this.loading.set(false);
       return;
     }
-    this.builderService.getConfiguration(storeId).subscribe({
-      next: (config) => {
-        this.localConfig = JSON.parse(JSON.stringify(config));
+    forkJoin({
+      config: this.builderService.getConfiguration(storeId),
+      variants: this.builderService.getLayoutVariants(),
+    }).subscribe({
+      next: ({ config, variants }) => {
+        this.variants.set(variants);
+        const cfg: StoreConfigurationDto = JSON.parse(JSON.stringify(config));
+        cfg.headerVariant = this.legacyHeader[cfg.headerVariant] ?? cfg.headerVariant;
+        cfg.footerVariant = this.legacyFooter[cfg.footerVariant] ?? cfg.footerVariant;
+        cfg.productCardVariant = this.legacyCard[cfg.productCardVariant] ?? cfg.productCardVariant;
+        cfg.productGridVariant = this.legacyGrid[cfg.productGridVariant] ?? cfg.productGridVariant;
+        this.localConfig = cfg;
         this.loading.set(false);
       },
       error: (err) => {

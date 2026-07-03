@@ -29,10 +29,15 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
 
         builder.OwnsOne(c => c.Name, name =>
         {
-            name.Property(n => n.Value)
+            name.Property(n => n.English)
                 .HasColumnName("name")
                 .HasMaxLength(100)
                 .IsRequired();
+            name.Property(n => n.Arabic)
+                .HasColumnName("name_ar")
+                .HasMaxLength(100)
+                .IsRequired();
+            name.Ignore(n => n.Value);
         });
 
         builder.OwnsOne(c => c.Slug, slug =>

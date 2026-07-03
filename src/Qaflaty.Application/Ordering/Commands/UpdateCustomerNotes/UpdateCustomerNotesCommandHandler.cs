@@ -32,7 +32,9 @@ public class UpdateCustomerNotesCommandHandler : ICommandHandler<UpdateCustomerN
             return Result.Failure(OrderingErrors.CustomerNotFound);
 
         var store = await _storeRepository.GetByIdAsync(customer.StoreId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure(new Error("Customer.Unauthorized", "You don't have access to this customer"));
 
         customer.AddNote(request.Note);

@@ -10,7 +10,7 @@ public sealed class Address : ValueObject
     public string City { get; private set; } = null!; // City name, e.g. "Riyadh"
     public string? District { get; private set; } // Optional district/neighborhood, e.g. "Al Olaya"
     public string? PostalCode { get; private set; } // Optional postal/ZIP code, e.g. "12211"
-    public string Country { get; private set; } = null!; // Country name, defaults to "Saudi Arabia"
+    public string Country { get; private set; } = null!; // Country name as chosen by the customer, e.g. "Saudi Arabia"; empty when not supplied
     public string? AdditionalInfo { get; private set; } // Optional extra address detail, e.g. "Apartment 5, 2nd floor"
 
     private Address() { }
@@ -30,25 +30,30 @@ public sealed class Address : ValueObject
         string city,
         string? district = null,
         string? postalCode = null,
-        string country = "Saudi Arabia",
+        string? country = null,
         string? additionalInfo = null)
     {
         if (string.IsNullOrWhiteSpace(street) || string.IsNullOrWhiteSpace(city))
             return Result.Failure<Address>(OrderingErrors.InvalidAddress);
 
+        // The country is the customer's choice — never invent one here. Callers pass it through
+        // from checkout; when it's genuinely unknown we store an empty string rather than a guess.
         return Result.Success(new Address(
             street.Trim(),
             city.Trim(),
             district?.Trim(),
             postalCode?.Trim(),
-            country.Trim(),
+            country?.Trim() ?? string.Empty,
             additionalInfo?.Trim()));
     }
 
-    public string ToSingleLine() => $"{Street}, {City}{(District != null ? $", {District}" : "")}, {Country}";
+    public string ToSingleLine() =>
+        $"{Street}, {City}{(District != null ? $", {District}" : "")}" +
+        (string.IsNullOrWhiteSpace(Country) ? "" : $", {Country}");
 
     public string ToMultiLine() =>
-        $"{Street}\n{City}{(District != null ? $", {District}" : "")}\n{PostalCode ?? ""}\n{Country}" +
+        $"{Street}\n{City}{(District != null ? $", {District}" : "")}\n{PostalCode ?? ""}" +
+        (string.IsNullOrWhiteSpace(Country) ? "" : $"\n{Country}") +
         (AdditionalInfo != null ? $"\n{AdditionalInfo}" : "");
 
     protected override IEnumerable<object?> GetEqualityComponents()

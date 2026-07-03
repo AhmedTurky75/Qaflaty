@@ -1,7 +1,9 @@
+using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
 using Qaflaty.Application.Catalog.Commands.CreateProduct;
+using Qaflaty.Application.Catalog.Commands.ImportProducts;
 using Qaflaty.Application.Catalog.Commands.DeleteProduct;
 using Qaflaty.Application.Catalog.Commands.ActivateProduct;
 using Qaflaty.Application.Catalog.Commands.DeactivateProduct;
@@ -32,11 +34,12 @@ public class ProductsController : ApiController
         [FromQuery] string? searchTerm,
         [FromQuery] Guid? categoryId,
         [FromQuery] string? status,
+        [FromQuery] bool? inStock,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
-        var query = new GetProductsQuery(storeId, searchTerm, categoryId, status, pageNumber, pageSize);
+        var query = new GetProductsQuery(storeId, searchTerm, categoryId, status, pageNumber, pageSize, inStock);
         var result = await Sender.Send(query, cancellationToken);
         return HandleResult(result);
     }
@@ -65,6 +68,7 @@ public class ProductsController : ApiController
         var command = new CreateProductCommand(
             storeId,
             request.Name,
+            request.NameAr,
             request.Slug,
             request.Description,
             request.Price.Amount,
@@ -100,6 +104,7 @@ public class ProductsController : ApiController
         var command = new UpdateProductCommand(
             id,
             request.Name,
+            request.NameAr,
             request.Slug,
             request.Description,
             request.Price.Amount,
@@ -111,6 +116,32 @@ public class ProductsController : ApiController
             request.Status,
             updateImages);
 
+        var result = await Sender.Send(command, cancellationToken);
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Bulk-imports products (without images) from an uploaded CSV file. Referenced categories that
+    /// don't exist yet are created. Invalid rows are skipped and returned in the result's error list.
+    /// </summary>
+    [HttpPost("import")]
+    [RequestSizeLimit(10 * 1024 * 1024)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ImportProducts(Guid storeId, IFormFile file, CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length == 0)
+            return BadRequest(new { error = "Import.NoFile", message = "Please upload a non-empty CSV file." });
+
+        string content;
+        using (var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8, detectEncodingFromByteOrderMarks: true))
+        {
+            content = await reader.ReadToEndAsync(cancellationToken);
+        }
+
+        var rows = CsvProductImportParser.Parse(content);
+        var command = new ImportProductsCommand(storeId, rows);
         var result = await Sender.Send(command, cancellationToken);
         return HandleResult(result);
     }
@@ -304,6 +335,7 @@ public record MoneyInput(decimal Amount, string Currency = "SAR");
 
 public record CreateProductRequest(
     string Name,
+    string? NameAr,
     string Slug,
     string? Description,
     MoneyInput Price,
@@ -317,6 +349,7 @@ public record CreateProductRequest(
 
 public record UpdateProductRequest(
     string Name,
+    string? NameAr,
     string Slug,
     string? Description,
     MoneyInput Price,

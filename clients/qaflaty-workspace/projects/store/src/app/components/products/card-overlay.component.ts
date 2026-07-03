@@ -1,12 +1,12 @@
 import { Component, input, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { I18nService } from '../../services/i18n.service';
-import { CurrencyPipe } from '@angular/common';
+import { StorePricePipe } from '../../pipes/store-price.pipe';
 
 @Component({
   selector: 'app-card-overlay',
   standalone: true,
-  imports: [RouterLink, CurrencyPipe],
+  imports: [RouterLink, StorePricePipe],
   template: `
     <a
       [routerLink]="['/products', product().slug]"
@@ -41,15 +41,15 @@ import { CurrencyPipe } from '@angular/common';
             @if (product().pricing?.salePrice && product().pricing.salePrice < product().pricing.regularPrice) {
               <div class="flex items-center gap-2">
                 <span class="text-xl font-bold text-white">
-                  {{ product().pricing.salePrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().pricing.salePrice | storePrice }}
                 </span>
                 <span class="text-sm text-white/70 line-through">
-                  {{ product().pricing.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                  {{ product().pricing.regularPrice | storePrice }}
                 </span>
               </div>
             } @else {
               <span class="text-xl font-bold text-white">
-                {{ product().pricing?.regularPrice | currency:'EGP':'symbol':'1.2-2' }}
+                {{ product().pricing?.regularPrice | storePrice }}
               </span>
             }
 

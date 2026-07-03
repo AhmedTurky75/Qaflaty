@@ -7,7 +7,8 @@ import {
   CreateStoreRequest,
   UpdateStoreRequest,
   UpdateBrandingRequest,
-  UpdateDeliverySettingsRequest
+  UpdateDeliverySettingsRequest,
+  CurrencyOption
 } from 'shared';
 
 @Injectable({
@@ -27,6 +28,11 @@ export class StoreService {
 
   createStore(request: CreateStoreRequest): Observable<StoreDto> {
     return this.http.post<StoreDto>(this.API_URL, request);
+  }
+
+  /** All ISO 4217 currencies a merchant can pick from when creating a store. */
+  getCurrencies(): Observable<CurrencyOption[]> {
+    return this.http.get<CurrencyOption[]>(`${environment.apiUrl}/currencies`);
   }
 
   updateStore(id: string, request: UpdateStoreRequest): Observable<StoreDto> {

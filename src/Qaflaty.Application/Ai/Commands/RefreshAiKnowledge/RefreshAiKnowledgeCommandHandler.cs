@@ -89,7 +89,9 @@ public sealed class RefreshAiKnowledgeCommandHandler
         try
         {
             embeddings = await _embeddingService.GenerateEmbeddingsAsync(
-                drafts.Select(d => d.Content).ToList(), cancellationToken);
+                drafts.Select(d => d.Content).ToList(),
+                AiEmbeddingInputType.Document,
+                cancellationToken);
         }
         catch (Exception ex)
         {
@@ -102,10 +104,48 @@ public sealed class RefreshAiKnowledgeCommandHandler
             return Result.Failure<AiKnowledgeRefreshResultDto>(
                 new Error("Ai.EmbeddingMismatch", "The embedding service returned an unexpected number of vectors."));
 
+        // Secondary name-only embeddings (products). Embedded in one batch and mapped back to
+        // their draft by position so an explicitly-named product can be scored on its name alone.
+        var nameDraftIndices = new List<int>();
+        var nameTexts = new List<string>();
+        for (var i = 0; i < drafts.Count; i++)
+        {
+            if (!string.IsNullOrWhiteSpace(drafts[i].NameForEmbedding))
+            {
+                nameDraftIndices.Add(i);
+                nameTexts.Add(drafts[i].NameForEmbedding!);
+            }
+        }
+
+        var nameEmbeddingByDraft = new Dictionary<int, float[]>();
+        if (nameTexts.Count > 0)
+        {
+            IReadOnlyList<float[]> nameEmbeddings;
+            try
+            {
+                nameEmbeddings = await _embeddingService.GenerateEmbeddingsAsync(
+                    nameTexts, AiEmbeddingInputType.Document, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to generate name embeddings while refreshing AI knowledge for store {StoreId}", storeId.Value);
+                return Result.Failure<AiKnowledgeRefreshResultDto>(
+                    new Error("Ai.EmbeddingFailed", "Failed to generate embeddings. Check the AI service connection."));
+            }
+
+            if (nameEmbeddings.Count != nameTexts.Count)
+                return Result.Failure<AiKnowledgeRefreshResultDto>(
+                    new Error("Ai.EmbeddingMismatch", "The embedding service returned an unexpected number of vectors."));
+
+            for (var j = 0; j < nameDraftIndices.Count; j++)
+                nameEmbeddingByDraft[nameDraftIndices[j]] = nameEmbeddings[j];
+        }
+
         var documents = new List<AiKnowledgeDocument>(drafts.Count);
         for (var i = 0; i < drafts.Count; i++)
         {
             var draft = drafts[i];
+            nameEmbeddingByDraft.TryGetValue(i, out var nameEmbedding);
             documents.Add(new AiKnowledgeDocument(
                 draft.Id,
                 storeId.Value,
@@ -113,7 +153,8 @@ public sealed class RefreshAiKnowledgeCommandHandler
                 draft.Title,
                 draft.Content,
                 embeddings[i],
-                draft.Metadata));
+                draft.Metadata,
+                nameEmbedding));
         }
 
         _knowledgeStore.ReplaceStoreDocuments(storeId.Value, documents);

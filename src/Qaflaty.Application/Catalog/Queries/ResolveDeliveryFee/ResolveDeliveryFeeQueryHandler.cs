@@ -25,6 +25,10 @@ public class ResolveDeliveryFeeQueryHandler : IQueryHandler<ResolveDeliveryFeeQu
     {
         var storeId = new StoreId(request.StoreId);
 
+        // Custom zone fees are in the store's single currency.
+        var storeForCurrency = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
+        var currencyCode = storeForCurrency?.Currency.Code ?? "EGP";
+
         // Check district zone first (most specific)
         if (request.DistrictId.HasValue)
         {
@@ -38,7 +42,7 @@ public class ResolveDeliveryFeeQueryHandler : IQueryHandler<ResolveDeliveryFeeQu
 
                 if (districtZone.CustomDeliveryFee.HasValue)
                     return Result.Success(new ResolvedDeliveryFeeDto(
-                        true, districtZone.CustomDeliveryFee, districtZone.FeeCurrency, "District"));
+                        true, districtZone.CustomDeliveryFee, currencyCode, "District"));
             }
         }
 
@@ -55,7 +59,7 @@ public class ResolveDeliveryFeeQueryHandler : IQueryHandler<ResolveDeliveryFeeQu
 
                 if (cityZone.CustomDeliveryFee.HasValue)
                     return Result.Success(new ResolvedDeliveryFeeDto(
-                        true, cityZone.CustomDeliveryFee, cityZone.FeeCurrency, "City"));
+                        true, cityZone.CustomDeliveryFee, currencyCode, "City"));
             }
         }
 
@@ -70,7 +74,7 @@ public class ResolveDeliveryFeeQueryHandler : IQueryHandler<ResolveDeliveryFeeQu
 
             if (countryZone.CustomDeliveryFee.HasValue)
                 return Result.Success(new ResolvedDeliveryFeeDto(
-                    true, countryZone.CustomDeliveryFee, countryZone.FeeCurrency, "Country"));
+                    true, countryZone.CustomDeliveryFee, currencyCode, "Country"));
         }
 
         // Fall back to store default
@@ -82,7 +86,7 @@ public class ResolveDeliveryFeeQueryHandler : IQueryHandler<ResolveDeliveryFeeQu
         return Result.Success(new ResolvedDeliveryFeeDto(
             true,
             store.DeliverySettings.DeliveryFee.Amount,
-            store.DeliverySettings.DeliveryFee.Currency.ToString(),
+            store.Currency.Code,
             "StoreDefault"));
     }
 }

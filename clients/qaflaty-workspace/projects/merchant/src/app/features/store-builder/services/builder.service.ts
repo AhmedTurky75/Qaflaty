@@ -26,6 +26,16 @@ import {
   AiAnalyticsDto,
 } from 'shared';
 
+/** A selectable storefront layout option served by GET /api/layout-variants. */
+export interface LayoutVariantDto {
+  id: string;
+  type: 'Header' | 'Footer' | 'ProductCard' | 'ProductGrid';
+  code: string;
+  nameEn: string;
+  nameAr: string;
+  sortOrder: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -96,6 +106,11 @@ export class BuilderService {
   // ── Payment Method Options (catalog) ────────────────────────────────────
   getPaymentMethodOptions(): Observable<PaymentMethodOptionDto[]> {
     return this.http.get<PaymentMethodOptionDto[]>(`${this.apiUrl}/payment-methods/options`);
+  }
+
+  // ── Layout Variants (catalog) ────────────────────────────────────────────
+  getLayoutVariants(): Observable<LayoutVariantDto[]> {
+    return this.http.get<LayoutVariantDto[]>(`${this.apiUrl}/layout-variants`);
   }
 
   // ── Payment Method Adjustments ───────────────────────────────────────────

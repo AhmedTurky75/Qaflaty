@@ -23,7 +23,7 @@ public class GetDeliveryZonesQueryHandler : IQueryHandler<GetDeliveryZonesQuery,
         var dtos = zones
             .Select(z => new DeliveryZoneDto(
                 z.Id.Value, z.StoreId.Value, z.Level.ToString(), z.ReferenceId,
-                z.IsDeliveryEnabled, z.CustomDeliveryFee, z.FeeCurrency))
+                z.IsDeliveryEnabled, z.CustomDeliveryFee))
             .ToList();
 
         return Result.Success(dtos);
