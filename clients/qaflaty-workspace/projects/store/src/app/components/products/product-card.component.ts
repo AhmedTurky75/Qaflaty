@@ -20,7 +20,7 @@ import { StorePricePipe } from '../../pipes/store-price.pipe';
               <img
                 [src]="product().images[0].url"
                 [alt]="displayName()"
-                class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                class="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
               />
             } @else {
               <div class="w-full h-full flex items-center justify-center text-gray-300">
@@ -76,7 +76,7 @@ import { StorePricePipe } from '../../pipes/store-price.pipe';
             <img
               [src]="product().images[0].url"
               [alt]="displayName()"
-              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
           } @else {
             <div class="w-full h-full flex items-center justify-center text-gray-300">
@@ -120,7 +120,7 @@ import { StorePricePipe } from '../../pipes/store-price.pipe';
               <img
                 [src]="product().images[0].url"
                 [alt]="displayName()"
-                class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                class="w-full h-full object-contain hover:scale-105 transition-transform duration-300"
               />
             } @else {
               <div class="w-full h-full flex items-center justify-center text-gray-300">
@@ -190,13 +190,13 @@ import { StorePricePipe } from '../../pipes/store-price.pipe';
     @else if (variant() === 'card-overlay') {
       <a
         [routerLink]="['/products', product().slug]"
-        class="group block relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 aspect-[3/4]"
+        class="group block relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 aspect-[3/4] bg-gray-100"
       >
         @if (product().images?.length > 0) {
           <img
             [src]="product().images[0].url"
             [alt]="displayName()"
-            class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            class="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
           />
         } @else {
           <div class="absolute inset-0 bg-gray-100 flex items-center justify-center text-gray-300">
