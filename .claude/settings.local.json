@@ -177,7 +177,8 @@
       "Bash(npm --prefix clients/qaflaty-workspace exec -- ng build shared)",
       "PowerShell(Get-Process *)",
       "PowerShell(Get-CimInstance *)",
-      "Bash(dotnet build-server *)"
+      "Bash(dotnet build-server *)",
+      "Bash(dotnet test *)"
     ],
     "deny": [],
     "ask": [],
