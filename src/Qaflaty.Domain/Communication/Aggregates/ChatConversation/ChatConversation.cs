@@ -16,8 +16,8 @@ public sealed class ChatConversation : AggregateRoot<ChatConversationId>
     public DateTime StartedAt { get; private set; } // UTC timestamp when the conversation began
     public DateTime? ClosedAt { get; private set; } // UTC timestamp when it was closed/archived; null while active
     public DateTime? LastMessageAt { get; private set; } // UTC timestamp of the most recent message (for sorting inbox)
-    public int UnreadMerchantMessages { get; private set; } // Count of messages the merchant hasn't read yet (from customer/bot)
-    public int UnreadCustomerMessages { get; private set; } // Count of messages the customer hasn't read yet (from merchant)
+    public int UnreadMerchantMessages { get; private set; } // Count of messages the merchant hasn't read yet (from the customer)
+    public int UnreadCustomerMessages { get; private set; } // Count of messages the customer hasn't read yet (from the merchant or the AI bot)
 
     public IReadOnlyCollection<ChatMessage> Messages => _messages.AsReadOnly(); // All messages in the conversation, in send order
 
@@ -73,12 +73,14 @@ public sealed class ChatConversation : AggregateRoot<ChatConversationId>
         _messages.Add(message);
         LastMessageAt = DateTime.UtcNow;
 
-        // Increment unread counter based on sender type
-        if (senderType == MessageSenderType.Customer || senderType == MessageSenderType.Bot)
+        // Increment unread counter based on sender type. A Bot message is an AI reply generated
+        // for the customer, so — like a Merchant message — it is unread for the customer, not the
+        // merchant. Only genuine Customer messages are unread for the merchant.
+        if (senderType == MessageSenderType.Customer)
         {
             UnreadMerchantMessages++;
         }
-        else if (senderType == MessageSenderType.Merchant)
+        else if (senderType == MessageSenderType.Merchant || senderType == MessageSenderType.Bot)
         {
             UnreadCustomerMessages++;
         }
@@ -91,7 +93,7 @@ public sealed class ChatConversation : AggregateRoot<ChatConversationId>
         foreach (var messageId in messageIds)
         {
             var message = _messages.FirstOrDefault(m => m.Id == messageId && m.ReadAt is null);
-            if (message is not null && (message.SenderType == MessageSenderType.Customer || message.SenderType == MessageSenderType.Bot))
+            if (message is not null && message.SenderType == MessageSenderType.Customer)
             {
                 message.MarkAsRead();
                 UnreadMerchantMessages = Math.Max(0, UnreadMerchantMessages - 1);
@@ -104,7 +106,7 @@ public sealed class ChatConversation : AggregateRoot<ChatConversationId>
         foreach (var messageId in messageIds)
         {
             var message = _messages.FirstOrDefault(m => m.Id == messageId && m.ReadAt is null);
-            if (message is not null && message.SenderType == MessageSenderType.Merchant)
+            if (message is not null && (message.SenderType == MessageSenderType.Merchant || message.SenderType == MessageSenderType.Bot))
             {
                 message.MarkAsRead();
                 UnreadCustomerMessages = Math.Max(0, UnreadCustomerMessages - 1);

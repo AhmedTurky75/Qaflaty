@@ -146,10 +146,10 @@
                     @for (p of suggestionsFor(message.id); track p.productId) {
                       <div class="ai-suggestion-card">
                         @if (p.imageUrl) {
-                          <img [src]="p.imageUrl" [alt]="p.name" class="ai-suggestion-img" />
+                          <img [src]="p.imageUrl" [alt]="suggestionName(p)" class="ai-suggestion-img" />
                         }
                         <div class="ai-suggestion-info">
-                          <a [routerLink]="['/products', p.slug]" class="ai-suggestion-name">{{ p.name }}</a>
+                          <a [routerLink]="['/products', p.slug]" class="ai-suggestion-name">{{ suggestionName(p) }}</a>
                           <div class="ai-suggestion-price">{{ p.price | storePrice }}</div>
                         </div>
                         <button type="button" class="ai-suggestion-add" (click)="addSuggestion(p)">

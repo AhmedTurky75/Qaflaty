@@ -6,6 +6,7 @@ namespace Qaflaty.Application.Ai.DTOs;
 public sealed record AiSuggestedProductDto(
     Guid ProductId,
     string Name,
+    string NameAr,
     string Slug,
     decimal Price,
     string Currency,

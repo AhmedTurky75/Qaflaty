@@ -239,6 +239,11 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     return this.chatService.suggestedProducts()[messageId] ?? [];
   }
 
+  /** Display name of a suggested product in the shopper's active language. */
+  suggestionName(product: AiSuggestedProduct): string {
+    return this.i18n.nameFor(product.name, product.nameAr);
+  }
+
   /**
    * Add an AI-recommended product to the cart (explicit customer confirmation), then log it.
    */
@@ -247,6 +252,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       id: product.productId,
       slug: product.slug,
       name: product.name,
+      nameAr: product.nameAr,
       price: product.price,
       compareAtPrice: null,
       inStock: product.inStock,

@@ -112,8 +112,17 @@ public static class AiKnowledgeContentBuilder
         IReadOnlyDictionary<Guid, string> categoryNames,
         IReadOnlyDictionary<Guid, ProductPropertyDefinition> propertyDefinitions)
     {
+        var englishName = product.Name.English;
+        var arabicName = product.Name.Arabic;
+        // ProductName falls back Arabic->English when no Arabic was supplied; only emit the
+        // Arabic line when it actually differs, so bilingual products become retrievable and
+        // answerable in Arabic without adding noise for English-only products.
+        var hasArabicName = !string.Equals(arabicName, englishName, StringComparison.Ordinal);
+
         var sb = new StringBuilder();
-        sb.AppendLine($"Product: {product.Name.Value}");
+        sb.AppendLine($"Product (English): {englishName}");
+        if (hasArabicName)
+            sb.AppendLine($"Product (Arabic): {arabicName}");
 
         if (product.CategoryId is { } categoryId &&
             categoryNames.TryGetValue(categoryId.Value, out var categoryName))
@@ -122,12 +131,22 @@ public static class AiKnowledgeContentBuilder
         if (!string.IsNullOrWhiteSpace(product.Description))
             sb.AppendLine($"Description: {product.Description}");
 
+        if (!string.IsNullOrWhiteSpace(product.Inventory.Sku))
+            sb.AppendLine($"SKU: {product.Inventory.Sku}");
+
         var price = product.Pricing.Price;
         sb.AppendLine($"Price: {price.Amount:0.##} {currencyCode}");
         if (product.Pricing.HasDiscount && product.Pricing.CompareAtPrice is { } compareAt)
-            sb.AppendLine($"Was: {compareAt.Amount:0.##} {currencyCode} (on sale)");
+            sb.AppendLine($"Was: {compareAt.Amount:0.##} {currencyCode} (on sale, {product.Pricing.DiscountPercentage:0.##}% off)");
 
         sb.AppendLine($"Availability: {DescribeStock(product)}");
+
+        // Variant dimensions the product is sold in, e.g. "Color: Red, Blue" / "Size: S, M, L".
+        foreach (var option in product.VariantOptions)
+        {
+            if (option.Values.Count > 0)
+                sb.AppendLine($"{option.Name}: {string.Join(", ", option.Values)}");
+        }
 
         foreach (var pv in product.PropertyValues)
         {
@@ -139,6 +158,7 @@ public static class AiKnowledgeContentBuilder
         {
             ["productId"] = product.Id.Value.ToString(),
             ["slug"] = product.Slug.Value,
+            ["nameAr"] = arabicName,
             ["price"] = price.Amount.ToString("0.##", CultureInfo.InvariantCulture),
             ["currency"] = currencyCode,
             ["inStock"] = product.Inventory.InStock.ToString()
@@ -151,7 +171,7 @@ public static class AiKnowledgeContentBuilder
         return new AiKnowledgeDraft(
             $"product-{product.Id.Value}",
             AiKnowledgeDocumentType.Product,
-            product.Name.Value,
+            englishName,
             sb.ToString().Trim(),
             metadata);
     }

@@ -89,7 +89,9 @@ public sealed class RefreshAiKnowledgeCommandHandler
         try
         {
             embeddings = await _embeddingService.GenerateEmbeddingsAsync(
-                drafts.Select(d => d.Content).ToList(), cancellationToken);
+                drafts.Select(d => d.Content).ToList(),
+                AiEmbeddingInputType.Document,
+                cancellationToken);
         }
         catch (Exception ex)
         {
