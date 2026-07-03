@@ -51,9 +51,6 @@ public sealed class Cart : AggregateRoot<CartId>
         return Result<Cart>.Success(cart);
     }
 
-    /// <summary>Keep for backward compatibility with existing callers.</summary>
-    public static Result<Cart> Create(StoreCustomerId customerId) => CreateForCustomer(customerId);
-
     public Result AddItem(ProductId productId, int quantity, Guid? variantId = null)
     {
         if (quantity <= 0)
