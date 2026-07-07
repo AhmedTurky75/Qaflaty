@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageConfigurationDto, SectionConfigurationDto, PageSeoSettings } from 'shared';
 import { MediaService } from '../products/services/media.service';
 
@@ -19,7 +20,7 @@ interface SectionTypeInfo {
 @Component({
   selector: 'app-section-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DragDropModule],
   template: `
     <div class="bg-white rounded-lg shadow">
       <!-- Header -->
@@ -43,33 +44,25 @@ interface SectionTypeInfo {
 
       <!-- Sections List -->
       <div class="p-6 space-y-3 max-h-[560px] overflow-y-auto">
+        <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="space-y-3">
         @for (section of localSections; track section.id; let idx = $index) {
-          <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div cdkDrag [cdkDragDisabled]="isExpanded(section.id)" class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+            <!-- Drag placeholder shown in the drop gap -->
+            <div class="h-16 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg" *cdkDragPlaceholder></div>
             <!-- Section Row Header -->
             <div class="p-4 flex items-start gap-3 bg-white">
-              <!-- Move Up/Down -->
-              <div class="flex flex-col gap-0.5 pt-1">
-                <button
-                  (click)="moveUp(idx)"
-                  [disabled]="idx === 0"
-                  class="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move up"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-                  </svg>
-                </button>
-                <button
-                  (click)="moveDown(idx)"
-                  [disabled]="idx === localSections.length - 1"
-                  class="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move down"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </button>
-              </div>
+              <!-- Drag Handle -->
+              <button
+                type="button"
+                cdkDragHandle
+                class="pt-1 text-gray-300 hover:text-gray-500 cursor-move disabled:cursor-not-allowed disabled:opacity-30"
+                [disabled]="isExpanded(section.id)"
+                [title]="isExpanded(section.id) ? 'Collapse to reorder' : 'Drag to reorder'"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M7 4a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zM13 4a1 1 0 100 2 1 1 0 000-2zM13 9a1 1 0 100 2 1 1 0 000-2zM13 14a1 1 0 100 2 1 1 0 000-2z"></path>
+                </svg>
+              </button>
 
               <!-- Section Details -->
               <div class="flex-1 space-y-2">
@@ -96,6 +89,16 @@ interface SectionTypeInfo {
                     >
                       <svg class="w-4 h-4 transition-transform" [class.rotate-180]="isExpanded(section.id)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                    <!-- Duplicate -->
+                    <button
+                      (click)="duplicateSection(idx)"
+                      class="text-gray-400 hover:text-blue-600 transition-colors"
+                      title="Duplicate section"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
                       </svg>
                     </button>
                     <!-- Delete -->
@@ -876,6 +879,7 @@ interface SectionTypeInfo {
             <p class="text-gray-500 mb-4">No sections yet. Add your first section below.</p>
           </div>
         }
+        </div>
 
         <!-- Add Section Button -->
         <button
@@ -1161,17 +1165,23 @@ export class SectionEditorComponent implements OnInit {
     return this.designTabSectionIds().has(sectionId);
   }
 
-  moveUp(index: number): void {
-    if (index === 0) return;
-    [this.localSections[index], this.localSections[index - 1]] =
-      [this.localSections[index - 1], this.localSections[index]];
+  onDrop(event: CdkDragDrop<SectionConfigurationDto[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    moveItemInArray(this.localSections, event.previousIndex, event.currentIndex);
     this.updateSortOrders();
   }
 
-  moveDown(index: number): void {
-    if (index === this.localSections.length - 1) return;
-    [this.localSections[index], this.localSections[index + 1]] =
-      [this.localSections[index + 1], this.localSections[index]];
+  duplicateSection(index: number): void {
+    const source = this.localSections[index];
+    if (!source) return;
+    // Deep clone with a fresh temporary id; the backend re-creates all sections
+    // with server-generated ids on save, so this persists as a new row.
+    const clone: SectionConfigurationDto = {
+      ...JSON.parse(JSON.stringify(source)),
+      id: crypto.randomUUID()
+    };
+    this.localSections.splice(index + 1, 0, clone);
+    this.localSections = [...this.localSections];
     this.updateSortOrders();
   }
 
