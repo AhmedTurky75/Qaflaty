@@ -78,6 +78,7 @@ interface SectionTypeInfo {
                       <input
                         type="checkbox"
                         [(ngModel)]="section.isEnabled"
+                        (ngModelChange)="notifyChange()"
                         class="h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                       />
                     </label>
@@ -117,6 +118,7 @@ interface SectionTypeInfo {
                 <!-- Variant Selector -->
                 <select
                   [(ngModel)]="section.variantId"
+                  (ngModelChange)="notifyChange()"
                   class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
                   @for (variant of getVariantsForSection(section.sectionType); track variant.id) {
@@ -1024,6 +1026,8 @@ export class SectionEditorComponent implements OnInit {
   @Input() page: PageConfigurationDto | null = null;
   @Output() save = new EventEmitter<{ sections: SectionConfigurationDto[]; seoSettings: PageSeoSettings }>();
   @Output() close = new EventEmitter<void>();
+  /** Emits the current (unsaved) section list on every edit, to drive the live preview. */
+  @Output() sectionsChange = new EventEmitter<SectionConfigurationDto[]>();
 
   localSections: SectionConfigurationDto[] = [];
   localSeoSettings: PageSeoSettings = {
@@ -1129,6 +1133,11 @@ export class SectionEditorComponent implements OnInit {
     }
   }
 
+  /** Notify listeners (live preview) that the working section list changed. */
+  notifyChange(): void {
+    this.sectionsChange.emit([...this.localSections]);
+  }
+
   getSectionTypeLabel(sectionType: string): string {
     return this.sectionTypes.find(t => t.key === sectionType)?.label ?? sectionType;
   }
@@ -1169,6 +1178,7 @@ export class SectionEditorComponent implements OnInit {
     if (event.previousIndex === event.currentIndex) return;
     moveItemInArray(this.localSections, event.previousIndex, event.currentIndex);
     this.updateSortOrders();
+    this.notifyChange();
   }
 
   duplicateSection(index: number): void {
@@ -1183,6 +1193,7 @@ export class SectionEditorComponent implements OnInit {
     this.localSections.splice(index + 1, 0, clone);
     this.localSections = [...this.localSections];
     this.updateSortOrders();
+    this.notifyChange();
   }
 
   private updateSortOrders(): void {
@@ -1205,11 +1216,13 @@ export class SectionEditorComponent implements OnInit {
     };
     this.localSections = [...this.localSections, newSection];
     this.showAddModal.set(false);
+    this.notifyChange();
   }
 
   deleteSection(index: number): void {
     this.localSections = this.localSections.filter((_, i) => i !== index);
     this.updateSortOrders();
+    this.notifyChange();
   }
 
   getContent(section: SectionConfigurationDto): any {
@@ -1224,6 +1237,7 @@ export class SectionEditorComponent implements OnInit {
     const content = this.getContent(section);
     content[field] = value;
     section.contentJson = JSON.stringify(content);
+    this.notifyChange();
   }
 
   setContentBilingual(section: SectionConfigurationDto, field: string, lang: 'en' | 'ar', value: string): void {
@@ -1231,6 +1245,7 @@ export class SectionEditorComponent implements OnInit {
     if (!content[field]) content[field] = { en: '', ar: '' };
     content[field][lang] = value;
     section.contentJson = JSON.stringify(content);
+    this.notifyChange();
   }
 
   getSettings(section: SectionConfigurationDto): any {
@@ -1249,6 +1264,7 @@ export class SectionEditorComponent implements OnInit {
       settings[field] = value;
     }
     section.settingsJson = Object.keys(settings).length ? JSON.stringify(settings) : undefined;
+    this.notifyChange();
   }
 
   clearSettingsField(section: SectionConfigurationDto, field: string): void {
@@ -1266,6 +1282,7 @@ export class SectionEditorComponent implements OnInit {
     const content = this.getContent(section);
     content[field] = items;
     section.contentJson = JSON.stringify(content);
+    this.notifyChange();
   }
 
   addArrayItem(section: SectionConfigurationDto, field: string, template: any): void {

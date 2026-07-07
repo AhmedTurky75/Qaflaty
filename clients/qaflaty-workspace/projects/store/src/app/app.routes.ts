@@ -122,6 +122,11 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/store-offline/store-offline.component').then(m => m.StoreOfflineComponent)
   },
   {
+    // Live WYSIWYG preview surface embedded by the merchant store-builder.
+    path: '__preview',
+    loadComponent: () => import('./pages/preview/preview.component').then(m => m.PreviewComponent)
+  },
+  {
     path: '**',
     loadComponent: () => import('./pages/not-found/not-found.component').then(m => m.NotFoundComponent)
   }
