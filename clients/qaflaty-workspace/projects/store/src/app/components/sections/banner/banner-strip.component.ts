@@ -8,24 +8,34 @@ import { I18nService } from '../../../services/i18n.service';
   standalone: true,
   imports: [RouterLink],
   template: `
-    <div
-      class="relative py-3 px-4 text-center text-white overflow-hidden"
-      [class.bg-gray-900]="!imageUrl()"
-      [style.background-image]="imageUrl() ? 'url(' + imageUrl() + ')' : null"
-      [style.background-size]="imageUrl() ? 'cover' : null"
-      [style.background-position]="imageUrl() ? 'center' : null"
-    >
-      @if (imageUrl()) {
-        <div class="absolute inset-0 bg-black/50"></div>
-      }
-      <p class="relative z-10 text-sm">
-        <span class="font-semibold">{{ title() }}</span>
-        @if (subtitle()) {
-          <span class="ms-1">{{ subtitle() }}</span>
+    @if (imageUrl()) {
+      <!-- Image banner: sized to actually show the image, not just a sliver behind it -->
+      <div class="relative w-full">
+        <img [src]="imageUrl()" [alt]="title() || 'Banner'" class="w-full h-auto max-h-[280px] object-cover" />
+        @if (title() || subtitle() || hasButton()) {
+          <div class="absolute inset-0 bg-black/40 flex items-center justify-center text-center px-4">
+            <div class="text-white">
+              @if (title()) { <p class="font-semibold text-lg">{{ title() }}</p> }
+              @if (subtitle()) { <p class="text-sm mt-1">{{ subtitle() }}</p> }
+              @if (hasButton()) {
+                <a [routerLink]="buttonLink()" class="inline-block mt-2 underline hover:text-[var(--primary-color)] transition-colors">{{ buttonText() }}</a>
+              }
+            </div>
+          </div>
         }
-        <a [routerLink]="buttonLink()" class="underline ms-2 hover:text-[var(--primary-color)] transition-colors">{{ buttonText() }}</a>
-      </p>
-    </div>
+      </div>
+    } @else if (title() || subtitle() || hasButton()) {
+      <!-- Text-only strip -->
+      <div class="bg-gray-900 text-white py-3 px-4 text-center">
+        <p class="text-sm">
+          @if (title()) { <span class="font-semibold">{{ title() }}</span> }
+          @if (subtitle()) { <span class="ms-1">{{ subtitle() }}</span> }
+          @if (hasButton()) {
+            <a [routerLink]="buttonLink()" class="underline ms-2 hover:text-[var(--primary-color)] transition-colors">{{ buttonText() }}</a>
+          }
+        </p>
+      </div>
+    }
   `
 })
 export class BannerStripComponent {
@@ -39,15 +49,16 @@ export class BannerStripComponent {
 
   title = computed(() => {
     const c = this.content();
-    return (this.i18n.currentLanguage() === 'ar' ? c.title?.ar : c.title?.en) || 'Special Offer!';
+    return (this.i18n.currentLanguage() === 'ar' ? c.title?.ar : c.title?.en) || '';
   });
 
   subtitle = computed(() => {
     const c = this.content();
-    return (this.i18n.currentLanguage() === 'ar' ? c.subtitle?.ar : c.subtitle?.en) || 'Free shipping on all qualifying orders';
+    return (this.i18n.currentLanguage() === 'ar' ? c.subtitle?.ar : c.subtitle?.en) || '';
   });
 
-  buttonText = computed(() => this.content().buttonText || 'Shop Now');
+  buttonText = computed(() => this.content().buttonText || '');
   buttonLink = computed(() => this.content().buttonLink || '/products');
+  hasButton = computed(() => !!this.buttonText());
   imageUrl = computed(() => this.content().imageUrl || null);
 }

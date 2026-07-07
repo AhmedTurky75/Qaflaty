@@ -26,9 +26,11 @@ import { I18nService } from '../../../services/i18n.service';
 
           <div class="relative z-10 w-full px-8 md:px-16 py-12">
             <div class="max-w-2xl">
-              <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
-                {{ title() }}
-              </h2>
+              @if (title()) {
+                <h2 class="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 leading-tight">
+                  {{ title() }}
+                </h2>
+              }
 
               @if (subtitle()) {
                 <p class="text-xl md:text-2xl text-white/90 mb-8 leading-relaxed">
@@ -36,12 +38,14 @@ import { I18nService } from '../../../services/i18n.service';
                 </p>
               }
 
-              <a
-                [routerLink]="buttonLink()"
-                class="inline-block px-8 py-4 bg-white text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg"
-              >
-                {{ buttonText() }}
-              </a>
+              @if (hasButton()) {
+                <a
+                  [routerLink]="buttonLink()"
+                  class="inline-block px-8 py-4 bg-white text-gray-900 font-bold rounded-lg hover:bg-gray-100 transition-all duration-200 transform hover:scale-105 shadow-lg"
+                >
+                  {{ buttonText() }}
+                </a>
+              }
             </div>
           </div>
         </div>
@@ -60,7 +64,7 @@ export class BannerCardComponent {
 
   title = computed(() => {
     const c = this.content();
-    return (this.i18n.currentLanguage() === 'ar' ? c.title?.ar : c.title?.en) || (this.i18n.currentLanguage() === 'ar' ? 'عرض خاص' : 'Special Offer');
+    return (this.i18n.currentLanguage() === 'ar' ? c.title?.ar : c.title?.en) || '';
   });
 
   subtitle = computed(() => {
@@ -68,11 +72,8 @@ export class BannerCardComponent {
     return (this.i18n.currentLanguage() === 'ar' ? c.subtitle?.ar : c.subtitle?.en) || '';
   });
 
-  buttonText = computed(() => {
-    const c = this.content();
-    return c.buttonText || (this.i18n.currentLanguage() === 'ar' ? 'تسوق الآن' : 'Shop Now');
-  });
-
+  buttonText = computed(() => this.content().buttonText || '');
   buttonLink = computed(() => this.content().buttonLink || '/products');
+  hasButton = computed(() => !!this.buttonText());
   imageUrl = computed(() => this.content().imageUrl || null);
 }
