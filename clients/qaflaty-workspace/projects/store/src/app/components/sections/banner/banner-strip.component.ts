@@ -9,18 +9,16 @@ import { I18nService } from '../../../services/i18n.service';
   imports: [RouterLink],
   template: `
     @if (imageUrl()) {
-      <!-- Image banner: sized to actually show the image, not just a sliver behind it -->
+      <!-- Image shown at its natural size, never cropped or darkened; text overlaid on top, no background -->
       <div class="relative w-full">
-        <img [src]="imageUrl()" [alt]="title() || 'Banner'" class="w-full h-auto max-h-[280px] object-cover" />
+        <img [src]="imageUrl()" [alt]="title() || 'Banner'" class="w-full h-auto" />
         @if (title() || subtitle() || hasButton()) {
-          <div class="absolute inset-0 bg-black/40 flex items-center justify-center text-center px-4">
-            <div class="text-white">
-              @if (title()) { <p class="font-semibold text-lg">{{ title() }}</p> }
-              @if (subtitle()) { <p class="text-sm mt-1">{{ subtitle() }}</p> }
-              @if (hasButton()) {
-                <a [routerLink]="buttonLink()" class="inline-block mt-2 underline hover:text-[var(--primary-color)] transition-colors">{{ buttonText() }}</a>
-              }
-            </div>
+          <div class="absolute top-0 inset-x-0 pt-4 px-4 text-center text-white [text-shadow:0_1px_4px_rgba(0,0,0,0.6)]">
+            @if (title()) { <span class="font-semibold">{{ title() }}</span> }
+            @if (subtitle()) { <span class="ms-1">{{ subtitle() }}</span> }
+            @if (hasButton()) {
+              <a [routerLink]="buttonLink()" class="underline ms-2 hover:text-[var(--primary-color)] transition-colors">{{ buttonText() }}</a>
+            }
           </div>
         }
       </div>
