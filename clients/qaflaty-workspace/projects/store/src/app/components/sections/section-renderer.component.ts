@@ -29,6 +29,12 @@ import { LandingGuaranteeComponent } from '../landing/landing-guarantee.componen
 import { LandingCtaBandComponent } from '../landing/landing-cta-band.component';
 import { LandingReviewsShowcaseComponent } from '../landing/landing-reviews-showcase.component';
 import { SectionWrapperComponent } from './section-wrapper.component';
+import { SliderStandardComponent } from './slider/slider-standard.component';
+import { VideoYoutubeComponent } from './video/video-youtube.component';
+import { AnnouncementBarComponent } from './announcement/announcement-bar.component';
+import { CountdownTimerComponent } from './countdown/countdown-timer.component';
+import { RichTextComponent } from './rich-text/rich-text.component';
+import { CtaButtonComponent } from './cta-button/cta-button.component';
 
 @Component({
   selector: 'app-section-renderer',
@@ -45,7 +51,9 @@ import { SectionWrapperComponent } from './section-wrapper.component';
     TestCardsComponent, TestSliderComponent,
     CustomHtmlComponent,
     LandingMediaTextComponent, LandingBenefitsComponent, LandingFaqComponent,
-    LandingGuaranteeComponent, LandingCtaBandComponent, LandingReviewsShowcaseComponent
+    LandingGuaranteeComponent, LandingCtaBandComponent, LandingReviewsShowcaseComponent,
+    SliderStandardComponent, VideoYoutubeComponent, AnnouncementBarComponent,
+    CountdownTimerComponent, RichTextComponent, CtaButtonComponent
   ],
   template: `
     @for (section of sections(); track section.id) {
@@ -80,6 +88,13 @@ import { SectionWrapperComponent } from './section-wrapper.component';
             @case ('guarantee-standard') { <app-landing-guarantee [config]="section" /> }
             @case ('cta-band') { <app-landing-cta-band [config]="section" /> }
             @case ('reviews-standard') { <app-landing-reviews-showcase [config]="section" [product]="product()" /> }
+            @case ('slider-standard') { <app-slider-standard [config]="section" /> }
+            @case ('video-youtube') { <app-video-youtube [config]="section" /> }
+            @case ('announcement-bar') { <app-announcement-bar [config]="section" /> }
+            @case ('countdown-standard') { <app-countdown-timer [config]="section" /> }
+            @case ('rich-text') { <app-rich-text [config]="section" /> }
+            @case ('cta-button') { <app-cta-button [config]="section" /> }
+            @case ('benefits-strip') { <app-landing-benefits [config]="section" /> }
           }
           </app-section-wrapper>
         </section>

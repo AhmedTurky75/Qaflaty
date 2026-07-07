@@ -708,6 +708,216 @@ interface SectionTypeInfo {
                       </div>
                     </div>
                   }
+                  @case ('Slider') {
+                    <div class="space-y-4">
+                      <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [checked]="getContent(section)?.autoplay !== false"
+                            (change)="setContentField(section, 'autoplay', !(getContent(section)?.autoplay !== false))"
+                            class="h-4 w-4 text-blue-600 rounded" />
+                          <span class="text-xs font-medium text-gray-700">Autoplay</span>
+                        </label>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Interval (ms)</label>
+                          <input #slInterval type="number" min="1500" step="500" class="w-28 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.interval || 5000" (input)="setContentField(section, 'interval', +slInterval.value)" />
+                        </div>
+                      </div>
+                      @for (item of getContentArray(section, 'slides'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Slide {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'slides', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-2 gap-3">
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Image</label>
+                              <div class="flex gap-2">
+                                <input #slImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                  [value]="item.imageUrl || ''" (input)="updateArrayItemField(section, 'slides', i, 'imageUrl', slImg.value)" placeholder="Image URL or upload →" />
+                                <label class="px-2 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 whitespace-nowrap">
+                                  Upload
+                                  <input type="file" accept="image/*" class="hidden" (change)="uploadArrayItemImage(section, 'slides', i, 'imageUrl', $event)" />
+                                </label>
+                              </div>
+                              @if (item.imageUrl) {
+                                <img [src]="item.imageUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="Preview" />
+                              }
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Link</label>
+                              <input #slLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.link || ''" (input)="updateArrayItemField(section, 'slides', i, 'link', slLink.value)" placeholder="/products" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Alt text</label>
+                              <input #slAlt type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.alt || ''" (input)="updateArrayItemField(section, 'slides', i, 'alt', slAlt.value)" />
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'slides', { imageUrl: '', link: '', alt: '' })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Slide</button>
+                    </div>
+                  }
+                  @case ('Video') {
+                    <div class="space-y-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">YouTube Video ID or URL</label>
+                        <input #vidId type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.videoId || ''" (input)="setContentField(section, 'videoId', vidId.value)" placeholder="dQw4w9WgXcQ or https://youtu.be/…" />
+                      </div>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Aspect Ratio</label>
+                          <select #vidAr class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                            [value]="getContent(section)?.aspectRatio || '16 / 9'" (change)="setContentField(section, 'aspectRatio', vidAr.value)">
+                            <option value="16 / 9">16:9 (widescreen)</option>
+                            <option value="4 / 3">4:3</option>
+                            <option value="1 / 1">1:1 (square)</option>
+                            <option value="9 / 16">9:16 (vertical)</option>
+                          </select>
+                        </div>
+                        <label class="flex items-center gap-2 cursor-pointer mt-6">
+                          <input type="checkbox" [checked]="getContent(section)?.autoplay === true"
+                            (change)="setContentField(section, 'autoplay', !(getContent(section)?.autoplay === true))"
+                            class="h-4 w-4 text-blue-600 rounded" />
+                          <span class="text-xs font-medium text-gray-700">Autoplay when opened</span>
+                        </label>
+                      </div>
+                    </div>
+                  }
+                  @case ('AnnouncementBar') {
+                    <div class="space-y-3">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
+                          <input #anEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.text?.en || ''" (input)="setContentBilingual(section, 'text', 'en', anEn.value)" placeholder="Free shipping on orders over 500!" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
+                          <input #anAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.text?.ar || ''" (input)="setContentBilingual(section, 'text', 'ar', anAr.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Link (optional)</label>
+                          <input #anLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.link || ''" (input)="setContentField(section, 'link', anLink.value)" placeholder="/products" />
+                        </div>
+                        <div class="flex gap-3">
+                          <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Background</label>
+                            <input #anBg type="color" class="h-8 w-12 rounded border border-gray-300 cursor-pointer p-0"
+                              [value]="getContent(section)?.bg || '#111827'" (input)="setContentField(section, 'bg', anBg.value)" />
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
+                            <input #anTc type="color" class="h-8 w-12 rounded border border-gray-300 cursor-pointer p-0"
+                              [value]="getContent(section)?.textColor || '#ffffff'" (input)="setContentField(section, 'textColor', anTc.value)" />
+                          </div>
+                        </div>
+                      </div>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" [checked]="getContent(section)?.dismissible === true"
+                          (change)="setContentField(section, 'dismissible', !(getContent(section)?.dismissible === true))"
+                          class="h-4 w-4 text-blue-600 rounded" />
+                        <span class="text-xs font-medium text-gray-700">Allow visitors to dismiss</span>
+                      </label>
+                    </div>
+                  }
+                  @case ('Countdown') {
+                    <div class="space-y-3">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                          <input #cdTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', cdTEn.value)" placeholder="Hurry, offer ends in" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                          <input #cdTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', cdTAr.value)" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Ends At</label>
+                        <input #cdEnds type="datetime-local" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.endsAt || ''" (input)="setContentField(section, 'endsAt', cdEnds.value)" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">When expired</label>
+                        <select #cdExp class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          [value]="getContent(section)?.expiredBehavior || 'message'" (change)="setContentField(section, 'expiredBehavior', cdExp.value)">
+                          <option value="message">Show a message</option>
+                          <option value="hide">Hide the section</option>
+                        </select>
+                      </div>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Expired Text (EN)</label>
+                          <input #cdExEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.expiredText?.en || ''" (input)="setContentBilingual(section, 'expiredText', 'en', cdExEn.value)" placeholder="Offer ended" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Expired Text (AR)</label>
+                          <input #cdExAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.expiredText?.ar || ''" (input)="setContentBilingual(section, 'expiredText', 'ar', cdExAr.value)" />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @case ('RichText') {
+                    <div class="space-y-3">
+                      <p class="text-xs text-gray-500">HTML is sanitized on render. Supports basic tags (headings, paragraphs, lists, links, bold/italic).</p>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">HTML (EN)</label>
+                        <textarea #rtEn rows="5" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md font-mono"
+                          [value]="getContent(section)?.html?.en || ''" (input)="setContentBilingual(section, 'html', 'en', rtEn.value)" placeholder="<h2>About us</h2><p>…</p>"></textarea>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">HTML (AR)</label>
+                        <textarea #rtAr rows="5" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md font-mono"
+                          [value]="getContent(section)?.html?.ar || ''" (input)="setContentBilingual(section, 'html', 'ar', rtAr.value)"></textarea>
+                      </div>
+                    </div>
+                  }
+                  @case ('CtaButton') {
+                    <div class="space-y-3">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
+                          <input #cbEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.text?.en || ''" (input)="setContentBilingual(section, 'text', 'en', cbEn.value)" placeholder="Buy Now" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
+                          <input #cbAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.text?.ar || ''" (input)="setContentBilingual(section, 'text', 'ar', cbAr.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Style</label>
+                          <select #cbStyle class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                            [value]="getContent(section)?.style || 'primary'" (change)="setContentField(section, 'style', cbStyle.value)">
+                            <option value="primary">Primary (filled)</option>
+                            <option value="outline">Outline</option>
+                            <option value="dark">Dark</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Link</label>
+                          <input #cbLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.link || ''" (input)="setContentField(section, 'link', cbLink.value)" placeholder="/products" />
+                        </div>
+                        <div class="col-span-2">
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Scroll-to Anchor ID (optional)</label>
+                          <input #cbAnchor type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.anchor || ''" (input)="setContentField(section, 'anchor', cbAnchor.value)" placeholder="order-form (overrides link, scrolls in-page)" />
+                        </div>
+                      </div>
+                    </div>
+                  }
                   @default {
                     <p class="text-xs text-gray-500 py-2">No content fields available for this section type.</p>
                   }
@@ -1061,6 +1271,12 @@ export class SectionEditorComponent implements OnInit {
     { key: 'Faq', label: 'FAQ', description: 'Question & answer accordion', defaultVariantId: 'faq-accordion' },
     { key: 'Guarantee', label: 'Guarantee', description: 'Trust / guarantee banner', defaultVariantId: 'guarantee-standard' },
     { key: 'CallToAction', label: 'Call to Action', description: 'Closing CTA band', defaultVariantId: 'cta-band' },
+    { key: 'Slider', label: 'Image Slider', description: 'Rotating image slides', defaultVariantId: 'slider-standard' },
+    { key: 'Video', label: 'Video', description: 'YouTube / video embed', defaultVariantId: 'video-youtube' },
+    { key: 'AnnouncementBar', label: 'Announcement Bar', description: 'Top promo strip', defaultVariantId: 'announcement-bar' },
+    { key: 'Countdown', label: 'Countdown Timer', description: 'Urgency timer', defaultVariantId: 'countdown-standard' },
+    { key: 'RichText', label: 'Rich Text', description: 'Formatted HTML block', defaultVariantId: 'rich-text' },
+    { key: 'CtaButton', label: 'CTA Button', description: 'Standalone button', defaultVariantId: 'cta-button' },
   ];
 
   private readonly sectionVariants: Record<string, SectionVariant[]> = {
@@ -1107,7 +1323,26 @@ export class SectionEditorComponent implements OnInit {
       { id: 'media-text-standard', label: 'Standard' }
     ],
     Benefits: [
-      { id: 'benefits-standard', label: 'Standard' }
+      { id: 'benefits-standard', label: 'Standard' },
+      { id: 'benefits-strip', label: 'Trust Badge Strip' }
+    ],
+    Slider: [
+      { id: 'slider-standard', label: 'Standard' }
+    ],
+    Video: [
+      { id: 'video-youtube', label: 'YouTube' }
+    ],
+    AnnouncementBar: [
+      { id: 'announcement-bar', label: 'Standard' }
+    ],
+    Countdown: [
+      { id: 'countdown-standard', label: 'Standard' }
+    ],
+    RichText: [
+      { id: 'rich-text', label: 'Standard' }
+    ],
+    CtaButton: [
+      { id: 'cta-button', label: 'Standard' }
     ],
     ReviewsShowcase: [
       { id: 'reviews-standard', label: 'Standard' }
