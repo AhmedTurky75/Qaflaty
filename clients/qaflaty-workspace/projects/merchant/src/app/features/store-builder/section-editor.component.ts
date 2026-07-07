@@ -17,6 +17,23 @@ interface SectionTypeInfo {
   defaultVariantId: string;
 }
 
+interface SectionPreset {
+  key: string;
+  label: string;
+  description: string;
+  sectionType: string;
+  variantId: string;
+  content?: unknown;
+  settings?: unknown;
+}
+
+interface PageTemplate {
+  key: string;
+  label: string;
+  description: string;
+  sections: Array<{ sectionType: string; variantId: string; content?: unknown; settings?: unknown }>;
+}
+
 @Component({
   selector: 'app-section-editor',
   standalone: true,
@@ -1187,27 +1204,57 @@ interface SectionTypeInfo {
       </div>
 
       <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-        <button
-          (click)="onClose()"
-          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
-        >
-          Cancel
-        </button>
-        <button
-          (click)="onSave()"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Save Changes
-        </button>
+      <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2">
+          <button
+            (click)="exportJson()"
+            class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-1.5"
+            title="Download this page's sections as a JSON template"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            Export
+          </button>
+          <label
+            class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-1.5 cursor-pointer"
+            title="Load sections from a JSON template (replaces current, not saved until you Save)"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+            </svg>
+            Import
+            <input type="file" accept="application/json,.json" class="hidden" (change)="onImportFile($event)" />
+          </label>
+          @if (importErr()) {
+            <span class="text-xs text-red-600">{{ importErr() }}</span>
+          }
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            (click)="onClose()"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="onSave()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Save Changes
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Add Section Modal -->
     @if (showAddModal()) {
       <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[85vh] overflow-y-auto">
           <h3 class="text-base font-semibold text-gray-900 mb-4">Add New Section</h3>
+
+          <!-- Blank section types -->
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Section Types</p>
           <div class="grid grid-cols-3 gap-3">
             @for (type of sectionTypes; track type.key) {
               <button
@@ -1219,7 +1266,36 @@ interface SectionTypeInfo {
               </button>
             }
           </div>
-          <div class="mt-4 flex justify-end">
+
+          <!-- Pre-filled section presets -->
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-6 mb-2">Presets (pre-filled)</p>
+          <div class="grid grid-cols-3 gap-3">
+            @for (preset of sectionPresets; track preset.key) {
+              <button
+                (click)="addPreset(preset)"
+                class="p-3 border-2 border-gray-200 rounded-lg text-left hover:border-green-500 hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <div class="text-sm font-medium text-gray-900">{{ preset.label }}</div>
+                <div class="text-xs text-gray-500 mt-0.5">{{ preset.description }}</div>
+              </button>
+            }
+          </div>
+
+          <!-- Full-page templates -->
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-6 mb-2">Page Templates (replace all)</p>
+          <div class="grid grid-cols-2 gap-3">
+            @for (tpl of pageTemplates; track tpl.key) {
+              <button
+                (click)="applyPageTemplate(tpl)"
+                class="p-3 border-2 border-gray-200 rounded-lg text-left hover:border-purple-500 hover:bg-purple-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <div class="text-sm font-medium text-gray-900">{{ tpl.label }}</div>
+                <div class="text-xs text-gray-500 mt-0.5">{{ tpl.description }}</div>
+              </button>
+            }
+          </div>
+
+          <div class="mt-6 flex justify-end">
             <button
               (click)="showAddModal.set(false)"
               class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
@@ -1252,6 +1328,7 @@ export class SectionEditorComponent implements OnInit {
   designTabSectionIds = signal<Set<string>>(new Set());
   showAddModal = signal(false);
   uploadingField = signal<string | null>(null);
+  importErr = signal<string | null>(null);
 
   private mediaService = inject(MediaService);
 
@@ -1358,6 +1435,77 @@ export class SectionEditorComponent implements OnInit {
     ]
   };
 
+  // ── Presets: single, pre-filled sections merchants can drop in ──
+  readonly sectionPresets: SectionPreset[] = [
+    {
+      key: 'preset-hero', label: 'Hero (image)', description: 'Headline + CTA over an image',
+      sectionType: 'Hero', variantId: 'hero-full-image',
+      content: { title: { en: 'Welcome to our store', ar: 'مرحبًا بكم في متجرنا' }, subtitle: { en: 'Quality products, delivered fast', ar: 'منتجات عالية الجودة، توصيل سريع' }, buttonText: 'Shop Now', buttonLink: '/products' }
+    },
+    {
+      key: 'preset-benefits', label: 'Benefits (3)', description: 'Three value-prop icons',
+      sectionType: 'Benefits', variantId: 'benefits-standard',
+      content: { title: { en: "Why You'll Love It", ar: 'لماذا ستحبه' }, items: [
+        { icon: '🚚', title: { en: 'Fast Delivery', ar: 'توصيل سريع' }, text: { en: 'Get it in days, not weeks', ar: 'استلمه خلال أيام' } },
+        { icon: '🛡️', title: { en: 'Secure Checkout', ar: 'دفع آمن' }, text: { en: 'Your data is protected', ar: 'بياناتك محمية' } },
+        { icon: '↩️', title: { en: 'Easy Returns', ar: 'إرجاع سهل' }, text: { en: 'Hassle-free returns', ar: 'إرجاع بدون متاعب' } }
+      ] }
+    },
+    {
+      key: 'preset-faq', label: 'FAQ starter', description: 'Two starter questions',
+      sectionType: 'Faq', variantId: 'faq-accordion',
+      content: { title: { en: 'Frequently Asked Questions', ar: 'الأسئلة الشائعة' }, items: [
+        { question: { en: 'How long does delivery take?', ar: 'كم يستغرق التوصيل؟' }, answer: { en: 'Typically 2–5 business days.', ar: 'عادةً من 2 إلى 5 أيام عمل.' } },
+        { question: { en: 'Can I return an item?', ar: 'هل يمكنني إرجاع المنتج؟' }, answer: { en: 'Yes, within 14 days of delivery.', ar: 'نعم، خلال 14 يومًا من الاستلام.' } }
+      ] }
+    },
+    {
+      key: 'preset-cta', label: 'CTA band', description: 'Closing call-to-action',
+      sectionType: 'CallToAction', variantId: 'cta-band',
+      content: { title: { en: 'Ready to get yours?', ar: 'هل أنت مستعد للحصول عليه؟' }, subtitle: { en: 'Order now while stock lasts', ar: 'اطلب الآن قبل نفاد الكمية' }, buttonText: { en: 'Shop Now', ar: 'تسوق الآن' } }
+    },
+    {
+      key: 'preset-announcement', label: 'Announcement', description: 'Dismissible promo strip',
+      sectionType: 'AnnouncementBar', variantId: 'announcement-bar',
+      content: { text: { en: 'Free shipping on orders over 500!', ar: 'شحن مجاني للطلبات فوق 500!' }, link: '/products', bg: '#111827', textColor: '#ffffff', dismissible: true }
+    },
+    {
+      key: 'preset-countdown', label: 'Countdown offer', description: 'Urgency timer',
+      sectionType: 'Countdown', variantId: 'countdown-standard',
+      content: { title: { en: 'Hurry, offer ends in', ar: 'أسرع، ينتهي العرض خلال' }, expiredBehavior: 'message', expiredText: { en: 'Offer ended', ar: 'انتهى العرض' } }
+    }
+  ];
+
+  // ── Full-page templates: replace the whole section list ──
+  readonly pageTemplates: PageTemplate[] = [
+    {
+      key: 'tpl-landing', label: 'Product Landing — Conversion', description: 'Announcement, hero, benefits, countdown, reviews, FAQ, guarantee, CTA',
+      sections: [
+        { sectionType: 'AnnouncementBar', variantId: 'announcement-bar', content: { text: { en: 'Limited time offer!', ar: 'عرض لفترة محدودة!' }, bg: '#111827', textColor: '#ffffff', dismissible: true } },
+        { sectionType: 'Hero', variantId: 'hero-full-image', content: { title: { en: 'The product you need', ar: 'المنتج الذي تحتاجه' }, subtitle: { en: 'Trusted by thousands', ar: 'موثوق من الآلاف' }, buttonText: 'Buy Now', buttonLink: '/products' } },
+        { sectionType: 'Benefits', variantId: 'benefits-standard', content: { items: [
+          { icon: '⭐', title: { en: 'Top Rated', ar: 'الأعلى تقييمًا' }, text: { en: 'Loved by customers', ar: 'محبوب من العملاء' } },
+          { icon: '🚚', title: { en: 'Fast Delivery', ar: 'توصيل سريع' }, text: { en: 'Delivered in days', ar: 'يصل خلال أيام' } },
+          { icon: '🛡️', title: { en: 'Guaranteed', ar: 'مضمون' }, text: { en: 'Money-back promise', ar: 'ضمان استرداد الأموال' } }
+        ] } },
+        { sectionType: 'Countdown', variantId: 'countdown-standard', content: { title: { en: 'Offer ends in', ar: 'ينتهي العرض خلال' }, expiredBehavior: 'message', expiredText: { en: 'Offer ended', ar: 'انتهى العرض' } } },
+        { sectionType: 'ReviewsShowcase', variantId: 'reviews-standard', content: { title: { en: 'What Customers Say', ar: 'ماذا يقول العملاء' } } },
+        { sectionType: 'Faq', variantId: 'faq-accordion', content: { title: { en: 'Frequently Asked Questions', ar: 'الأسئلة الشائعة' }, items: [] } },
+        { sectionType: 'Guarantee', variantId: 'guarantee-standard', content: { icon: '🛡️', title: { en: 'Satisfaction Guaranteed', ar: 'رضا مضمون' }, text: { en: 'Or your money back', ar: 'أو استرداد أموالك' } } },
+        { sectionType: 'CallToAction', variantId: 'cta-band', content: { title: { en: 'Ready to order?', ar: 'مستعد للطلب؟' }, buttonText: { en: 'Buy Now', ar: 'اشترِ الآن' } } }
+      ]
+    },
+    {
+      key: 'tpl-home', label: 'Simple Store Home', description: 'Hero, featured products, categories, newsletter',
+      sections: [
+        { sectionType: 'Hero', variantId: 'hero-full-image', content: { title: { en: 'Welcome', ar: 'مرحبًا' }, subtitle: { en: 'Discover our collection', ar: 'اكتشف مجموعتنا' }, buttonText: 'Shop Now', buttonLink: '/products' } },
+        { sectionType: 'FeaturedProducts', variantId: 'grid-standard', content: { title: { en: 'Featured Products', ar: 'منتجات مميزة' } } },
+        { sectionType: 'CategoryShowcase', variantId: 'cats-grid', content: { title: { en: 'Shop by Category', ar: 'تسوق حسب الفئة' } } },
+        { sectionType: 'Newsletter', variantId: 'news-inline', content: { title: { en: 'Stay in the loop', ar: 'ابقَ على اطلاع' }, buttonText: 'Subscribe' } }
+      ]
+    }
+  ];
+
   ngOnInit(): void {
     if (this.page?.sections) {
       this.localSections = JSON.parse(JSON.stringify(this.page.sections));
@@ -1435,6 +1583,131 @@ export class SectionEditorComponent implements OnInit {
     this.localSections.forEach((section, index) => {
       section.sortOrder = index + 1;
     });
+  }
+
+  // ── Presets & templates (Phase E) ──
+
+  addPreset(preset: SectionPreset): void {
+    const newSection: SectionConfigurationDto = {
+      id: crypto.randomUUID(),
+      sectionType: preset.sectionType,
+      variantId: preset.variantId,
+      isEnabled: true,
+      sortOrder: this.localSections.length + 1,
+      contentJson: preset.content !== undefined ? JSON.stringify(preset.content) : undefined,
+      settingsJson: preset.settings !== undefined ? JSON.stringify(preset.settings) : undefined
+    };
+    this.localSections = [...this.localSections, newSection];
+    this.showAddModal.set(false);
+    this.notifyChange();
+  }
+
+  applyPageTemplate(tpl: PageTemplate): void {
+    if (this.localSections.length > 0 &&
+        !confirm(`Replace all ${this.localSections.length} current section(s) with the "${tpl.label}" template? This is not saved until you click Save Changes.`)) {
+      return;
+    }
+    this.localSections = tpl.sections.map((s, i) => ({
+      id: crypto.randomUUID(),
+      sectionType: s.sectionType,
+      variantId: s.variantId,
+      isEnabled: true,
+      sortOrder: i + 1,
+      contentJson: s.content !== undefined ? JSON.stringify(s.content) : undefined,
+      settingsJson: s.settings !== undefined ? JSON.stringify(s.settings) : undefined
+    }));
+    this.showAddModal.set(false);
+    this.notifyChange();
+  }
+
+  // ── Export / Import JSON (Phase E) ──
+
+  exportJson(): void {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      sections: this.localSections.map(({ sectionType, variantId, isEnabled, sortOrder, contentJson, settingsJson }) =>
+        ({ sectionType, variantId, isEnabled, sortOrder, contentJson, settingsJson })),
+      seoSettings: this.localSeoSettings
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const name = (this.page?.slug || this.page?.title?.english || 'page').toString().replace(/[^a-z0-9-_]+/gi, '-');
+    a.href = url;
+    a.download = `qaflaty-${name}-sections.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  onImportFile(event: Event): void {
+    this.importErr.set(null);
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        this.applyImported(parsed);
+      } catch {
+        this.importErr.set('Invalid JSON file.');
+      }
+      input.value = '';
+    };
+    reader.onerror = () => {
+      this.importErr.set('Could not read the file.');
+      input.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  private applyImported(parsed: any): void {
+    const rawSections = Array.isArray(parsed?.sections) ? parsed.sections : null;
+    if (!rawSections) {
+      this.importErr.set('File does not contain a "sections" array.');
+      return;
+    }
+
+    const validTypes = new Set(this.sectionTypes.map(t => t.key));
+    const imported: SectionConfigurationDto[] = [];
+    for (const s of rawSections) {
+      if (!s || typeof s.sectionType !== 'string' || typeof s.variantId !== 'string') {
+        this.importErr.set('One or more sections are missing a type or variant.');
+        return;
+      }
+      if (!validTypes.has(s.sectionType)) {
+        this.importErr.set(`Unknown section type: ${s.sectionType}.`);
+        return;
+      }
+      imported.push({
+        id: crypto.randomUUID(),
+        sectionType: s.sectionType,
+        variantId: s.variantId,
+        isEnabled: s.isEnabled !== false,
+        sortOrder: imported.length + 1,
+        contentJson: typeof s.contentJson === 'string' ? s.contentJson : undefined,
+        settingsJson: typeof s.settingsJson === 'string' ? s.settingsJson : undefined
+      });
+    }
+
+    this.localSections = imported;
+    this.updateSortOrders();
+
+    // Optional SEO settings block.
+    const seo = parsed?.seoSettings;
+    if (seo && seo.metaTitle && seo.metaDescription) {
+      this.localSeoSettings = {
+        metaTitle: { english: seo.metaTitle.english || '', arabic: seo.metaTitle.arabic || '' },
+        metaDescription: { english: seo.metaDescription.english || '', arabic: seo.metaDescription.arabic || '' },
+        ogImageUrl: seo.ogImageUrl || '',
+        noIndex: seo.noIndex === true,
+        noFollow: seo.noFollow === true
+      };
+    }
+
+    this.notifyChange();
   }
 
   addSection(sectionTypeKey: string): void {
