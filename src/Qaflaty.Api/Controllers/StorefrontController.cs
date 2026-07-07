@@ -7,6 +7,7 @@ using Qaflaty.Application.Catalog.Queries.GetCustomPage;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontPages;
 using Qaflaty.Application.Catalog.Queries.GetFaqItems;
 using Qaflaty.Application.Catalog.Queries.GetProductBySlug;
+using Qaflaty.Application.Catalog.Queries.GetStorefrontProductLandingPage;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontConfig;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontPaymentMethods;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontProducts;
@@ -96,6 +97,17 @@ public class StorefrontController : ApiController
 
         var result = await Sender.Send(
             new GetProductBySlugQuery(_tenantContext.CurrentStoreId.Value.Value, slug), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("products/{slug}/landing-page")]
+    public async Task<IActionResult> GetProductLandingPage(string slug, CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var result = await Sender.Send(
+            new GetStorefrontProductLandingPageQuery(_tenantContext.CurrentStoreId.Value.Value, slug), ct);
         return HandleResult(result);
     }
 

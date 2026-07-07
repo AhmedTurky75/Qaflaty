@@ -481,6 +481,10 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("page_type");
 
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -496,6 +500,9 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnName("updated_at");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductId")
+                        .IsUnique();
 
                     b.HasIndex("StoreId", "Slug")
                         .IsUnique();

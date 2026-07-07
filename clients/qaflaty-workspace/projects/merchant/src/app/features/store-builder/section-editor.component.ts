@@ -440,6 +440,241 @@ interface SectionTypeInfo {
                       <p class="mt-1 text-xs text-amber-600">HTML is rendered as-is. Ensure content is safe.</p>
                     </div>
                   }
+                  @case ('MediaText') {
+                    <div class="space-y-4">
+                      @for (item of getContentArray(section, 'items'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Row {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-2 gap-3">
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                              <input #mtTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.title?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'en', mtTitleEn.value)" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                              <input #mtTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.title?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'ar', mtTitleAr.value)" />
+                            </div>
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
+                              <textarea #mtTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.text?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'en', mtTextEn.value)"></textarea>
+                            </div>
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
+                              <textarea #mtTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.text?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'ar', mtTextAr.value)"></textarea>
+                            </div>
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Image (leave blank to use a product photo)</label>
+                              <div class="flex gap-2">
+                                <input #mtImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                  [value]="item.imageUrl || ''" (input)="updateArrayItemField(section, 'items', i, 'imageUrl', mtImg.value)" placeholder="Paste image URL or upload →" />
+                                <label class="cursor-pointer flex-shrink-0 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-md text-xs text-gray-700"
+                                  [class.opacity-50]="uploadingField() === section.id + ':items:' + i + ':imageUrl'">
+                                  Upload
+                                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden"
+                                    [disabled]="!!uploadingField()" (change)="uploadArrayItemImage(section, 'items', i, 'imageUrl', $event)" />
+                                </label>
+                              </div>
+                              @if (item.imageUrl) {
+                                <img [src]="item.imageUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="Preview" />
+                              }
+                            </div>
+                            <label class="col-span-2 flex items-center gap-2 cursor-pointer">
+                              <input type="checkbox" [checked]="item.reverse" (change)="updateArrayItemField(section, 'items', i, 'reverse', !item.reverse)" class="h-4 w-4 text-blue-600 rounded" />
+                              <span class="text-xs font-medium text-gray-700">Image on the right</span>
+                            </label>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'items', { imageUrl: '', title: { en: '', ar: '' }, text: { en: '', ar: '' }, reverse: false })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Row</button>
+                    </div>
+                  }
+                  @case ('Benefits') {
+                    <div class="space-y-4">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                          <input #benfTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', benfTitleEn.value)" placeholder="Why You'll Love It" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                          <input #benfTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', benfTitleAr.value)" />
+                        </div>
+                      </div>
+                      @for (item of getContentArray(section, 'items'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Benefit {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-2 gap-3">
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Icon (emoji)</label>
+                              <input #benIcon type="text" class="w-20 text-sm px-2 py-1.5 border border-gray-300 rounded-md text-center"
+                                [value]="item.icon || ''" (input)="updateArrayItemField(section, 'items', i, 'icon', benIcon.value)" placeholder="⭐" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                              <input #benTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.title?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'en', benTitleEn.value)" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                              <input #benTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.title?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'ar', benTitleAr.value)" />
+                            </div>
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
+                              <textarea #benTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.text?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'en', benTextEn.value)"></textarea>
+                            </div>
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
+                              <textarea #benTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.text?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'ar', benTextAr.value)"></textarea>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'items', { icon: '⭐', title: { en: '', ar: '' }, text: { en: '', ar: '' } })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Benefit</button>
+                    </div>
+                  }
+                  @case ('Faq') {
+                    <div class="space-y-4">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                          <input #faqTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', faqTitleEn.value)" placeholder="Frequently Asked Questions" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                          <input #faqTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', faqTitleAr.value)" />
+                        </div>
+                      </div>
+                      @for (item of getContentArray(section, 'items'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Question {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-2 gap-3">
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Question (EN)</label>
+                              <input #faqQEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.question?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'question', 'en', faqQEn.value)" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Question (AR)</label>
+                              <input #faqQAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.question?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'question', 'ar', faqQAr.value)" />
+                            </div>
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Answer (EN)</label>
+                              <textarea #faqAEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.answer?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'answer', 'en', faqAEn.value)"></textarea>
+                            </div>
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Answer (AR)</label>
+                              <textarea #faqAAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.answer?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'answer', 'ar', faqAAr.value)"></textarea>
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'items', { question: { en: '', ar: '' }, answer: { en: '', ar: '' } })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Question</button>
+                    </div>
+                  }
+                  @case ('Guarantee') {
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Icon (emoji)</label>
+                        <input #gIcon type="text" class="w-20 text-sm px-2 py-1.5 border border-gray-300 rounded-md text-center"
+                          [value]="getContent(section)?.icon || ''" (input)="setContentField(section, 'icon', gIcon.value)" placeholder="🛡️" />
+                      </div>
+                      <div></div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                        <input #gTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', gTitleEn.value)" placeholder="Satisfaction Guaranteed" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                        <input #gTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', gTitleAr.value)" />
+                      </div>
+                      <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
+                        <textarea #gTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.text?.en || ''" (input)="setContentBilingual(section, 'text', 'en', gTextEn.value)"></textarea>
+                      </div>
+                      <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
+                        <textarea #gTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.text?.ar || ''" (input)="setContentBilingual(section, 'text', 'ar', gTextAr.value)"></textarea>
+                      </div>
+                    </div>
+                  }
+                  @case ('CallToAction') {
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                        <input #ctaTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', ctaTitleEn.value)" placeholder="Ready to get yours?" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                        <input #ctaTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', ctaTitleAr.value)" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (EN)</label>
+                        <input #ctaSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.subtitle?.en || ''" (input)="setContentBilingual(section, 'subtitle', 'en', ctaSubEn.value)" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (AR)</label>
+                        <input #ctaSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.subtitle?.ar || ''" (input)="setContentBilingual(section, 'subtitle', 'ar', ctaSubAr.value)" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
+                        <input #ctaBtnEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.buttonText?.en || ''" (input)="setContentBilingual(section, 'buttonText', 'en', ctaBtnEn.value)" placeholder="Shop Now" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
+                        <input #ctaBtnAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', ctaBtnAr.value)" />
+                      </div>
+                    </div>
+                  }
+                  @case ('ReviewsShowcase') {
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                        <input #rsTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', rsTitleEn.value)" placeholder="What Customers Say" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                        <input #rsTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', rsTitleAr.value)" />
+                      </div>
+                    </div>
+                  }
                   @default {
                     <p class="text-xs text-gray-500 py-2">No content fields available for this section type.</p>
                   }
@@ -622,6 +857,12 @@ export class SectionEditorComponent implements OnInit {
     { key: 'ProductCarousel', label: 'Carousel', description: 'Scrolling products', defaultVariantId: 'carousel-standard' },
     { key: 'Testimonials', label: 'Testimonials', description: 'Customer reviews', defaultVariantId: 'test-cards' },
     { key: 'CustomHtml', label: 'Custom HTML', description: 'Raw HTML block', defaultVariantId: 'custom-html' },
+    { key: 'MediaText', label: 'Media + Text', description: 'Alternating image/text rows', defaultVariantId: 'media-text-standard' },
+    { key: 'Benefits', label: 'Benefits', description: 'Icon + text value props', defaultVariantId: 'benefits-standard' },
+    { key: 'ReviewsShowcase', label: 'Reviews', description: 'Customer reviews block', defaultVariantId: 'reviews-standard' },
+    { key: 'Faq', label: 'FAQ', description: 'Question & answer accordion', defaultVariantId: 'faq-accordion' },
+    { key: 'Guarantee', label: 'Guarantee', description: 'Trust / guarantee banner', defaultVariantId: 'guarantee-standard' },
+    { key: 'CallToAction', label: 'Call to Action', description: 'Closing CTA band', defaultVariantId: 'cta-band' },
   ];
 
   private readonly sectionVariants: Record<string, SectionVariant[]> = {
@@ -663,6 +904,24 @@ export class SectionEditorComponent implements OnInit {
     ],
     CustomHtml: [
       { id: 'custom-html', label: 'Custom HTML Block' }
+    ],
+    MediaText: [
+      { id: 'media-text-standard', label: 'Standard' }
+    ],
+    Benefits: [
+      { id: 'benefits-standard', label: 'Standard' }
+    ],
+    ReviewsShowcase: [
+      { id: 'reviews-standard', label: 'Standard' }
+    ],
+    Faq: [
+      { id: 'faq-accordion', label: 'Accordion' }
+    ],
+    Guarantee: [
+      { id: 'guarantee-standard', label: 'Standard' }
+    ],
+    CallToAction: [
+      { id: 'cta-band', label: 'Band' }
     ]
   };
 
@@ -772,6 +1031,64 @@ export class SectionEditorComponent implements OnInit {
     const settings = this.getSettings(section);
     settings[field] = value;
     section.settingsJson = JSON.stringify(settings);
+  }
+
+  // ── Repeatable content-array helpers (Benefits / MediaText / Faq items) ──
+
+  getContentArray(section: SectionConfigurationDto, field: string): any[] {
+    const content = this.getContent(section);
+    return Array.isArray(content[field]) ? content[field] : [];
+  }
+
+  private setContentArray(section: SectionConfigurationDto, field: string, items: any[]): void {
+    const content = this.getContent(section);
+    content[field] = items;
+    section.contentJson = JSON.stringify(content);
+  }
+
+  addArrayItem(section: SectionConfigurationDto, field: string, template: any): void {
+    this.setContentArray(section, field, [...this.getContentArray(section, field), template]);
+  }
+
+  removeArrayItem(section: SectionConfigurationDto, field: string, index: number): void {
+    this.setContentArray(section, field, this.getContentArray(section, field).filter((_, i) => i !== index));
+  }
+
+  updateArrayItemField(section: SectionConfigurationDto, field: string, index: number, key: string, value: any): void {
+    const items = [...this.getContentArray(section, field)];
+    items[index] = { ...items[index], [key]: value };
+    this.setContentArray(section, field, items);
+  }
+
+  updateArrayItemBilingual(section: SectionConfigurationDto, field: string, index: number, key: string, lang: 'en' | 'ar', value: string): void {
+    const items = [...this.getContentArray(section, field)];
+    const item = { ...items[index] };
+    item[key] = { ...(item[key] || {}), [lang]: value };
+    items[index] = item;
+    this.setContentArray(section, field, items);
+  }
+
+  uploadArrayItemImage(section: SectionConfigurationDto, field: string, index: number, itemKey: string, event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    const storeId = this.page?.storeId;
+    if (!file || !storeId) return;
+
+    const key = `${section.id}:${field}:${index}:${itemKey}`;
+    this.uploadingField.set(key);
+
+    this.mediaService.uploadImages(storeId, [file]).subscribe({
+      next: (result) => {
+        if (result.urls?.[0]) {
+          this.updateArrayItemField(section, field, index, itemKey, result.urls[0]);
+        }
+        this.uploadingField.set(null);
+        (event.target as HTMLInputElement).value = '';
+      },
+      error: () => {
+        this.uploadingField.set(null);
+        (event.target as HTMLInputElement).value = '';
+      }
+    });
   }
 
   uploadImage(section: SectionConfigurationDto, field: string, event: Event): void {

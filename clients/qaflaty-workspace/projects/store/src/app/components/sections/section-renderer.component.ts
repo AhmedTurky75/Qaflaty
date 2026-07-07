@@ -1,5 +1,6 @@
 import { Component, input } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
+import { Product } from '../../models/product.model';
 import { HeroFullImageComponent } from './hero/hero-full-image.component';
 import { HeroSplitComponent } from './hero/hero-split.component';
 import { HeroSliderComponent } from './hero/hero-slider.component';
@@ -21,6 +22,12 @@ import { CarouselStandardComponent } from './product-carousel/carousel-standard.
 import { TestCardsComponent } from './testimonials/test-cards.component';
 import { TestSliderComponent } from './testimonials/test-slider.component';
 import { CustomHtmlComponent } from './custom-html/custom-html.component';
+import { LandingMediaTextComponent } from '../landing/landing-media-text.component';
+import { LandingBenefitsComponent } from '../landing/landing-benefits.component';
+import { LandingFaqComponent } from '../landing/landing-faq.component';
+import { LandingGuaranteeComponent } from '../landing/landing-guarantee.component';
+import { LandingCtaBandComponent } from '../landing/landing-cta-band.component';
+import { LandingReviewsShowcaseComponent } from '../landing/landing-reviews-showcase.component';
 
 @Component({
   selector: 'app-section-renderer',
@@ -34,7 +41,9 @@ import { CustomHtmlComponent } from './custom-html/custom-html.component';
     BannerStripComponent, BannerCardComponent,
     CarouselStandardComponent,
     TestCardsComponent, TestSliderComponent,
-    CustomHtmlComponent
+    CustomHtmlComponent,
+    LandingMediaTextComponent, LandingBenefitsComponent, LandingFaqComponent,
+    LandingGuaranteeComponent, LandingCtaBandComponent, LandingReviewsShowcaseComponent
   ],
   template: `
     @for (section of sections(); track section.id) {
@@ -62,6 +71,12 @@ import { CustomHtmlComponent } from './custom-html/custom-html.component';
             @case ('test-cards') { <app-test-cards [config]="section" /> }
             @case ('test-slider') { <app-test-slider [config]="section" /> }
             @case ('custom-html') { <app-custom-html [config]="section" /> }
+            @case ('media-text-standard') { <app-landing-media-text [config]="section" [product]="product()" /> }
+            @case ('benefits-standard') { <app-landing-benefits [config]="section" /> }
+            @case ('faq-accordion') { <app-landing-faq [config]="section" /> }
+            @case ('guarantee-standard') { <app-landing-guarantee [config]="section" /> }
+            @case ('cta-band') { <app-landing-cta-band [config]="section" /> }
+            @case ('reviews-standard') { <app-landing-reviews-showcase [config]="section" [product]="product()" /> }
           }
         </section>
       }
@@ -70,4 +85,5 @@ import { CustomHtmlComponent } from './custom-html/custom-html.component';
 })
 export class SectionRendererComponent {
   sections = input.required<SectionConfigurationDto[]>();
+  product = input<Product | null>(null);
 }

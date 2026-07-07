@@ -69,4 +69,10 @@ public static class CatalogErrors
 
     public static readonly Error DeliveryZoneNotFound =
         new("Catalog.DeliveryZoneNotFound", "Delivery zone not found");
+
+    public static readonly Error LandingPageAlreadyExists =
+        new("Catalog.LandingPageAlreadyExists", "This product already has a landing page");
+
+    public static readonly Error LandingPageNotFound =
+        new("Catalog.LandingPageNotFound", "Landing page not found");
 }

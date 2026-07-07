@@ -288,6 +288,11 @@
           </div>
         }
 
+        <!-- Landing Page (only in edit mode) -->
+        @if (isEditMode() && productId) {
+          <app-landing-page-panel [productId]="productId"></app-landing-page-panel>
+        }
+
         <!-- Custom Product Properties -->
         @if (propertyDefinitions().length > 0) {
           <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">

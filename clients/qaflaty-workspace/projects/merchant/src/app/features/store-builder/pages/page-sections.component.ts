@@ -115,12 +115,11 @@ export class PageSectionsComponent implements OnInit {
     this.builderService.updateSections(storeId, current.id, sectionsReq).subscribe({
       next: () => {
         this.builderService.updatePage(storeId, current.id, pageReq).subscribe({
-          next: () => {
+          next: (updated) => {
             this.saving.set(false);
             this.saved.set(true);
-            setTimeout(() => {
-              this.router.navigate(['/store-builder/pages']);
-            }, 1200);
+            this.page.set(updated);
+            setTimeout(() => this.saved.set(false), 2500);
           },
           error: (err) => {
             this.saving.set(false);

@@ -12,6 +12,7 @@ public sealed class PageConfiguration : AggregateRoot<PageConfigurationId>
 
     public StoreId StoreId { get; private set; } // Store this page belongs to
     public PageType PageType { get; private set; } // Which storefront page this configures (Home, About, Contact, custom, etc.)
+    public ProductId? ProductId { get; private set; } // Set only for PageType.ProductLanding — the single product this landing page belongs to
     public string Slug { get; private set; } = null!; // URL slug of the page, e.g. "about-us"
     public BilingualText Title { get; private set; } = null!; // Page title in Arabic + English
     public bool IsEnabled { get; private set; } // Whether the page is published/visible; GetStorefrontPages returns only enabled pages
@@ -39,6 +40,29 @@ public sealed class PageConfiguration : AggregateRoot<PageConfigurationId>
             Slug = slug,
             Title = title,
             IsEnabled = isEnabled,
+            SeoSettings = PageSeoSettings.CreateDefault(),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        return Result.Success(page);
+    }
+
+    public static Result<PageConfiguration> CreateForProduct(
+        StoreId storeId,
+        ProductId productId,
+        BilingualText title,
+        string slug)
+    {
+        var page = new PageConfiguration
+        {
+            Id = PageConfigurationId.New(),
+            StoreId = storeId,
+            ProductId = productId,
+            PageType = PageType.ProductLanding,
+            Slug = slug,
+            Title = title,
+            IsEnabled = true,
             SeoSettings = PageSeoSettings.CreateDefault(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow

@@ -16,6 +16,9 @@ using Qaflaty.Application.Catalog.Queries.GetProductById;
 using Qaflaty.Application.Catalog.Queries.GetProducts;
 using Qaflaty.Application.Catalog.Queries.GetProductWithVariants;
 using Qaflaty.Application.Catalog.Queries.GetInventoryHistory;
+using Qaflaty.Application.Catalog.Commands.CreateProductLandingPage;
+using Qaflaty.Application.Catalog.Commands.DeleteProductLandingPage;
+using Qaflaty.Application.Catalog.Queries.GetProductLandingPage;
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
@@ -306,6 +309,48 @@ public class ProductsController : ApiController
             request.Reason);
 
         var result = await Sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+            return HandleResult(result);
+
+        return NoContent();
+    }
+
+    // ===== LANDING PAGE ENDPOINTS =====
+
+    [HttpPost("{id:guid}/landing-page")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> CreateLandingPage(Guid storeId, Guid id, CancellationToken cancellationToken)
+    {
+        var command = new CreateProductLandingPageCommand(storeId, id);
+        var result = await Sender.Send(command, cancellationToken);
+
+        if (result.IsFailure)
+            return HandleResult(result);
+
+        return StatusCode(StatusCodes.Status201Created, result.Value);
+    }
+
+    [HttpGet("{id:guid}/landing-page")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetLandingPage(Guid storeId, Guid id, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new GetProductLandingPageQuery(id), cancellationToken);
+        return HandleResult(result);
+    }
+
+    [HttpDelete("{id:guid}/landing-page")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> DeleteLandingPage(Guid storeId, Guid id, CancellationToken cancellationToken)
+    {
+        var result = await Sender.Send(new DeleteProductLandingPageCommand(id), cancellationToken);
 
         if (result.IsFailure)
             return HandleResult(result);

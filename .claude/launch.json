@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "merchant",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "clients/qaflaty-workspace", "run", "start:merchant", "--", "--port", "4200"],
+      "port": 4200
+    }
+  ]
+}

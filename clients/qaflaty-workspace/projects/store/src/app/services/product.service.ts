@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Product, ProductFilter, PaginatedProducts } from '../models/product.model';
 import { environment } from '../../environments/environment';
+import { PageConfigurationDto } from 'shared';
 
 @Injectable({
   providedIn: 'root'
@@ -65,5 +66,12 @@ export class ProductService {
       page: 1,
       pageSize: limit
     });
+  }
+
+  /**
+   * Get the product's landing page configuration, if it has one enabled. 404s otherwise.
+   */
+  getLandingPage(slug: string): Observable<PageConfigurationDto> {
+    return this.http.get<PageConfigurationDto>(`${this.apiUrl}/${slug}/landing-page`);
   }
 }

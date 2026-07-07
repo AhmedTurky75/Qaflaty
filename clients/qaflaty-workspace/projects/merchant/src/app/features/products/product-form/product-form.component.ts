@@ -8,13 +8,14 @@ import { BuilderService } from '../../store-builder/services/builder.service';
 import { ImageUploadComponent, ImageItem } from '../components/image-upload/image-upload.component';
 import { VariantManagerComponent } from '../components/variant-manager/variant-manager.component';
 import { InventoryHistoryComponent } from '../components/inventory-history/inventory-history.component';
+import { LandingPagePanelComponent } from '../components/landing-page-panel/landing-page-panel.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
 import { CategoryDto, ProductStatus, ProductPropertyDefinitionDto } from 'shared';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ImageUploadComponent, VariantManagerComponent, InventoryHistoryComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ImageUploadComponent, VariantManagerComponent, InventoryHistoryComponent, LandingPagePanelComponent],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss']
 })

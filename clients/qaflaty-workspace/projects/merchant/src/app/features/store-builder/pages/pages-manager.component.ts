@@ -185,7 +185,8 @@ export class PagesManagerComponent implements OnInit {
     this.loading.set(true);
     this.builderService.getPages(storeId).subscribe({
       next: (pages) => {
-        this.pages.set(pages);
+        // Product landing pages are edited from the product form, not this general list.
+        this.pages.set(pages.filter(p => p.pageType !== 'ProductLanding'));
         this.loading.set(false);
       },
       error: (err) => {

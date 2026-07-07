@@ -9,6 +9,7 @@ public interface IPageConfigurationRepository
     Task<PageConfiguration?> GetByIdAsync(PageConfigurationId id, CancellationToken ct = default);
     Task<PageConfiguration?> GetByStoreIdAndTypeAsync(StoreId storeId, PageType pageType, CancellationToken ct = default);
     Task<PageConfiguration?> GetByStoreIdAndSlugAsync(StoreId storeId, string slug, CancellationToken ct = default);
+    Task<PageConfiguration?> GetByProductIdAsync(ProductId productId, CancellationToken ct = default);
     Task<IReadOnlyList<PageConfiguration>> GetByStoreIdAsync(StoreId storeId, CancellationToken ct = default);
     Task AddAsync(PageConfiguration page, CancellationToken ct = default);
     void Update(PageConfiguration page);

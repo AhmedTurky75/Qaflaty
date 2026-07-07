@@ -13,7 +13,8 @@ import {
   UpdateProductVariantRequest,
   ProductVariantDto,
   AdjustInventoryRequest,
-  InventoryMovementDto
+  InventoryMovementDto,
+  PageConfigurationDto
 } from 'shared';
 
 export interface ImportRowError {
@@ -183,5 +184,19 @@ export class ProductService {
     return this.http.get<InventoryMovementDto[]>(
       `${this.storeUrl(storeId)}/${productId}/inventory-history`
     );
+  }
+
+  // ============ Landing Page ============
+
+  getLandingPage(storeId: string, productId: string): Observable<PageConfigurationDto> {
+    return this.http.get<PageConfigurationDto>(`${this.storeUrl(storeId)}/${productId}/landing-page`);
+  }
+
+  createLandingPage(storeId: string, productId: string): Observable<PageConfigurationDto> {
+    return this.http.post<PageConfigurationDto>(`${this.storeUrl(storeId)}/${productId}/landing-page`, {});
+  }
+
+  deleteLandingPage(storeId: string, productId: string): Observable<void> {
+    return this.http.delete<void>(`${this.storeUrl(storeId)}/${productId}/landing-page`);
   }
 }

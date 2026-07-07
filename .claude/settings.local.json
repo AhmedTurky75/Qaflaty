@@ -178,7 +178,8 @@
       "PowerShell(Get-Process *)",
       "PowerShell(Get-CimInstance *)",
       "Bash(dotnet build-server *)",
-      "Bash(dotnet test *)"
+      "Bash(dotnet test *)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": [],

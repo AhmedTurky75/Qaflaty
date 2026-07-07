@@ -10,5 +10,11 @@ public enum SectionType
     Banner,
     CustomHtml,
     ProductCarousel,
-    Testimonials
+    Testimonials,
+    MediaText,
+    Benefits,
+    Faq,
+    Guarantee,
+    CallToAction,
+    ReviewsShowcase
 }
