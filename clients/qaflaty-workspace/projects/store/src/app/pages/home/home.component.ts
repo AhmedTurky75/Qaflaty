@@ -5,6 +5,7 @@ import { StoreService } from '../../services/store.service';
 import { ProductService } from '../../services/product.service';
 import { CategoryService } from '../../services/category.service';
 import { ConfigService } from '../../services/config.service';
+import { ExperimentService } from '../../services/experiment.service';
 import { SeoService } from '../../services/seo.service';
 import { Category } from '../../models/category.model';
 import { SectionConfigurationDto } from 'shared';
@@ -23,6 +24,7 @@ export class HomeComponent implements OnInit {
   private productService = inject(ProductService);
   private categoryService = inject(CategoryService);
   private configService = inject(ConfigService);
+  private experimentService = inject(ExperimentService);
   private seoService = inject(SeoService);
 
   store = this.storeService.currentStore;
@@ -48,6 +50,13 @@ export class HomeComponent implements OnInit {
           this.seoService.setPageSeo(page.seoSettings, page.title);
         }
         this.pageConfigLoaded.set(true);
+
+        // A/B: if this visitor is assigned a variant, render its layout instead.
+        this.experimentService.resolve('home').subscribe(variantSections => {
+          if (variantSections?.length) {
+            this.homePageSections.set(variantSections.filter(s => s.isEnabled));
+          }
+        });
       },
       error: () => {
         this.pageConfigLoaded.set(true);

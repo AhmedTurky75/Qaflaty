@@ -121,6 +121,28 @@ export interface PageConfigurationDto {
   updatedAt: string;
 }
 
+/** An A/B test variant of a page (the page's own sections are the control). */
+export interface PageVariantDto {
+  id: string;              // empty string for a not-yet-persisted variant
+  name: string;
+  weight: number;
+  isActive: boolean;
+  sectionsJson?: string;   // serialized SectionConfigurationDto[] for this variant
+  impressions: number;
+  conversions: number;
+}
+
+/** Storefront experiment payload used to resolve a sticky variant client-side. */
+export interface PageExperimentDto {
+  pageId: string;
+  controlWeight: number;
+  variants: PageVariantDto[];
+}
+
+export interface UpdatePageVariantsRequest {
+  variants: PageVariantDto[];
+}
+
 export interface PaymentMethodAdjustment {
   id: string;
   paymentMethod: string;
