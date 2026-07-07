@@ -126,6 +126,34 @@ interface SectionTypeInfo {
             <!-- Expanded Content Form -->
             @if (isExpanded(section.id)) {
               <div class="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50 space-y-4">
+                <!-- Content / Design tabs -->
+                <div class="flex gap-4 border-b border-gray-200">
+                  <button
+                    type="button"
+                    (click)="setTab(section.id, 'content')"
+                    class="pb-2 -mb-px text-sm font-medium border-b-2 transition-colors"
+                    [class.border-blue-600]="!isDesignTab(section.id)"
+                    [class.text-blue-600]="!isDesignTab(section.id)"
+                    [class.border-transparent]="isDesignTab(section.id)"
+                    [class.text-gray-500]="isDesignTab(section.id)"
+                  >Content</button>
+                  <button
+                    type="button"
+                    (click)="setTab(section.id, 'design')"
+                    class="pb-2 -mb-px text-sm font-medium border-b-2 transition-colors flex items-center gap-1"
+                    [class.border-blue-600]="isDesignTab(section.id)"
+                    [class.text-blue-600]="isDesignTab(section.id)"
+                    [class.border-transparent]="!isDesignTab(section.id)"
+                    [class.text-gray-500]="!isDesignTab(section.id)"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                    </svg>
+                    Design
+                  </button>
+                </div>
+
+                @if (!isDesignTab(section.id)) {
                 @switch (section.sectionType) {
                   @case ('Hero') {
                     <div class="grid grid-cols-2 gap-3">
@@ -679,6 +707,167 @@ interface SectionTypeInfo {
                     <p class="text-xs text-gray-500 py-2">No content fields available for this section type.</p>
                   }
                 }
+                }
+
+                <!-- Design settings (applies SettingsJson on the storefront) -->
+                @if (isDesignTab(section.id)) {
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Background Color</label>
+                        <div class="flex items-center gap-2">
+                          <input
+                            type="color"
+                            [value]="getSettings(section)?.backgroundColor || '#ffffff'"
+                            (input)="setSettingsField(section, 'backgroundColor', dBg.value)"
+                            #dBg
+                            class="h-8 w-10 rounded border border-gray-300 cursor-pointer p-0"
+                          />
+                          <input
+                            type="text"
+                            [value]="getSettings(section)?.backgroundColor || ''"
+                            (input)="setSettingsField(section, 'backgroundColor', dBgText.value)"
+                            #dBgText
+                            placeholder="#ffffff or var(--x)"
+                            class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                          @if (getSettings(section)?.backgroundColor) {
+                            <button type="button" (click)="clearSettingsField(section, 'backgroundColor')" class="text-xs text-gray-400 hover:text-red-500" title="Clear">✕</button>
+                          }
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
+                        <div class="flex items-center gap-2">
+                          <input
+                            type="color"
+                            [value]="getSettings(section)?.textColor || '#111827'"
+                            (input)="setSettingsField(section, 'textColor', dText.value)"
+                            #dText
+                            class="h-8 w-10 rounded border border-gray-300 cursor-pointer p-0"
+                          />
+                          <input
+                            type="text"
+                            [value]="getSettings(section)?.textColor || ''"
+                            (input)="setSettingsField(section, 'textColor', dTextText.value)"
+                            #dTextText
+                            placeholder="#111827"
+                            class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                          @if (getSettings(section)?.textColor) {
+                            <button type="button" (click)="clearSettingsField(section, 'textColor')" class="text-xs text-gray-400 hover:text-red-500" title="Clear">✕</button>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Background Image URL</label>
+                      <input
+                        type="text"
+                        [value]="getSettings(section)?.backgroundImageUrl || ''"
+                        (input)="setSettingsField(section, 'backgroundImageUrl', dBgImg.value)"
+                        #dBgImg
+                        placeholder="https://... (optional, sits behind content)"
+                        class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Vertical Padding</label>
+                        <select
+                          [value]="getSettings(section)?.paddingY || ''"
+                          (change)="setSettingsField(section, 'paddingY', dPadY.value)"
+                          #dPadY
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Default</option>
+                          <option value="none">None</option>
+                          <option value="sm">Small</option>
+                          <option value="md">Medium</option>
+                          <option value="lg">Large</option>
+                          <option value="xl">Extra Large</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Horizontal Padding</label>
+                        <select
+                          [value]="getSettings(section)?.paddingX || ''"
+                          (change)="setSettingsField(section, 'paddingX', dPadX.value)"
+                          #dPadX
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Default</option>
+                          <option value="none">None</option>
+                          <option value="sm">Small</option>
+                          <option value="md">Medium</option>
+                          <option value="lg">Large</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Content Width</label>
+                        <select
+                          [value]="getSettings(section)?.maxWidth || ''"
+                          (change)="setSettingsField(section, 'maxWidth', dWidth.value)"
+                          #dWidth
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Default</option>
+                          <option value="full">Full Width</option>
+                          <option value="wide">Wide (max 80rem)</option>
+                          <option value="narrow">Narrow (max 48rem)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Corner Radius</label>
+                        <select
+                          [value]="getSettings(section)?.borderRadius || ''"
+                          (change)="setSettingsField(section, 'borderRadius', dRadius.value)"
+                          #dRadius
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Default</option>
+                          <option value="none">None</option>
+                          <option value="sm">Small</option>
+                          <option value="md">Medium</option>
+                          <option value="lg">Large</option>
+                          <option value="2xl">Extra Large</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                          Device Visibility
+                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="Uses CSS media queries so content stays crawlable">SEO</span>
+                        </label>
+                        <select
+                          [value]="getSettings(section)?.visibility || 'all'"
+                          (change)="setSettingsField(section, 'visibility', dVis.value)"
+                          #dVis
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="all">All Devices</option>
+                          <option value="desktop">Desktop Only</option>
+                          <option value="mobile">Mobile Only</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Anchor ID</label>
+                        <input
+                          type="text"
+                          [value]="getSettings(section)?.anchorId || ''"
+                          (input)="setSettingsField(section, 'anchorId', dAnchor.value)"
+                          #dAnchor
+                          placeholder="e.g. order-form (for #links)"
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                }
               </div>
             }
           </div>
@@ -842,6 +1031,7 @@ export class SectionEditorComponent implements OnInit {
   };
 
   expandedSectionIds = signal<Set<string>>(new Set());
+  designTabSectionIds = signal<Set<string>>(new Set());
   showAddModal = signal(false);
   uploadingField = signal<string | null>(null);
 
@@ -957,6 +1147,20 @@ export class SectionEditorComponent implements OnInit {
     return this.expandedSectionIds().has(sectionId);
   }
 
+  setTab(sectionId: string, tab: 'content' | 'design'): void {
+    const set = new Set(this.designTabSectionIds());
+    if (tab === 'design') {
+      set.add(sectionId);
+    } else {
+      set.delete(sectionId);
+    }
+    this.designTabSectionIds.set(set);
+  }
+
+  isDesignTab(sectionId: string): boolean {
+    return this.designTabSectionIds().has(sectionId);
+  }
+
   moveUp(index: number): void {
     if (index === 0) return;
     [this.localSections[index], this.localSections[index - 1]] =
@@ -1029,8 +1233,16 @@ export class SectionEditorComponent implements OnInit {
 
   setSettingsField(section: SectionConfigurationDto, field: string, value: any): void {
     const settings = this.getSettings(section);
-    settings[field] = value;
-    section.settingsJson = JSON.stringify(settings);
+    if (value === '' || value === null || value === undefined) {
+      delete settings[field];
+    } else {
+      settings[field] = value;
+    }
+    section.settingsJson = Object.keys(settings).length ? JSON.stringify(settings) : undefined;
+  }
+
+  clearSettingsField(section: SectionConfigurationDto, field: string): void {
+    this.setSettingsField(section, field, '');
   }
 
   // ── Repeatable content-array helpers (Benefits / MediaText / Faq items) ──

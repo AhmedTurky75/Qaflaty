@@ -28,11 +28,13 @@ import { LandingFaqComponent } from '../landing/landing-faq.component';
 import { LandingGuaranteeComponent } from '../landing/landing-guarantee.component';
 import { LandingCtaBandComponent } from '../landing/landing-cta-band.component';
 import { LandingReviewsShowcaseComponent } from '../landing/landing-reviews-showcase.component';
+import { SectionWrapperComponent } from './section-wrapper.component';
 
 @Component({
   selector: 'app-section-renderer',
   standalone: true,
   imports: [
+    SectionWrapperComponent,
     HeroFullImageComponent, HeroSplitComponent, HeroSliderComponent, HeroMinimalComponent,
     GridStandardComponent, GridLargeComponent, GridListComponent, GridCompactComponent,
     CatsGridComponent, CatsSliderComponent, CatsIconsComponent,
@@ -49,6 +51,7 @@ import { LandingReviewsShowcaseComponent } from '../landing/landing-reviews-show
     @for (section of sections(); track section.id) {
       @if (section.isEnabled) {
         <section class="w-full">
+          <app-section-wrapper [settingsJson]="section.settingsJson">
           @switch (section.variantId) {
             @case ('hero-full-image') { <app-hero-full-image [config]="section" /> }
             @case ('hero-split') { <app-hero-split [config]="section" /> }
@@ -78,6 +81,7 @@ import { LandingReviewsShowcaseComponent } from '../landing/landing-reviews-show
             @case ('cta-band') { <app-landing-cta-band [config]="section" /> }
             @case ('reviews-standard') { <app-landing-reviews-showcase [config]="section" [product]="product()" /> }
           }
+          </app-section-wrapper>
         </section>
       }
     }
