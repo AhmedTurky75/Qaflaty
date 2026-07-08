@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageConfigurationDto, SectionConfigurationDto, PageSeoSettings } from 'shared';
 import { MediaService } from '../products/services/media.service';
+import { RichTextEditorComponent } from './rich-text-editor.component';
 
 interface SectionVariant {
   id: string;
@@ -37,7 +38,7 @@ interface PageTemplate {
 @Component({
   selector: 'app-section-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [CommonModule, FormsModule, DragDropModule, RichTextEditorComponent],
   template: `
     <div class="bg-white rounded-lg shadow">
       <!-- Header -->
@@ -709,9 +710,16 @@ interface PageTemplate {
                         <input #ctaBtnAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
                           [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', ctaBtnAr.value)" />
                       </div>
+                      <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Link</label>
+                        <input #ctaBtnLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.buttonLink || ''" (input)="setContentField(section, 'buttonLink', ctaBtnLink.value)" placeholder="/products, https://…, or leave empty to scroll to the buy box" />
+                        <p class="text-[11px] text-gray-400 mt-1">Leave empty on a product page to scroll to the buy box. On other pages, set where the button should go (e.g. /products).</p>
+                      </div>
                     </div>
                   }
                   @case ('ReviewsShowcase') {
+                    <p class="text-[11px] text-amber-600 mb-2">Shows real customer reviews for the product — only appears on product landing pages. For a home or custom page, use the “Testimonials” section instead.</p>
                     <div class="grid grid-cols-2 gap-3">
                       <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
@@ -781,10 +789,42 @@ interface PageTemplate {
                   @case ('Video') {
                     <div class="space-y-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">YouTube Video ID or URL</label>
-                        <input #vidId type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
-                          [value]="getContent(section)?.videoId || ''" (input)="setContentField(section, 'videoId', vidId.value)" placeholder="dQw4w9WgXcQ or https://youtu.be/…" />
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Video Source</label>
+                        <select #vidSrc class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          [value]="getContent(section)?.source || 'youtube'" (change)="setContentField(section, 'source', vidSrc.value)">
+                          <option value="youtube">YouTube</option>
+                          <option value="upload">Upload a video</option>
+                        </select>
                       </div>
+                      @if ((getContent(section)?.source || 'youtube') === 'upload') {
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Video File (MP4/WebM, max 20 MB)</label>
+                          <div class="flex items-center gap-2">
+                            <label class="px-3 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200"
+                              [class.opacity-50]="uploadingField() === section.id + ':videoUrl'">
+                              @if (uploadingField() === section.id + ':videoUrl') { Uploading… } @else { Choose Video }
+                              <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" class="hidden"
+                                [disabled]="!!uploadingField()" (change)="uploadVideo(section, $event)" />
+                            </label>
+                            @if (getContent(section)?.videoUrl) {
+                              <span class="text-xs text-green-600">Video uploaded ✓</span>
+                              <button type="button" (click)="setContentField(section, 'videoUrl', '')" class="text-xs text-gray-400 hover:text-red-500">Remove</button>
+                            }
+                          </div>
+                          @if (videoUploadError()) {
+                            <p class="text-xs text-red-600 mt-1">{{ videoUploadError() }}</p>
+                          }
+                          @if (getContent(section)?.videoUrl) {
+                            <video [src]="getContent(section).videoUrl" class="mt-2 w-full max-h-40 rounded-md border border-gray-200 bg-black" controls></video>
+                          }
+                        </div>
+                      } @else {
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">YouTube Video ID or URL</label>
+                          <input #vidId type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.videoId || ''" (input)="setContentField(section, 'videoId', vidId.value)" placeholder="dQw4w9WgXcQ or https://youtu.be/…" />
+                        </div>
+                      }
                       <div class="grid grid-cols-2 gap-3">
                         <div>
                           <label class="block text-xs font-medium text-gray-700 mb-1">Aspect Ratio</label>
@@ -800,7 +840,7 @@ interface PageTemplate {
                           <input type="checkbox" [checked]="getContent(section)?.autoplay === true"
                             (change)="setContentField(section, 'autoplay', !(getContent(section)?.autoplay === true))"
                             class="h-4 w-4 text-blue-600 rounded" />
-                          <span class="text-xs font-medium text-gray-700">Autoplay when opened</span>
+                          <span class="text-xs font-medium text-gray-700" title="Browsers only allow autoplay when muted">Autoplay when opened (muted)</span>
                         </label>
                       </div>
                     </div>
@@ -908,16 +948,21 @@ interface PageTemplate {
                   }
                   @case ('RichText') {
                     <div class="space-y-3">
-                      <p class="text-xs text-gray-500">HTML is sanitized on render. Supports basic tags (headings, paragraphs, lists, links, bold/italic).</p>
+                      <p class="text-xs text-gray-500">Format text with the toolbar — no HTML needed. Content is sanitized on render.</p>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">HTML (EN)</label>
-                        <textarea #rtEn rows="5" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md font-mono"
-                          [value]="getContent(section)?.html?.en || ''" (input)="setContentBilingual(section, 'html', 'en', rtEn.value)" placeholder="<h2>About us</h2><p>…</p>"></textarea>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Content (EN)</label>
+                        <app-rich-text-editor
+                          [value]="getContent(section)?.html?.en || ''"
+                          placeholder="Write your content…"
+                          (valueChange)="setContentBilingual(section, 'html', 'en', $event)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">HTML (AR)</label>
-                        <textarea #rtAr rows="5" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md font-mono"
-                          [value]="getContent(section)?.html?.ar || ''" (input)="setContentBilingual(section, 'html', 'ar', rtAr.value)"></textarea>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Content (AR)</label>
+                        <app-rich-text-editor
+                          dir="rtl"
+                          [value]="getContent(section)?.html?.ar || ''"
+                          placeholder="اكتب المحتوى…"
+                          (valueChange)="setContentBilingual(section, 'html', 'ar', $event)" />
                       </div>
                     </div>
                   }
@@ -1694,6 +1739,7 @@ export class SectionEditorComponent implements OnInit {
   showAddModal = signal(false);
   uploadingField = signal<string | null>(null);
   importErr = signal<string | null>(null);
+  videoUploadError = signal<string | null>(null);
 
   private mediaService = inject(MediaService);
 
@@ -1709,7 +1755,7 @@ export class SectionEditorComponent implements OnInit {
     { key: 'CustomHtml', label: 'Custom HTML', description: 'Raw HTML block', defaultVariantId: 'custom-html' },
     { key: 'MediaText', label: 'Media + Text', description: 'Alternating image/text rows', defaultVariantId: 'media-text-standard' },
     { key: 'Benefits', label: 'Benefits', description: 'Icon + text value props', defaultVariantId: 'benefits-standard' },
-    { key: 'ReviewsShowcase', label: 'Reviews', description: 'Customer reviews block', defaultVariantId: 'reviews-standard' },
+    { key: 'ReviewsShowcase', label: 'Reviews', description: 'Product reviews (product pages)', defaultVariantId: 'reviews-standard' },
     { key: 'Faq', label: 'FAQ', description: 'Question & answer accordion', defaultVariantId: 'faq-accordion' },
     { key: 'Guarantee', label: 'Guarantee', description: 'Trust / guarantee banner', defaultVariantId: 'guarantee-standard' },
     { key: 'CallToAction', label: 'Call to Action', description: 'Closing CTA band', defaultVariantId: 'cta-band' },
@@ -2246,6 +2292,40 @@ export class SectionEditorComponent implements OnInit {
       error: () => {
         this.uploadingField.set(null);
         (event.target as HTMLInputElement).value = '';
+      }
+    });
+  }
+
+  uploadVideo(section: SectionConfigurationDto, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    const storeId = this.page?.storeId;
+    if (!file || !storeId) return;
+
+    this.videoUploadError.set(null);
+    const MAX = 20 * 1024 * 1024;
+    if (file.size > MAX) {
+      this.videoUploadError.set('Video exceeds the 20 MB limit.');
+      input.value = '';
+      return;
+    }
+
+    const key = `${section.id}:videoUrl`;
+    this.uploadingField.set(key);
+
+    this.mediaService.uploadVideo(storeId, file).subscribe({
+      next: (result) => {
+        if (result.url) {
+          this.setContentField(section, 'videoUrl', result.url);
+          this.setContentField(section, 'source', 'upload');
+        }
+        this.uploadingField.set(null);
+        input.value = '';
+      },
+      error: (err) => {
+        this.uploadingField.set(null);
+        this.videoUploadError.set(err?.error?.message || 'Failed to upload video.');
+        input.value = '';
       }
     });
   }
