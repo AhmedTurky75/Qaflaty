@@ -1,21 +1,34 @@
-import { Component, input, signal, computed } from '@angular/core';
+import { Component, input, signal, computed, inject } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { inject } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 
 /**
- * YouTube / video embed. Content model: { videoId, autoplay, aspectRatio }.
- * Uses a lightweight facade (thumbnail + play button) and only injects the
- * heavy YouTube iframe after the visitor clicks — keeps the storefront fast.
+ * Video section. Content model:
+ *   { source: 'youtube' | 'upload', videoId, videoUrl, autoplay, aspectRatio }
+ *
+ * - YouTube: uses a lightweight facade (thumbnail + play button) and only
+ *   injects the iframe on click — unless autoplay is on, in which case it loads
+ *   immediately and starts muted (browsers block un-muted autoplay).
+ * - Upload: renders a self-hosted <video>; autoplay likewise starts muted+loop.
  */
 @Component({
   selector: 'app-video-youtube',
   standalone: true,
   template: `
-    @if (videoId()) {
+    @if (hasVideo()) {
       <div class="max-w-4xl mx-auto px-4 py-8">
         <div class="relative w-full overflow-hidden rounded-xl bg-black" [style.aspect-ratio]="aspectRatio()">
-          @if (loaded()) {
+          @if (isUpload()) {
+            <video
+              [src]="videoUrl()"
+              class="absolute inset-0 w-full h-full object-contain bg-black"
+              controls
+              playsinline
+              [autoplay]="autoplay()"
+              [muted]="autoplay()"
+              [loop]="autoplay()"
+            ></video>
+          } @else if (loaded() || autoplay()) {
             <iframe
               [src]="embedUrl()"
               class="absolute inset-0 w-full h-full"
@@ -50,6 +63,10 @@ export class VideoYoutubeComponent {
     catch { return {}; }
   });
 
+  /** Uploaded self-hosted video vs YouTube embed. */
+  isUpload = computed(() => this.content().source === 'upload' && !!this.videoUrl());
+  videoUrl = computed(() => String(this.content().videoUrl || '').trim());
+
   /** Accepts a raw id or a full YouTube URL and extracts the 11-char id. */
   videoId = computed(() => {
     const raw = String(this.content().videoId || '').trim();
@@ -59,13 +76,16 @@ export class VideoYoutubeComponent {
     return /^[A-Za-z0-9_-]{11}$/.test(raw) ? raw : '';
   });
 
+  hasVideo = computed(() => this.isUpload() ? !!this.videoUrl() : !!this.videoId());
+
   autoplay = computed(() => this.content().autoplay === true);
   aspectRatio = computed(() => this.content().aspectRatio || '16 / 9');
   thumbUrl = computed(() => `https://i.ytimg.com/vi/${this.videoId()}/hqdefault.jpg`);
 
   embedUrl = computed<SafeResourceUrl>(() => {
-    const auto = this.autoplay() ? '&autoplay=1' : '';
-    const url = `https://www.youtube-nocookie.com/embed/${this.videoId()}?rel=0&playsinline=1&autoplay=1${auto}`;
+    // Autoplay must be muted for browsers to allow it on load.
+    const muted = this.autoplay() ? '&mute=1' : '';
+    const url = `https://www.youtube-nocookie.com/embed/${this.videoId()}?rel=0&playsinline=1&autoplay=1${muted}`;
     return this.sanitizer.bypassSecurityTrustResourceUrl(url);
   });
 }

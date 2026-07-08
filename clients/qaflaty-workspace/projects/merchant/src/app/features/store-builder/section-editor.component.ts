@@ -788,10 +788,42 @@ interface PageTemplate {
                   @case ('Video') {
                     <div class="space-y-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">YouTube Video ID or URL</label>
-                        <input #vidId type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
-                          [value]="getContent(section)?.videoId || ''" (input)="setContentField(section, 'videoId', vidId.value)" placeholder="dQw4w9WgXcQ or https://youtu.be/…" />
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Video Source</label>
+                        <select #vidSrc class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          [value]="getContent(section)?.source || 'youtube'" (change)="setContentField(section, 'source', vidSrc.value)">
+                          <option value="youtube">YouTube</option>
+                          <option value="upload">Upload a video</option>
+                        </select>
                       </div>
+                      @if ((getContent(section)?.source || 'youtube') === 'upload') {
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Video File (MP4/WebM, max 20 MB)</label>
+                          <div class="flex items-center gap-2">
+                            <label class="px-3 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200"
+                              [class.opacity-50]="uploadingField() === section.id + ':videoUrl'">
+                              @if (uploadingField() === section.id + ':videoUrl') { Uploading… } @else { Choose Video }
+                              <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" class="hidden"
+                                [disabled]="!!uploadingField()" (change)="uploadVideo(section, $event)" />
+                            </label>
+                            @if (getContent(section)?.videoUrl) {
+                              <span class="text-xs text-green-600">Video uploaded ✓</span>
+                              <button type="button" (click)="setContentField(section, 'videoUrl', '')" class="text-xs text-gray-400 hover:text-red-500">Remove</button>
+                            }
+                          </div>
+                          @if (videoUploadError()) {
+                            <p class="text-xs text-red-600 mt-1">{{ videoUploadError() }}</p>
+                          }
+                          @if (getContent(section)?.videoUrl) {
+                            <video [src]="getContent(section).videoUrl" class="mt-2 w-full max-h-40 rounded-md border border-gray-200 bg-black" controls></video>
+                          }
+                        </div>
+                      } @else {
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">YouTube Video ID or URL</label>
+                          <input #vidId type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.videoId || ''" (input)="setContentField(section, 'videoId', vidId.value)" placeholder="dQw4w9WgXcQ or https://youtu.be/…" />
+                        </div>
+                      }
                       <div class="grid grid-cols-2 gap-3">
                         <div>
                           <label class="block text-xs font-medium text-gray-700 mb-1">Aspect Ratio</label>
@@ -807,7 +839,7 @@ interface PageTemplate {
                           <input type="checkbox" [checked]="getContent(section)?.autoplay === true"
                             (change)="setContentField(section, 'autoplay', !(getContent(section)?.autoplay === true))"
                             class="h-4 w-4 text-blue-600 rounded" />
-                          <span class="text-xs font-medium text-gray-700">Autoplay when opened</span>
+                          <span class="text-xs font-medium text-gray-700" title="Browsers only allow autoplay when muted">Autoplay when opened (muted)</span>
                         </label>
                       </div>
                     </div>
@@ -1701,6 +1733,7 @@ export class SectionEditorComponent implements OnInit {
   showAddModal = signal(false);
   uploadingField = signal<string | null>(null);
   importErr = signal<string | null>(null);
+  videoUploadError = signal<string | null>(null);
 
   private mediaService = inject(MediaService);
 
@@ -2253,6 +2286,40 @@ export class SectionEditorComponent implements OnInit {
       error: () => {
         this.uploadingField.set(null);
         (event.target as HTMLInputElement).value = '';
+      }
+    });
+  }
+
+  uploadVideo(section: SectionConfigurationDto, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    const storeId = this.page?.storeId;
+    if (!file || !storeId) return;
+
+    this.videoUploadError.set(null);
+    const MAX = 20 * 1024 * 1024;
+    if (file.size > MAX) {
+      this.videoUploadError.set('Video exceeds the 20 MB limit.');
+      input.value = '';
+      return;
+    }
+
+    const key = `${section.id}:videoUrl`;
+    this.uploadingField.set(key);
+
+    this.mediaService.uploadVideo(storeId, file).subscribe({
+      next: (result) => {
+        if (result.url) {
+          this.setContentField(section, 'videoUrl', result.url);
+          this.setContentField(section, 'source', 'upload');
+        }
+        this.uploadingField.set(null);
+        input.value = '';
+      },
+      error: (err) => {
+        this.uploadingField.set(null);
+        this.videoUploadError.set(err?.error?.message || 'Failed to upload video.');
+        input.value = '';
       }
     });
   }

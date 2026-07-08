@@ -16,4 +16,14 @@ export class MediaService {
       formData
     );
   }
+
+  /** Upload a single video file (max 20 MB); returns its hosted URL. */
+  uploadVideo(storeId: string, file: File): Observable<{ url: string }> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<{ url: string }>(
+      `${this.BASE_URL}/stores/${storeId}/media/upload-video`,
+      formData
+    );
+  }
 }
