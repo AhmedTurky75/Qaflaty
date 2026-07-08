@@ -15,7 +15,18 @@ export class CustomHtmlComponent {
   private sanitizer = inject(DomSanitizer);
 
   safeContent = computed(() => {
-    const content = this.config().contentJson;
-    return content ? this.sanitizer.bypassSecurityTrustHtml(content) : '';
+    // contentJson is a JSON object like { "html": "<div>…</div>" }; render the
+    // `html` field, not the raw JSON string.
+    const raw = this.config().contentJson;
+    if (!raw) return '';
+    let html = '';
+    try {
+      const parsed = JSON.parse(raw);
+      html = typeof parsed?.html === 'string' ? parsed.html : '';
+    } catch {
+      // Legacy rows may have stored the HTML string directly.
+      html = raw;
+    }
+    return html ? this.sanitizer.bypassSecurityTrustHtml(html) : '';
   });
 }
