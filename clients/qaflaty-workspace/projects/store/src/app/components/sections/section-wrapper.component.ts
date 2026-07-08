@@ -1,9 +1,9 @@
-import { Component, input, computed } from '@angular/core';
+import { Component, input, computed, signal, viewChild, ElementRef, effect, OnDestroy } from '@angular/core';
 import { SectionSettings } from 'shared';
 
 /**
  * Wraps every rendered section and applies its `settingsJson` (background,
- * spacing, max-width, radius, device visibility, anchor id).
+ * spacing, max-width, radius, device visibility, anchor id, scroll animation).
  *
  * Device visibility uses real responsive CSS classes (`hidden md:block` /
  * `md:hidden`) rather than JS so hidden-on-mobile content stays crawlable for
@@ -16,7 +16,7 @@ import { SectionSettings } from 'shared';
   selector: 'app-section-wrapper',
   standalone: true,
   template: `
-    <div [id]="anchorId() || null" [class]="outerClasses()" [style]="outerStyles()">
+    <div #outer [id]="anchorId() || null" [class]="outerClasses()" [class.qf-in]="animatedIn()" [style]="outerStyles()">
       @if (innerClasses()) {
         <div [class]="innerClasses()">
           <ng-content />
@@ -25,11 +25,54 @@ import { SectionSettings } from 'shared';
         <ng-content />
       }
     </div>
-  `
+  `,
+  styles: [`
+    .qf-anim { opacity: 0; transition: opacity .6s ease, transform .6s ease; will-change: opacity, transform; }
+    .qf-slide-up { transform: translateY(28px); }
+    .qf-slide-left { transform: translateX(28px); }
+    .qf-zoom { transform: scale(.96); }
+    .qf-in { opacity: 1 !important; transform: none !important; }
+    @media (prefers-reduced-motion: reduce) {
+      .qf-anim { opacity: 1 !important; transform: none !important; transition: none !important; }
+    }
+  `]
 })
-export class SectionWrapperComponent {
+export class SectionWrapperComponent implements OnDestroy {
   /** Raw `settingsJson` string straight off the section DTO. */
   settingsJson = input<string | null | undefined>(undefined);
+
+  private outerEl = viewChild<ElementRef<HTMLElement>>('outer');
+  animatedIn = signal(false);
+  private observer: IntersectionObserver | null = null;
+
+  constructor() {
+    // Attach an IntersectionObserver once the element exists and an animation is set.
+    effect(() => {
+      const el = this.outerEl()?.nativeElement;
+      const anim = this.settings().animation;
+      this.observer?.disconnect();
+      this.observer = null;
+      this.animatedIn.set(false);
+
+      if (!el || !anim || anim === 'none') { this.animatedIn.set(true); return; }
+      if (typeof IntersectionObserver === 'undefined') { this.animatedIn.set(true); return; }
+
+      this.observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            this.animatedIn.set(true);
+            this.observer?.disconnect();
+            this.observer = null;
+          }
+        }
+      }, { threshold: 0.12 });
+      this.observer.observe(el);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+  }
 
   private settings = computed<SectionSettings>(() => {
     const raw = this.settingsJson();
@@ -73,6 +116,14 @@ export class SectionWrapperComponent {
     '2xl': 'rounded-2xl overflow-hidden'
   };
 
+  private readonly animationClasses: Record<string, string> = {
+    none: '',
+    fade: 'qf-anim',
+    'slide-up': 'qf-anim qf-slide-up',
+    'slide-left': 'qf-anim qf-slide-left',
+    zoom: 'qf-anim qf-zoom'
+  };
+
   anchorId = computed(() => this.settings().anchorId?.trim() || null);
 
   private cls(map: Record<string, string>, key: string | undefined): string {
@@ -84,6 +135,7 @@ export class SectionWrapperComponent {
     const parts = [
       this.cls(this.visibilityClasses, s.visibility),
       this.cls(this.radiusClasses, s.borderRadius),
+      this.cls(this.animationClasses, s.animation),
       s.backgroundImageUrl ? 'bg-cover bg-center bg-no-repeat' : ''
     ];
     return parts.filter(Boolean).join(' ').trim();

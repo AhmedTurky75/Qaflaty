@@ -22,5 +22,8 @@ public enum SectionType
     AnnouncementBar,
     Countdown,
     RichText,
-    CtaButton
+    CtaButton,
+    Stats,
+    Comparison,
+    BeforeAfter
 }

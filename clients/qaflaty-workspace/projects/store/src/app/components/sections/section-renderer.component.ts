@@ -35,6 +35,9 @@ import { AnnouncementBarComponent } from './announcement/announcement-bar.compon
 import { CountdownTimerComponent } from './countdown/countdown-timer.component';
 import { RichTextComponent } from './rich-text/rich-text.component';
 import { CtaButtonComponent } from './cta-button/cta-button.component';
+import { StatsStandardComponent } from './stats/stats-standard.component';
+import { ComparisonStandardComponent } from './comparison/comparison-standard.component';
+import { BeforeAfterStandardComponent } from './before-after/before-after-standard.component';
 
 @Component({
   selector: 'app-section-renderer',
@@ -53,7 +56,8 @@ import { CtaButtonComponent } from './cta-button/cta-button.component';
     LandingMediaTextComponent, LandingBenefitsComponent, LandingFaqComponent,
     LandingGuaranteeComponent, LandingCtaBandComponent, LandingReviewsShowcaseComponent,
     SliderStandardComponent, VideoYoutubeComponent, AnnouncementBarComponent,
-    CountdownTimerComponent, RichTextComponent, CtaButtonComponent
+    CountdownTimerComponent, RichTextComponent, CtaButtonComponent,
+    StatsStandardComponent, ComparisonStandardComponent, BeforeAfterStandardComponent
   ],
   template: `
     @for (section of sections(); track section.id) {
@@ -95,6 +99,9 @@ import { CtaButtonComponent } from './cta-button/cta-button.component';
             @case ('rich-text') { <app-rich-text [config]="section" /> }
             @case ('cta-button') { <app-cta-button [config]="section" /> }
             @case ('benefits-strip') { <app-landing-benefits [config]="section" /> }
+            @case ('stats-standard') { <app-stats-standard [config]="section" /> }
+            @case ('comparison-standard') { <app-comparison-standard [config]="section" /> }
+            @case ('before-after-standard') { <app-before-after-standard [config]="section" /> }
           }
           </app-section-wrapper>
         </section>

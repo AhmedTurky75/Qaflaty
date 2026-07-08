@@ -95,6 +95,7 @@ export interface SectionSettings {
   borderRadius?: 'none' | 'sm' | 'md' | 'lg' | '2xl';
   visibility?: 'all' | 'desktop' | 'mobile'; // device-specific visibility
   anchorId?: string;             // for in-page CTA links
+  animation?: 'none' | 'fade' | 'slide-up' | 'slide-left' | 'zoom'; // scroll-in animation
 }
 
 export interface SectionConfigurationDto {

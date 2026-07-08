@@ -46,7 +46,31 @@ export class CountdownTimerComponent implements OnInit, OnDestroy {
     catch { return {}; }
   });
 
+  /**
+   * Evergreen mode: a per-visitor timer that starts on first view and lasts
+   * `durationMinutes`. The end time is remembered in localStorage keyed by the
+   * section id, so urgency persists across pages without a fixed date.
+   */
+  private evergreenEndMs = computed(() => {
+    const c = this.content();
+    if (c.mode !== 'evergreen') return 0;
+    const minutes = Number(c.durationMinutes) || 0;
+    if (minutes <= 0) return 0;
+    const key = `qf-countdown:${this.config().id}`;
+    try {
+      const stored = localStorage.getItem(key);
+      const t = stored ? Number(stored) : NaN;
+      if (!isNaN(t)) return t;
+      const end = Date.now() + minutes * 60000;
+      localStorage.setItem(key, String(end));
+      return end;
+    } catch {
+      return Date.now() + minutes * 60000;
+    }
+  });
+
   private endsAtMs = computed(() => {
+    if (this.content().mode === 'evergreen') return this.evergreenEndMs();
     const raw = this.content().endsAt;
     const t = raw ? Date.parse(raw) : NaN;
     return isNaN(t) ? 0 : t;

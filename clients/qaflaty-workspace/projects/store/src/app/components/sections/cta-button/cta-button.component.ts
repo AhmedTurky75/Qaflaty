@@ -5,10 +5,13 @@ import { I18nService } from '../../../services/i18n.service';
 
 /**
  * Standalone call-to-action button. Content model:
- *   { text:{en,ar}, link, style:'primary'|'outline'|'dark', anchor }
- * When `anchor` is set the button scrolls to an in-page element with that id
- * (pairs with the `anchorId` section style setting from Phase A, e.g. an order
- * form), otherwise it routes to `link`.
+ *   { text:{en,ar}, style:'primary'|'outline'|'dark',
+ *     action:'link'|'anchor'|'whatsapp'|'phone', link, anchor, phone,
+ *     whatsapp, message:{en,ar} }
+ * - link: routes internally (RouterLink)
+ * - anchor: smooth-scrolls to an in-page element id (pairs with Phase A anchorId)
+ * - whatsapp: opens wa.me with an optional prefilled message
+ * - phone: tel: dialer
  */
 @Component({
   selector: 'app-cta-button',
@@ -17,10 +20,19 @@ import { I18nService } from '../../../services/i18n.service';
   template: `
     @if (text()) {
       <div class="py-8 px-4 text-center">
-        @if (anchor()) {
-          <button type="button" (click)="scrollToAnchor()" [class]="buttonClass()">{{ text() }}</button>
-        } @else {
-          <a [routerLink]="link()" [class]="buttonClass()">{{ text() }}</a>
+        @switch (action()) {
+          @case ('anchor') {
+            <button type="button" (click)="scrollToAnchor()" [class]="buttonClass()">{{ text() }}</button>
+          }
+          @case ('whatsapp') {
+            <a [href]="whatsappHref()" target="_blank" rel="noopener" [class]="buttonClass()">{{ text() }}</a>
+          }
+          @case ('phone') {
+            <a [href]="phoneHref()" [class]="buttonClass()">{{ text() }}</a>
+          }
+          @default {
+            <a [routerLink]="link()" [class]="buttonClass()">{{ text() }}</a>
+          }
         }
       </div>
     }
@@ -43,6 +55,26 @@ export class CtaButtonComponent {
   link = computed(() => this.content().link || '/products');
   anchor = computed(() => (this.content().anchor || '').trim());
   private style = computed(() => this.content().style || 'primary');
+
+  /** Explicit action, or inferred from legacy content (anchor set → anchor). */
+  action = computed<string>(() => {
+    const a = this.content().action;
+    if (a) return a;
+    return this.anchor() ? 'anchor' : 'link';
+  });
+
+  private message = computed(() => {
+    const c = this.content();
+    return (this.i18n.currentLanguage() === 'ar' ? c.message?.ar : c.message?.en) || '';
+  });
+
+  whatsappHref = computed(() => {
+    const num = String(this.content().whatsapp || '').replace(/[^0-9]/g, '');
+    const text = this.message() ? `?text=${encodeURIComponent(this.message())}` : '';
+    return `https://wa.me/${num}${text}`;
+  });
+
+  phoneHref = computed(() => `tel:${String(this.content().phone || '').replace(/\s+/g, '')}`);
 
   buttonClass = computed(() => {
     const base = 'inline-block px-8 py-3 font-semibold rounded-lg transition-colors cursor-pointer';
