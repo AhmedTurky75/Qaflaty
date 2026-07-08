@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageConfigurationDto, SectionConfigurationDto, PageSeoSettings } from 'shared';
 import { MediaService } from '../products/services/media.service';
+import { RichTextEditorComponent } from './rich-text-editor.component';
 
 interface SectionVariant {
   id: string;
@@ -37,7 +38,7 @@ interface PageTemplate {
 @Component({
   selector: 'app-section-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule],
+  imports: [CommonModule, FormsModule, DragDropModule, RichTextEditorComponent],
   template: `
     <div class="bg-white rounded-lg shadow">
       <!-- Header -->
@@ -947,16 +948,21 @@ interface PageTemplate {
                   }
                   @case ('RichText') {
                     <div class="space-y-3">
-                      <p class="text-xs text-gray-500">HTML is sanitized on render. Supports basic tags (headings, paragraphs, lists, links, bold/italic).</p>
+                      <p class="text-xs text-gray-500">Format text with the toolbar — no HTML needed. Content is sanitized on render.</p>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">HTML (EN)</label>
-                        <textarea #rtEn rows="5" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md font-mono"
-                          [value]="getContent(section)?.html?.en || ''" (input)="setContentBilingual(section, 'html', 'en', rtEn.value)" placeholder="<h2>About us</h2><p>…</p>"></textarea>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Content (EN)</label>
+                        <app-rich-text-editor
+                          [value]="getContent(section)?.html?.en || ''"
+                          placeholder="Write your content…"
+                          (valueChange)="setContentBilingual(section, 'html', 'en', $event)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">HTML (AR)</label>
-                        <textarea #rtAr rows="5" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md font-mono"
-                          [value]="getContent(section)?.html?.ar || ''" (input)="setContentBilingual(section, 'html', 'ar', rtAr.value)"></textarea>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Content (AR)</label>
+                        <app-rich-text-editor
+                          dir="rtl"
+                          [value]="getContent(section)?.html?.ar || ''"
+                          placeholder="اكتب المحتوى…"
+                          (valueChange)="setContentBilingual(section, 'html', 'ar', $event)" />
                       </div>
                     </div>
                   }
