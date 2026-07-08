@@ -712,6 +712,7 @@ interface PageTemplate {
                     </div>
                   }
                   @case ('ReviewsShowcase') {
+                    <p class="text-[11px] text-amber-600 mb-2">Shows real customer reviews for the product — only appears on product landing pages. For a home or custom page, use the “Testimonials” section instead.</p>
                     <div class="grid grid-cols-2 gap-3">
                       <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
@@ -1709,7 +1710,7 @@ export class SectionEditorComponent implements OnInit {
     { key: 'CustomHtml', label: 'Custom HTML', description: 'Raw HTML block', defaultVariantId: 'custom-html' },
     { key: 'MediaText', label: 'Media + Text', description: 'Alternating image/text rows', defaultVariantId: 'media-text-standard' },
     { key: 'Benefits', label: 'Benefits', description: 'Icon + text value props', defaultVariantId: 'benefits-standard' },
-    { key: 'ReviewsShowcase', label: 'Reviews', description: 'Customer reviews block', defaultVariantId: 'reviews-standard' },
+    { key: 'ReviewsShowcase', label: 'Reviews', description: 'Product reviews (product pages)', defaultVariantId: 'reviews-standard' },
     { key: 'Faq', label: 'FAQ', description: 'Question & answer accordion', defaultVariantId: 'faq-accordion' },
     { key: 'Guarantee', label: 'Guarantee', description: 'Trust / guarantee banner', defaultVariantId: 'guarantee-standard' },
     { key: 'CallToAction', label: 'Call to Action', description: 'Closing CTA band', defaultVariantId: 'cta-band' },
