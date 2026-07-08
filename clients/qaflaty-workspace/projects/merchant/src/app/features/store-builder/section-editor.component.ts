@@ -709,6 +709,12 @@ interface PageTemplate {
                         <input #ctaBtnAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
                           [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', ctaBtnAr.value)" />
                       </div>
+                      <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Link</label>
+                        <input #ctaBtnLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.buttonLink || ''" (input)="setContentField(section, 'buttonLink', ctaBtnLink.value)" placeholder="/products, https://…, or leave empty to scroll to the buy box" />
+                        <p class="text-[11px] text-gray-400 mt-1">Leave empty on a product page to scroll to the buy box. On other pages, set where the button should go (e.g. /products).</p>
+                      </div>
                     </div>
                   }
                   @case ('ReviewsShowcase') {
