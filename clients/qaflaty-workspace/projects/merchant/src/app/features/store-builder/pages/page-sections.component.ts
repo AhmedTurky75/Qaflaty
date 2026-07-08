@@ -178,6 +178,9 @@ type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
                     title="Storefront live preview"
                   ></iframe>
                 </div>
+                <p class="mt-2 text-[11px] text-gray-400 truncate">
+                  Previewing <span class="font-mono">{{ rawPreviewUrl }}</span> — the storefront app must be running there.
+                </p>
               </div>
             </div>
           }
@@ -268,16 +271,18 @@ export class PageSectionsComponent implements OnInit, OnDestroy {
     const slug = store?.slug ?? '';
     if (!slug) return;
 
+    // Prefer an explicitly configured storefront origin (must be the STORE app,
+    // not the merchant app). Fall back to deriving it from the store's domain.
+    const configured = (environment as { storeBaseUrl?: string }).storeBaseUrl?.trim();
     let origin: string;
-    let url: string;
-    if (!environment.production) {
-      origin = 'http://localhost:4201';
-      url = `${origin}/__preview?slug=${encodeURIComponent(slug)}`;
+    if (configured) {
+      origin = configured.replace(/\/+$/, '');
     } else {
       const host = store?.customDomain || `${slug}.qaflaty.com`;
       origin = `https://${host}`;
-      url = `${origin}/__preview`;
     }
+
+    const url = `${origin}/__preview?slug=${encodeURIComponent(slug)}`;
     this.previewOrigin = origin;
     this.rawPreviewUrl = url;
     this.previewUrl.set(this.sanitizer.bypassSecurityTrustResourceUrl(url));
