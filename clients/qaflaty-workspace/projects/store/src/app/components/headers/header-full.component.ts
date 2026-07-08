@@ -128,6 +128,10 @@ import { CustomerAuthService } from '../../services/customer-auth.service';
               <a routerLink="/privacy" routerLinkActive="text-[var(--primary-color)]"
                 class="text-sm font-medium text-gray-700 hover:text-[var(--primary-color)] transition-colors">{{ t('privacy') }}</a>
             }
+            @for (page of features.customPages(); track page.slug) {
+              <a [routerLink]="['/pages', page.slug]" routerLinkActive="text-[var(--primary-color)]"
+                class="text-sm font-medium text-gray-700 hover:text-[var(--primary-color)] transition-colors">{{ page.title }}</a>
+            }
           </nav>
         </div>
       </div>
@@ -156,6 +160,9 @@ import { CustomerAuthService } from '../../services/customer-auth.service';
           }
           @if (features.isPrivacyPageEnabled()) {
             <a routerLink="/privacy" (click)="mobileMenuOpen.set(false)" class="block py-2 text-gray-700">{{ t('privacy') }}</a>
+          }
+          @for (page of features.customPages(); track page.slug) {
+            <a [routerLink]="['/pages', page.slug]" (click)="mobileMenuOpen.set(false)" class="block py-2 text-gray-700">{{ page.title }}</a>
           }
           @if (features.authMode() === 'Required') {
             @if (customerAuth.isAuthenticated()) {

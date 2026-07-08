@@ -79,6 +79,14 @@ public class PageConfigurationEntityConfiguration : IEntityTypeConfiguration<Pag
 
         builder.Navigation(pc => pc.Sections).AutoInclude();
 
+        // Variants (A/B) navigation
+        builder.HasMany(pc => pc.Variants)
+            .WithOne()
+            .HasForeignKey(v => v.PageConfigurationId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(pc => pc.Variants).AutoInclude();
+
         builder.HasIndex(pc => new { pc.StoreId, pc.Slug }).IsUnique();
         builder.HasIndex(pc => pc.ProductId).IsUnique();
 

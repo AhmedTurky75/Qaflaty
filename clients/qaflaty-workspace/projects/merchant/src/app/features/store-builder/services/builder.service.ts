@@ -9,6 +9,8 @@ import {
   UpdatePageConfigurationRequest,
   CreateCustomPageRequest,
   UpdateSectionsRequest,
+  PageVariantDto,
+  UpdatePageVariantsRequest,
   FaqItemDto,
   CreateFaqItemRequest,
   UpdateFaqItemRequest,
@@ -84,6 +86,15 @@ export class BuilderService {
 
   updateSections(storeId: string, pageId: string, req: UpdateSectionsRequest): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/stores/${storeId}/pages/${pageId}/sections`, req);
+  }
+
+  // ── A/B Test Variants ────────────────────────────────────────────────────
+  getPageVariants(storeId: string, pageId: string): Observable<PageVariantDto[]> {
+    return this.http.get<PageVariantDto[]>(`${this.apiUrl}/stores/${storeId}/pages/${pageId}/variants`);
+  }
+
+  updatePageVariants(storeId: string, pageId: string, req: UpdatePageVariantsRequest): Observable<PageVariantDto[]> {
+    return this.http.put<PageVariantDto[]>(`${this.apiUrl}/stores/${storeId}/pages/${pageId}/variants`, req);
   }
 
   // ── FAQ ──────────────────────────────────────────────────────────────────

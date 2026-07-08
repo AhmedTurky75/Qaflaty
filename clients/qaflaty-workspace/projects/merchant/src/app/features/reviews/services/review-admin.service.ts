@@ -31,6 +31,14 @@ export interface ReviewSettingsDto {
   allowEditing: boolean;
 }
 
+export interface CreateManualReviewRequest {
+  productId: string;
+  authorName: string;
+  rating: number;
+  title?: string;
+  comment?: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReviewAdminService {
   private http = inject(HttpClient);
@@ -45,6 +53,11 @@ export class ReviewAdminService {
     if (opts.productId) params = params.set('productId', opts.productId);
     if (opts.status) params = params.set('status', opts.status);
     return this.http.get<ReviewModerationDto[]>(this.url(storeId), { params });
+  }
+
+  /** Create a merchant-authored (manual) review; returns the new review id. */
+  createManualReview(storeId: string, body: CreateManualReviewRequest): Observable<string> {
+    return this.http.post<string>(this.url(storeId), body);
   }
 
   approve(storeId: string, reviewId: string): Observable<void> {

@@ -77,6 +77,27 @@ export interface PageSeoSettings {
   noFollow: boolean;
 }
 
+/**
+ * Layout / style settings for a single section. Serialized into
+ * `SectionConfigurationDto.settingsJson`. Single source of truth shared by the
+ * merchant editor (writes) and the storefront wrapper (reads). No DB migration
+ * needed — this is stored inside the existing `SettingsJson` JSONB string.
+ */
+export interface SectionSettings {
+  /** Section-type specific settings live here too (e.g. pageSize) — kept loose. */
+  [key: string]: unknown;
+  backgroundColor?: string;      // hex / css var
+  backgroundImageUrl?: string;
+  textColor?: string;            // hex / css var
+  paddingY?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  paddingX?: 'none' | 'sm' | 'md' | 'lg';
+  maxWidth?: 'full' | 'wide' | 'narrow';
+  borderRadius?: 'none' | 'sm' | 'md' | 'lg' | '2xl';
+  visibility?: 'all' | 'desktop' | 'mobile'; // device-specific visibility
+  anchorId?: string;             // for in-page CTA links
+  animation?: 'none' | 'fade' | 'slide-up' | 'slide-left' | 'zoom'; // scroll-in animation
+}
+
 export interface SectionConfigurationDto {
   id: string;
   sectionType: string;
@@ -99,6 +120,28 @@ export interface PageConfigurationDto {
   sections: SectionConfigurationDto[];
   createdAt: string;
   updatedAt: string;
+}
+
+/** An A/B test variant of a page (the page's own sections are the control). */
+export interface PageVariantDto {
+  id: string;              // empty string for a not-yet-persisted variant
+  name: string;
+  weight: number;
+  isActive: boolean;
+  sectionsJson?: string;   // serialized SectionConfigurationDto[] for this variant
+  impressions: number;
+  conversions: number;
+}
+
+/** Storefront experiment payload used to resolve a sticky variant client-side. */
+export interface PageExperimentDto {
+  pageId: string;
+  controlWeight: number;
+  variants: PageVariantDto[];
+}
+
+export interface UpdatePageVariantsRequest {
+  variants: PageVariantDto[];
 }
 
 export interface PaymentMethodAdjustment {

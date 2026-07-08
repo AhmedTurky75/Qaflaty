@@ -16,5 +16,17 @@ public enum SectionType
     Faq,
     Guarantee,
     CallToAction,
-    ReviewsShowcase
+    ReviewsShowcase,
+    Slider,
+    Video,
+    AnnouncementBar,
+    Countdown,
+    RichText,
+    CtaButton,
+    Stats,
+    Comparison,
+    BeforeAfter,
+    OrderForm,
+    StickyBar,
+    Bundle
 }

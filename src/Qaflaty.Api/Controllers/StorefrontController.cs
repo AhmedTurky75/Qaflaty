@@ -5,6 +5,8 @@ using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Catalog.Queries.GetCategories;
 using Qaflaty.Application.Catalog.Queries.GetCustomPage;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontPages;
+using Qaflaty.Application.Catalog.Queries.GetPageExperiment;
+using Qaflaty.Application.Catalog.Commands.RecordVariantEvent;
 using Qaflaty.Application.Catalog.Queries.GetFaqItems;
 using Qaflaty.Application.Catalog.Queries.GetProductBySlug;
 using Qaflaty.Application.Catalog.Queries.GetStorefrontProductLandingPage;
@@ -165,4 +167,27 @@ public class StorefrontController : ApiController
             new GetFaqItemsQuery(_tenantContext.CurrentStoreId.Value.Value, PublishedOnly: true), ct);
         return HandleResult(result);
     }
+
+    // A/B experiment resolution + placeholder analytics tracking
+    [HttpGet("pages/{slug}/experiment")]
+    public async Task<IActionResult> GetPageExperiment(string slug, CancellationToken ct)
+    {
+        if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
+            return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
+
+        var result = await Sender.Send(
+            new GetPageExperimentQuery(_tenantContext.CurrentStoreId.Value.Value, slug), ct);
+        return HandleResult(result);
+    }
+
+    [HttpPost("variant-event")]
+    public async Task<IActionResult> RecordVariantEvent(
+        [FromBody] StorefrontVariantEventRequest request, CancellationToken ct)
+    {
+        var result = await Sender.Send(
+            new RecordVariantEventCommand(request.PageId, request.VariantId, request.EventType), ct);
+        return HandleResult(result);
+    }
 }
+
+public record StorefrontVariantEventRequest(Guid PageId, Guid VariantId, string EventType);

@@ -510,6 +510,57 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("page_configurations", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageVariant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long>("Conversions")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("conversions");
+
+                    b.Property<long>("Impressions")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("impressions");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("PageConfigurationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("page_configuration_id");
+
+                    b.Property<string>("SectionsJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("sections_json");
+
+                    b.Property<int>("Weight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("weight");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageConfigurationId");
+
+                    b.ToTable("page_variants", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.SectionConfiguration", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2363,6 +2414,15 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageVariant", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", null)
+                        .WithMany("Variants")
+                        .HasForeignKey("PageConfigurationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.SectionConfiguration", b =>
                 {
                     b.HasOne("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", null)
@@ -4130,6 +4190,8 @@ namespace Qaflaty.Infrastructure.Migrations
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
                 {
                     b.Navigation("Sections");
+
+                    b.Navigation("Variants");
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Product.Product", b =>

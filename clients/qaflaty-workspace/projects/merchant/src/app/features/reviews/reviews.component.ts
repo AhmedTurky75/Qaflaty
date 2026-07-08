@@ -2,11 +2,20 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StoreContextService } from '../../core/services/store-context.service';
+import { ProductService } from '../products/services/product.service';
 import {
   ReviewAdminService,
   ReviewModerationDto,
   ReviewSettingsDto
 } from './services/review-admin.service';
+
+interface ManualReviewForm {
+  productId: string;
+  authorName: string;
+  rating: number;
+  title: string;
+  comment: string;
+}
 
 @Component({
   selector: 'app-reviews',
@@ -18,6 +27,7 @@ import {
 export class ReviewsComponent implements OnInit {
   private storeContext = inject(StoreContextService);
   private service = inject(ReviewAdminService);
+  private productService = inject(ProductService);
 
   readonly statuses = ['Pending', 'Approved', 'Rejected', 'Hidden'];
 
@@ -27,6 +37,13 @@ export class ReviewsComponent implements OnInit {
   settings = signal<ReviewSettingsDto | null>(null);
   savingSettings = signal(false);
   settingsSaved = signal(false);
+
+  // Add-review (manual / merchant-authored)
+  products = signal<{ id: string; name: string }[]>([]);
+  showAddModal = signal(false);
+  submitting = signal(false);
+  addError = signal<string | null>(null);
+  addForm = signal<ManualReviewForm>(this.emptyForm());
 
   pendingCount = computed(() => this.reviews().filter(r => r.status === 'Pending').length);
 
@@ -98,5 +115,63 @@ export class ReviewsComponent implements OnInit {
 
   starArray(rating: number): boolean[] {
     return [1, 2, 3, 4, 5].map(i => i <= rating);
+  }
+
+  // ── Add manual review ──
+
+  private emptyForm(): ManualReviewForm {
+    return { productId: '', authorName: '', rating: 5, title: '', comment: '' };
+  }
+
+  openAddModal(): void {
+    this.addForm.set(this.emptyForm());
+    this.addError.set(null);
+    this.showAddModal.set(true);
+    if (!this.products().length) this.loadProducts();
+  }
+
+  private loadProducts(): void {
+    const storeId = this.storeId;
+    if (!storeId) return;
+    this.productService.getProducts(storeId, { limit: 200 }).subscribe({
+      next: (res) => this.products.set(res.items.map(p => ({ id: p.id, name: p.name }))),
+      error: () => { /* leave empty; the field will show no options */ }
+    });
+  }
+
+  updateAddField<K extends keyof ManualReviewForm>(key: K, value: ManualReviewForm[K]): void {
+    this.addForm.set({ ...this.addForm(), [key]: value });
+  }
+
+  submitManualReview(): void {
+    const storeId = this.storeId;
+    const form = this.addForm();
+    if (!storeId) return;
+    if (!form.productId || !form.authorName.trim()) {
+      this.addError.set('Product and author name are required.');
+      return;
+    }
+
+    this.submitting.set(true);
+    this.addError.set(null);
+    this.service.createManualReview(storeId, {
+      productId: form.productId,
+      authorName: form.authorName.trim(),
+      rating: form.rating,
+      title: form.title.trim() || undefined,
+      comment: form.comment.trim() || undefined
+    }).subscribe({
+      next: () => {
+        this.submitting.set(false);
+        this.showAddModal.set(false);
+        // Manual reviews are auto-approved — jump to the Approved tab to see it.
+        this.activeStatus.set('Approved');
+        this.load();
+      },
+      error: (err) => {
+        this.submitting.set(false);
+        this.addError.set(err?.error?.message || 'Failed to add review.');
+      }
+    });
   }
 }

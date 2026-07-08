@@ -1,8 +1,10 @@
 import { Component, Input, Output, EventEmitter, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageConfigurationDto, SectionConfigurationDto, PageSeoSettings } from 'shared';
 import { MediaService } from '../products/services/media.service';
+import { RichTextEditorComponent } from './rich-text-editor.component';
 
 interface SectionVariant {
   id: string;
@@ -16,10 +18,27 @@ interface SectionTypeInfo {
   defaultVariantId: string;
 }
 
+interface SectionPreset {
+  key: string;
+  label: string;
+  description: string;
+  sectionType: string;
+  variantId: string;
+  content?: unknown;
+  settings?: unknown;
+}
+
+interface PageTemplate {
+  key: string;
+  label: string;
+  description: string;
+  sections: Array<{ sectionType: string; variantId: string; content?: unknown; settings?: unknown }>;
+}
+
 @Component({
   selector: 'app-section-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DragDropModule, RichTextEditorComponent],
   template: `
     <div class="bg-white rounded-lg shadow">
       <!-- Header -->
@@ -43,33 +62,25 @@ interface SectionTypeInfo {
 
       <!-- Sections List -->
       <div class="p-6 space-y-3 max-h-[560px] overflow-y-auto">
+        <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="space-y-3">
         @for (section of localSections; track section.id; let idx = $index) {
-          <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div cdkDrag [cdkDragDisabled]="isExpanded(section.id)" class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+            <!-- Drag placeholder shown in the drop gap -->
+            <div class="h-16 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg" *cdkDragPlaceholder></div>
             <!-- Section Row Header -->
             <div class="p-4 flex items-start gap-3 bg-white">
-              <!-- Move Up/Down -->
-              <div class="flex flex-col gap-0.5 pt-1">
-                <button
-                  (click)="moveUp(idx)"
-                  [disabled]="idx === 0"
-                  class="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move up"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
-                  </svg>
-                </button>
-                <button
-                  (click)="moveDown(idx)"
-                  [disabled]="idx === localSections.length - 1"
-                  class="text-gray-400 hover:text-gray-600 disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move down"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </button>
-              </div>
+              <!-- Drag Handle -->
+              <button
+                type="button"
+                cdkDragHandle
+                class="pt-1 text-gray-300 hover:text-gray-500 cursor-move disabled:cursor-not-allowed disabled:opacity-30"
+                [disabled]="isExpanded(section.id)"
+                [title]="isExpanded(section.id) ? 'Collapse to reorder' : 'Drag to reorder'"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M7 4a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zM13 4a1 1 0 100 2 1 1 0 000-2zM13 9a1 1 0 100 2 1 1 0 000-2zM13 14a1 1 0 100 2 1 1 0 000-2z"></path>
+                </svg>
+              </button>
 
               <!-- Section Details -->
               <div class="flex-1 space-y-2">
@@ -85,6 +96,7 @@ interface SectionTypeInfo {
                       <input
                         type="checkbox"
                         [(ngModel)]="section.isEnabled"
+                        (ngModelChange)="notifyChange()"
                         class="h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
                       />
                     </label>
@@ -96,6 +108,16 @@ interface SectionTypeInfo {
                     >
                       <svg class="w-4 h-4 transition-transform" [class.rotate-180]="isExpanded(section.id)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                      </svg>
+                    </button>
+                    <!-- Duplicate -->
+                    <button
+                      (click)="duplicateSection(idx)"
+                      class="text-gray-400 hover:text-blue-600 transition-colors"
+                      title="Duplicate section"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
                       </svg>
                     </button>
                     <!-- Delete -->
@@ -114,6 +136,7 @@ interface SectionTypeInfo {
                 <!-- Variant Selector -->
                 <select
                   [(ngModel)]="section.variantId"
+                  (ngModelChange)="notifyChange()"
                   class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
                 >
                   @for (variant of getVariantsForSection(section.sectionType); track variant.id) {
@@ -126,6 +149,34 @@ interface SectionTypeInfo {
             <!-- Expanded Content Form -->
             @if (isExpanded(section.id)) {
               <div class="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50 space-y-4">
+                <!-- Content / Design tabs -->
+                <div class="flex gap-4 border-b border-gray-200">
+                  <button
+                    type="button"
+                    (click)="setTab(section.id, 'content')"
+                    class="pb-2 -mb-px text-sm font-medium border-b-2 transition-colors"
+                    [class.border-blue-600]="!isDesignTab(section.id)"
+                    [class.text-blue-600]="!isDesignTab(section.id)"
+                    [class.border-transparent]="isDesignTab(section.id)"
+                    [class.text-gray-500]="isDesignTab(section.id)"
+                  >Content</button>
+                  <button
+                    type="button"
+                    (click)="setTab(section.id, 'design')"
+                    class="pb-2 -mb-px text-sm font-medium border-b-2 transition-colors flex items-center gap-1"
+                    [class.border-blue-600]="isDesignTab(section.id)"
+                    [class.text-blue-600]="isDesignTab(section.id)"
+                    [class.border-transparent]="!isDesignTab(section.id)"
+                    [class.text-gray-500]="!isDesignTab(section.id)"
+                  >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
+                    </svg>
+                    Design
+                  </button>
+                </div>
+
+                @if (!isDesignTab(section.id)) {
                 @switch (section.sectionType) {
                   @case ('Hero') {
                     <div class="grid grid-cols-2 gap-3">
@@ -659,9 +710,16 @@ interface SectionTypeInfo {
                         <input #ctaBtnAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
                           [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', ctaBtnAr.value)" />
                       </div>
+                      <div class="col-span-2">
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Link</label>
+                        <input #ctaBtnLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          [value]="getContent(section)?.buttonLink || ''" (input)="setContentField(section, 'buttonLink', ctaBtnLink.value)" placeholder="/products, https://…, or leave empty to scroll to the buy box" />
+                        <p class="text-[11px] text-gray-400 mt-1">Leave empty on a product page to scroll to the buy box. On other pages, set where the button should go (e.g. /products).</p>
+                      </div>
                     </div>
                   }
                   @case ('ReviewsShowcase') {
+                    <p class="text-[11px] text-amber-600 mb-2">Shows real customer reviews for the product — only appears on product landing pages. For a home or custom page, use the “Testimonials” section instead.</p>
                     <div class="grid grid-cols-2 gap-3">
                       <div>
                         <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
@@ -675,9 +733,782 @@ interface SectionTypeInfo {
                       </div>
                     </div>
                   }
+                  @case ('Slider') {
+                    <div class="space-y-4">
+                      <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [checked]="getContent(section)?.autoplay !== false"
+                            (change)="setContentField(section, 'autoplay', !(getContent(section)?.autoplay !== false))"
+                            class="h-4 w-4 text-blue-600 rounded" />
+                          <span class="text-xs font-medium text-gray-700">Autoplay</span>
+                        </label>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Interval (ms)</label>
+                          <input #slInterval type="number" min="1500" step="500" class="w-28 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.interval || 5000" (input)="setContentField(section, 'interval', +slInterval.value)" />
+                        </div>
+                      </div>
+                      @for (item of getContentArray(section, 'slides'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Slide {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'slides', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-2 gap-3">
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Image</label>
+                              <div class="flex gap-2">
+                                <input #slImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                  [value]="item.imageUrl || ''" (input)="updateArrayItemField(section, 'slides', i, 'imageUrl', slImg.value)" placeholder="Image URL or upload →" />
+                                <label class="px-2 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 whitespace-nowrap">
+                                  Upload
+                                  <input type="file" accept="image/*" class="hidden" (change)="uploadArrayItemImage(section, 'slides', i, 'imageUrl', $event)" />
+                                </label>
+                              </div>
+                              @if (item.imageUrl) {
+                                <img [src]="item.imageUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="Preview" />
+                              }
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Link</label>
+                              <input #slLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.link || ''" (input)="updateArrayItemField(section, 'slides', i, 'link', slLink.value)" placeholder="/products" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Alt text</label>
+                              <input #slAlt type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.alt || ''" (input)="updateArrayItemField(section, 'slides', i, 'alt', slAlt.value)" />
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'slides', { imageUrl: '', link: '', alt: '' })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Slide</button>
+                    </div>
+                  }
+                  @case ('Video') {
+                    <div class="space-y-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Video Source</label>
+                        <select #vidSrc class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          [value]="getContent(section)?.source || 'youtube'" (change)="setContentField(section, 'source', vidSrc.value)">
+                          <option value="youtube">YouTube</option>
+                          <option value="upload">Upload a video</option>
+                        </select>
+                      </div>
+                      @if ((getContent(section)?.source || 'youtube') === 'upload') {
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Video File (MP4/WebM, max 20 MB)</label>
+                          <div class="flex items-center gap-2">
+                            <label class="px-3 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200"
+                              [class.opacity-50]="uploadingField() === section.id + ':videoUrl'">
+                              @if (uploadingField() === section.id + ':videoUrl') { Uploading… } @else { Choose Video }
+                              <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" class="hidden"
+                                [disabled]="!!uploadingField()" (change)="uploadVideo(section, $event)" />
+                            </label>
+                            @if (getContent(section)?.videoUrl) {
+                              <span class="text-xs text-green-600">Video uploaded ✓</span>
+                              <button type="button" (click)="setContentField(section, 'videoUrl', '')" class="text-xs text-gray-400 hover:text-red-500">Remove</button>
+                            }
+                          </div>
+                          @if (videoUploadError()) {
+                            <p class="text-xs text-red-600 mt-1">{{ videoUploadError() }}</p>
+                          }
+                          @if (getContent(section)?.videoUrl) {
+                            <video [src]="getContent(section).videoUrl" class="mt-2 w-full max-h-40 rounded-md border border-gray-200 bg-black" controls></video>
+                          }
+                        </div>
+                      } @else {
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">YouTube Video ID or URL</label>
+                          <input #vidId type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.videoId || ''" (input)="setContentField(section, 'videoId', vidId.value)" placeholder="dQw4w9WgXcQ or https://youtu.be/…" />
+                        </div>
+                      }
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Aspect Ratio</label>
+                          <select #vidAr class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                            [value]="getContent(section)?.aspectRatio || '16 / 9'" (change)="setContentField(section, 'aspectRatio', vidAr.value)">
+                            <option value="16 / 9">16:9 (widescreen)</option>
+                            <option value="4 / 3">4:3</option>
+                            <option value="1 / 1">1:1 (square)</option>
+                            <option value="9 / 16">9:16 (vertical)</option>
+                          </select>
+                        </div>
+                        <label class="flex items-center gap-2 cursor-pointer mt-6">
+                          <input type="checkbox" [checked]="getContent(section)?.autoplay === true"
+                            (change)="setContentField(section, 'autoplay', !(getContent(section)?.autoplay === true))"
+                            class="h-4 w-4 text-blue-600 rounded" />
+                          <span class="text-xs font-medium text-gray-700" title="Browsers only allow autoplay when muted">Autoplay when opened (muted)</span>
+                        </label>
+                      </div>
+                    </div>
+                  }
+                  @case ('AnnouncementBar') {
+                    <div class="space-y-3">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
+                          <input #anEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.text?.en || ''" (input)="setContentBilingual(section, 'text', 'en', anEn.value)" placeholder="Free shipping on orders over 500!" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
+                          <input #anAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.text?.ar || ''" (input)="setContentBilingual(section, 'text', 'ar', anAr.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Link (optional)</label>
+                          <input #anLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.link || ''" (input)="setContentField(section, 'link', anLink.value)" placeholder="/products" />
+                        </div>
+                        <div class="flex gap-3">
+                          <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Background</label>
+                            <input #anBg type="color" class="h-8 w-12 rounded border border-gray-300 cursor-pointer p-0"
+                              [value]="getContent(section)?.bg || '#111827'" (input)="setContentField(section, 'bg', anBg.value)" />
+                          </div>
+                          <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
+                            <input #anTc type="color" class="h-8 w-12 rounded border border-gray-300 cursor-pointer p-0"
+                              [value]="getContent(section)?.textColor || '#ffffff'" (input)="setContentField(section, 'textColor', anTc.value)" />
+                          </div>
+                        </div>
+                      </div>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" [checked]="getContent(section)?.dismissible === true"
+                          (change)="setContentField(section, 'dismissible', !(getContent(section)?.dismissible === true))"
+                          class="h-4 w-4 text-blue-600 rounded" />
+                        <span class="text-xs font-medium text-gray-700">Allow visitors to dismiss</span>
+                      </label>
+                    </div>
+                  }
+                  @case ('Countdown') {
+                    <div class="space-y-3">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                          <input #cdTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', cdTEn.value)" placeholder="Hurry, offer ends in" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                          <input #cdTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', cdTAr.value)" />
+                        </div>
+                      </div>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Timer Type</label>
+                          <select #cdMode class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                            [value]="getContent(section)?.mode || 'fixed'" (change)="setContentField(section, 'mode', cdMode.value)">
+                            <option value="fixed">Fixed date</option>
+                            <option value="evergreen">Evergreen (per visitor)</option>
+                          </select>
+                        </div>
+                        @if ((getContent(section)?.mode || 'fixed') === 'evergreen') {
+                          <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                            <input #cdDur type="number" min="1" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              [value]="getContent(section)?.durationMinutes || 60" (input)="setContentField(section, 'durationMinutes', +cdDur.value)" />
+                          </div>
+                        } @else {
+                          <div>
+                            <label class="block text-xs font-medium text-gray-700 mb-1">Ends At</label>
+                            <input #cdEnds type="datetime-local" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              [value]="getContent(section)?.endsAt || ''" (input)="setContentField(section, 'endsAt', cdEnds.value)" />
+                          </div>
+                        }
+                      </div>
+                      @if ((getContent(section)?.mode || 'fixed') === 'evergreen') {
+                        <p class="text-[11px] text-gray-400">Evergreen: each visitor's timer starts on their first visit and counts down the set duration.</p>
+                      }
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">When expired</label>
+                        <select #cdExp class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          [value]="getContent(section)?.expiredBehavior || 'message'" (change)="setContentField(section, 'expiredBehavior', cdExp.value)">
+                          <option value="message">Show a message</option>
+                          <option value="hide">Hide the section</option>
+                        </select>
+                      </div>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Expired Text (EN)</label>
+                          <input #cdExEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.expiredText?.en || ''" (input)="setContentBilingual(section, 'expiredText', 'en', cdExEn.value)" placeholder="Offer ended" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Expired Text (AR)</label>
+                          <input #cdExAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.expiredText?.ar || ''" (input)="setContentBilingual(section, 'expiredText', 'ar', cdExAr.value)" />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @case ('RichText') {
+                    <div class="space-y-3">
+                      <p class="text-xs text-gray-500">Format text with the toolbar — no HTML needed. Content is sanitized on render.</p>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Content (EN)</label>
+                        <app-rich-text-editor
+                          [value]="getContent(section)?.html?.en || ''"
+                          placeholder="Write your content…"
+                          (valueChange)="setContentBilingual(section, 'html', 'en', $event)" />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Content (AR)</label>
+                        <app-rich-text-editor
+                          dir="rtl"
+                          [value]="getContent(section)?.html?.ar || ''"
+                          placeholder="اكتب المحتوى…"
+                          (valueChange)="setContentBilingual(section, 'html', 'ar', $event)" />
+                      </div>
+                    </div>
+                  }
+                  @case ('CtaButton') {
+                    <div class="space-y-3">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
+                          <input #cbEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.text?.en || ''" (input)="setContentBilingual(section, 'text', 'en', cbEn.value)" placeholder="Buy Now" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
+                          <input #cbAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.text?.ar || ''" (input)="setContentBilingual(section, 'text', 'ar', cbAr.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Style</label>
+                          <select #cbStyle class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                            [value]="getContent(section)?.style || 'primary'" (change)="setContentField(section, 'style', cbStyle.value)">
+                            <option value="primary">Primary (filled)</option>
+                            <option value="outline">Outline</option>
+                            <option value="dark">Dark</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Action</label>
+                          <select #cbAction class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                            [value]="getContent(section)?.action || 'link'" (change)="setContentField(section, 'action', cbAction.value)">
+                            <option value="link">Go to link</option>
+                            <option value="anchor">Scroll to section</option>
+                            <option value="whatsapp">Open WhatsApp</option>
+                            <option value="phone">Call phone</option>
+                          </select>
+                        </div>
+                        @switch (getContent(section)?.action || 'link') {
+                          @case ('whatsapp') {
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">WhatsApp Number</label>
+                              <input #cbWa type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="getContent(section)?.whatsapp || ''" (input)="setContentField(section, 'whatsapp', cbWa.value)" placeholder="201000000000 (country code, no +)" />
+                            </div>
+                            <div class="col-span-2 grid grid-cols-2 gap-3">
+                              <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Prefilled Message (EN)</label>
+                                <input #cbMsgEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                  [value]="getContent(section)?.message?.en || ''" (input)="setContentBilingual(section, 'message', 'en', cbMsgEn.value)" placeholder="I'd like to order…" />
+                              </div>
+                              <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Prefilled Message (AR)</label>
+                                <input #cbMsgAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                  [value]="getContent(section)?.message?.ar || ''" (input)="setContentBilingual(section, 'message', 'ar', cbMsgAr.value)" />
+                              </div>
+                            </div>
+                          }
+                          @case ('phone') {
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
+                              <input #cbPhone type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="getContent(section)?.phone || ''" (input)="setContentField(section, 'phone', cbPhone.value)" placeholder="+20 100 000 0000" />
+                            </div>
+                          }
+                          @case ('anchor') {
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Scroll-to Anchor ID</label>
+                              <input #cbAnchor type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="getContent(section)?.anchor || ''" (input)="setContentField(section, 'anchor', cbAnchor.value)" placeholder="order-form" />
+                            </div>
+                          }
+                          @default {
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Link</label>
+                              <input #cbLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="getContent(section)?.link || ''" (input)="setContentField(section, 'link', cbLink.value)" placeholder="/products" />
+                            </div>
+                          }
+                        }
+                      </div>
+                    </div>
+                  }
+                  @case ('Stats') {
+                    <div class="space-y-4">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                          <input #stTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', stTEn.value)" placeholder="Trusted by thousands" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                          <input #stTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', stTAr.value)" />
+                        </div>
+                      </div>
+                      @for (item of getContentArray(section, 'items'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Stat {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-3 gap-2">
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Prefix</label>
+                              <input #stPre type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.prefix || ''" (input)="updateArrayItemField(section, 'items', i, 'prefix', stPre.value)" placeholder="+" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Value</label>
+                              <input #stVal type="number" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.value || 0" (input)="updateArrayItemField(section, 'items', i, 'value', +stVal.value)" placeholder="10000" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Suffix</label>
+                              <input #stSuf type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.suffix || ''" (input)="updateArrayItemField(section, 'items', i, 'suffix', stSuf.value)" placeholder="+" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (EN)</label>
+                              <input #stLEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.label?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'label', 'en', stLEn.value)" placeholder="Happy customers" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (AR)</label>
+                              <input #stLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.label?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'label', 'ar', stLAr.value)" />
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'items', { prefix: '', value: 0, suffix: '+', label: { en: '', ar: '' } })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Stat</button>
+                    </div>
+                  }
+                  @case ('Comparison') {
+                    <div class="space-y-4">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                          <input #cmTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', cmTEn.value)" placeholder="Why choose us" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                          <input #cmTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', cmTAr.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Our Column (EN)</label>
+                          <input #cmUsEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.usLabel?.en || ''" (input)="setContentBilingual(section, 'usLabel', 'en', cmUsEn.value)" placeholder="Us" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Their Column (EN)</label>
+                          <input #cmThEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.themLabel?.en || ''" (input)="setContentBilingual(section, 'themLabel', 'en', cmThEn.value)" placeholder="Others" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Our Column (AR)</label>
+                          <input #cmUsAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.usLabel?.ar || ''" (input)="setContentBilingual(section, 'usLabel', 'ar', cmUsAr.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Their Column (AR)</label>
+                          <input #cmThAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.themLabel?.ar || ''" (input)="setContentBilingual(section, 'themLabel', 'ar', cmThAr.value)" />
+                        </div>
+                      </div>
+                      @for (item of getContentArray(section, 'rows'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Row {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'rows', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-2 gap-2">
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Feature (EN)</label>
+                              <input #cmFEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.feature?.en || ''" (input)="updateArrayItemBilingual(section, 'rows', i, 'feature', 'en', cmFEn.value)" placeholder="Free delivery" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Feature (AR)</label>
+                              <input #cmFAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.feature?.ar || ''" (input)="updateArrayItemBilingual(section, 'rows', i, 'feature', 'ar', cmFAr.value)" />
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-4">
+                            <label class="flex items-center gap-1.5 cursor-pointer">
+                              <input type="checkbox" [checked]="item.us !== false" (change)="updateArrayItemField(section, 'rows', i, 'us', !(item.us !== false))" class="h-4 w-4 text-blue-600 rounded" />
+                              <span class="text-xs text-gray-600">We have it</span>
+                            </label>
+                            <label class="flex items-center gap-1.5 cursor-pointer">
+                              <input type="checkbox" [checked]="item.them === true" (change)="updateArrayItemField(section, 'rows', i, 'them', !(item.them === true))" class="h-4 w-4 text-blue-600 rounded" />
+                              <span class="text-xs text-gray-600">They have it</span>
+                            </label>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'rows', { feature: { en: '', ar: '' }, us: true, them: false })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Row</button>
+                    </div>
+                  }
+                  @case ('BeforeAfter') {
+                    <div class="space-y-3">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Before Image</label>
+                          <div class="flex gap-2">
+                            <input #baBefore type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              [value]="getContent(section)?.beforeUrl || ''" (input)="setContentField(section, 'beforeUrl', baBefore.value)" placeholder="Before URL" />
+                            <label class="px-2 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200">Upload
+                              <input type="file" accept="image/*" class="hidden" (change)="uploadImage(section, 'beforeUrl', $event)" />
+                            </label>
+                          </div>
+                          @if (getContent(section)?.beforeUrl) {
+                            <img [src]="getContent(section).beforeUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="Before" />
+                          }
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">After Image</label>
+                          <div class="flex gap-2">
+                            <input #baAfter type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              [value]="getContent(section)?.afterUrl || ''" (input)="setContentField(section, 'afterUrl', baAfter.value)" placeholder="After URL" />
+                            <label class="px-2 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200">Upload
+                              <input type="file" accept="image/*" class="hidden" (change)="uploadImage(section, 'afterUrl', $event)" />
+                            </label>
+                          </div>
+                          @if (getContent(section)?.afterUrl) {
+                            <img [src]="getContent(section).afterUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="After" />
+                          }
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Before Label (EN)</label>
+                          <input #baBLEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.beforeLabel?.en || ''" (input)="setContentBilingual(section, 'beforeLabel', 'en', baBLEn.value)" placeholder="Before" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">After Label (EN)</label>
+                          <input #baALEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.afterLabel?.en || ''" (input)="setContentBilingual(section, 'afterLabel', 'en', baALEn.value)" placeholder="After" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Before Label (AR)</label>
+                          <input #baBLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.beforeLabel?.ar || ''" (input)="setContentBilingual(section, 'beforeLabel', 'ar', baBLAr.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">After Label (AR)</label>
+                          <input #baALAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.afterLabel?.ar || ''" (input)="setContentBilingual(section, 'afterLabel', 'ar', baALAr.value)" />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @case ('OrderForm') {
+                    <div class="space-y-3">
+                      <p class="text-[11px] text-gray-400">Shows on product landing pages. Adds the product to cart; "Buy Now" goes to checkout.</p>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Heading (EN)</label>
+                          <input #ofHEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.heading?.en || ''" (input)="setContentBilingual(section, 'heading', 'en', ofHEn.value)" placeholder="Order now" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Heading (AR)</label>
+                          <input #ofHAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.heading?.ar || ''" (input)="setContentBilingual(section, 'heading', 'ar', ofHAr.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
+                          <input #ofBEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.buttonText?.en || ''" (input)="setContentBilingual(section, 'buttonText', 'en', ofBEn.value)" placeholder="Buy Now" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
+                          <input #ofBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', ofBAr.value)" />
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [checked]="getContent(section)?.showImage !== false"
+                            (change)="setContentField(section, 'showImage', !(getContent(section)?.showImage !== false))" class="h-4 w-4 text-blue-600 rounded" />
+                          <span class="text-xs font-medium text-gray-700">Show product image</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [checked]="getContent(section)?.showQuantity !== false"
+                            (change)="setContentField(section, 'showQuantity', !(getContent(section)?.showQuantity !== false))" class="h-4 w-4 text-blue-600 rounded" />
+                          <span class="text-xs font-medium text-gray-700">Show quantity selector</span>
+                        </label>
+                      </div>
+                    </div>
+                  }
+                  @case ('StickyBar') {
+                    <div class="space-y-3">
+                      <p class="text-[11px] text-gray-400">Pinned to the bottom on mobile only, on product landing pages.</p>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
+                          <input #sbBEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.buttonText?.en || ''" (input)="setContentBilingual(section, 'buttonText', 'en', sbBEn.value)" placeholder="Buy Now" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
+                          <input #sbBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', sbBAr.value)" />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @case ('Bundle') {
+                    <div class="space-y-4">
+                      <p class="text-[11px] text-gray-400">Quantity tiers add N of the product to the cart. The badge is marketing text — actual per-bundle discounts still need a promo rule.</p>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                          <input #buTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', buTEn.value)" placeholder="Choose your bundle" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                          <input #buTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', buTAr.value)" />
+                        </div>
+                      </div>
+                      @for (item of getContentArray(section, 'tiers'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Tier {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'tiers', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-2 gap-2">
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                              <input #buQty type="number" min="1" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.qty || 1" (input)="updateArrayItemField(section, 'tiers', i, 'qty', +buQty.value)" />
+                            </div>
+                            <label class="flex items-center gap-2 cursor-pointer mt-6">
+                              <input type="checkbox" [checked]="item.highlight === true" (change)="updateArrayItemField(section, 'tiers', i, 'highlight', !(item.highlight === true))" class="h-4 w-4 text-blue-600 rounded" />
+                              <span class="text-xs text-gray-600">Highlight (best value)</span>
+                            </label>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (EN)</label>
+                              <input #buLEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.label?.en || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'label', 'en', buLEn.value)" placeholder="Buy 2" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (AR)</label>
+                              <input #buLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.label?.ar || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'label', 'ar', buLAr.value)" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Badge (EN)</label>
+                              <input #buBEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.badge?.en || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'badge', 'en', buBEn.value)" placeholder="Most popular" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Badge (AR)</label>
+                              <input #buBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.badge?.ar || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'badge', 'ar', buBAr.value)" />
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'tiers', { qty: 1, label: { en: '', ar: '' }, badge: { en: '', ar: '' }, highlight: false })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Tier</button>
+                    </div>
+                  }
                   @default {
                     <p class="text-xs text-gray-500 py-2">No content fields available for this section type.</p>
                   }
+                }
+                }
+
+                <!-- Design settings (applies SettingsJson on the storefront) -->
+                @if (isDesignTab(section.id)) {
+                  <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Background Color</label>
+                        <div class="flex items-center gap-2">
+                          <input
+                            type="color"
+                            [value]="getSettings(section)?.backgroundColor || '#ffffff'"
+                            (input)="setSettingsField(section, 'backgroundColor', dBg.value)"
+                            #dBg
+                            class="h-8 w-10 rounded border border-gray-300 cursor-pointer p-0"
+                          />
+                          <input
+                            type="text"
+                            [value]="getSettings(section)?.backgroundColor || ''"
+                            (input)="setSettingsField(section, 'backgroundColor', dBgText.value)"
+                            #dBgText
+                            placeholder="#ffffff or var(--x)"
+                            class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                          @if (getSettings(section)?.backgroundColor) {
+                            <button type="button" (click)="clearSettingsField(section, 'backgroundColor')" class="text-xs text-gray-400 hover:text-red-500" title="Clear">✕</button>
+                          }
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
+                        <div class="flex items-center gap-2">
+                          <input
+                            type="color"
+                            [value]="getSettings(section)?.textColor || '#111827'"
+                            (input)="setSettingsField(section, 'textColor', dText.value)"
+                            #dText
+                            class="h-8 w-10 rounded border border-gray-300 cursor-pointer p-0"
+                          />
+                          <input
+                            type="text"
+                            [value]="getSettings(section)?.textColor || ''"
+                            (input)="setSettingsField(section, 'textColor', dTextText.value)"
+                            #dTextText
+                            placeholder="#111827"
+                            class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          />
+                          @if (getSettings(section)?.textColor) {
+                            <button type="button" (click)="clearSettingsField(section, 'textColor')" class="text-xs text-gray-400 hover:text-red-500" title="Clear">✕</button>
+                          }
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label class="block text-xs font-medium text-gray-700 mb-1">Background Image URL</label>
+                      <input
+                        type="text"
+                        [value]="getSettings(section)?.backgroundImageUrl || ''"
+                        (input)="setSettingsField(section, 'backgroundImageUrl', dBgImg.value)"
+                        #dBgImg
+                        placeholder="https://... (optional, sits behind content)"
+                        class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Vertical Padding</label>
+                        <select
+                          [value]="getSettings(section)?.paddingY || ''"
+                          (change)="setSettingsField(section, 'paddingY', dPadY.value)"
+                          #dPadY
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Default</option>
+                          <option value="none">None</option>
+                          <option value="sm">Small</option>
+                          <option value="md">Medium</option>
+                          <option value="lg">Large</option>
+                          <option value="xl">Extra Large</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Horizontal Padding</label>
+                        <select
+                          [value]="getSettings(section)?.paddingX || ''"
+                          (change)="setSettingsField(section, 'paddingX', dPadX.value)"
+                          #dPadX
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Default</option>
+                          <option value="none">None</option>
+                          <option value="sm">Small</option>
+                          <option value="md">Medium</option>
+                          <option value="lg">Large</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Content Width</label>
+                        <select
+                          [value]="getSettings(section)?.maxWidth || ''"
+                          (change)="setSettingsField(section, 'maxWidth', dWidth.value)"
+                          #dWidth
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Default</option>
+                          <option value="full">Full Width</option>
+                          <option value="wide">Wide (max 80rem)</option>
+                          <option value="narrow">Narrow (max 48rem)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Corner Radius</label>
+                        <select
+                          [value]="getSettings(section)?.borderRadius || ''"
+                          (change)="setSettingsField(section, 'borderRadius', dRadius.value)"
+                          #dRadius
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="">Default</option>
+                          <option value="none">None</option>
+                          <option value="sm">Small</option>
+                          <option value="md">Medium</option>
+                          <option value="lg">Large</option>
+                          <option value="2xl">Extra Large</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                          Device Visibility
+                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="Uses CSS media queries so content stays crawlable">SEO</span>
+                        </label>
+                        <select
+                          [value]="getSettings(section)?.visibility || 'all'"
+                          (change)="setSettingsField(section, 'visibility', dVis.value)"
+                          #dVis
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="all">All Devices</option>
+                          <option value="desktop">Desktop Only</option>
+                          <option value="mobile">Mobile Only</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Anchor ID</label>
+                        <input
+                          type="text"
+                          [value]="getSettings(section)?.anchorId || ''"
+                          (input)="setSettingsField(section, 'anchorId', dAnchor.value)"
+                          #dAnchor
+                          placeholder="e.g. order-form (for #links)"
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        />
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Scroll Animation</label>
+                        <select
+                          [value]="getSettings(section)?.animation || 'none'"
+                          (change)="setSettingsField(section, 'animation', dAnim.value)"
+                          #dAnim
+                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                        >
+                          <option value="none">None</option>
+                          <option value="fade">Fade in</option>
+                          <option value="slide-up">Slide up</option>
+                          <option value="slide-left">Slide in</option>
+                          <option value="zoom">Zoom in</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
                 }
               </div>
             }
@@ -687,6 +1518,7 @@ interface SectionTypeInfo {
             <p class="text-gray-500 mb-4">No sections yet. Add your first section below.</p>
           </div>
         }
+        </div>
 
         <!-- Add Section Button -->
         <button
@@ -782,27 +1614,57 @@ interface SectionTypeInfo {
       </div>
 
       <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
-        <button
-          (click)="onClose()"
-          class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
-        >
-          Cancel
-        </button>
-        <button
-          (click)="onSave()"
-          class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          Save Changes
-        </button>
+      <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-3 flex-wrap">
+        <div class="flex items-center gap-2">
+          <button
+            (click)="exportJson()"
+            class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-1.5"
+            title="Download this page's sections as a JSON template"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            Export
+          </button>
+          <label
+            class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-1.5 cursor-pointer"
+            title="Load sections from a JSON template (replaces current, not saved until you Save)"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+            </svg>
+            Import
+            <input type="file" accept="application/json,.json" class="hidden" (change)="onImportFile($event)" />
+          </label>
+          @if (importErr()) {
+            <span class="text-xs text-red-600">{{ importErr() }}</span>
+          }
+        </div>
+        <div class="flex items-center gap-3">
+          <button
+            (click)="onClose()"
+            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="onSave()"
+            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            Save Changes
+          </button>
+        </div>
       </div>
     </div>
 
     <!-- Add Section Modal -->
     @if (showAddModal()) {
       <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-lg w-full mx-4 shadow-xl">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[85vh] overflow-y-auto">
           <h3 class="text-base font-semibold text-gray-900 mb-4">Add New Section</h3>
+
+          <!-- Blank section types -->
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Section Types</p>
           <div class="grid grid-cols-3 gap-3">
             @for (type of sectionTypes; track type.key) {
               <button
@@ -814,7 +1676,36 @@ interface SectionTypeInfo {
               </button>
             }
           </div>
-          <div class="mt-4 flex justify-end">
+
+          <!-- Pre-filled section presets -->
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-6 mb-2">Presets (pre-filled)</p>
+          <div class="grid grid-cols-3 gap-3">
+            @for (preset of sectionPresets; track preset.key) {
+              <button
+                (click)="addPreset(preset)"
+                class="p-3 border-2 border-gray-200 rounded-lg text-left hover:border-green-500 hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+              >
+                <div class="text-sm font-medium text-gray-900">{{ preset.label }}</div>
+                <div class="text-xs text-gray-500 mt-0.5">{{ preset.description }}</div>
+              </button>
+            }
+          </div>
+
+          <!-- Full-page templates -->
+          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-6 mb-2">Page Templates (replace all)</p>
+          <div class="grid grid-cols-2 gap-3">
+            @for (tpl of pageTemplates; track tpl.key) {
+              <button
+                (click)="applyPageTemplate(tpl)"
+                class="p-3 border-2 border-gray-200 rounded-lg text-left hover:border-purple-500 hover:bg-purple-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+              >
+                <div class="text-sm font-medium text-gray-900">{{ tpl.label }}</div>
+                <div class="text-xs text-gray-500 mt-0.5">{{ tpl.description }}</div>
+              </button>
+            }
+          </div>
+
+          <div class="mt-6 flex justify-end">
             <button
               (click)="showAddModal.set(false)"
               class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
@@ -831,6 +1722,8 @@ export class SectionEditorComponent implements OnInit {
   @Input() page: PageConfigurationDto | null = null;
   @Output() save = new EventEmitter<{ sections: SectionConfigurationDto[]; seoSettings: PageSeoSettings }>();
   @Output() close = new EventEmitter<void>();
+  /** Emits the current (unsaved) section list on every edit, to drive the live preview. */
+  @Output() sectionsChange = new EventEmitter<SectionConfigurationDto[]>();
 
   localSections: SectionConfigurationDto[] = [];
   localSeoSettings: PageSeoSettings = {
@@ -842,8 +1735,11 @@ export class SectionEditorComponent implements OnInit {
   };
 
   expandedSectionIds = signal<Set<string>>(new Set());
+  designTabSectionIds = signal<Set<string>>(new Set());
   showAddModal = signal(false);
   uploadingField = signal<string | null>(null);
+  importErr = signal<string | null>(null);
+  videoUploadError = signal<string | null>(null);
 
   private mediaService = inject(MediaService);
 
@@ -859,10 +1755,22 @@ export class SectionEditorComponent implements OnInit {
     { key: 'CustomHtml', label: 'Custom HTML', description: 'Raw HTML block', defaultVariantId: 'custom-html' },
     { key: 'MediaText', label: 'Media + Text', description: 'Alternating image/text rows', defaultVariantId: 'media-text-standard' },
     { key: 'Benefits', label: 'Benefits', description: 'Icon + text value props', defaultVariantId: 'benefits-standard' },
-    { key: 'ReviewsShowcase', label: 'Reviews', description: 'Customer reviews block', defaultVariantId: 'reviews-standard' },
+    { key: 'ReviewsShowcase', label: 'Reviews', description: 'Product reviews (product pages)', defaultVariantId: 'reviews-standard' },
     { key: 'Faq', label: 'FAQ', description: 'Question & answer accordion', defaultVariantId: 'faq-accordion' },
     { key: 'Guarantee', label: 'Guarantee', description: 'Trust / guarantee banner', defaultVariantId: 'guarantee-standard' },
     { key: 'CallToAction', label: 'Call to Action', description: 'Closing CTA band', defaultVariantId: 'cta-band' },
+    { key: 'Slider', label: 'Image Slider', description: 'Rotating image slides', defaultVariantId: 'slider-standard' },
+    { key: 'Video', label: 'Video', description: 'YouTube / video embed', defaultVariantId: 'video-youtube' },
+    { key: 'AnnouncementBar', label: 'Announcement Bar', description: 'Top promo strip', defaultVariantId: 'announcement-bar' },
+    { key: 'Countdown', label: 'Countdown Timer', description: 'Urgency timer', defaultVariantId: 'countdown-standard' },
+    { key: 'RichText', label: 'Rich Text', description: 'Formatted HTML block', defaultVariantId: 'rich-text' },
+    { key: 'CtaButton', label: 'CTA Button', description: 'Standalone / WhatsApp button', defaultVariantId: 'cta-button' },
+    { key: 'Stats', label: 'Stats / Counters', description: 'Animated numbers', defaultVariantId: 'stats-standard' },
+    { key: 'Comparison', label: 'Comparison Table', description: 'Us vs. others', defaultVariantId: 'comparison-standard' },
+    { key: 'BeforeAfter', label: 'Before / After', description: 'Image comparison slider', defaultVariantId: 'before-after-standard' },
+    { key: 'OrderForm', label: 'Order Form', description: 'Inline buy box (product pages)', defaultVariantId: 'order-form' },
+    { key: 'StickyBar', label: 'Sticky Buy Bar', description: 'Mobile bottom bar (product pages)', defaultVariantId: 'sticky-bar' },
+    { key: 'Bundle', label: 'Bundle Offers', description: 'Quantity tiers (product pages)', defaultVariantId: 'bundle-tiers' },
   ];
 
   private readonly sectionVariants: Record<string, SectionVariant[]> = {
@@ -909,7 +1817,44 @@ export class SectionEditorComponent implements OnInit {
       { id: 'media-text-standard', label: 'Standard' }
     ],
     Benefits: [
-      { id: 'benefits-standard', label: 'Standard' }
+      { id: 'benefits-standard', label: 'Standard' },
+      { id: 'benefits-strip', label: 'Trust Badge Strip' }
+    ],
+    Slider: [
+      { id: 'slider-standard', label: 'Standard' }
+    ],
+    Video: [
+      { id: 'video-youtube', label: 'YouTube' }
+    ],
+    AnnouncementBar: [
+      { id: 'announcement-bar', label: 'Standard' }
+    ],
+    Countdown: [
+      { id: 'countdown-standard', label: 'Standard' }
+    ],
+    RichText: [
+      { id: 'rich-text', label: 'Standard' }
+    ],
+    CtaButton: [
+      { id: 'cta-button', label: 'Standard' }
+    ],
+    Stats: [
+      { id: 'stats-standard', label: 'Standard' }
+    ],
+    Comparison: [
+      { id: 'comparison-standard', label: 'Standard' }
+    ],
+    BeforeAfter: [
+      { id: 'before-after-standard', label: 'Standard' }
+    ],
+    OrderForm: [
+      { id: 'order-form', label: 'Standard' }
+    ],
+    StickyBar: [
+      { id: 'sticky-bar', label: 'Standard' }
+    ],
+    Bundle: [
+      { id: 'bundle-tiers', label: 'Quantity Tiers' }
     ],
     ReviewsShowcase: [
       { id: 'reviews-standard', label: 'Standard' }
@@ -925,6 +1870,77 @@ export class SectionEditorComponent implements OnInit {
     ]
   };
 
+  // ── Presets: single, pre-filled sections merchants can drop in ──
+  readonly sectionPresets: SectionPreset[] = [
+    {
+      key: 'preset-hero', label: 'Hero (image)', description: 'Headline + CTA over an image',
+      sectionType: 'Hero', variantId: 'hero-full-image',
+      content: { title: { en: 'Welcome to our store', ar: 'مرحبًا بكم في متجرنا' }, subtitle: { en: 'Quality products, delivered fast', ar: 'منتجات عالية الجودة، توصيل سريع' }, buttonText: 'Shop Now', buttonLink: '/products' }
+    },
+    {
+      key: 'preset-benefits', label: 'Benefits (3)', description: 'Three value-prop icons',
+      sectionType: 'Benefits', variantId: 'benefits-standard',
+      content: { title: { en: "Why You'll Love It", ar: 'لماذا ستحبه' }, items: [
+        { icon: '🚚', title: { en: 'Fast Delivery', ar: 'توصيل سريع' }, text: { en: 'Get it in days, not weeks', ar: 'استلمه خلال أيام' } },
+        { icon: '🛡️', title: { en: 'Secure Checkout', ar: 'دفع آمن' }, text: { en: 'Your data is protected', ar: 'بياناتك محمية' } },
+        { icon: '↩️', title: { en: 'Easy Returns', ar: 'إرجاع سهل' }, text: { en: 'Hassle-free returns', ar: 'إرجاع بدون متاعب' } }
+      ] }
+    },
+    {
+      key: 'preset-faq', label: 'FAQ starter', description: 'Two starter questions',
+      sectionType: 'Faq', variantId: 'faq-accordion',
+      content: { title: { en: 'Frequently Asked Questions', ar: 'الأسئلة الشائعة' }, items: [
+        { question: { en: 'How long does delivery take?', ar: 'كم يستغرق التوصيل؟' }, answer: { en: 'Typically 2–5 business days.', ar: 'عادةً من 2 إلى 5 أيام عمل.' } },
+        { question: { en: 'Can I return an item?', ar: 'هل يمكنني إرجاع المنتج؟' }, answer: { en: 'Yes, within 14 days of delivery.', ar: 'نعم، خلال 14 يومًا من الاستلام.' } }
+      ] }
+    },
+    {
+      key: 'preset-cta', label: 'CTA band', description: 'Closing call-to-action',
+      sectionType: 'CallToAction', variantId: 'cta-band',
+      content: { title: { en: 'Ready to get yours?', ar: 'هل أنت مستعد للحصول عليه؟' }, subtitle: { en: 'Order now while stock lasts', ar: 'اطلب الآن قبل نفاد الكمية' }, buttonText: { en: 'Shop Now', ar: 'تسوق الآن' } }
+    },
+    {
+      key: 'preset-announcement', label: 'Announcement', description: 'Dismissible promo strip',
+      sectionType: 'AnnouncementBar', variantId: 'announcement-bar',
+      content: { text: { en: 'Free shipping on orders over 500!', ar: 'شحن مجاني للطلبات فوق 500!' }, link: '/products', bg: '#111827', textColor: '#ffffff', dismissible: true }
+    },
+    {
+      key: 'preset-countdown', label: 'Countdown offer', description: 'Urgency timer',
+      sectionType: 'Countdown', variantId: 'countdown-standard',
+      content: { title: { en: 'Hurry, offer ends in', ar: 'أسرع، ينتهي العرض خلال' }, expiredBehavior: 'message', expiredText: { en: 'Offer ended', ar: 'انتهى العرض' } }
+    }
+  ];
+
+  // ── Full-page templates: replace the whole section list ──
+  readonly pageTemplates: PageTemplate[] = [
+    {
+      key: 'tpl-landing', label: 'Product Landing — Conversion', description: 'Announcement, hero, benefits, countdown, reviews, FAQ, guarantee, CTA',
+      sections: [
+        { sectionType: 'AnnouncementBar', variantId: 'announcement-bar', content: { text: { en: 'Limited time offer!', ar: 'عرض لفترة محدودة!' }, bg: '#111827', textColor: '#ffffff', dismissible: true } },
+        { sectionType: 'Hero', variantId: 'hero-full-image', content: { title: { en: 'The product you need', ar: 'المنتج الذي تحتاجه' }, subtitle: { en: 'Trusted by thousands', ar: 'موثوق من الآلاف' }, buttonText: 'Buy Now', buttonLink: '/products' } },
+        { sectionType: 'Benefits', variantId: 'benefits-standard', content: { items: [
+          { icon: '⭐', title: { en: 'Top Rated', ar: 'الأعلى تقييمًا' }, text: { en: 'Loved by customers', ar: 'محبوب من العملاء' } },
+          { icon: '🚚', title: { en: 'Fast Delivery', ar: 'توصيل سريع' }, text: { en: 'Delivered in days', ar: 'يصل خلال أيام' } },
+          { icon: '🛡️', title: { en: 'Guaranteed', ar: 'مضمون' }, text: { en: 'Money-back promise', ar: 'ضمان استرداد الأموال' } }
+        ] } },
+        { sectionType: 'Countdown', variantId: 'countdown-standard', content: { title: { en: 'Offer ends in', ar: 'ينتهي العرض خلال' }, expiredBehavior: 'message', expiredText: { en: 'Offer ended', ar: 'انتهى العرض' } } },
+        { sectionType: 'ReviewsShowcase', variantId: 'reviews-standard', content: { title: { en: 'What Customers Say', ar: 'ماذا يقول العملاء' } } },
+        { sectionType: 'Faq', variantId: 'faq-accordion', content: { title: { en: 'Frequently Asked Questions', ar: 'الأسئلة الشائعة' }, items: [] } },
+        { sectionType: 'Guarantee', variantId: 'guarantee-standard', content: { icon: '🛡️', title: { en: 'Satisfaction Guaranteed', ar: 'رضا مضمون' }, text: { en: 'Or your money back', ar: 'أو استرداد أموالك' } } },
+        { sectionType: 'CallToAction', variantId: 'cta-band', content: { title: { en: 'Ready to order?', ar: 'مستعد للطلب؟' }, buttonText: { en: 'Buy Now', ar: 'اشترِ الآن' } } }
+      ]
+    },
+    {
+      key: 'tpl-home', label: 'Simple Store Home', description: 'Hero, featured products, categories, newsletter',
+      sections: [
+        { sectionType: 'Hero', variantId: 'hero-full-image', content: { title: { en: 'Welcome', ar: 'مرحبًا' }, subtitle: { en: 'Discover our collection', ar: 'اكتشف مجموعتنا' }, buttonText: 'Shop Now', buttonLink: '/products' } },
+        { sectionType: 'FeaturedProducts', variantId: 'grid-standard', content: { title: { en: 'Featured Products', ar: 'منتجات مميزة' } } },
+        { sectionType: 'CategoryShowcase', variantId: 'cats-grid', content: { title: { en: 'Shop by Category', ar: 'تسوق حسب الفئة' } } },
+        { sectionType: 'Newsletter', variantId: 'news-inline', content: { title: { en: 'Stay in the loop', ar: 'ابقَ على اطلاع' }, buttonText: 'Subscribe' } }
+      ]
+    }
+  ];
+
   ngOnInit(): void {
     if (this.page?.sections) {
       this.localSections = JSON.parse(JSON.stringify(this.page.sections));
@@ -933,6 +1949,11 @@ export class SectionEditorComponent implements OnInit {
     if (this.page?.seoSettings) {
       this.localSeoSettings = JSON.parse(JSON.stringify(this.page.seoSettings));
     }
+  }
+
+  /** Notify listeners (live preview) that the working section list changed. */
+  notifyChange(): void {
+    this.sectionsChange.emit([...this.localSections]);
   }
 
   getSectionTypeLabel(sectionType: string): string {
@@ -957,24 +1978,171 @@ export class SectionEditorComponent implements OnInit {
     return this.expandedSectionIds().has(sectionId);
   }
 
-  moveUp(index: number): void {
-    if (index === 0) return;
-    [this.localSections[index], this.localSections[index - 1]] =
-      [this.localSections[index - 1], this.localSections[index]];
-    this.updateSortOrders();
+  setTab(sectionId: string, tab: 'content' | 'design'): void {
+    const set = new Set(this.designTabSectionIds());
+    if (tab === 'design') {
+      set.add(sectionId);
+    } else {
+      set.delete(sectionId);
+    }
+    this.designTabSectionIds.set(set);
   }
 
-  moveDown(index: number): void {
-    if (index === this.localSections.length - 1) return;
-    [this.localSections[index], this.localSections[index + 1]] =
-      [this.localSections[index + 1], this.localSections[index]];
+  isDesignTab(sectionId: string): boolean {
+    return this.designTabSectionIds().has(sectionId);
+  }
+
+  onDrop(event: CdkDragDrop<SectionConfigurationDto[]>): void {
+    if (event.previousIndex === event.currentIndex) return;
+    moveItemInArray(this.localSections, event.previousIndex, event.currentIndex);
     this.updateSortOrders();
+    this.notifyChange();
+  }
+
+  duplicateSection(index: number): void {
+    const source = this.localSections[index];
+    if (!source) return;
+    // Deep clone with a fresh temporary id; the backend re-creates all sections
+    // with server-generated ids on save, so this persists as a new row.
+    const clone: SectionConfigurationDto = {
+      ...JSON.parse(JSON.stringify(source)),
+      id: crypto.randomUUID()
+    };
+    this.localSections.splice(index + 1, 0, clone);
+    this.localSections = [...this.localSections];
+    this.updateSortOrders();
+    this.notifyChange();
   }
 
   private updateSortOrders(): void {
     this.localSections.forEach((section, index) => {
       section.sortOrder = index + 1;
     });
+  }
+
+  // ── Presets & templates (Phase E) ──
+
+  addPreset(preset: SectionPreset): void {
+    const newSection: SectionConfigurationDto = {
+      id: crypto.randomUUID(),
+      sectionType: preset.sectionType,
+      variantId: preset.variantId,
+      isEnabled: true,
+      sortOrder: this.localSections.length + 1,
+      contentJson: preset.content !== undefined ? JSON.stringify(preset.content) : undefined,
+      settingsJson: preset.settings !== undefined ? JSON.stringify(preset.settings) : undefined
+    };
+    this.localSections = [...this.localSections, newSection];
+    this.showAddModal.set(false);
+    this.notifyChange();
+  }
+
+  applyPageTemplate(tpl: PageTemplate): void {
+    if (this.localSections.length > 0 &&
+        !confirm(`Replace all ${this.localSections.length} current section(s) with the "${tpl.label}" template? This is not saved until you click Save Changes.`)) {
+      return;
+    }
+    this.localSections = tpl.sections.map((s, i) => ({
+      id: crypto.randomUUID(),
+      sectionType: s.sectionType,
+      variantId: s.variantId,
+      isEnabled: true,
+      sortOrder: i + 1,
+      contentJson: s.content !== undefined ? JSON.stringify(s.content) : undefined,
+      settingsJson: s.settings !== undefined ? JSON.stringify(s.settings) : undefined
+    }));
+    this.showAddModal.set(false);
+    this.notifyChange();
+  }
+
+  // ── Export / Import JSON (Phase E) ──
+
+  exportJson(): void {
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      sections: this.localSections.map(({ sectionType, variantId, isEnabled, sortOrder, contentJson, settingsJson }) =>
+        ({ sectionType, variantId, isEnabled, sortOrder, contentJson, settingsJson })),
+      seoSettings: this.localSeoSettings
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const name = (this.page?.slug || this.page?.title?.english || 'page').toString().replace(/[^a-z0-9-_]+/gi, '-');
+    a.href = url;
+    a.download = `qaflaty-${name}-sections.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  onImportFile(event: Event): void {
+    this.importErr.set(null);
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        this.applyImported(parsed);
+      } catch {
+        this.importErr.set('Invalid JSON file.');
+      }
+      input.value = '';
+    };
+    reader.onerror = () => {
+      this.importErr.set('Could not read the file.');
+      input.value = '';
+    };
+    reader.readAsText(file);
+  }
+
+  private applyImported(parsed: any): void {
+    const rawSections = Array.isArray(parsed?.sections) ? parsed.sections : null;
+    if (!rawSections) {
+      this.importErr.set('File does not contain a "sections" array.');
+      return;
+    }
+
+    const validTypes = new Set(this.sectionTypes.map(t => t.key));
+    const imported: SectionConfigurationDto[] = [];
+    for (const s of rawSections) {
+      if (!s || typeof s.sectionType !== 'string' || typeof s.variantId !== 'string') {
+        this.importErr.set('One or more sections are missing a type or variant.');
+        return;
+      }
+      if (!validTypes.has(s.sectionType)) {
+        this.importErr.set(`Unknown section type: ${s.sectionType}.`);
+        return;
+      }
+      imported.push({
+        id: crypto.randomUUID(),
+        sectionType: s.sectionType,
+        variantId: s.variantId,
+        isEnabled: s.isEnabled !== false,
+        sortOrder: imported.length + 1,
+        contentJson: typeof s.contentJson === 'string' ? s.contentJson : undefined,
+        settingsJson: typeof s.settingsJson === 'string' ? s.settingsJson : undefined
+      });
+    }
+
+    this.localSections = imported;
+    this.updateSortOrders();
+
+    // Optional SEO settings block.
+    const seo = parsed?.seoSettings;
+    if (seo && seo.metaTitle && seo.metaDescription) {
+      this.localSeoSettings = {
+        metaTitle: { english: seo.metaTitle.english || '', arabic: seo.metaTitle.arabic || '' },
+        metaDescription: { english: seo.metaDescription.english || '', arabic: seo.metaDescription.arabic || '' },
+        ogImageUrl: seo.ogImageUrl || '',
+        noIndex: seo.noIndex === true,
+        noFollow: seo.noFollow === true
+      };
+    }
+
+    this.notifyChange();
   }
 
   addSection(sectionTypeKey: string): void {
@@ -991,11 +2159,13 @@ export class SectionEditorComponent implements OnInit {
     };
     this.localSections = [...this.localSections, newSection];
     this.showAddModal.set(false);
+    this.notifyChange();
   }
 
   deleteSection(index: number): void {
     this.localSections = this.localSections.filter((_, i) => i !== index);
     this.updateSortOrders();
+    this.notifyChange();
   }
 
   getContent(section: SectionConfigurationDto): any {
@@ -1010,6 +2180,7 @@ export class SectionEditorComponent implements OnInit {
     const content = this.getContent(section);
     content[field] = value;
     section.contentJson = JSON.stringify(content);
+    this.notifyChange();
   }
 
   setContentBilingual(section: SectionConfigurationDto, field: string, lang: 'en' | 'ar', value: string): void {
@@ -1017,6 +2188,7 @@ export class SectionEditorComponent implements OnInit {
     if (!content[field]) content[field] = { en: '', ar: '' };
     content[field][lang] = value;
     section.contentJson = JSON.stringify(content);
+    this.notifyChange();
   }
 
   getSettings(section: SectionConfigurationDto): any {
@@ -1029,8 +2201,17 @@ export class SectionEditorComponent implements OnInit {
 
   setSettingsField(section: SectionConfigurationDto, field: string, value: any): void {
     const settings = this.getSettings(section);
-    settings[field] = value;
-    section.settingsJson = JSON.stringify(settings);
+    if (value === '' || value === null || value === undefined) {
+      delete settings[field];
+    } else {
+      settings[field] = value;
+    }
+    section.settingsJson = Object.keys(settings).length ? JSON.stringify(settings) : undefined;
+    this.notifyChange();
+  }
+
+  clearSettingsField(section: SectionConfigurationDto, field: string): void {
+    this.setSettingsField(section, field, '');
   }
 
   // ── Repeatable content-array helpers (Benefits / MediaText / Faq items) ──
@@ -1044,6 +2225,7 @@ export class SectionEditorComponent implements OnInit {
     const content = this.getContent(section);
     content[field] = items;
     section.contentJson = JSON.stringify(content);
+    this.notifyChange();
   }
 
   addArrayItem(section: SectionConfigurationDto, field: string, template: any): void {
@@ -1110,6 +2292,40 @@ export class SectionEditorComponent implements OnInit {
       error: () => {
         this.uploadingField.set(null);
         (event.target as HTMLInputElement).value = '';
+      }
+    });
+  }
+
+  uploadVideo(section: SectionConfigurationDto, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    const storeId = this.page?.storeId;
+    if (!file || !storeId) return;
+
+    this.videoUploadError.set(null);
+    const MAX = 20 * 1024 * 1024;
+    if (file.size > MAX) {
+      this.videoUploadError.set('Video exceeds the 20 MB limit.');
+      input.value = '';
+      return;
+    }
+
+    const key = `${section.id}:videoUrl`;
+    this.uploadingField.set(key);
+
+    this.mediaService.uploadVideo(storeId, file).subscribe({
+      next: (result) => {
+        if (result.url) {
+          this.setContentField(section, 'videoUrl', result.url);
+          this.setContentField(section, 'source', 'upload');
+        }
+        this.uploadingField.set(null);
+        input.value = '';
+      },
+      error: (err) => {
+        this.uploadingField.set(null);
+        this.videoUploadError.set(err?.error?.message || 'Failed to upload video.');
+        input.value = '';
       }
     });
   }

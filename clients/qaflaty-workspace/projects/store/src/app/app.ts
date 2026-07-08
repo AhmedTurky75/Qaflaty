@@ -85,7 +85,12 @@ export class App implements OnInit {
         return this.configService.loadConfig();
       })
     ).subscribe({
-      next: () => this.storeService.isLoading.set(false),
+      next: () => {
+        this.storeService.isLoading.set(false);
+        // Load merchant-created pages so custom pages appear in the header nav.
+        this.configService.loadPages(this.storeService.currentStore()?.id ?? '')
+          .subscribe({ next: () => {}, error: () => {} });
+      },
       error: (error) => {
         console.error('Failed to load store:', error);
         if (!this.storeService.isInactive()) {

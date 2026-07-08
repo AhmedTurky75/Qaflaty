@@ -9,6 +9,7 @@ namespace Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 public sealed class PageConfiguration : AggregateRoot<PageConfigurationId>
 {
     private readonly List<SectionConfiguration> _sections = [];
+    private readonly List<PageVariant> _variants = [];
 
     public StoreId StoreId { get; private set; } // Store this page belongs to
     public PageType PageType { get; private set; } // Which storefront page this configures (Home, About, Contact, custom, etc.)
@@ -22,6 +23,7 @@ public sealed class PageConfiguration : AggregateRoot<PageConfigurationId>
     public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last page change
 
     public IReadOnlyList<SectionConfiguration> Sections => _sections.AsReadOnly(); // Ordered builder sections that compose the page (hero, product grid, banner, etc.)
+    public IReadOnlyList<PageVariant> Variants => _variants.AsReadOnly(); // A/B test variants; the page's own Sections are the control
 
     private PageConfiguration() : base(PageConfigurationId.Empty) { }
 
@@ -138,4 +140,40 @@ public sealed class PageConfiguration : AggregateRoot<PageConfigurationId>
         _sections.Clear();
         UpdatedAt = DateTime.UtcNow;
     }
+
+    // ── A/B test variants ──
+
+    public PageVariant AddVariant(string name, int weight, bool isActive, string? sectionsJson)
+    {
+        var variant = PageVariant.Create(Id, name, weight, isActive, sectionsJson);
+        _variants.Add(variant);
+        UpdatedAt = DateTime.UtcNow;
+        return variant;
+    }
+
+    public void UpdateVariant(PageVariantId variantId, string name, int weight, bool isActive, string? sectionsJson)
+    {
+        var variant = _variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant != null)
+        {
+            variant.Update(name, weight, isActive, sectionsJson);
+            UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public void RemoveVariant(PageVariantId variantId)
+    {
+        var variant = _variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant != null)
+        {
+            _variants.Remove(variant);
+            UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public void RecordVariantImpression(PageVariantId variantId)
+        => _variants.FirstOrDefault(v => v.Id == variantId)?.RecordImpression();
+
+    public void RecordVariantConversion(PageVariantId variantId)
+        => _variants.FirstOrDefault(v => v.Id == variantId)?.RecordConversion();
 }
