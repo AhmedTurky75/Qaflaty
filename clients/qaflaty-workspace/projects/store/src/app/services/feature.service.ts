@@ -1,11 +1,24 @@
 import { Injectable, inject, computed } from '@angular/core';
 import { ConfigService } from './config.service';
+import { I18nService } from './i18n.service';
 
 @Injectable({ providedIn: 'root' })
 export class FeatureService {
   private configService = inject(ConfigService);
+  private i18n = inject(I18nService);
 
   private config = this.configService.config;
+
+  /**
+   * Merchant-created custom pages (PageType "Custom"), enabled only, with their
+   * title localized to the current language. Headers render these in the nav
+   * next to the built-in pages; each links to /pages/{slug}.
+   */
+  customPages = computed(() =>
+    this.configService.pages()
+      .filter(p => p.pageType === 'Custom' && p.isEnabled)
+      .map(p => ({ slug: p.slug, title: this.i18n.getText(p.title) }))
+  );
 
   // Feature toggles
   isWishlistEnabled = computed(() => this.config()?.featureToggles?.wishlist ?? false);

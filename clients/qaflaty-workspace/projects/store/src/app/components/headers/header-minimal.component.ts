@@ -34,6 +34,10 @@ import { CustomerAuthService } from '../../services/customer-auth.service';
             <a routerLink="/contact" routerLinkActive="text-[var(--primary-color)]"
               class="text-sm text-gray-700 hover:text-[var(--primary-color)] transition-colors">{{ t('contact') }}</a>
           }
+          @for (page of features.customPages(); track page.slug) {
+            <a [routerLink]="['/pages', page.slug]" routerLinkActive="text-[var(--primary-color)]"
+              class="text-sm text-gray-700 hover:text-[var(--primary-color)] transition-colors">{{ page.title }}</a>
+          }
         </nav>
 
         <div class="flex items-center gap-3">
@@ -79,6 +83,9 @@ import { CustomerAuthService } from '../../services/customer-auth.service';
           }
           @if (features.isContactPageEnabled()) {
             <a routerLink="/contact" (click)="mobileMenuOpen.set(false)" class="block py-2 text-gray-700">{{ t('contact') }}</a>
+          }
+          @for (page of features.customPages(); track page.slug) {
+            <a [routerLink]="['/pages', page.slug]" (click)="mobileMenuOpen.set(false)" class="block py-2 text-gray-700">{{ page.title }}</a>
           }
           @if (features.authMode() === 'Required') {
             @if (customerAuth.isAuthenticated()) {
