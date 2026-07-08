@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Qaflaty.Api.Common;
+using Qaflaty.Application.Storefront.Commands.CreateManualReview;
 using Qaflaty.Application.Storefront.Commands.ModerateProductReview;
 using Qaflaty.Application.Storefront.Commands.UpdateReviewSettings;
 using Qaflaty.Application.Storefront.Queries.GetReviewSettings;
@@ -27,6 +28,18 @@ public class MerchantReviewsController : ApiController
             productId.HasValue ? new ProductId(productId.Value) : null,
             status);
         var result = await Sender.Send(query, ct);
+        return HandleResult(result);
+    }
+
+    [HttpPost]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> CreateManualReview(
+        Guid storeId, [FromBody] CreateManualReviewRequest request, CancellationToken ct)
+    {
+        var command = new CreateManualReviewCommand(
+            storeId, request.ProductId, request.AuthorName, request.Rating, request.Title, request.Comment);
+        var result = await Sender.Send(command, ct);
         return HandleResult(result);
     }
 
@@ -93,3 +106,6 @@ public class MerchantReviewsController : ApiController
 
 public record UpdateReviewSettingsRequest(
     bool ReviewsEnabled, bool RequirePurchase, bool AutoApprove, bool AllowEditing);
+
+public record CreateManualReviewRequest(
+    Guid ProductId, string AuthorName, int Rating, string? Title, string? Comment);
