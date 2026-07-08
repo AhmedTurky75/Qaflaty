@@ -1171,6 +1171,120 @@ interface PageTemplate {
                       </div>
                     </div>
                   }
+                  @case ('OrderForm') {
+                    <div class="space-y-3">
+                      <p class="text-[11px] text-gray-400">Shows on product landing pages. Adds the product to cart; "Buy Now" goes to checkout.</p>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Heading (EN)</label>
+                          <input #ofHEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.heading?.en || ''" (input)="setContentBilingual(section, 'heading', 'en', ofHEn.value)" placeholder="Order now" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Heading (AR)</label>
+                          <input #ofHAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.heading?.ar || ''" (input)="setContentBilingual(section, 'heading', 'ar', ofHAr.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
+                          <input #ofBEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.buttonText?.en || ''" (input)="setContentBilingual(section, 'buttonText', 'en', ofBEn.value)" placeholder="Buy Now" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
+                          <input #ofBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', ofBAr.value)" />
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-4">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [checked]="getContent(section)?.showImage !== false"
+                            (change)="setContentField(section, 'showImage', !(getContent(section)?.showImage !== false))" class="h-4 w-4 text-blue-600 rounded" />
+                          <span class="text-xs font-medium text-gray-700">Show product image</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                          <input type="checkbox" [checked]="getContent(section)?.showQuantity !== false"
+                            (change)="setContentField(section, 'showQuantity', !(getContent(section)?.showQuantity !== false))" class="h-4 w-4 text-blue-600 rounded" />
+                          <span class="text-xs font-medium text-gray-700">Show quantity selector</span>
+                        </label>
+                      </div>
+                    </div>
+                  }
+                  @case ('StickyBar') {
+                    <div class="space-y-3">
+                      <p class="text-[11px] text-gray-400">Pinned to the bottom on mobile only, on product landing pages.</p>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
+                          <input #sbBEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.buttonText?.en || ''" (input)="setContentBilingual(section, 'buttonText', 'en', sbBEn.value)" placeholder="Buy Now" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
+                          <input #sbBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', sbBAr.value)" />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @case ('Bundle') {
+                    <div class="space-y-4">
+                      <p class="text-[11px] text-gray-400">Quantity tiers add N of the product to the cart. The badge is marketing text — actual per-bundle discounts still need a promo rule.</p>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                          <input #buTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', buTEn.value)" placeholder="Choose your bundle" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                          <input #buTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', buTAr.value)" />
+                        </div>
+                      </div>
+                      @for (item of getContentArray(section, 'tiers'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Tier {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'tiers', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-2 gap-2">
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
+                              <input #buQty type="number" min="1" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.qty || 1" (input)="updateArrayItemField(section, 'tiers', i, 'qty', +buQty.value)" />
+                            </div>
+                            <label class="flex items-center gap-2 cursor-pointer mt-6">
+                              <input type="checkbox" [checked]="item.highlight === true" (change)="updateArrayItemField(section, 'tiers', i, 'highlight', !(item.highlight === true))" class="h-4 w-4 text-blue-600 rounded" />
+                              <span class="text-xs text-gray-600">Highlight (best value)</span>
+                            </label>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (EN)</label>
+                              <input #buLEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.label?.en || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'label', 'en', buLEn.value)" placeholder="Buy 2" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (AR)</label>
+                              <input #buLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.label?.ar || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'label', 'ar', buLAr.value)" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Badge (EN)</label>
+                              <input #buBEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.badge?.en || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'badge', 'en', buBEn.value)" placeholder="Most popular" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Badge (AR)</label>
+                              <input #buBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.badge?.ar || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'badge', 'ar', buBAr.value)" />
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'tiers', { qty: 1, label: { en: '', ar: '' }, badge: { en: '', ar: '' }, highlight: false })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Tier</button>
+                    </div>
+                  }
                   @default {
                     <p class="text-xs text-gray-500 py-2">No content fields available for this section type.</p>
                   }
@@ -1608,6 +1722,9 @@ export class SectionEditorComponent implements OnInit {
     { key: 'Stats', label: 'Stats / Counters', description: 'Animated numbers', defaultVariantId: 'stats-standard' },
     { key: 'Comparison', label: 'Comparison Table', description: 'Us vs. others', defaultVariantId: 'comparison-standard' },
     { key: 'BeforeAfter', label: 'Before / After', description: 'Image comparison slider', defaultVariantId: 'before-after-standard' },
+    { key: 'OrderForm', label: 'Order Form', description: 'Inline buy box (product pages)', defaultVariantId: 'order-form' },
+    { key: 'StickyBar', label: 'Sticky Buy Bar', description: 'Mobile bottom bar (product pages)', defaultVariantId: 'sticky-bar' },
+    { key: 'Bundle', label: 'Bundle Offers', description: 'Quantity tiers (product pages)', defaultVariantId: 'bundle-tiers' },
   ];
 
   private readonly sectionVariants: Record<string, SectionVariant[]> = {
@@ -1683,6 +1800,15 @@ export class SectionEditorComponent implements OnInit {
     ],
     BeforeAfter: [
       { id: 'before-after-standard', label: 'Standard' }
+    ],
+    OrderForm: [
+      { id: 'order-form', label: 'Standard' }
+    ],
+    StickyBar: [
+      { id: 'sticky-bar', label: 'Standard' }
+    ],
+    Bundle: [
+      { id: 'bundle-tiers', label: 'Quantity Tiers' }
     ],
     ReviewsShowcase: [
       { id: 'reviews-standard', label: 'Standard' }

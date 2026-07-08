@@ -25,5 +25,8 @@ public enum SectionType
     CtaButton,
     Stats,
     Comparison,
-    BeforeAfter
+    BeforeAfter,
+    OrderForm,
+    StickyBar,
+    Bundle
 }

@@ -38,6 +38,9 @@ import { CtaButtonComponent } from './cta-button/cta-button.component';
 import { StatsStandardComponent } from './stats/stats-standard.component';
 import { ComparisonStandardComponent } from './comparison/comparison-standard.component';
 import { BeforeAfterStandardComponent } from './before-after/before-after-standard.component';
+import { OrderFormComponent } from './order-form/order-form.component';
+import { StickyBuyBarComponent } from './sticky-bar/sticky-buy-bar.component';
+import { BundleTiersComponent } from './bundle/bundle-tiers.component';
 
 @Component({
   selector: 'app-section-renderer',
@@ -57,7 +60,8 @@ import { BeforeAfterStandardComponent } from './before-after/before-after-standa
     LandingGuaranteeComponent, LandingCtaBandComponent, LandingReviewsShowcaseComponent,
     SliderStandardComponent, VideoYoutubeComponent, AnnouncementBarComponent,
     CountdownTimerComponent, RichTextComponent, CtaButtonComponent,
-    StatsStandardComponent, ComparisonStandardComponent, BeforeAfterStandardComponent
+    StatsStandardComponent, ComparisonStandardComponent, BeforeAfterStandardComponent,
+    OrderFormComponent, StickyBuyBarComponent, BundleTiersComponent
   ],
   template: `
     @for (section of sections(); track section.id) {
@@ -102,6 +106,9 @@ import { BeforeAfterStandardComponent } from './before-after/before-after-standa
             @case ('stats-standard') { <app-stats-standard [config]="section" /> }
             @case ('comparison-standard') { <app-comparison-standard [config]="section" /> }
             @case ('before-after-standard') { <app-before-after-standard [config]="section" /> }
+            @case ('order-form') { <app-order-form [config]="section" [product]="product()" /> }
+            @case ('sticky-bar') { <app-sticky-buy-bar [config]="section" [product]="product()" /> }
+            @case ('bundle-tiers') { <app-bundle-tiers [config]="section" [product]="product()" /> }
           }
           </app-section-wrapper>
         </section>
