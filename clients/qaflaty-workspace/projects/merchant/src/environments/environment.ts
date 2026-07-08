@@ -7,5 +7,5 @@ export const environment = {
   // NOT the merchant app. In dev this is the store dev server
   // (npm run start:store → port 4201). Leave empty to derive it from the
   // store's slug / custom domain instead.
-  storeBaseUrl: 'http://localhost:4201'
+  storeBaseUrl: 'http://localhost:4202'
 };
