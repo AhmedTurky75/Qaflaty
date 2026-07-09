@@ -5,6 +5,7 @@ import { StoreService } from '../../services/store.service';
 import { ExperimentService } from '../../services/experiment.service';
 import { WhatsAppButtonComponent } from '../../components/shared/whatsapp-button.component';
 import { WhatsAppService } from '../../services/whatsapp.service';
+import { TrackingService } from '../../services/tracking.service';
 
 @Component({
   selector: 'app-order-confirmation',
@@ -17,6 +18,7 @@ export class OrderConfirmationComponent {
   private route = inject(ActivatedRoute);
   private storeService = inject(StoreService);
   private experimentService = inject(ExperimentService);
+  private tracking = inject(TrackingService);
   whatsAppService = inject(WhatsAppService);
 
   store = this.storeService.currentStore;
@@ -30,6 +32,21 @@ export class OrderConfirmationComponent {
       if (orderNumber) {
         this.experimentService.trackConversion(orderNumber);
       }
+    });
+
+    this.route.queryParams.subscribe(params => {
+      const orderId = params['orderId'];
+      if (!orderId) return;
+
+      // Use the order id itself as the event key so this browser-side Purchase
+      // deduplicates against the server-side one fired by OrderPlacedTrackingHandler
+      // (which uses the same OrderId), per Meta/TikTok best practice.
+      this.tracking.track('Purchase', {
+        eventKey: orderId,
+        orderId,
+        value: params['value'] ? Number(params['value']) : undefined,
+        currency: params['currency']
+      });
     });
   }
 }

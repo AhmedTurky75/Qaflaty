@@ -14,6 +14,7 @@ import { CreateOrderRequest, OrderCalculation, OrderStatus } from '../../models/
 import { PaymentMethodAdjustment } from 'shared';
 import { LocationPickerComponent, PickedLocation } from '../../components/shared/location-picker.component';
 import { COUNTRIES, CITIES, DISTRICTS, Country, City, District, PhoneInputComponent } from 'shared';
+import { TrackingService } from '../../services/tracking.service';
 
 @Component({
   selector: 'app-checkout',
@@ -31,6 +32,7 @@ export class CheckoutComponent implements OnInit {
   private promoService = inject(PromoService);
   private featureService = inject(FeatureService);
   private router = inject(Router);
+  private tracking = inject(TrackingService);
   readonly authService = inject(CustomerAuthService);
 
   // Promo code state
@@ -145,6 +147,16 @@ export class CheckoutComponent implements OnInit {
     this.checkoutForm.get('paymentMethod')!.valueChanges.subscribe(() => {
       const cc = this.lastCountryCode();
       if (cc > 0) this.calculateOrder(cc, this.lastCityId(), this.lastDistrictId());
+      this.tracking.track('AddPaymentInfo', {
+        value: this.cart().total.amount,
+        currency: this.cart().total.currency
+      });
+    });
+
+    this.tracking.track('InitiateCheckout', {
+      value: this.cart().total.amount,
+      currency: this.cart().total.currency,
+      contents: this.cart().items.map(i => ({ contentId: i.productId, quantity: i.quantity, price: i.unitPrice.amount }))
     });
   }
 
@@ -523,8 +535,16 @@ export class CheckoutComponent implements OnInit {
             queryParams: { email: emailForVerify }
           });
         } else {
-          // Order auto-confirmed — go straight to confirmation
-          this.router.navigate(['/order-confirmation', response.orderNumber]);
+          // Order auto-confirmed — go straight to confirmation. Carry the order id/value so
+          // the confirmation page can fire Purchase with the same event key the server uses
+          // (see OrderPlacedTrackingHandler), letting the provider deduplicate the two.
+          this.router.navigate(['/order-confirmation', response.orderNumber], {
+            queryParams: {
+              orderId: response.id,
+              value: response.pricing.total.amount,
+              currency: response.pricing.total.currency
+            }
+          });
         }
       },
       error: (error) => {

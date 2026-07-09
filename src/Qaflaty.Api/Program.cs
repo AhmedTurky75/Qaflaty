@@ -162,12 +162,22 @@ builder.Services.AddAuthorization(options =>
 
     options.AddPolicy("CanManageStore", policy =>
         policy.RequireRole("merchant"));
-  
+
+    options.AddPolicy("CanManageAds", policy =>
+        policy.RequireRole("merchant")
+              .RequireAssertion(ctx =>
+              {
+                  var perms = ctx.User.FindFirst("permissions")?.Value ?? "";
+                  return perms.Contains("ManageAds");
+              }));
 
     options.AddPolicy("CanManageUsers", policy =>
         policy.RequireRole("merchant")
               .RequireClaim("role", "Owner"));
 });
+
+// Data Protection (used to encrypt ad-provider access tokens at rest — see ICredentialProtector)
+builder.Services.AddDataProtection();
 
 // Antiforgery (CSRF protection)
 builder.Services.AddAntiforgery(opts =>

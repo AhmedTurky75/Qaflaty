@@ -72,6 +72,7 @@ export class ShellComponent implements OnInit {
       { name: 'Promo Codes', icon: 'tag', route: '/promo-codes' },
       { name: 'Live Chat', icon: 'message-square', route: '/chat' },
       { name: 'Store Builder', icon: 'layout', route: '/store-builder' },
+      { name: 'Ads Management', icon: 'megaphone', route: '/ads' },
       { name: 'Settings', icon: 'settings', route: '/settings' }
     ];
     if (isStoreOwner) {

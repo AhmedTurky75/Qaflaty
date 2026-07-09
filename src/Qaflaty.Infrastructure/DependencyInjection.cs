@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Qaflaty.Application.Ads.Abstractions;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.Interfaces.Ai;
 using Qaflaty.Infrastructure.Services.Ai;
 using Qaflaty.Application.Identity.Services;
+using Qaflaty.Domain.Ads.Repositories;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Communication.Aggregates.AiInteraction;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
@@ -19,6 +21,8 @@ using Qaflaty.Infrastructure.Persistence;
 using Qaflaty.Infrastructure.Persistence.Interceptors;
 using Qaflaty.Infrastructure.Persistence.Repositories;
 using Qaflaty.Infrastructure.Persistence.Repositories.Communication;
+using Qaflaty.Infrastructure.Services.Ads;
+using Qaflaty.Infrastructure.Services.Ads.Providers;
 using Qaflaty.Infrastructure.Services.Common;
 using Qaflaty.Infrastructure.Services.Identity;
 using Qaflaty.Infrastructure.Services.Ordering;
@@ -78,6 +82,10 @@ public static class DependencyInjection
         services.AddScoped<IPromoCodeRepository, PromoCodeRepository>();
         services.AddScoped<ILayoutVariantRepository, LayoutVariantRepository>();
 
+        // Ads Management Repositories
+        services.AddScoped<IProviderIntegrationRepository, ProviderIntegrationRepository>();
+        services.AddScoped<ITrackingEventRepository, TrackingEventRepository>();
+
         // Identity Services
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<ITokenService, JwtTokenService>();
@@ -104,8 +112,27 @@ public static class DependencyInjection
         services.AddHttpClient<IAiChatCompletionService, OpenAiCompatibleChatCompletionService>(ConfigureAiHttpClient);
         services.AddHttpClient<IAiEmbeddingService, OpenAiCompatibleEmbeddingService>(ConfigureAiHttpClient);
 
+        // Ads Management Services
+        services.AddScoped<ICredentialProtector, DataProtectionCredentialProtector>();
+        services.AddScoped<ITrackingProviderResolver, TrackingProviderResolver>();
+        services.AddScoped<IEventDispatcher, EventDispatcherService>();
+        services.AddScoped<ITrackingLogger, TrackingLoggerService>();
+        services.AddScoped<IProviderConfiguration, ProviderConfigurationService>();
+        services.AddScoped<IProviderVerifier, ProviderVerifierService>();
+        services.AddScoped<IDiagnosticsService, DiagnosticsService>();
+        services.AddSingleton<IEventQueue, ChannelEventQueue>();
+
+        services.AddHttpClient<MetaTrackingProvider>();
+        services.AddScoped<ITrackingProvider>(sp => sp.GetRequiredService<MetaTrackingProvider>());
+        services.AddScoped<ITrackingProvider, TikTokTrackingProvider>();
+        services.AddScoped<ITrackingProvider, SnapchatTrackingProvider>();
+        services.AddScoped<ITrackingProvider, Ga4TrackingProvider>();
+        services.AddScoped<ITrackingProvider, GoogleAdsTrackingProvider>();
+        services.AddScoped<ITrackingProvider, GtmTrackingProvider>();
+
         // Background Services
         services.AddHostedService<GuestCartCleanupService>();
+        services.AddHostedService<TrackingRetryWorker>();
 
         return services;
     }

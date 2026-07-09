@@ -1,0 +1,36 @@
+<div class="py-6">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">Ads Management</h1>
+    <nav class="mt-2" aria-label="Breadcrumb">
+      <ol class="flex items-center space-x-2 text-sm text-gray-500">
+        <li><a routerLink="/dashboard" class="hover:text-gray-700">Dashboard</a></li>
+        <li><span class="mx-2">/</span></li>
+        <li class="text-gray-900">Ads Management</li>
+      </ol>
+    </nav>
+  </div>
+
+  <div class="flex flex-col lg:flex-row gap-6">
+    <div class="lg:w-64 flex-shrink-0">
+      <nav class="bg-white rounded-lg shadow">
+        <div class="p-2 space-y-1">
+          @for (item of navigation; track item.path) {
+            <a
+              [routerLink]="item.path"
+              routerLinkActive="bg-primary-50 text-primary-700"
+              [routerLinkActiveOptions]="{ exact: false }"
+              class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+            >
+              <span class="w-6 mr-3 text-lg">{{ item.icon }}</span>
+              {{ item.name }}
+            </a>
+          }
+        </div>
+      </nav>
+    </div>
+
+    <div class="flex-1 min-w-0">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

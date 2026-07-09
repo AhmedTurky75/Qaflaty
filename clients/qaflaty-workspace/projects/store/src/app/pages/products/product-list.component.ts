@@ -10,6 +10,7 @@ import { Product, ProductFilter, ProductSortBy } from '../../models/product.mode
 import { Category } from '../../models/category.model';
 import { ProductCardComponent } from '../../components/products/product-card.component';
 import { I18nService } from '../../services/i18n.service';
+import { TrackingService } from '../../services/tracking.service';
 import { FilterablePropertyDefinition } from 'shared';
 
 @Component({
@@ -27,6 +28,7 @@ export class ProductListComponent {
   readonly i18n = inject(I18nService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private tracking = inject(TrackingService);
 
   readonly ALL_SORT_OPTIONS = [
     { value: ProductSortBy.Newest, label: 'Newest' },
@@ -169,6 +171,9 @@ export class ProductListComponent {
         this.totalCount.set(result.totalCount);
         this.totalPages.set(result.totalPages);
         this.loading.set(false);
+        if (filter.search) {
+          this.tracking.track('Search', { customerRef: filter.search });
+        }
       },
       error: (error) => {
         console.error('Failed to load products:', error);

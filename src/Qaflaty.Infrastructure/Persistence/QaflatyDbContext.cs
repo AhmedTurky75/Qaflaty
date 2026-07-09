@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Qaflaty.Domain.Ads.Aggregates.ProviderIntegration;
+using Qaflaty.Domain.Ads.Aggregates.TrackingEvent;
 using Qaflaty.Domain.Catalog.Aggregates.Category;
 using Qaflaty.Domain.Catalog.Aggregates.City;
 using Qaflaty.Domain.Catalog.Aggregates.PaymentMethodDefinition;
@@ -85,6 +87,11 @@ public class QaflatyDbContext : DbContext
     public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<AiInteractionLog> AiInteractionLogs => Set<AiInteractionLog>();
+
+    // Ads
+    public DbSet<ProviderIntegration> ProviderIntegrations => Set<ProviderIntegration>();
+    public DbSet<TrackingEvent> TrackingEvents => Set<TrackingEvent>();
+    public DbSet<TrackingDispatchLog> TrackingDispatchLogs => Set<TrackingDispatchLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
