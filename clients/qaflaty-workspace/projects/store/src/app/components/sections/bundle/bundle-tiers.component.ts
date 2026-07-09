@@ -1,7 +1,8 @@
-import { Component, input, computed, inject } from '@angular/core';
+import { Component, input, signal, computed, inject, effect } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 import { Product } from '../../../models/product.model';
 import { CartService } from '../../../services/cart.service';
+import { ProductService } from '../../../services/product.service';
 import { I18nService } from '../../../services/i18n.service';
 import { StorePricePipe } from '../../../pipes/store-price.pipe';
 
@@ -26,7 +27,7 @@ interface Tier {
   standalone: true,
   imports: [StorePricePipe],
   template: `
-    @if (product(); as prod) {
+    @if (effectiveProduct(); as prod) {
       <div class="max-w-2xl mx-auto px-4 py-10">
         @if (title()) {
           <h2 class="text-xl md:text-2xl font-bold text-gray-900 text-center mb-6">{{ title() }}</h2>
@@ -62,11 +63,30 @@ export class BundleTiersComponent {
 
   private cart = inject(CartService);
   private i18n = inject(I18nService);
+  private productService = inject(ProductService);
+
+  private fetched = signal<Product | null>(null);
+  private lastSlug = '';
 
   private content = computed<any>(() => {
     try { return this.config().contentJson ? JSON.parse(this.config().contentJson!) : {}; }
     catch { return {}; }
   });
+
+  private productSlug = computed(() => (this.content().productSlug || '').trim());
+  effectiveProduct = computed(() => this.product() ?? this.fetched());
+
+  constructor() {
+    effect(() => {
+      const slug = this.productSlug();
+      if (this.product() || !slug || slug === this.lastSlug) return;
+      this.lastSlug = slug;
+      this.productService.getProductBySlug(slug).subscribe({
+        next: (p) => this.fetched.set(p),
+        error: () => this.fetched.set(null)
+      });
+    });
+  }
 
   private tr(field: any): string {
     return (this.i18n.currentLanguage() === 'ar' ? field?.ar : field?.en) || '';
@@ -75,7 +95,7 @@ export class BundleTiersComponent {
   title = computed(() => this.tr(this.content().title));
 
   tiers = computed<Tier[]>(() => {
-    const price = this.product()?.price ?? 0;
+    const price = this.effectiveProduct()?.price ?? 0;
     const raw: any[] = Array.isArray(this.content().tiers) ? this.content().tiers : [];
     return raw
       .filter(t => Number(t.qty) > 0)
@@ -92,8 +112,9 @@ export class BundleTiersComponent {
   });
 
   add(qty: number): void {
-    const p = this.product();
-    if (!p || (p.hasVariants ?? false)) {
+    const p = this.effectiveProduct();
+    if (!p) return;
+    if (p.hasVariants ?? false) {
       document.getElementById('buy-box')?.scrollIntoView({ behavior: 'smooth' });
       return;
     }

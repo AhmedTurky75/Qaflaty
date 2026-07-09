@@ -1,21 +1,23 @@
-import { Component, input, computed, inject } from '@angular/core';
+import { Component, input, signal, computed, inject, effect } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 import { Product } from '../../../models/product.model';
 import { CartService } from '../../../services/cart.service';
+import { ProductService } from '../../../services/product.service';
 import { I18nService } from '../../../services/i18n.service';
 import { StorePricePipe } from '../../../pipes/store-price.pipe';
 
 /**
  * Sticky mobile buy-bar pinned to the bottom of the viewport (mobile only).
- * Content model: { buttonText:{en,ar} }. Product-aware; adds to cart and opens
- * the cart. Landing pages already reserve bottom padding for it.
+ * Content model: { productSlug, buttonText:{en,ar} }. Uses the page's product
+ * when present, else the product named by `productSlug`, so it works on the
+ * home page and custom pages too. Adds to cart and opens the cart.
  */
 @Component({
   selector: 'app-sticky-buy-bar',
   standalone: true,
   imports: [StorePricePipe],
   template: `
-    @if (product(); as prod) {
+    @if (effectiveProduct(); as prod) {
       <div class="md:hidden fixed inset-x-0 bottom-0 z-40 bg-white border-t border-gray-200 shadow-[0_-2px_10px_rgba(0,0,0,0.06)] px-4 py-3 flex items-center gap-3">
         <div class="min-w-0">
           <p class="text-xs text-gray-500 truncate">{{ name() }}</p>
@@ -35,14 +37,33 @@ export class StickyBuyBarComponent {
 
   private cart = inject(CartService);
   private i18n = inject(I18nService);
+  private productService = inject(ProductService);
+
+  private fetched = signal<Product | null>(null);
+  private lastSlug = '';
 
   private content = computed<any>(() => {
     try { return this.config().contentJson ? JSON.parse(this.config().contentJson!) : {}; }
     catch { return {}; }
   });
 
+  private productSlug = computed(() => (this.content().productSlug || '').trim());
+  effectiveProduct = computed(() => this.product() ?? this.fetched());
+
+  constructor() {
+    effect(() => {
+      const slug = this.productSlug();
+      if (this.product() || !slug || slug === this.lastSlug) return;
+      this.lastSlug = slug;
+      this.productService.getProductBySlug(slug).subscribe({
+        next: (p) => this.fetched.set(p),
+        error: () => this.fetched.set(null)
+      });
+    });
+  }
+
   name = computed(() => {
-    const p = this.product();
+    const p = this.effectiveProduct();
     return p ? this.i18n.nameFor(p.name, p.nameAr) : '';
   });
 
@@ -53,8 +74,9 @@ export class StickyBuyBarComponent {
   });
 
   add(): void {
-    const p = this.product();
-    if (!p || (p.hasVariants ?? false)) {
+    const p = this.effectiveProduct();
+    if (!p) return;
+    if (p.hasVariants ?? false) {
       // With variants, send them to the buy box to choose an option.
       document.getElementById('buy-box')?.scrollIntoView({ behavior: 'smooth' });
       return;

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { PageConfigurationDto, SectionConfigurationDto, PageSeoSettings } from 'shared';
 import { MediaService } from '../products/services/media.service';
+import { ProductService } from '../products/services/product.service';
 import { RichTextEditorComponent } from './rich-text-editor.component';
 
 interface SectionVariant {
@@ -1218,7 +1219,18 @@ interface PageTemplate {
                   }
                   @case ('OrderForm') {
                     <div class="space-y-3">
-                      <p class="text-[11px] text-gray-400">Shows on product landing pages. Adds the product to cart; "Buy Now" goes to checkout.</p>
+                      <p class="text-[11px] text-gray-400">Adds the product to cart; "Buy Now" goes to checkout.</p>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Product</label>
+                        <select #ofProd class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          [value]="getContent(section)?.productSlug || ''" (change)="setContentField(section, 'productSlug', ofProd.value)">
+                          <option value="">Use the page's product (product pages only)</option>
+                          @for (p of productOptions(); track p.slug) {
+                            <option [value]="p.slug">{{ p.name }}</option>
+                          }
+                        </select>
+                        <p class="text-[11px] text-gray-400 mt-1">Pick a product to use this on the home page or a custom page. On a product page, leave it to use that product.</p>
+                      </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
                           <label class="block text-xs font-medium text-gray-700 mb-1">Heading (EN)</label>
@@ -1257,7 +1269,18 @@ interface PageTemplate {
                   }
                   @case ('StickyBar') {
                     <div class="space-y-3">
-                      <p class="text-[11px] text-gray-400">Pinned to the bottom on mobile only, on product landing pages.</p>
+                      <p class="text-[11px] text-gray-400">Pinned to the bottom on mobile only.</p>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Product</label>
+                        <select #sbProd class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          [value]="getContent(section)?.productSlug || ''" (change)="setContentField(section, 'productSlug', sbProd.value)">
+                          <option value="">Use the page's product (product pages only)</option>
+                          @for (p of productOptions(); track p.slug) {
+                            <option [value]="p.slug">{{ p.name }}</option>
+                          }
+                        </select>
+                        <p class="text-[11px] text-gray-400 mt-1">Pick a product to use this on the home page or a custom page.</p>
+                      </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
                           <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
@@ -1275,6 +1298,17 @@ interface PageTemplate {
                   @case ('Bundle') {
                     <div class="space-y-4">
                       <p class="text-[11px] text-gray-400">Quantity tiers add N of the product to the cart. The badge is marketing text — actual per-bundle discounts still need a promo rule.</p>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Product</label>
+                        <select #buProd class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          [value]="getContent(section)?.productSlug || ''" (change)="setContentField(section, 'productSlug', buProd.value)">
+                          <option value="">Use the page's product (product pages only)</option>
+                          @for (p of productOptions(); track p.slug) {
+                            <option [value]="p.slug">{{ p.name }}</option>
+                          }
+                        </select>
+                        <p class="text-[11px] text-gray-400 mt-1">Pick a product to use this on the home page or a custom page.</p>
+                      </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
                           <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
@@ -1742,6 +1776,10 @@ export class SectionEditorComponent implements OnInit {
   videoUploadError = signal<string | null>(null);
 
   private mediaService = inject(MediaService);
+  private productService = inject(ProductService);
+
+  /** Products for the product-bound section pickers (Order Form / Bundle / Sticky Bar). */
+  productOptions = signal<{ slug: string; name: string }[]>([]);
 
   readonly sectionTypes: SectionTypeInfo[] = [
     { key: 'Hero', label: 'Hero Banner', description: 'Top hero section', defaultVariantId: 'hero-full-image' },
@@ -1768,9 +1806,9 @@ export class SectionEditorComponent implements OnInit {
     { key: 'Stats', label: 'Stats / Counters', description: 'Animated numbers', defaultVariantId: 'stats-standard' },
     { key: 'Comparison', label: 'Comparison Table', description: 'Us vs. others', defaultVariantId: 'comparison-standard' },
     { key: 'BeforeAfter', label: 'Before / After', description: 'Image comparison slider', defaultVariantId: 'before-after-standard' },
-    { key: 'OrderForm', label: 'Order Form', description: 'Inline buy box (product pages)', defaultVariantId: 'order-form' },
-    { key: 'StickyBar', label: 'Sticky Buy Bar', description: 'Mobile bottom bar (product pages)', defaultVariantId: 'sticky-bar' },
-    { key: 'Bundle', label: 'Bundle Offers', description: 'Quantity tiers (product pages)', defaultVariantId: 'bundle-tiers' },
+    { key: 'OrderForm', label: 'Order Form', description: 'Inline buy box for a product', defaultVariantId: 'order-form' },
+    { key: 'StickyBar', label: 'Sticky Buy Bar', description: 'Mobile bottom buy bar', defaultVariantId: 'sticky-bar' },
+    { key: 'Bundle', label: 'Bundle Offers', description: 'Quantity offer tiers', defaultVariantId: 'bundle-tiers' },
   ];
 
   private readonly sectionVariants: Record<string, SectionVariant[]> = {
@@ -1949,6 +1987,16 @@ export class SectionEditorComponent implements OnInit {
     if (this.page?.seoSettings) {
       this.localSeoSettings = JSON.parse(JSON.stringify(this.page.seoSettings));
     }
+    this.loadProductOptions();
+  }
+
+  private loadProductOptions(): void {
+    const storeId = this.page?.storeId;
+    if (!storeId) return;
+    this.productService.getProducts(storeId, { limit: 200 }).subscribe({
+      next: (res) => this.productOptions.set(res.items.map(p => ({ slug: p.slug, name: p.name }))),
+      error: () => { /* pickers will show no options */ }
+    });
   }
 
   /** Notify listeners (live preview) that the working section list changed. */
