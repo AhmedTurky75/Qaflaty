@@ -41,6 +41,7 @@ import { BeforeAfterStandardComponent } from './before-after/before-after-standa
 import { OrderFormComponent } from './order-form/order-form.component';
 import { StickyBuyBarComponent } from './sticky-bar/sticky-buy-bar.component';
 import { BundleTiersComponent } from './bundle/bundle-tiers.component';
+import { MarqueeBarComponent } from './marquee/marquee-bar.component';
 
 @Component({
   selector: 'app-section-renderer',
@@ -61,7 +62,7 @@ import { BundleTiersComponent } from './bundle/bundle-tiers.component';
     SliderStandardComponent, VideoYoutubeComponent, AnnouncementBarComponent,
     CountdownTimerComponent, RichTextComponent, CtaButtonComponent,
     StatsStandardComponent, ComparisonStandardComponent, BeforeAfterStandardComponent,
-    OrderFormComponent, StickyBuyBarComponent, BundleTiersComponent
+    OrderFormComponent, StickyBuyBarComponent, BundleTiersComponent, MarqueeBarComponent
   ],
   template: `
     @for (section of sections(); track section.id) {
@@ -106,6 +107,7 @@ import { BundleTiersComponent } from './bundle/bundle-tiers.component';
             @case ('stats-standard') { <app-stats-standard [config]="section" /> }
             @case ('comparison-standard') { <app-comparison-standard [config]="section" /> }
             @case ('before-after-standard') { <app-before-after-standard [config]="section" /> }
+            @case ('marquee-standard') { <app-marquee-bar [config]="section" /> }
             @case ('order-form') { <app-order-form [config]="section" [product]="product()" /> }
             @case ('sticky-bar') { <app-sticky-buy-bar [config]="section" [product]="product()" /> }
             @case ('bundle-tiers') { <app-bundle-tiers [config]="section" [product]="product()" /> }
