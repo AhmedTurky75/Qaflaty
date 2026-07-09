@@ -1217,6 +1217,59 @@ interface PageTemplate {
                       </div>
                     </div>
                   }
+                  @case ('Marquee') {
+                    <div class="space-y-4">
+                      <p class="text-[11px] text-gray-400">A bar with text that scrolls forever. Direction follows the store language automatically.</p>
+                      <div class="grid grid-cols-3 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Speed</label>
+                          <select #mqSpeed class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                            [value]="getContent(section)?.speed || 'normal'" (change)="setContentField(section, 'speed', mqSpeed.value)">
+                            <option value="slow">Slow</option>
+                            <option value="normal">Normal</option>
+                            <option value="fast">Fast</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Background</label>
+                          <input #mqBg type="color" class="h-8 w-full rounded border border-gray-300 cursor-pointer p-0.5"
+                            [value]="getContent(section)?.bg || '#111827'" (input)="setContentField(section, 'bg', mqBg.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
+                          <input #mqTc type="color" class="h-8 w-full rounded border border-gray-300 cursor-pointer p-0.5"
+                            [value]="getContent(section)?.textColor || '#ffffff'" (input)="setContentField(section, 'textColor', mqTc.value)" />
+                        </div>
+                      </div>
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Separator</label>
+                        <input #mqSep type="text" class="w-24 text-sm px-2 py-1.5 border border-gray-300 rounded-md text-center"
+                          [value]="getContent(section)?.separator || ''" (input)="setContentField(section, 'separator', mqSep.value)" placeholder="•" />
+                      </div>
+                      @for (item of getContentArray(section, 'messages'); track $index; let i = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center justify-between">
+                            <span class="text-xs font-semibold text-gray-500">Message {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'messages', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                          </div>
+                          <div class="grid grid-cols-2 gap-2">
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
+                              <input #mqEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.text?.en || ''" (input)="updateArrayItemBilingual(section, 'messages', i, 'text', 'en', mqEn.value)" placeholder="Free shipping over 500!" />
+                            </div>
+                            <div>
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
+                              <input #mqAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                [value]="item.text?.ar || ''" (input)="updateArrayItemBilingual(section, 'messages', i, 'text', 'ar', mqAr.value)" />
+                            </div>
+                          </div>
+                        </div>
+                      }
+                      <button type="button" (click)="addArrayItem(section, 'messages', { text: { en: '', ar: '' } })"
+                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Message</button>
+                    </div>
+                  }
                   @case ('OrderForm') {
                     <div class="space-y-3">
                       <p class="text-[11px] text-gray-400">Adds the product to cart; "Buy Now" goes to checkout.</p>
@@ -1806,6 +1859,7 @@ export class SectionEditorComponent implements OnInit {
     { key: 'Stats', label: 'Stats / Counters', description: 'Animated numbers', defaultVariantId: 'stats-standard' },
     { key: 'Comparison', label: 'Comparison Table', description: 'Us vs. others', defaultVariantId: 'comparison-standard' },
     { key: 'BeforeAfter', label: 'Before / After', description: 'Image comparison slider', defaultVariantId: 'before-after-standard' },
+    { key: 'Marquee', label: 'Marquee', description: 'Scrolling running-text bar', defaultVariantId: 'marquee-standard' },
     { key: 'OrderForm', label: 'Order Form', description: 'Inline buy box for a product', defaultVariantId: 'order-form' },
     { key: 'StickyBar', label: 'Sticky Buy Bar', description: 'Mobile bottom buy bar', defaultVariantId: 'sticky-bar' },
     { key: 'Bundle', label: 'Bundle Offers', description: 'Quantity offer tiers', defaultVariantId: 'bundle-tiers' },
@@ -1884,6 +1938,9 @@ export class SectionEditorComponent implements OnInit {
     ],
     BeforeAfter: [
       { id: 'before-after-standard', label: 'Standard' }
+    ],
+    Marquee: [
+      { id: 'marquee-standard', label: 'Standard' }
     ],
     OrderForm: [
       { id: 'order-form', label: 'Standard' }

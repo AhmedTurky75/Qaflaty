@@ -28,5 +28,6 @@ public enum SectionType
     BeforeAfter,
     OrderForm,
     StickyBar,
-    Bundle
+    Bundle,
+    Marquee
 }
