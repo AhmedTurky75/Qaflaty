@@ -21,5 +21,7 @@ public record IngestBrowserEventCommand(
     string? CustomerRef,
     string? PageUrl,
     string? CustomerEmail,
-    string? CustomerPhone
+    string? CustomerPhone,
+    string? ClientIpAddress,
+    string? ClientUserAgent
 ) : ICommand;

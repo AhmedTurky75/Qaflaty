@@ -39,8 +39,8 @@ public class IngestBrowserEventCommandHandler : ICommandHandler<IngestBrowserEve
             request.Currency,
             request.Contents?.Select(c => new TrackingContentItem(c.ContentId, c.Quantity, c.Price)).ToList(),
             request.PageUrl,
-            ClientIpAddress: null,
-            ClientUserAgent: null,
+            request.ClientIpAddress,
+            request.ClientUserAgent,
             request.CustomerEmail,
             request.CustomerPhone);
 

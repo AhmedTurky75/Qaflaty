@@ -2,6 +2,8 @@ import { DOCUMENT } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, Renderer2, RendererFactory2, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
+import { GuestSessionService } from './guest-session.service';
+import { CustomerAuthService } from './customer-auth.service';
 
 export type StandardEventType =
   | 'PageView' | 'ViewContent' | 'Search' | 'AddToCart' | 'InitiateCheckout'
@@ -41,6 +43,8 @@ interface TrackingPixelConfigDto {
 export class TrackingService {
   private http = inject(HttpClient);
   private document = inject(DOCUMENT);
+  private guestSession = inject(GuestSessionService);
+  private customerAuth = inject(CustomerAuthService);
   private renderer: Renderer2;
   private initialized = false;
   private metaLoaded = false;
@@ -63,6 +67,11 @@ export class TrackingService {
 
   track(eventType: StandardEventType, options: TrackOptions = {}): string {
     const eventKey = options.eventKey || this.generateEventKey();
+    // Every event needs at least one real matching parameter or Meta/TikTok reject it
+    // ("insufficient customer information"). A stable per-visitor id (the logged-in customer,
+    // or the guest session id everyone already gets) satisfies that for every event, not just
+    // ones that happen to carry an email/phone.
+    const customerRef = options.customerRef ?? this.resolveCustomerRef();
 
     this.fireBrowserPixels(eventType, eventKey, options);
 
@@ -73,13 +82,18 @@ export class TrackingService {
       currency: options.currency,
       contents: options.contents,
       orderId: options.orderId,
-      customerRef: options.customerRef,
+      customerRef,
       pageUrl: options.pageUrl ?? this.document.location.href,
       customerEmail: options.customerEmail,
       customerPhone: options.customerPhone
     }).subscribe({ next: () => {}, error: () => {} });
 
     return eventKey;
+  }
+
+  private resolveCustomerRef(): string {
+    const customer = this.customerAuth.customer();
+    return customer ? customer.id : this.guestSession.getOrCreateGuestId();
   }
 
   private fireBrowserPixels(eventType: StandardEventType, eventKey: string, options: TrackOptions): void {

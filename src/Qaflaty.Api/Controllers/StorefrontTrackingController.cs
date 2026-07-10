@@ -48,6 +48,8 @@ public class StorefrontTrackingController : ApiController
         if (!Enum.TryParse<TrackingEventType>(request.EventType, true, out var eventType))
             return BadRequest(new { error = "Ads.InvalidEventType", message = $"Unknown event type '{request.EventType}'" });
 
+        var userAgent = Request.Headers["User-Agent"].ToString();
+
         var command = new IngestBrowserEventCommand(
             _tenantContext.CurrentStoreId.Value.Value,
             request.EventKey,
@@ -59,10 +61,26 @@ public class StorefrontTrackingController : ApiController
             request.CustomerRef,
             request.PageUrl,
             request.CustomerEmail,
-            request.CustomerPhone);
+            request.CustomerPhone,
+            GetClientIpAddress(),
+            string.IsNullOrEmpty(userAgent) ? null : userAgent);
 
         var result = await Sender.Send(command, ct);
         return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Real visitor IP for Conversions API matching. Prefers X-Forwarded-For (set by a reverse
+    /// proxy/load balancer in front of the API) over the raw connection IP, since behind a proxy
+    /// RemoteIpAddress is the proxy's own address, not the visitor's.
+    /// </summary>
+    private string? GetClientIpAddress()
+    {
+        var forwardedFor = Request.Headers["X-Forwarded-For"].ToString();
+        if (!string.IsNullOrWhiteSpace(forwardedFor))
+            return forwardedFor.Split(',')[0].Trim();
+
+        return HttpContext.Connection.RemoteIpAddress?.ToString();
     }
 }
 
