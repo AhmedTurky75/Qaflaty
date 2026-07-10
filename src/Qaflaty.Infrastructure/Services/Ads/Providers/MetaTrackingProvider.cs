@@ -44,6 +44,12 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
         // events. Sending a test event is the only check that proves live tracking will work.
         // When a Test Event Code is provided, Meta routes the event to Events Manager > Test
         // Events so verification never pollutes real reporting data.
+        //
+        // The event MUST carry a sufficient customer-information parameter or Meta rejects it
+        // with error subcode 2804050 ("insufficient customer information ... unlikely to be
+        // effective for matching"). client_user_agent alone is too weak. We include a hashed
+        // synthetic external_id (a strong, non-broad matching parameter) plus the user agent —
+        // this satisfies the requirement without fabricating a real user's email/phone/IP.
         var body = new GraphEventsRequest
         {
             Data =
@@ -54,7 +60,11 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
                     EventTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                     EventId = $"qaflaty-verify-{Guid.NewGuid()}",
                     ActionSource = "website",
-                    UserData = new GraphUserData { ClientUserAgent = "Qaflaty-Verify/1.0" }
+                    UserData = new GraphUserData
+                    {
+                        ExternalIdHash = HashOrNull($"qaflaty-verify-{pixelId}"),
+                        ClientUserAgent = "Qaflaty-Verify/1.0"
+                    }
                 }
             ],
             TestEventCode = string.IsNullOrWhiteSpace(testEventCode) ? null : testEventCode
@@ -106,6 +116,7 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
                     {
                         EmailHash = HashOrNull(payload.CustomerEmail),
                         PhoneHash = HashOrNull(payload.CustomerPhone),
+                        ExternalIdHash = HashOrNull(payload.CustomerRef),
                         ClientIpAddress = payload.ClientIpAddress,
                         ClientUserAgent = payload.ClientUserAgent
                     },
@@ -192,8 +203,10 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
     {
         [JsonPropertyName("em")] public List<string>? Em => EmailHash is null ? null : [EmailHash];
         [JsonPropertyName("ph")] public List<string>? Ph => PhoneHash is null ? null : [PhoneHash];
+        [JsonPropertyName("external_id")] public List<string>? ExternalId => ExternalIdHash is null ? null : [ExternalIdHash];
         [JsonIgnore] public string? EmailHash { get; set; }
         [JsonIgnore] public string? PhoneHash { get; set; }
+        [JsonIgnore] public string? ExternalIdHash { get; set; }
         [JsonPropertyName("client_ip_address")] public string? ClientIpAddress { get; set; }
         [JsonPropertyName("client_user_agent")] public string? ClientUserAgent { get; set; }
     }
