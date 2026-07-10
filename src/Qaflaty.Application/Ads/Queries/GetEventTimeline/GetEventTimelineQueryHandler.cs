@@ -18,7 +18,7 @@ public class GetEventTimelineQueryHandler : IQueryHandler<GetEventTimelineQuery,
 
     public async Task<Result<EventTimelineDto>> Handle(GetEventTimelineQuery request, CancellationToken cancellationToken)
     {
-        var orderId = OrderId.From(request.OrderId);
+        var orderId = new OrderId(request.OrderId);
         var events = await _trackingEventRepository.GetByOrderIdAsync(orderId, cancellationToken);
 
         var ordered = events

@@ -24,7 +24,7 @@ public class IngestBrowserEventCommandHandler : ICommandHandler<IngestBrowserEve
     public async Task<Result> Handle(IngestBrowserEventCommand request, CancellationToken cancellationToken)
     {
         var storeId = StoreId.From(request.StoreId);
-        var orderId = request.OrderId.HasValue ? OrderId.From(request.OrderId.Value) : (OrderId?)null;
+        var orderId = request.OrderId.HasValue ? new OrderId(request.OrderId.Value) : (OrderId?)null;
         var correlationId = Guid.NewGuid();
 
         var payload = new TrackingEventPayload(
