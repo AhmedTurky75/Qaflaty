@@ -1,0 +1,86 @@
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm p-4 mb-4 flex flex-wrap gap-3 items-end">
+  <div>
+    <label class="block text-xs font-medium text-gray-600 mb-1">Status</label>
+    <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event)" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm">
+      <option value="">All</option>
+      <option value="Pending">Pending</option>
+      <option value="Processing">Processing</option>
+      <option value="Succeeded">Succeeded</option>
+      <option value="Failed">Failed</option>
+      <option value="DeadLettered">Dead Lettered</option>
+    </select>
+  </div>
+  <div>
+    <label class="block text-xs font-medium text-gray-600 mb-1">Event Type</label>
+    <select [ngModel]="eventTypeFilter()" (ngModelChange)="eventTypeFilter.set($event)" class="border border-gray-300 rounded-md px-3 py-1.5 text-sm">
+      <option value="">All</option>
+      <option value="PageView">PageView</option>
+      <option value="ViewContent">ViewContent</option>
+      <option value="Search">Search</option>
+      <option value="AddToCart">AddToCart</option>
+      <option value="InitiateCheckout">InitiateCheckout</option>
+      <option value="AddPaymentInfo">AddPaymentInfo</option>
+      <option value="Purchase">Purchase</option>
+      <option value="CompleteRegistration">CompleteRegistration</option>
+      <option value="Contact">Contact</option>
+    </select>
+  </div>
+  <button type="button" (click)="applyFilters()" class="px-4 py-1.5 text-sm font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700">
+    Apply
+  </button>
+</div>
+
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-x-auto">
+  <table class="w-full text-sm">
+    <thead class="bg-gray-50 text-gray-500 text-left">
+      <tr>
+        <th class="px-4 py-2">Date</th>
+        <th class="px-4 py-2">Provider</th>
+        <th class="px-4 py-2">Event</th>
+        <th class="px-4 py-2">Order</th>
+        <th class="px-4 py-2">Channel</th>
+        <th class="px-4 py-2">Status</th>
+        <th class="px-4 py-2">Duration</th>
+        <th class="px-4 py-2">Response</th>
+        <th class="px-4 py-2"></th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-gray-100">
+      @for (row of rows(); track row.dispatchLogId + row.trackingEventId) {
+        <tr>
+          <td class="px-4 py-2 whitespace-nowrap text-gray-500">{{ row.date | date:'short' }}</td>
+          <td class="px-4 py-2 font-medium text-gray-900">{{ row.provider }}</td>
+          <td class="px-4 py-2">{{ row.eventType }}</td>
+          <td class="px-4 py-2 text-gray-500 font-mono text-xs">{{ row.orderId ? (row.orderId | slice:0:8) : '—' }}</td>
+          <td class="px-4 py-2">{{ row.channel }}</td>
+          <td class="px-4 py-2 font-medium" [ngClass]="statusColor(row.status)">{{ row.status }}</td>
+          <td class="px-4 py-2 text-gray-500">{{ row.durationMs ?? '—' }}ms</td>
+          <td class="px-4 py-2 text-gray-500 max-w-xs truncate" [title]="row.responseBody || row.errorMessage || ''">
+            {{ row.errorMessage || row.responseBody || '—' }}
+          </td>
+          <td class="px-4 py-2">
+            @if (canReplay(row)) {
+              <button
+                type="button" (click)="replay(row)" [disabled]="replaying() === row.dispatchLogId"
+                class="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50"
+              >
+                {{ replaying() === row.dispatchLogId ? 'Replaying...' : 'Replay' }}
+              </button>
+            }
+          </td>
+        </tr>
+      } @empty {
+        <tr><td colspan="9" class="px-4 py-8 text-center text-gray-500">No events logged yet.</td></tr>
+      }
+    </tbody>
+  </table>
+</div>
+
+<div class="flex items-center justify-between mt-3 text-sm text-gray-500">
+  <span>{{ totalCount() }} total</span>
+  <div class="flex gap-2">
+    <button type="button" (click)="prevPage()" [disabled]="pageNumber() === 1" class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50">Prev</button>
+    <span>Page {{ pageNumber() }}</span>
+    <button type="button" (click)="nextPage()" [disabled]="pageNumber() * pageSize >= totalCount()" class="px-3 py-1 rounded border border-gray-300 disabled:opacity-50">Next</button>
+  </div>
+</div>

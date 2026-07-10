@@ -28,7 +28,7 @@ export const ADS_ROUTES: Routes = [
       },
       {
         path: 'logs',
-        loadComponent: () => import('./logs/ads-logs.component').then(m => m.AdsLogsComponent)
+        loadComponent: () => import('./event-logs/ads-logs.component').then(m => m.AdsLogsComponent)
       },
       {
         path: 'monitoring',
