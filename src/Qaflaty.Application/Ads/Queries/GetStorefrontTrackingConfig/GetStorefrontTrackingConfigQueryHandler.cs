@@ -28,7 +28,9 @@ public class GetStorefrontTrackingConfigQueryHandler : IQueryHandler<GetStorefro
         var integrations = await _integrationRepository.GetByStoreIdAsync(storeId, cancellationToken);
 
         var dtos = new List<TrackingPixelConfigDto>();
-        foreach (var integration in integrations.Where(i => i.IsActive && i.BrowserTrackingEnabled))
+        // IsDispatchable so the browser pixel keeps loading even if server-side dispatch has
+        // errored — the two channels are independent, and a CAPI failure shouldn't blind the pixel.
+        foreach (var integration in integrations.Where(i => i.IsDispatchable && i.BrowserTrackingEnabled))
         {
             try
             {

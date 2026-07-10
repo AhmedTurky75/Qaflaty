@@ -92,6 +92,33 @@ public class EventDispatcherServiceTests
     }
 
     [Fact]
+    public async Task DispatchAsync_AfterAProviderErrors_StillDispatchesToItOnTheNextEvent()
+    {
+        // Regression: a single failed send used to flip the provider to Error, and Error was
+        // treated as inactive, so every subsequent event skipped the provider ("No Providers
+        // Enabled"). An errored-but-connected provider must keep receiving dispatch attempts.
+        var storeId = StoreId.New();
+        var integration = EnabledIntegration(storeId, AdProvider.Meta);
+        var integrationRepo = new InMemoryProviderIntegrationRepository(integration);
+        var trackingRepo = new InMemoryTrackingEventRepository();
+        var failingProvider = new StubTrackingProvider(AdProvider.Meta, succeeds: false);
+        var dispatcher = new EventDispatcherService(
+            integrationRepo, trackingRepo, new FakeTrackingProviderResolver(failingProvider), new FakeProviderConfiguration(),
+            new TrackingLoggerService(), new FakeEventQueue(), new NoOpUnitOfWork(), NullLogger<EventDispatcherService>.Instance);
+
+        await dispatcher.DispatchAsync(Payload(storeId, Guid.NewGuid()), CancellationToken.None);
+        Assert.Equal(IntegrationStatus.Error, integration.Status); // first send failed -> Error
+
+        await dispatcher.DispatchAsync(Payload(storeId, Guid.NewGuid()), CancellationToken.None);
+
+        // The second event must still have produced a Meta dispatch attempt, not zero logs.
+        Assert.Equal(2, trackingRepo.Store.Count);
+        Assert.Single(trackingRepo.Store[1].DispatchLogs);
+        Assert.Equal(AdProvider.Meta, trackingRepo.Store[1].DispatchLogs[0].Provider);
+        Assert.Equal(2, failingProvider.SendCallCount);
+    }
+
+    [Fact]
     public async Task DispatchAsync_NoEnabledProviders_StillRecordsTheEventForTheTimeline()
     {
         var storeId = StoreId.New();
