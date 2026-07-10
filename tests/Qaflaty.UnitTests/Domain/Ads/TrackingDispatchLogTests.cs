@@ -1,5 +1,6 @@
 using Qaflaty.Domain.Ads.Aggregates.TrackingEvent;
 using Qaflaty.Domain.Ads.Enums;
+using Qaflaty.Domain.Common.Identifiers;
 using Xunit;
 
 namespace Qaflaty.UnitTests.Domain.Ads;
@@ -9,7 +10,7 @@ public class TrackingDispatchLogTests
     [Fact]
     public void Create_StartsPendingWithNoAttempts()
     {
-        var log = TrackingDispatchLog.Create(AdProvider.Meta);
+        var log = TrackingDispatchLog.Create(TrackingEventId.New(), AdProvider.Meta);
 
         Assert.Equal(DispatchStatus.Pending, log.Status);
         Assert.Equal(0, log.AttemptCount);
@@ -19,7 +20,7 @@ public class TrackingDispatchLogTests
     [Fact]
     public void MarkProcessing_IncrementsAttemptCountAndSetsProcessingStatus()
     {
-        var log = TrackingDispatchLog.Create(AdProvider.Meta);
+        var log = TrackingDispatchLog.Create(TrackingEventId.New(), AdProvider.Meta);
 
         log.MarkProcessing();
 
@@ -31,7 +32,7 @@ public class TrackingDispatchLogTests
     [Fact]
     public void MarkSucceeded_ClearsErrorAndNextRetry()
     {
-        var log = TrackingDispatchLog.Create(AdProvider.Meta);
+        var log = TrackingDispatchLog.Create(TrackingEventId.New(), AdProvider.Meta);
         log.MarkProcessing();
         log.MarkFailed(50, 500, "server error", "boom"); // give it something to clear
 
@@ -48,7 +49,7 @@ public class TrackingDispatchLogTests
     [Fact]
     public void MarkFailed_BeforeMaxAttempts_SchedulesExponentialBackoff()
     {
-        var log = TrackingDispatchLog.Create(AdProvider.Meta);
+        var log = TrackingDispatchLog.Create(TrackingEventId.New(), AdProvider.Meta);
         var before = DateTime.UtcNow;
 
         log.MarkProcessing(); // attempt 1
@@ -62,7 +63,7 @@ public class TrackingDispatchLogTests
     [Fact]
     public void MarkFailed_AtFifthAttempt_DeadLetters()
     {
-        var log = TrackingDispatchLog.Create(AdProvider.Meta);
+        var log = TrackingDispatchLog.Create(TrackingEventId.New(), AdProvider.Meta);
 
         for (var i = 0; i < 4; i++)
         {
@@ -82,7 +83,7 @@ public class TrackingDispatchLogTests
     [Fact]
     public void Replay_ResetsDeadLetteredLogToPending()
     {
-        var log = TrackingDispatchLog.Create(AdProvider.Meta);
+        var log = TrackingDispatchLog.Create(TrackingEventId.New(), AdProvider.Meta);
         for (var i = 0; i < 5; i++)
         {
             log.MarkProcessing();

@@ -49,7 +49,7 @@ public class TrackingEventConfiguration : IEntityTypeConfiguration<TrackingEvent
 
         builder.HasMany(t => t.DispatchLogs)
             .WithOne()
-            .HasForeignKey("TrackingEventId")
+            .HasForeignKey(l => l.TrackingEventId)
             .OnDelete(DeleteBehavior.Cascade);
 
         builder.Ignore(t => t.DomainEvents);

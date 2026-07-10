@@ -64,7 +64,7 @@ public sealed class TrackingEvent : AggregateRoot<TrackingEventId>
 
     public TrackingDispatchLog QueueDispatch(AdProvider provider)
     {
-        var log = TrackingDispatchLog.Create(provider);
+        var log = TrackingDispatchLog.Create(Id, provider);
         _dispatchLogs.Add(log);
         return log;
     }

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Qaflaty.Domain.Ads.Aggregates.TrackingEvent;
+using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Infrastructure.Persistence.Configurations.Ads;
 
@@ -12,6 +13,10 @@ public class TrackingDispatchLogConfiguration : IEntityTypeConfiguration<Trackin
 
         builder.HasKey(l => l.Id);
         builder.Property(l => l.Id).HasColumnName("id").ValueGeneratedNever();
+
+        builder.Property(l => l.TrackingEventId)
+            .HasConversion(id => id.Value, value => new TrackingEventId(value))
+            .HasColumnName("tracking_event_id");
 
         builder.Property(l => l.Provider)
             .HasColumnName("provider")
@@ -31,7 +36,7 @@ public class TrackingDispatchLogConfiguration : IEntityTypeConfiguration<Trackin
         builder.Property(l => l.CreatedAt).HasColumnName("created_at");
         builder.Property(l => l.UpdatedAt).HasColumnName("updated_at");
 
-        builder.HasIndex("TrackingEventId");
+        builder.HasIndex(l => l.TrackingEventId);
         builder.HasIndex(l => l.NextRetryAt);
         builder.HasIndex(l => l.Status);
     }
