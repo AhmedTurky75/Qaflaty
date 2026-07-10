@@ -95,7 +95,9 @@ export class App implements OnInit {
           .subscribe({ next: () => {}, error: () => {} });
 
         this.trackingService.init();
-        this.trackingService.track('PageView');
+        // NavigationEnd fires for the initial route too, so this alone covers both the
+        // first page load and every subsequent navigation — an extra explicit call here
+        // would double-track the first PageView.
         this.router.events.pipe(
           filter((event): event is NavigationEnd => event instanceof NavigationEnd)
         ).subscribe(() => this.trackingService.track('PageView'));
