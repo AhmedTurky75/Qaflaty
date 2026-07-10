@@ -66,6 +66,10 @@ public class MetaTrackingProviderTests
         Assert.Equal(HttpMethod.Post, handler.LastRequest!.Method);
         Assert.Contains("/1234567890/events", handler.LastRequest!.RequestUri!.ToString());
         Assert.Contains("\"event_name\":\"PageView\"", handler.LastRequestBody);
+        // Must carry a customer-information parameter or Meta rejects with subcode 2804050.
+        Assert.Contains("\"external_id\":[", handler.LastRequestBody);
+        // A PageView carries no commerce data, so no empty custom_data object should be sent.
+        Assert.DoesNotContain("custom_data", handler.LastRequestBody);
     }
 
     [Fact]

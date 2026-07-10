@@ -44,6 +44,12 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
         // events. Sending a test event is the only check that proves live tracking will work.
         // When a Test Event Code is provided, Meta routes the event to Events Manager > Test
         // Events so verification never pollutes real reporting data.
+        //
+        // The event MUST carry a sufficient customer-information parameter or Meta rejects it
+        // with error subcode 2804050 ("insufficient customer information ... unlikely to be
+        // effective for matching"). client_user_agent alone is too weak. We include a hashed
+        // synthetic external_id (a strong, non-broad matching parameter) plus the user agent —
+        // this satisfies the requirement without fabricating a real user's email/phone/IP.
         var body = new GraphEventsRequest
         {
             Data =
@@ -54,7 +60,11 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
                     EventTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
                     EventId = $"qaflaty-verify-{Guid.NewGuid()}",
                     ActionSource = "website",
-                    UserData = new GraphUserData { ClientUserAgent = "Qaflaty-Verify/1.0" }
+                    UserData = new GraphUserData
+                    {
+                        ExternalIdHash = HashOrNull($"qaflaty-verify-{pixelId}"),
+                        ClientUserAgent = "Qaflaty-Verify/1.0"
+                    }
                 }
             ],
             TestEventCode = string.IsNullOrWhiteSpace(testEventCode) ? null : testEventCode
@@ -106,16 +116,11 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
                     {
                         EmailHash = HashOrNull(payload.CustomerEmail),
                         PhoneHash = HashOrNull(payload.CustomerPhone),
+                        ExternalIdHash = HashOrNull(payload.CustomerRef),
                         ClientIpAddress = payload.ClientIpAddress,
                         ClientUserAgent = payload.ClientUserAgent
                     },
-                    CustomData = new GraphCustomData
-                    {
-                        Currency = payload.Currency,
-                        Value = payload.Value,
-                        ContentIds = payload.Contents?.Select(c => c.ContentId).ToList(),
-                        Contents = payload.Contents?.Select(c => new GraphContent { Id = c.ContentId, Quantity = c.Quantity }).ToList()
-                    }
+                    CustomData = BuildCustomData(payload)
                 }
             ],
             TestEventCode = string.IsNullOrWhiteSpace(testEventCode) ? null : testEventCode
@@ -124,6 +129,26 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
         return ExecuteAsync(
             () => _httpClient.PostAsJsonAsync($"{pixelId}/events?access_token={Uri.EscapeDataString(accessToken ?? string.Empty)}", body, JsonOptions, ct),
             responseBody => ExtractGraphErrorMessage(responseBody));
+    }
+
+    /// <summary>
+    /// Builds custom_data only when the event actually carries commerce data. Events like
+    /// PageView/Search have none, so we return null and let WhenWritingNull omit the field
+    /// entirely rather than sending an empty "custom_data": {} object.
+    /// </summary>
+    private static GraphCustomData? BuildCustomData(TrackingEventPayload payload)
+    {
+        var hasContents = payload.Contents is { Count: > 0 };
+        if (payload.Value is null && string.IsNullOrEmpty(payload.Currency) && !hasContents)
+            return null;
+
+        return new GraphCustomData
+        {
+            Currency = payload.Currency,
+            Value = payload.Value,
+            ContentIds = payload.Contents?.Select(c => c.ContentId).ToList(),
+            Contents = payload.Contents?.Select(c => new GraphContent { Id = c.ContentId, Quantity = c.Quantity }).ToList()
+        };
     }
 
     private static string? HashOrNull(string? value)
@@ -171,15 +196,17 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
         [JsonPropertyName("action_source")] public string ActionSource { get; set; } = "website";
         [JsonPropertyName("event_source_url")] public string? EventSourceUrl { get; set; }
         [JsonPropertyName("user_data")] public GraphUserData UserData { get; set; } = new();
-        [JsonPropertyName("custom_data")] public GraphCustomData CustomData { get; set; } = new();
+        [JsonPropertyName("custom_data")] public GraphCustomData? CustomData { get; set; }
     }
 
     private sealed class GraphUserData
     {
         [JsonPropertyName("em")] public List<string>? Em => EmailHash is null ? null : [EmailHash];
         [JsonPropertyName("ph")] public List<string>? Ph => PhoneHash is null ? null : [PhoneHash];
+        [JsonPropertyName("external_id")] public List<string>? ExternalId => ExternalIdHash is null ? null : [ExternalIdHash];
         [JsonIgnore] public string? EmailHash { get; set; }
         [JsonIgnore] public string? PhoneHash { get; set; }
+        [JsonIgnore] public string? ExternalIdHash { get; set; }
         [JsonPropertyName("client_ip_address")] public string? ClientIpAddress { get; set; }
         [JsonPropertyName("client_user_agent")] public string? ClientUserAgent { get; set; }
     }
