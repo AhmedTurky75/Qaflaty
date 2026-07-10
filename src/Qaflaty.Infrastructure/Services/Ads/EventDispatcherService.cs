@@ -57,7 +57,9 @@ public sealed class EventDispatcherService : IEventDispatcher
             return; // already dispatched for this logical occurrence — never double-send
 
         var integrations = await _integrationRepository.GetByStoreIdAsync(payload.StoreId, ct);
-        var enabledIntegrations = integrations.Where(i => i.IsActive && i.ServerTrackingEnabled).ToList();
+        // IsDispatchable (not IsActive) so a provider that previously errored still gets retried
+        // rather than silently dropping out of the pipeline after one failure.
+        var enabledIntegrations = integrations.Where(i => i.IsDispatchable && i.ServerTrackingEnabled).ToList();
 
         var createResult = TrackingEventAggregate.Create(
             payload.StoreId,
@@ -121,9 +123,16 @@ public sealed class EventDispatcherService : IEventDispatcher
         log.MarkProcessing();
 
         ProviderDispatchResult result;
-        if (trackingProvider == null || credentials == null)
+        if (trackingProvider == null)
         {
-            result = ProviderDispatchResult.Failure(null, null, "Provider adapter or credentials unavailable", 0);
+            result = ProviderDispatchResult.Failure(null, null, $"No adapter is registered for provider {integration.Provider}", 0);
+        }
+        else if (credentials == null)
+        {
+            // The integration exists but its stored credentials couldn't be read/decrypted —
+            // typically the encryption key ring changed since the token was saved. Reconnecting
+            // the provider re-encrypts the token with the current key.
+            result = ProviderDispatchResult.Failure(null, null, "Credentials missing or could not be decrypted — reconnect this provider", 0);
         }
         else
         {

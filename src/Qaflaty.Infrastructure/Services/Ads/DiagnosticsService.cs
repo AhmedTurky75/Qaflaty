@@ -29,7 +29,9 @@ public sealed class DiagnosticsService : IDiagnosticsService
     {
         var findings = new List<DiagnosticFinding>();
         var integrations = await _integrationRepository.GetByStoreIdAsync(storeId, ct);
-        var activeIntegrations = integrations.Where(i => i.IsActive).ToList();
+        // IsDispatchable so errored providers are still diagnosed (otherwise the Error-status
+        // check below would be dead code — an errored provider would be filtered out first).
+        var activeIntegrations = integrations.Where(i => i.IsDispatchable).ToList();
 
         if (activeIntegrations.Count == 0)
         {

@@ -47,5 +47,6 @@ public class ProviderIntegrationConfiguration : IEntityTypeConfiguration<Provide
 
         builder.Ignore(p => p.DomainEvents);
         builder.Ignore(p => p.IsActive);
+        builder.Ignore(p => p.IsDispatchable);
     }
 }

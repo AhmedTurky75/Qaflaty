@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Qaflaty.Api.Common;
@@ -172,8 +173,16 @@ builder.Services.AddAuthorization(options =>
               .RequireClaim("role", "Owner"));
 });
 
-// Data Protection (used to encrypt ad-provider access tokens at rest — see ICredentialProtector)
-builder.Services.AddDataProtection();
+// Data Protection (used to encrypt ad-provider access tokens at rest — see ICredentialProtector).
+// Persist the key ring to a stable folder and pin the application name so tokens encrypted
+// before an app restart stay decryptable afterward — otherwise a restart rotates the key and
+// every stored provider token becomes unreadable ("reconnect this provider" on dispatch).
+// In production, point this at a durable/shared location (mounted volume, blob, etc.).
+var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, "keys", "dataprotection");
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+    .SetApplicationName("Qaflaty");
 
 // Antiforgery (CSRF protection)
 builder.Services.AddAntiforgery(opts =>

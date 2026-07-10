@@ -20,11 +20,21 @@ public sealed class ProviderConfigurationService : IProviderConfiguration
     public async Task<ProviderCredentialSet?> GetCredentialsAsync(StoreId storeId, AdProvider provider, CancellationToken ct)
     {
         var integration = await _integrationRepository.GetByStoreAndProviderAsync(storeId, provider, ct);
-        if (integration == null || !integration.IsActive)
+        if (integration == null || !integration.IsDispatchable)
             return null;
 
-        var plaintext = _credentialProtector.Unprotect(integration.ProtectedCredentialsJson);
-        var values = JsonSerializer.Deserialize<Dictionary<string, string>>(plaintext) ?? [];
-        return new ProviderCredentialSet(values);
+        try
+        {
+            var plaintext = _credentialProtector.Unprotect(integration.ProtectedCredentialsJson);
+            var values = JsonSerializer.Deserialize<Dictionary<string, string>>(plaintext) ?? [];
+            return new ProviderCredentialSet(values);
+        }
+        catch (Exception)
+        {
+            // A decrypt/parse failure (e.g. the Data Protection key that encrypted this token is
+            // gone) must not crash dispatch — return null so the caller records a clean, actionable
+            // "reconnect this provider" failure instead of a 500.
+            return null;
+        }
     }
 }

@@ -140,4 +140,13 @@ public sealed class ProviderIntegration : AggregateRoot<ProviderIntegrationId>
     }
 
     public bool IsActive => Status is IntegrationStatus.Connected or IntegrationStatus.Verified;
+
+    /// <summary>
+    /// Whether the dispatch pipeline should still attempt this provider. A configured provider
+    /// stays dispatchable even after failures (Status = Error) — the health score and status
+    /// communicate the degradation, but we keep trying so a single transient failure never
+    /// permanently drops the provider from tracking. Only an explicit Disconnect (or a
+    /// never-configured provider) stops dispatch entirely.
+    /// </summary>
+    public bool IsDispatchable => Status is IntegrationStatus.Connected or IntegrationStatus.Verified or IntegrationStatus.Error;
 }
