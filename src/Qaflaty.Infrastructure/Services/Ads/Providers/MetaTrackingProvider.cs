@@ -109,13 +109,7 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
                         ClientIpAddress = payload.ClientIpAddress,
                         ClientUserAgent = payload.ClientUserAgent
                     },
-                    CustomData = new GraphCustomData
-                    {
-                        Currency = payload.Currency,
-                        Value = payload.Value,
-                        ContentIds = payload.Contents?.Select(c => c.ContentId).ToList(),
-                        Contents = payload.Contents?.Select(c => new GraphContent { Id = c.ContentId, Quantity = c.Quantity }).ToList()
-                    }
+                    CustomData = BuildCustomData(payload)
                 }
             ],
             TestEventCode = string.IsNullOrWhiteSpace(testEventCode) ? null : testEventCode
@@ -124,6 +118,26 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
         return ExecuteAsync(
             () => _httpClient.PostAsJsonAsync($"{pixelId}/events?access_token={Uri.EscapeDataString(accessToken ?? string.Empty)}", body, JsonOptions, ct),
             responseBody => ExtractGraphErrorMessage(responseBody));
+    }
+
+    /// <summary>
+    /// Builds custom_data only when the event actually carries commerce data. Events like
+    /// PageView/Search have none, so we return null and let WhenWritingNull omit the field
+    /// entirely rather than sending an empty "custom_data": {} object.
+    /// </summary>
+    private static GraphCustomData? BuildCustomData(TrackingEventPayload payload)
+    {
+        var hasContents = payload.Contents is { Count: > 0 };
+        if (payload.Value is null && string.IsNullOrEmpty(payload.Currency) && !hasContents)
+            return null;
+
+        return new GraphCustomData
+        {
+            Currency = payload.Currency,
+            Value = payload.Value,
+            ContentIds = payload.Contents?.Select(c => c.ContentId).ToList(),
+            Contents = payload.Contents?.Select(c => new GraphContent { Id = c.ContentId, Quantity = c.Quantity }).ToList()
+        };
     }
 
     private static string? HashOrNull(string? value)
@@ -171,7 +185,7 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
         [JsonPropertyName("action_source")] public string ActionSource { get; set; } = "website";
         [JsonPropertyName("event_source_url")] public string? EventSourceUrl { get; set; }
         [JsonPropertyName("user_data")] public GraphUserData UserData { get; set; } = new();
-        [JsonPropertyName("custom_data")] public GraphCustomData CustomData { get; set; } = new();
+        [JsonPropertyName("custom_data")] public GraphCustomData? CustomData { get; set; }
     }
 
     private sealed class GraphUserData

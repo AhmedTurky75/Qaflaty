@@ -66,6 +66,8 @@ public class MetaTrackingProviderTests
         Assert.Equal(HttpMethod.Post, handler.LastRequest!.Method);
         Assert.Contains("/1234567890/events", handler.LastRequest!.RequestUri!.ToString());
         Assert.Contains("\"event_name\":\"PageView\"", handler.LastRequestBody);
+        // A PageView carries no commerce data, so no empty custom_data object should be sent.
+        Assert.DoesNotContain("custom_data", handler.LastRequestBody);
     }
 
     [Fact]
