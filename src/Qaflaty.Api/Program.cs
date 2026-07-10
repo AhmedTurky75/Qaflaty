@@ -164,12 +164,8 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("merchant"));
 
     options.AddPolicy("CanManageAds", policy =>
-        policy.RequireRole("merchant")
-              .RequireAssertion(ctx =>
-              {
-                  var perms = ctx.User.FindFirst("permissions")?.Value ?? "";
-                  return perms.Contains("ManageAds");
-              }));
+        policy.RequireRole("merchant"));
+             
 
     options.AddPolicy("CanManageUsers", policy =>
         policy.RequireRole("merchant")
