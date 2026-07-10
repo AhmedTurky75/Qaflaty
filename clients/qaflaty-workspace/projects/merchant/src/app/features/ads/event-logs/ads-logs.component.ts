@@ -95,6 +95,7 @@ export class AdsLogsComponent {
       case 'Failed': return 'text-red-600';
       case 'DeadLettered': return 'text-red-800';
       case 'Processing': return 'text-blue-600';
+      case 'No Providers Enabled': return 'text-yellow-600';
       default: return 'text-gray-500';
     }
   }
