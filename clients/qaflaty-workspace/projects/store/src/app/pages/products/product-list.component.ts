@@ -172,7 +172,10 @@ export class ProductListComponent {
         this.totalPages.set(result.totalPages);
         this.loading.set(false);
         if (filter.search) {
-          this.tracking.track('Search', { customerRef: filter.search });
+          // customerRef identifies the visitor (fed to Meta as external_id) — it must not carry
+          // the search term itself, or every search corrupts the matching parameter with
+          // unrelated text. Let it default to the visitor id like every other tracked event.
+          this.tracking.track('Search');
         }
       },
       error: (error) => {
