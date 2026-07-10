@@ -8,16 +8,16 @@ interface ProviderMeta {
   id: AdProvider;
   name: string;
   available: boolean;
-  fields: { key: string; label: string; secret?: boolean; optional?: boolean }[];
+  fields: { key: string; label: string; secret?: boolean; optional?: boolean; hint?: string }[];
 }
 
 const PROVIDERS: ProviderMeta[] = [
   {
     id: 'Meta', name: 'Meta Pixel & Conversions API', available: true,
     fields: [
-      { key: 'pixelId', label: 'Pixel ID' },
-      { key: 'accessToken', label: 'Access Token', secret: true },
-      { key: 'testEventCode', label: 'Test Event Code', optional: true }
+      { key: 'pixelId', label: 'Pixel ID', hint: 'Events Manager → your Pixel → Settings (top of the page).' },
+      { key: 'accessToken', label: 'Access Token', secret: true, hint: 'The Conversions API token: Events Manager → Pixel → Settings → Conversions API → Generate access token. Not your Facebook password.' },
+      { key: 'testEventCode', label: 'Test Event Code', optional: true, hint: 'From Events Manager → Test Events. Set it while testing so events land in Test Events (and verification stays out of real reporting). Clear it in production.' }
     ]
   },
   { id: 'TikTok', name: 'TikTok Pixel & Events API', available: false, fields: [{ key: 'pixelId', label: 'Pixel Code' }, { key: 'accessToken', label: 'Access Token', secret: true }] },

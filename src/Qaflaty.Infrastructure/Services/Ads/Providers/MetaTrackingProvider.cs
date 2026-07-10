@@ -32,21 +32,52 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
     {
         var pixelId = credentials.Get("pixelId");
         var accessToken = credentials.Get("accessToken");
+        var testEventCode = credentials.Get("testEventCode");
 
         if (string.IsNullOrWhiteSpace(pixelId) || string.IsNullOrWhiteSpace(accessToken))
             return Result.Failure(new Error("Ads.Meta.MissingCredentials", "Pixel ID and Access Token are required"));
 
+        // Verify by POSTing a minimal event to the SAME /events endpoint the live dispatch uses,
+        // NOT by GETting the pixel node. A Conversions API access token has the "send events"
+        // permission but usually lacks ads_management/read access on the pixel object, so a GET
+        // verify falsely fails with "(#100) Missing Permission" on tokens that can actually send
+        // events. Sending a test event is the only check that proves live tracking will work.
+        // When a Test Event Code is provided, Meta routes the event to Events Manager > Test
+        // Events so verification never pollutes real reporting data.
+        var body = new GraphEventsRequest
+        {
+            Data =
+            [
+                new GraphEvent
+                {
+                    EventName = "PageView",
+                    EventTime = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                    EventId = $"qaflaty-verify-{Guid.NewGuid()}",
+                    ActionSource = "website",
+                    UserData = new GraphUserData { ClientUserAgent = "Qaflaty-Verify/1.0" }
+                }
+            ],
+            TestEventCode = string.IsNullOrWhiteSpace(testEventCode) ? null : testEventCode
+        };
+
         try
         {
-            using var response = await _httpClient.GetAsync(
-                $"{pixelId}?fields=id,name&access_token={Uri.EscapeDataString(accessToken)}", ct);
+            using var response = await _httpClient.PostAsJsonAsync(
+                $"{pixelId}/events?access_token={Uri.EscapeDataString(accessToken)}", body, JsonOptions, ct);
+            var responseBody = await response.Content.ReadAsStringAsync(ct);
 
-            if (response.IsSuccessStatusCode)
+            if (!response.IsSuccessStatusCode)
+            {
+                var message = ExtractGraphErrorMessage(responseBody) ?? $"Meta returned HTTP {(int)response.StatusCode}";
+                return Result.Failure(new Error("Ads.Meta.VerificationFailed", message));
+            }
+
+            var parsed = JsonSerializer.Deserialize<GraphEventsResponse>(responseBody, JsonOptions);
+            if (parsed?.EventsReceived is > 0)
                 return Result.Success();
 
-            var body = await response.Content.ReadAsStringAsync(ct);
-            var message = ExtractGraphErrorMessage(body) ?? $"Meta returned HTTP {(int)response.StatusCode}";
-            return Result.Failure(new Error("Ads.Meta.VerificationFailed", message));
+            return Result.Failure(new Error("Ads.Meta.VerificationFailed",
+                "Meta accepted the request but reported no events received. Double-check the Pixel ID."));
         }
         catch (Exception ex)
         {
@@ -165,6 +196,13 @@ public sealed class MetaTrackingProvider : TrackingProviderBase, ITrackingProvid
     {
         [JsonPropertyName("id")] public string Id { get; set; } = string.Empty;
         [JsonPropertyName("quantity")] public int Quantity { get; set; }
+    }
+
+    private sealed class GraphEventsResponse
+    {
+        [JsonPropertyName("events_received")] public int? EventsReceived { get; set; }
+        [JsonPropertyName("messages")] public List<string>? Messages { get; set; }
+        [JsonPropertyName("fbtrace_id")] public string? FbTraceId { get; set; }
     }
 
     private sealed class GraphErrorEnvelope

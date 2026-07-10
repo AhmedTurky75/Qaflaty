@@ -248,6 +248,12 @@ public interface ITrackingLogger
 
 public interface IProviderVerifier
 {
+    // Verification sends a minimal event through the provider's REAL send path (e.g. Meta's
+    // /events POST) rather than a read/introspection call. A Conversions API token can send
+    // events but often lacks the ads_management permission needed to read the pixel node, so a
+    // GET-based verify would falsely fail on tokens that actually work. Sending an event is the
+    // only check that proves live tracking will succeed. A Test Event Code (when provided)
+    // routes the verify event to the provider's test surface so it never pollutes real data.
     Task<Result> VerifyAsync(StoreId storeId, AdProvider provider, CancellationToken ct);
 }
 

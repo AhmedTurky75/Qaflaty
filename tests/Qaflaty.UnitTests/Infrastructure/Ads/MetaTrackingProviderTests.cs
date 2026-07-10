@@ -53,19 +53,46 @@ public class MetaTrackingProviderTests
     }
 
     [Fact]
-    public async Task VerifyAsync_GraphApiReturns200_Succeeds()
+    public async Task VerifyAsync_PostsAnEventToTheEventsEndpoint_NotAGetOnThePixelNode()
     {
-        var handler = FakeHttpMessageHandler.ReturningJson(HttpStatusCode.OK, "{\"id\":\"1234567890\",\"name\":\"My Pixel\"}");
+        // A CAPI token can POST /events but usually can't GET the pixel node, so verify must
+        // exercise the same /events POST the live dispatch uses (see MetaTrackingProvider).
+        var handler = FakeHttpMessageHandler.ReturningJson(HttpStatusCode.OK, "{\"events_received\":1,\"messages\":[],\"fbtrace_id\":\"abc\"}");
         var provider = new MetaTrackingProvider(new HttpClient(handler), NullLogger<MetaTrackingProvider>.Instance);
 
         var result = await provider.VerifyAsync(Credentials(), CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Contains("1234567890", handler.LastRequest!.RequestUri!.ToString());
+        Assert.Equal(HttpMethod.Post, handler.LastRequest!.Method);
+        Assert.Contains("/1234567890/events", handler.LastRequest!.RequestUri!.ToString());
+        Assert.Contains("\"event_name\":\"PageView\"", handler.LastRequestBody);
     }
 
     [Fact]
-    public async Task VerifyAsync_GraphApiReturnsError_FailsWithExtractedMessage()
+    public async Task VerifyAsync_ForwardsTestEventCodeSoItDoesNotPolluteRealData()
+    {
+        var handler = FakeHttpMessageHandler.ReturningJson(HttpStatusCode.OK, "{\"events_received\":1}");
+        var provider = new MetaTrackingProvider(new HttpClient(handler), NullLogger<MetaTrackingProvider>.Instance);
+
+        await provider.VerifyAsync(Credentials("TEST12345"), CancellationToken.None);
+
+        Assert.Contains("\"test_event_code\":\"TEST12345\"", handler.LastRequestBody);
+    }
+
+    [Fact]
+    public async Task VerifyAsync_200ButZeroEventsReceived_Fails()
+    {
+        var handler = FakeHttpMessageHandler.ReturningJson(HttpStatusCode.OK, "{\"events_received\":0,\"messages\":[]}");
+        var provider = new MetaTrackingProvider(new HttpClient(handler), NullLogger<MetaTrackingProvider>.Instance);
+
+        var result = await provider.VerifyAsync(Credentials(), CancellationToken.None);
+
+        Assert.True(result.IsFailure);
+        Assert.Equal("Ads.Meta.VerificationFailed", result.Error.Code);
+    }
+
+    [Fact]
+    public async Task VerifyAsync_InvalidToken_FailsWithExtractedMessage()
     {
         var handler = FakeHttpMessageHandler.ReturningJson(
             HttpStatusCode.BadRequest, "{\"error\":{\"message\":\"Invalid OAuth access token\",\"code\":190}}");
