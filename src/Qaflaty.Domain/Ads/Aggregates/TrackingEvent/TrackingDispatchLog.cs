@@ -1,5 +1,6 @@
 using Qaflaty.Domain.Ads.Enums;
 using Qaflaty.Domain.Common.Errors;
+using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Common.Primitives;
 
 namespace Qaflaty.Domain.Ads.Aggregates.TrackingEvent;
@@ -21,6 +22,7 @@ public sealed class TrackingDispatchLog : Entity<Guid>
         TimeSpan.FromHours(6)
     ];
 
+    public TrackingEventId TrackingEventId { get; private set; } // Parent TrackingEvent this dispatch attempt history belongs to
     public AdProvider Provider { get; private set; } // Which provider this dispatch attempt history is for
     public DispatchStatus Status { get; private set; } // Current state of this provider's delivery of the event
     public int AttemptCount { get; private set; } // Number of send attempts made so far
@@ -35,11 +37,12 @@ public sealed class TrackingDispatchLog : Entity<Guid>
 
     private TrackingDispatchLog() : base(Guid.Empty) { }
 
-    public static TrackingDispatchLog Create(AdProvider provider)
+    public static TrackingDispatchLog Create(TrackingEventId trackingEventId, AdProvider provider)
     {
         return new TrackingDispatchLog
         {
             Id = Guid.NewGuid(),
+            TrackingEventId = trackingEventId,
             Provider = provider,
             Status = DispatchStatus.Pending,
             AttemptCount = 0,
