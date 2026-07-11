@@ -29,5 +29,7 @@ public enum SectionType
     OrderForm,
     StickyBar,
     Bundle,
-    Marquee
+    Marquee,
+    Image,
+    Specs
 }

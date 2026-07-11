@@ -1217,6 +1217,90 @@ interface PageTemplate {
                       </div>
                     </div>
                   }
+                  @case ('Image') {
+                    <div class="space-y-3">
+                      <div>
+                        <label class="block text-xs font-medium text-gray-700 mb-1">Image</label>
+                        <div class="flex gap-2">
+                          <input #imgUrl type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.imageUrl || ''" (input)="setContentField(section, 'imageUrl', imgUrl.value)" placeholder="Image URL or upload →" />
+                          <label class="px-2 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 whitespace-nowrap"
+                            [class.opacity-50]="uploadingField() === section.id + ':imageUrl'">
+                            @if (uploadingField() === section.id + ':imageUrl') { Uploading… } @else { Upload }
+                            <input type="file" accept="image/*" class="hidden" [disabled]="!!uploadingField()" (change)="uploadImage(section, 'imageUrl', $event)" />
+                          </label>
+                        </div>
+                        @if (getContent(section)?.imageUrl) {
+                          <img [src]="getContent(section).imageUrl" class="mt-2 w-full max-h-48 object-contain rounded-md border border-gray-200 bg-gray-50" alt="Preview" />
+                        }
+                      </div>
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Link (optional)</label>
+                          <input #imgLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.link || ''" (input)="setContentField(section, 'link', imgLink.value)" placeholder="/products or https://…" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Alt text (SEO)</label>
+                          <input #imgAlt type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.alt || ''" (input)="setContentField(section, 'alt', imgAlt.value)" placeholder="Describe the image" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Caption (EN)</label>
+                          <input #imgCapEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.caption?.en || ''" (input)="setContentBilingual(section, 'caption', 'en', imgCapEn.value)" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Caption (AR)</label>
+                          <input #imgCapAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.caption?.ar || ''" (input)="setContentBilingual(section, 'caption', 'ar', imgCapAr.value)" />
+                        </div>
+                      </div>
+                    </div>
+                  }
+                  @case ('Specs') {
+                    <div class="space-y-4">
+                      <div class="grid grid-cols-2 gap-3">
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                          <input #spTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', spTEn.value)" placeholder="Specifications" />
+                        </div>
+                        <div>
+                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                          <input #spTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', spTAr.value)" placeholder="المواصفات" />
+                        </div>
+                      </div>
+
+                      @for (group of getSpecGroups(section); track $index; let gi = $index) {
+                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                          <div class="flex items-center gap-2">
+                            <input #spGEn type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md font-medium"
+                              [value]="group.name?.en || ''" (input)="setSpecGroupName(section, gi, 'en', spGEn.value)" placeholder="Group (EN) e.g. Display" />
+                            <input #spGAr type="text" dir="rtl" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md font-medium"
+                              [value]="group.name?.ar || ''" (input)="setSpecGroupName(section, gi, 'ar', spGAr.value)" placeholder="المجموعة" />
+                            <button type="button" (click)="removeSpecGroup(section, gi)" class="text-xs text-red-600 hover:text-red-800 whitespace-nowrap">Remove group</button>
+                          </div>
+                          @for (row of group.rows || []; track $index; let ri = $index) {
+                            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center pl-2 border-l-2 border-gray-100">
+                              <input #spLEn type="text" class="text-sm px-2 py-1 border border-gray-300 rounded-md"
+                                [value]="row.label?.en || ''" (input)="setSpecRow(section, gi, ri, 'label', 'en', spLEn.value)" placeholder="Label (EN)" />
+                              <input #spLAr type="text" dir="rtl" class="text-sm px-2 py-1 border border-gray-300 rounded-md"
+                                [value]="row.label?.ar || ''" (input)="setSpecRow(section, gi, ri, 'label', 'ar', spLAr.value)" placeholder="التسمية" />
+                              <input #spVEn type="text" class="text-sm px-2 py-1 border border-gray-300 rounded-md"
+                                [value]="row.value?.en || ''" (input)="setSpecRow(section, gi, ri, 'value', 'en', spVEn.value)" placeholder="Value (EN)" />
+                              <input #spVAr type="text" dir="rtl" class="text-sm px-2 py-1 border border-gray-300 rounded-md"
+                                [value]="row.value?.ar || ''" (input)="setSpecRow(section, gi, ri, 'value', 'ar', spVAr.value)" placeholder="القيمة" />
+                              <button type="button" (click)="removeSpecRow(section, gi, ri)" class="text-xs text-red-500 hover:text-red-700 px-1">✕</button>
+                            </div>
+                          }
+                          <button type="button" (click)="addSpecRow(section, gi)" class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Row</button>
+                        </div>
+                      }
+                      <button type="button" (click)="addSpecGroup(section)" class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Group</button>
+                    </div>
+                  }
                   @case ('Marquee') {
                     <div class="space-y-4">
                       <p class="text-[11px] text-gray-400">A bar with text that scrolls forever. Direction follows the store language automatically.</p>
@@ -1859,6 +1943,8 @@ export class SectionEditorComponent implements OnInit {
     { key: 'Stats', label: 'Stats / Counters', description: 'Animated numbers', defaultVariantId: 'stats-standard' },
     { key: 'Comparison', label: 'Comparison Table', description: 'Us vs. others', defaultVariantId: 'comparison-standard' },
     { key: 'BeforeAfter', label: 'Before / After', description: 'Image comparison slider', defaultVariantId: 'before-after-standard' },
+    { key: 'Image', label: 'Image', description: 'Full-width image block', defaultVariantId: 'image-standard' },
+    { key: 'Specs', label: 'Specs Table', description: 'Grouped specification rows', defaultVariantId: 'specs-standard' },
     { key: 'Marquee', label: 'Marquee', description: 'Scrolling running-text bar', defaultVariantId: 'marquee-standard' },
     { key: 'OrderForm', label: 'Order Form', description: 'Inline buy box for a product', defaultVariantId: 'order-form' },
     { key: 'StickyBar', label: 'Sticky Buy Bar', description: 'Mobile bottom buy bar', defaultVariantId: 'sticky-bar' },
@@ -1938,6 +2024,12 @@ export class SectionEditorComponent implements OnInit {
     ],
     BeforeAfter: [
       { id: 'before-after-standard', label: 'Standard' }
+    ],
+    Image: [
+      { id: 'image-standard', label: 'Standard' }
+    ],
+    Specs: [
+      { id: 'specs-standard', label: 'Standard' }
     ],
     Marquee: [
       { id: 'marquee-standard', label: 'Standard' }
@@ -2353,6 +2445,56 @@ export class SectionEditorComponent implements OnInit {
     item[key] = { ...(item[key] || {}), [lang]: value };
     items[index] = item;
     this.setContentArray(section, field, items);
+  }
+
+  // ── Specs table (nested groups → rows) ──
+
+  getSpecGroups(section: SectionConfigurationDto): any[] {
+    const g = this.getContent(section).groups;
+    return Array.isArray(g) ? g : [];
+  }
+
+  private setSpecGroups(section: SectionConfigurationDto, groups: any[]): void {
+    const content = this.getContent(section);
+    content.groups = groups;
+    section.contentJson = JSON.stringify(content);
+    this.notifyChange();
+  }
+
+  addSpecGroup(section: SectionConfigurationDto): void {
+    this.setSpecGroups(section, [...this.getSpecGroups(section), { name: { en: '', ar: '' }, rows: [] }]);
+  }
+
+  removeSpecGroup(section: SectionConfigurationDto, gi: number): void {
+    this.setSpecGroups(section, this.getSpecGroups(section).filter((_, i) => i !== gi));
+  }
+
+  setSpecGroupName(section: SectionConfigurationDto, gi: number, lang: 'en' | 'ar', value: string): void {
+    const groups = this.getSpecGroups(section).map((g, i) =>
+      i === gi ? { ...g, name: { ...(g.name || {}), [lang]: value } } : g);
+    this.setSpecGroups(section, groups);
+  }
+
+  addSpecRow(section: SectionConfigurationDto, gi: number): void {
+    const groups = this.getSpecGroups(section).map((g, i) =>
+      i === gi ? { ...g, rows: [...(g.rows || []), { label: { en: '', ar: '' }, value: { en: '', ar: '' } }] } : g);
+    this.setSpecGroups(section, groups);
+  }
+
+  removeSpecRow(section: SectionConfigurationDto, gi: number, ri: number): void {
+    const groups = this.getSpecGroups(section).map((g, i) =>
+      i === gi ? { ...g, rows: (g.rows || []).filter((_: any, r: number) => r !== ri) } : g);
+    this.setSpecGroups(section, groups);
+  }
+
+  setSpecRow(section: SectionConfigurationDto, gi: number, ri: number, key: 'label' | 'value', lang: 'en' | 'ar', value: string): void {
+    const groups = this.getSpecGroups(section).map((g, i) => {
+      if (i !== gi) return g;
+      const rows = (g.rows || []).map((r: any, r2: number) =>
+        r2 === ri ? { ...r, [key]: { ...(r[key] || {}), [lang]: value } } : r);
+      return { ...g, rows };
+    });
+    this.setSpecGroups(section, groups);
   }
 
   uploadArrayItemImage(section: SectionConfigurationDto, field: string, index: number, itemKey: string, event: Event): void {
