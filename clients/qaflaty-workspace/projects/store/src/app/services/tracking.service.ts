@@ -39,6 +39,19 @@ interface TrackingPixelConfigDto {
  * Tracking never blocks page rendering — script loading and the server call are both
  * fire-and-forget.
  */
+// Our standard event names -> each provider's own vocabulary. Meta uses our names verbatim.
+const TIKTOK_EVENT_NAMES: Record<StandardEventType, string> = {
+  PageView: 'Pageview', ViewContent: 'ViewContent', Search: 'Search', AddToCart: 'AddToCart',
+  InitiateCheckout: 'InitiateCheckout', AddPaymentInfo: 'AddPaymentInfo', Purchase: 'CompletePayment',
+  CompleteRegistration: 'CompleteRegistration', Contact: 'Contact'
+};
+
+const SNAPCHAT_EVENT_NAMES: Record<StandardEventType, string> = {
+  PageView: 'PAGE_VIEW', ViewContent: 'VIEW_CONTENT', Search: 'SEARCH', AddToCart: 'ADD_CART',
+  InitiateCheckout: 'START_CHECKOUT', AddPaymentInfo: 'ADD_BILLING', Purchase: 'PURCHASE',
+  CompleteRegistration: 'SIGN_UP', Contact: 'CONTACT'
+};
+
 @Injectable({ providedIn: 'root' })
 export class TrackingService {
   private http = inject(HttpClient);
@@ -48,6 +61,8 @@ export class TrackingService {
   private renderer: Renderer2;
   private initialized = false;
   private metaLoaded = false;
+  private tiktokLoaded = false;
+  private snapchatLoaded = false;
 
   constructor(rendererFactory: RendererFactory2) {
     this.renderer = rendererFactory.createRenderer(null, null);
@@ -97,7 +112,14 @@ export class TrackingService {
   }
 
   private fireBrowserPixels(eventType: StandardEventType, eventKey: string, options: TrackOptions): void {
-    const win = window as unknown as { fbq?: (...args: unknown[]) => void };
+    const win = window as unknown as {
+      fbq?: (...args: unknown[]) => void;
+      ttq?: { track: (...args: unknown[]) => void };
+      snaptr?: (...args: unknown[]) => void;
+    };
+
+    // Every provider gets the SAME eventKey as event id, so its own dedup merges the browser
+    // hit with the server-side event we mirror through /storefront/tracking/events.
     if (win.fbq) {
       win.fbq('track', eventType, {
         value: options.value,
@@ -106,15 +128,34 @@ export class TrackingService {
         contents: options.contents?.map(c => ({ id: c.contentId, quantity: c.quantity }))
       }, { eventID: eventKey });
     }
+
+    if (win.ttq) {
+      win.ttq.track(TIKTOK_EVENT_NAMES[eventType], {
+        value: options.value,
+        currency: options.currency,
+        contents: options.contents?.map(c => ({ content_id: c.contentId, quantity: c.quantity, price: c.price }))
+      }, { event_id: eventKey });
+    }
+
+    if (win.snaptr) {
+      win.snaptr('track', SNAPCHAT_EVENT_NAMES[eventType], {
+        price: options.value,
+        currency: options.currency,
+        item_ids: options.contents?.map(c => c.contentId),
+        client_dedup_id: eventKey
+      });
+    }
   }
 
   private loadScripts(pixels: TrackingPixelConfigDto[]): void {
     for (const pixel of pixels) {
-      if (pixel.provider === 'Meta' && pixel.publicConfig['pixelId']) {
-        this.loadMetaPixel(pixel.publicConfig['pixelId']);
-      }
-      // Other providers (TikTok, Snapchat, GA4, Google Ads, GTM) are scaffolded server-side
-      // but not yet wired for browser script injection — see docs/ADS_MANAGEMENT.md, §18.
+      const id = pixel.publicConfig['pixelId'];
+      if (!id) continue;
+
+      if (pixel.provider === 'Meta') this.loadMetaPixel(id);
+      else if (pixel.provider === 'TikTok') this.loadTikTokPixel(id);
+      else if (pixel.provider === 'Snapchat') this.loadSnapchatPixel(id);
+      // GA4, Google Ads, GTM are deferred to a later phase — see docs/ADS_MANAGEMENT.md, §18.
     }
   }
 
@@ -131,6 +172,42 @@ export class TrackingService {
       t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
       document,'script','https://connect.facebook.net/en_US/fbevents.js');
       fbq('init', '${pixelId}');
+    `;
+    this.renderer.appendChild(this.document.head, script);
+  }
+
+  private loadTikTokPixel(pixelCode: string): void {
+    if (this.tiktokLoaded) return;
+    this.tiktokLoaded = true;
+
+    const script = this.renderer.createElement('script');
+    script.type = 'text/javascript';
+    script.text = `
+      !function (w, d, t) {
+        w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];
+        ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"];
+        ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};
+        for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);
+        ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e};
+        ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};n=document.createElement("script");n.type="text/javascript",n.async=!0,n.src=r+"?sdkid="+e+"&lib="+t;e=document.getElementsByTagName("script")[0];e.parentNode.insertBefore(n,e)};
+        ttq.load('${pixelCode}');
+      }(window, document, 'ttq');
+    `;
+    this.renderer.appendChild(this.document.head, script);
+  }
+
+  private loadSnapchatPixel(pixelId: string): void {
+    if (this.snapchatLoaded) return;
+    this.snapchatLoaded = true;
+
+    const script = this.renderer.createElement('script');
+    script.type = 'text/javascript';
+    script.text = `
+      (function(e,t,n){if(e.snaptr)return;var a=e.snaptr=function(){a.handleRequest?
+      a.handleRequest.apply(a,arguments):a.queue.push(arguments)};a.queue=[];var s='script';
+      var r=t.createElement(s);r.async=!0;r.src=n;var u=t.getElementsByTagName(s)[0];
+      u.parentNode.insertBefore(r,u);})(window,document,'https://sc-static.net/scevent.min.js');
+      snaptr('init', '${pixelId}');
     `;
     this.renderer.appendChild(this.document.head, script);
   }

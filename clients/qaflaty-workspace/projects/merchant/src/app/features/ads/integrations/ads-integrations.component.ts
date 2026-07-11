@@ -20,8 +20,21 @@ const PROVIDERS: ProviderMeta[] = [
       { key: 'testEventCode', label: 'Test Event Code', optional: true, hint: 'From Events Manager → Test Events. Set it while testing so events land in Test Events (and verification stays out of real reporting). Clear it in production.' }
     ]
   },
-  { id: 'TikTok', name: 'TikTok Pixel & Events API', available: false, fields: [{ key: 'pixelId', label: 'Pixel Code' }, { key: 'accessToken', label: 'Access Token', secret: true }] },
-  { id: 'Snapchat', name: 'Snapchat Pixel', available: false, fields: [{ key: 'pixelId', label: 'Pixel ID' }, { key: 'accessToken', label: 'API Token', secret: true }] },
+  {
+    id: 'TikTok', name: 'TikTok Pixel & Events API', available: true,
+    fields: [
+      { key: 'pixelId', label: 'Pixel Code', hint: 'TikTok Events Manager → your Pixel → the Pixel ID/Code shown at the top.' },
+      { key: 'accessToken', label: 'Access Token', secret: true, hint: 'TikTok Events Manager → Settings → Events API → Generate access token.' },
+      { key: 'testEventCode', label: 'Test Event Code', optional: true, hint: 'From Events Manager → Test Event. Set it while testing; clear it in production.' }
+    ]
+  },
+  {
+    id: 'Snapchat', name: 'Snapchat Pixel & Conversions API', available: true,
+    fields: [
+      { key: 'pixelId', label: 'Pixel ID', hint: 'Snapchat Events Manager → your Pixel → Pixel ID.' },
+      { key: 'accessToken', label: 'Access Token', secret: true, hint: 'Snapchat Ads Manager → Conversions API → generate a token for this pixel.' }
+    ]
+  },
   { id: 'GoogleAnalytics4', name: 'Google Analytics 4', available: false, fields: [{ key: 'pixelId', label: 'Measurement ID' }, { key: 'accessToken', label: 'API Secret', secret: true }] },
   { id: 'GoogleAds', name: 'Google Ads Conversion Tracking', available: false, fields: [{ key: 'pixelId', label: 'Conversion ID' }, { key: 'accessToken', label: 'API Token', secret: true }] },
   { id: 'GoogleTagManager', name: 'Google Tag Manager', available: false, fields: [{ key: 'pixelId', label: 'Container ID' }] }

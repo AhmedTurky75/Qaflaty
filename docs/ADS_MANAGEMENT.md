@@ -441,8 +441,9 @@ Current design (in-process channel queue + DB retry sweep) comfortably handles a
 
 ## 18. Future Scalability / Roadmap Notes
 
+- **Implemented:** Meta (Pixel + CAPI), **TikTok (Pixel + Events API 2.0)**, and **Snapchat (Pixel + Conversions API v3)** — all dual-channel (browser + server) behind the shared `ITrackingProvider` strategy, with per-provider event-name maps (e.g. Purchase → `CompletePayment` for TikTok, `PURCHASE` for Snapchat) and a body-based success check for TikTok (which returns HTTP 200 with `code != 0` on errors).
+- **Still deferred (stubs):** GA4 Measurement Protocol, Google Ads Enhanced Conversions (needs a Google-approved developer token), and GTM (web-container vs server-container decision pending). Their `ITrackingProvider` stubs remain and return "coming soon".
 - Add a server-side `CompleteRegistration` hook once `StoreCustomerRegisteredEvent` (or the registration command) carries the originating `StoreId` — today customer accounts are modeled as shared across stores in the Identity context, so there's no store to resolve providers for at that event.
-- Fill in TikTok Events API, Snapchat CAPI, GA4 Measurement Protocol, Google Ads Enhanced Conversions, and GTM server container support behind the existing `ITrackingProvider` stubs.
 - Add Pinterest, LinkedIn, X, Microsoft Ads as pure additive `ITrackingProvider` implementations.
 - Add a durable outbox pattern if multi-instance deployment is introduced before a broker is adopted.
 - Consider an audit log entity for provider configuration changes (who changed what token, when) once RBAC on this surface needs finer granularity than `CanManageAds`.

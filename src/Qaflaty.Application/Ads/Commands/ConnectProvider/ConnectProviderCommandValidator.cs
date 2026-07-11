@@ -11,12 +11,15 @@ public class ConnectProviderCommandValidator : AbstractValidator<ConnectProvider
         RuleFor(x => x.Provider).IsInEnum();
         RuleFor(x => x.Credentials).NotNull();
 
+        // Meta / TikTok / Snapchat all require a public pixel identifier + a server access token.
+        // (TikTok's identifier is labeled "Pixel Code" in the UI but stored under the same key.)
         RuleFor(x => x.Credentials)
             .Must(c => c.ContainsKey("pixelId") && !string.IsNullOrWhiteSpace(c["pixelId"]))
             .WithMessage("Pixel ID is required")
             .Must(c => c.ContainsKey("accessToken") && !string.IsNullOrWhiteSpace(c["accessToken"]))
             .WithMessage("Access token is required")
-            .When(x => x.Provider == AdProvider.Meta && x.Credentials != null);
+            .When(x => x.Credentials != null &&
+                       x.Provider is AdProvider.Meta or AdProvider.TikTok or AdProvider.Snapchat);
 
         RuleFor(x => x)
             .Must(x => x.BrowserTrackingEnabled || x.ServerTrackingEnabled)

@@ -22,9 +22,17 @@ public abstract class TrackingProviderBase
 
     public abstract AdProvider Provider { get; }
 
+    /// <param name="isSuccess">
+    /// Optional body-based success test. Some providers (notably TikTok) return HTTP 200 even on
+    /// logical errors and signal failure only inside the body (e.g. <c>code != 0</c>), so an HTTP
+    /// status check alone is wrong for them. When null, success is determined purely by
+    /// <see cref="HttpResponseMessage.IsSuccessStatusCode"/> (the correct behavior for Meta/Snapchat).
+    /// When provided, the HTTP status must be successful AND the predicate must return true.
+    /// </param>
     protected async Task<ProviderDispatchResult> ExecuteAsync(
         Func<Task<HttpResponseMessage>> send,
-        Func<string, string?> extractErrorMessage)
+        Func<string, string?> extractErrorMessage,
+        Func<string, bool>? isSuccess = null)
     {
         var stopwatch = Stopwatch.StartNew();
         try
@@ -33,7 +41,8 @@ public abstract class TrackingProviderBase
             var body = await response.Content.ReadAsStringAsync();
             stopwatch.Stop();
 
-            if (response.IsSuccessStatusCode)
+            var succeeded = response.IsSuccessStatusCode && (isSuccess is null || isSuccess(body));
+            if (succeeded)
                 return ProviderDispatchResult.Success((int)response.StatusCode, body, (int)stopwatch.ElapsedMilliseconds);
 
             var errorMessage = extractErrorMessage(body) ?? $"Provider returned HTTP {(int)response.StatusCode}";

@@ -122,10 +122,15 @@ public static class DependencyInjection
         services.AddScoped<IDiagnosticsService, DiagnosticsService>();
         services.AddSingleton<IEventQueue, ChannelEventQueue>();
 
+        // Providers that make HTTP calls get a typed HttpClient + a factory registration so the
+        // resolver's IEnumerable<ITrackingProvider> includes them.
         services.AddHttpClient<MetaTrackingProvider>();
         services.AddScoped<ITrackingProvider>(sp => sp.GetRequiredService<MetaTrackingProvider>());
-        services.AddScoped<ITrackingProvider, TikTokTrackingProvider>();
-        services.AddScoped<ITrackingProvider, SnapchatTrackingProvider>();
+        services.AddHttpClient<TikTokTrackingProvider>();
+        services.AddScoped<ITrackingProvider>(sp => sp.GetRequiredService<TikTokTrackingProvider>());
+        services.AddHttpClient<SnapchatTrackingProvider>();
+        services.AddScoped<ITrackingProvider>(sp => sp.GetRequiredService<SnapchatTrackingProvider>());
+        // Still stubs (deferred to a later phase) — no HTTP client needed yet.
         services.AddScoped<ITrackingProvider, Ga4TrackingProvider>();
         services.AddScoped<ITrackingProvider, GoogleAdsTrackingProvider>();
         services.AddScoped<ITrackingProvider, GtmTrackingProvider>();
