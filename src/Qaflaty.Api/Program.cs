@@ -248,7 +248,14 @@ if (app.Environment.IsDevelopment())
 // Global exception handler must be early in the pipeline
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-app.UseHttpsRedirection();
+// Skipped in Development: the Angular dev-server proxy talks to this API over plain
+// HTTP (see proxy.conf.json), and an HTTPS redirect here would send the browser an
+// absolute https://localhost:5000 Location header, bypassing the proxy and turning
+// the request cross-origin again.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseStaticFiles();
 
