@@ -53,7 +53,7 @@ docker-compose up -d
 # pgAdmin at http://localhost:5050
 ```
 
-The backend API runs locally (not in Docker). Dev DB connection: `Host=localhost;Port=5432;Database=qaflaty_db;Username=postgres;Password=P@ssw0rd`.
+The backend API runs locally (not in Docker). It reads its connection string from the `ConnectionStrings__DefaultConnection` environment variable (or `dotnet user-secrets` for the `src/Qaflaty.Api` project) — it is intentionally not committed to `appsettings*.json`. For the default `docker-compose` Postgres service, use `Host=localhost;Port=5432;Database=qaflaty_db;Username=postgres;Password=<your-password>`.
 
 ## Architecture
 

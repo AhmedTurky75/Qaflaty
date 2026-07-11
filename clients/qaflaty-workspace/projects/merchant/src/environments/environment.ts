@@ -1,6 +1,8 @@
 export const environment = {
   production: false,
-  apiUrl: 'https://localhost:5000/api',
+  // Relative so requests go through the dev-server proxy (proxy.conf.json) to
+  // the backend — keeps the API same-origin, avoiding cross-site cookie warnings.
+  apiUrl: '/api',
   appName: 'Qaflaty Merchant Dashboard',
   // Origin where the STORE app is served, used for the live section preview
   // iframe. Must point at the storefront (which serves the /__preview route),
