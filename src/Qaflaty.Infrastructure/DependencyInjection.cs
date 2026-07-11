@@ -46,7 +46,17 @@ public static class DependencyInjection
             var auditInterceptor = sp.GetRequiredService<AuditableEntityInterceptor>();
             var eventInterceptor = sp.GetRequiredService<DomainEventDispatcherInterceptor>();
 
-            options.UseNpgsql(configuration.GetConnectionString("DefaultConnection"))
+            var connectionString = configuration.GetConnectionString("DefaultConnection");
+            if (string.IsNullOrWhiteSpace(connectionString))
+            {
+                throw new InvalidOperationException(
+                    "ConnectionStrings:DefaultConnection is not configured. Set it via the " +
+                    "ConnectionStrings__DefaultConnection environment variable, or with " +
+                    "'dotnet user-secrets set \"ConnectionStrings:DefaultConnection\" \"...\"' " +
+                    "for local development.");
+            }
+
+            options.UseNpgsql(connectionString)
                 .AddInterceptors(auditInterceptor, eventInterceptor);
         });
 

@@ -1,17 +1,27 @@
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Hosting;
 using Qaflaty.Application.Common.Interfaces;
 
 namespace Qaflaty.Infrastructure.Services.Identity;
 
 public class CookieAuthService : ICookieAuthService
 {
-    private static readonly CookieOptions DefaultOptions = new()
+    private readonly CookieOptions DefaultOptions;
+
+    public CookieAuthService(IHostEnvironment environment)
     {
-        HttpOnly = true,
-        SameSite = SameSiteMode.None,
-        Secure = true,
-        Path = "/"
-    };
+        // The Angular dev servers proxy /api to this backend (see proxy.conf.json),
+        // so in local development the browser only ever talks to the frontend's own
+        // origin — cookies can use SameSite=Lax instead of None, and don't need
+        // Secure since the dev servers run over plain HTTP.
+        DefaultOptions = new CookieOptions
+        {
+            HttpOnly = true,
+            SameSite = SameSiteMode.Lax,
+            Secure = !environment.IsDevelopment(),
+            Path = "/"
+        };
+    }
 
     // Legacy methods kept for backward compatibility — delegate to merchant cookies
     public void SetAuthCookies(HttpContext context, string accessToken, string refreshToken, bool isSecure = false)
