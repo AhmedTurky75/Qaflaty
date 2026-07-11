@@ -23,6 +23,204 @@ namespace Qaflaty.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.ProviderIntegration.ProviderIntegration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("BrowserTrackingEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("browser_enabled");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("HealthScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("health_score");
+
+                    b.Property<string>("LastErrorCode")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("last_error_code");
+
+                    b.Property<string>("LastErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("last_error_message");
+
+                    b.Property<DateTime?>("LastEventAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_event_at");
+
+                    b.Property<DateTime?>("LastVerifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_verified_at");
+
+                    b.Property<string>("ProtectedCredentialsJson")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("credentials_protected");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider");
+
+                    b.Property<bool>("ServerTrackingEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("server_enabled");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "Provider")
+                        .IsUnique();
+
+                    b.ToTable("provider_integrations", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingDispatchLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DurationMs")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_ms");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("error_message");
+
+                    b.Property<DateTime?>("LastAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_attempt_at");
+
+                    b.Property<DateTime?>("NextRetryAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_retry_at");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("ResponseBody")
+                        .HasColumnType("text")
+                        .HasColumnName("response_body");
+
+                    b.Property<int?>("ResponseStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("response_status");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TrackingEventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tracking_event_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NextRetryAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TrackingEventId");
+
+                    b.ToTable("tracking_dispatch_logs", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("channel");
+
+                    b.Property<Guid>("CorrelationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("correlation_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CustomerRef")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("customer_ref");
+
+                    b.Property<Guid>("EventKey")
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_key");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("event_type");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload_json");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CorrelationId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("StoreId", "EventKey", "Channel");
+
+                    b.ToTable("tracking_events", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Category.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2182,6 +2380,15 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("wishlist_items", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingDispatchLog", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingEvent", null)
+                        .WithMany("DispatchLogs")
+                        .HasForeignKey("TrackingEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Category.Category", b =>
                 {
                     b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.CategoryName", "Name", b1 =>
@@ -4185,6 +4392,11 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasForeignKey("WishlistId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingEvent", b =>
+                {
+                    b.Navigation("DispatchLogs");
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>

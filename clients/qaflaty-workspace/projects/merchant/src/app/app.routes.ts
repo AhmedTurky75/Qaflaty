@@ -100,6 +100,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/store-builder/store-builder.routes').then(m => m.STORE_BUILDER_ROUTES)
       },
       {
+        path: 'ads',
+        canActivate: [storeGuard],
+        loadChildren: () => import('./features/ads/ads.routes').then(m => m.ADS_ROUTES)
+      },
+      {
         path: 'settings',
         loadChildren: () => import('./features/settings/settings.routes').then(m => m.SETTINGS_ROUTES)
       }

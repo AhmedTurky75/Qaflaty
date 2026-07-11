@@ -8,6 +8,8 @@ import { ProductReviewsComponent } from '../../components/reviews/product-review
 import { ProductRowComponent } from '../../components/recommendations/product-row.component';
 import { RecommendationService } from '../../services/recommendation.service';
 import { I18nService } from '../../services/i18n.service';
+import { TrackingService } from '../../services/tracking.service';
+import { ConfigService } from '../../services/config.service';
 
 type ProductTab = 'description' | 'specifications' | 'reviews' | 'shipping';
 
@@ -23,6 +25,8 @@ export class ProductDetailComponent {
   private route = inject(ActivatedRoute);
   private recommendations = inject(RecommendationService);
   private i18n = inject(I18nService);
+  private tracking = inject(TrackingService);
+  private configService = inject(ConfigService);
 
   product = signal<Product | null>(null);
   displayName = computed(() => this.i18n.nameFor(this.product()?.name, this.product()?.nameAr));
@@ -61,6 +65,11 @@ export class ProductDetailComponent {
         this.product.set(product);
         this.loading.set(false);
         this.loadRecommendations(product.id);
+        this.tracking.track('ViewContent', {
+          value: product.price,
+          currency: this.configService.config()?.currency,
+          contents: [{ contentId: product.id, quantity: 1, price: product.price }]
+        });
       },
       error: (error) => {
         console.error('Failed to load product:', error);

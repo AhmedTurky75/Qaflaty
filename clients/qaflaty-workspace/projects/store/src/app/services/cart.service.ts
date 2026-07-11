@@ -6,6 +6,7 @@ import { CartApiService } from './cart-api.service';
 import { CustomerAuthService } from './customer-auth.service';
 import { GuestSessionService } from './guest-session.service';
 import { ConfigService } from './config.service';
+import { TrackingService } from './tracking.service';
 
 @Injectable({
   providedIn: 'root'
@@ -21,6 +22,7 @@ export class CartService {
   private authService = inject(CustomerAuthService);
   private guestSession = inject(GuestSessionService);
   private config = inject(ConfigService);
+  private tracking = inject(TrackingService);
 
   /** The store's single currency code; every cart Money carries it. */
   private get currency(): string {
@@ -168,6 +170,12 @@ export class CartService {
       this.guestSession.getOrCreateGuestId();
       this.cartApi.addGuestItem(product.id, quantity, variant?.id);
     }
+
+    this.tracking.track('AddToCart', {
+      value: unitPrice.amount * quantity,
+      currency: this.currency,
+      contents: [{ contentId: product.id, quantity, price: unitPrice.amount }]
+    });
   }
 
   /**

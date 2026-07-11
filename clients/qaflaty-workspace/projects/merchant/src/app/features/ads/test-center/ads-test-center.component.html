@@ -1,0 +1,47 @@
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm p-5 mb-6">
+  <h3 class="font-semibold text-gray-900 mb-3">Send a test event</h3>
+  <p class="text-sm text-gray-500 mb-4">
+    Fires a synthetic event through the real dispatch pipeline so you can confirm it lands
+    (e.g. in Meta's Test Events tab) before trusting live tracking.
+  </p>
+  <div class="flex flex-wrap gap-3">
+    @for (evt of testEvents; track evt.type) {
+      <button
+        type="button" (click)="send(evt.type)" [disabled]="sending() === evt.type"
+        class="px-4 py-2 text-sm font-medium rounded-md bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50"
+      >
+        {{ sending() === evt.type ? 'Sending...' : evt.label }}
+      </button>
+    }
+  </div>
+  @if (error()) {
+    <p class="text-sm text-yellow-700 mt-3">{{ error() }}</p>
+  }
+</div>
+
+@if (results().length > 0) {
+  <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-gray-50 text-gray-500 text-left">
+        <tr>
+          <th class="px-4 py-2">Provider</th>
+          <th class="px-4 py-2">Status</th>
+          <th class="px-4 py-2">Duration</th>
+          <th class="px-4 py-2">Response</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        @for (row of results(); track row.dispatchLogId) {
+          <tr>
+            <td class="px-4 py-2 font-medium text-gray-900">{{ row.provider }}</td>
+            <td class="px-4 py-2 font-medium" [ngClass]="statusColor(row.status)">{{ row.status }}</td>
+            <td class="px-4 py-2 text-gray-500">{{ row.durationMs ?? '—' }}ms</td>
+            <td class="px-4 py-2 text-gray-500 max-w-xs truncate" [title]="row.responseBody || row.errorMessage || ''">
+              {{ row.errorMessage || row.responseBody || '—' }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+}

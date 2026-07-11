@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { CustomerAuthService } from '../../../services/customer-auth.service';
+import { TrackingService } from '../../../services/tracking.service';
 
 @Component({
   selector: 'app-register',
@@ -79,6 +80,7 @@ export class RegisterComponent {
   private fb = inject(FormBuilder);
   private authService = inject(CustomerAuthService);
   private router = inject(Router);
+  private tracking = inject(TrackingService);
 
   loading = signal(false);
   errorMessage = signal<string | null>(null);
@@ -108,7 +110,10 @@ export class RegisterComponent {
     this.loading.set(true); this.errorMessage.set(null);
     const { confirmPassword, ...data } = this.registerForm.value;
     this.authService.register(data).subscribe({
-      next: () => this.router.navigate(['/account/profile']),
+      next: () => {
+        this.tracking.track('CompleteRegistration', { customerEmail: data.email });
+        this.router.navigate(['/account/profile']);
+      },
       error: (err: any) => { this.errorMessage.set(err.message || 'فشل التسجيل'); this.loading.set(false); }
     });
   }

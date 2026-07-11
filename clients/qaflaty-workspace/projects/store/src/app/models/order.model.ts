@@ -56,9 +56,9 @@ export interface OrderItemRequest {
 
 
 export interface OrderResponse {
-  orderId: string;
+  id: string;
   orderNumber: string;
-  total: Money;
+  pricing: { total: Money };
   status: OrderStatus;
   createdAt: string;
 }

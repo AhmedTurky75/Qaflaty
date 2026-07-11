@@ -12,5 +12,6 @@ public enum MerchantPermission
     ManageCustomers = 32,
     ManageStore = 64,
     ManageChat = 128,
-    ManageMerchants = 256
+    ManageMerchants = 256,
+    ManageAds = 512
 }

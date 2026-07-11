@@ -10,11 +10,12 @@ public static class RolePermissions
                                MerchantPermission.ViewOrders | MerchantPermission.ManageOrders |
                                MerchantPermission.ViewCustomers | MerchantPermission.ManageCustomers |
                                MerchantPermission.ManageStore | MerchantPermission.ManageChat |
-                               MerchantPermission.ManageMerchants,
+                               MerchantPermission.ManageMerchants | MerchantPermission.ManageAds,
         [MerchantRole.Admin] = MerchantPermission.ViewProducts | MerchantPermission.ManageProducts |
                                MerchantPermission.ViewOrders | MerchantPermission.ManageOrders |
                                MerchantPermission.ViewCustomers | MerchantPermission.ManageCustomers |
-                               MerchantPermission.ManageStore | MerchantPermission.ManageChat,
+                               MerchantPermission.ManageStore | MerchantPermission.ManageChat |
+                               MerchantPermission.ManageAds,
         [MerchantRole.Manager] = MerchantPermission.ViewProducts | MerchantPermission.ManageProducts |
                                  MerchantPermission.ViewOrders | MerchantPermission.ManageOrders |
                                  MerchantPermission.ViewCustomers | MerchantPermission.ManageChat,

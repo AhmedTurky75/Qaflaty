@@ -1,5 +1,5 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { LayoutRendererComponent } from './components/layout/layout-renderer.component';
 import { CartSidebarComponent } from './components/shared/cart-sidebar.component';
 import { WhatsAppButtonComponent } from './components/shared/whatsapp-button.component';
@@ -10,7 +10,8 @@ import { ConfigService } from './services/config.service';
 import { ThemeService } from './services/theme.service';
 import { CartService } from './services/cart.service';
 import { I18nService } from './services/i18n.service';
-import { switchMap } from 'rxjs';
+import { TrackingService } from './services/tracking.service';
+import { filter, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -72,6 +73,8 @@ export class App implements OnInit {
   private themeService = inject(ThemeService);
   private cartService = inject(CartService);
   private i18nService = inject(I18nService);
+  private trackingService = inject(TrackingService);
+  private router = inject(Router);
 
   ngOnInit() {
     this.storeService.detectAndLoadStore().pipe(
@@ -90,6 +93,14 @@ export class App implements OnInit {
         // Load merchant-created pages so custom pages appear in the header nav.
         this.configService.loadPages(this.storeService.currentStore()?.id ?? '')
           .subscribe({ next: () => {}, error: () => {} });
+
+        this.trackingService.init();
+        // NavigationEnd fires for the initial route too, so this alone covers both the
+        // first page load and every subsequent navigation — an extra explicit call here
+        // would double-track the first PageView.
+        this.router.events.pipe(
+          filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+        ).subscribe(() => this.trackingService.track('PageView'));
       },
       error: (error) => {
         console.error('Failed to load store:', error);
