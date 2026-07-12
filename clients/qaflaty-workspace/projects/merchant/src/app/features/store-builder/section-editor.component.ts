@@ -501,26 +501,28 @@ interface PageTemplate {
                             <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
                           </div>
                           <div class="grid grid-cols-2 gap-3">
-                            <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                              <input #mtTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
-                                [value]="item.title?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'en', mtTitleEn.value)" />
-                            </div>
-                            <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                              <input #mtTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
-                                [value]="item.title?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'ar', mtTitleAr.value)" />
-                            </div>
-                            <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
-                              <textarea #mtTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
-                                [value]="item.text?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'en', mtTextEn.value)"></textarea>
-                            </div>
-                            <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
-                              <textarea #mtTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
-                                [value]="item.text?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'ar', mtTextAr.value)"></textarea>
-                            </div>
+                            @if ((item.layout || 'side') !== 'overlay') {
+                              <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
+                                <input #mtTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                  [value]="item.title?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'en', mtTitleEn.value)" />
+                              </div>
+                              <div>
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
+                                <input #mtTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                  [value]="item.title?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'ar', mtTitleAr.value)" />
+                              </div>
+                              <div class="col-span-2">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
+                                <textarea #mtTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                  [value]="item.text?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'en', mtTextEn.value)"></textarea>
+                              </div>
+                              <div class="col-span-2">
+                                <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
+                                <textarea #mtTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                  [value]="item.text?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'ar', mtTextAr.value)"></textarea>
+                              </div>
+                            }
                             <div class="col-span-2">
                               <label class="block text-xs font-medium text-gray-700 mb-1">Image (leave blank to use a product photo)</label>
                               <div class="flex gap-2">
@@ -569,45 +571,66 @@ interface PageTemplate {
                             @if (item.layout === 'overlay') {
                               <div class="col-span-2 space-y-3 border-t border-gray-100 pt-3">
                                 <div>
-                                  <label class="block text-xs font-medium text-gray-700 mb-1">Text Position on Image</label>
-                                  <div class="grid grid-cols-3 gap-1 w-32">
-                                    @for (pos of overlayPositions; track pos) {
-                                      <button type="button" (click)="updateArrayItemField(section, 'items', i, 'overlayPosition', pos)"
-                                        class="h-9 rounded-md border flex items-center justify-center"
-                                        [class.border-blue-500]="(item.overlayPosition || 'bottom-left') === pos"
-                                        [class.bg-blue-50]="(item.overlayPosition || 'bottom-left') === pos"
-                                        [class.border-gray-300]="(item.overlayPosition || 'bottom-left') !== pos"
-                                        [title]="pos">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-                                      </button>
-                                    }
-                                  </div>
+                                  <label class="block text-xs font-medium text-gray-700 mb-1">Readability Overlay</label>
+                                  <select #mtScrim class="w-40 text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                                    [value]="item.scrim || 'dark'" (change)="updateArrayItemField(section, 'items', i, 'scrim', mtScrim.value)">
+                                    <option value="dark">Dark</option>
+                                    <option value="light">Light</option>
+                                    <option value="none">None</option>
+                                  </select>
                                 </div>
-                                <div class="grid grid-cols-3 gap-3">
-                                  <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Readability Overlay</label>
-                                    <select #mtScrim class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
-                                      [value]="item.scrim || 'dark'" (change)="updateArrayItemField(section, 'items', i, 'scrim', mtScrim.value)">
-                                      <option value="dark">Dark</option>
-                                      <option value="light">Light</option>
-                                      <option value="none">None</option>
-                                    </select>
+
+                                <p class="text-[11px] text-gray-400">Each box is independent — pick where it sits. On phones, positions collapse to the nearest of the 4 corners so boxes don't crowd on a small screen.</p>
+
+                                @for (box of getMediaTextBoxes(section, i); track $index; let bi = $index) {
+                                  <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-gray-50">
+                                    <div class="flex items-center justify-between">
+                                      <span class="text-xs font-semibold text-gray-500">Text Box {{ bi + 1 }}</span>
+                                      <button type="button" (click)="removeMediaTextBox(section, i, bi)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                                    </div>
+                                    <div class="flex gap-4">
+                                      <div class="grid grid-cols-3 gap-1 w-28 flex-shrink-0">
+                                        @for (pos of overlayPositions; track pos) {
+                                          <button type="button" (click)="setMediaTextBoxField(section, i, bi, 'anchor', pos)"
+                                            class="h-8 rounded-md border flex items-center justify-center"
+                                            [class.border-blue-500]="(box.anchor || 'bottom-left') === pos"
+                                            [class.bg-blue-50]="(box.anchor || 'bottom-left') === pos"
+                                            [class.border-gray-300]="(box.anchor || 'bottom-left') !== pos"
+                                            [title]="pos">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                                          </button>
+                                        }
+                                      </div>
+                                      <div class="flex-1 grid grid-cols-2 gap-2">
+                                        <div>
+                                          <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
+                                          <input #mtBoxColor type="color" class="h-8 w-full rounded border border-gray-300 cursor-pointer p-0.5"
+                                            [value]="box.textColor || '#ffffff'" (input)="setMediaTextBoxField(section, i, bi, 'textColor', mtBoxColor.value)" />
+                                        </div>
+                                        <div>
+                                          <label class="block text-xs font-medium text-gray-700 mb-1">Text Width</label>
+                                          <select #mtBoxWidth class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                                            [value]="box.maxWidth || 'medium'" (change)="setMediaTextBoxField(section, i, bi, 'maxWidth', mtBoxWidth.value)">
+                                            <option value="narrow">Narrow</option>
+                                            <option value="medium">Medium</option>
+                                            <option value="wide">Wide</option>
+                                          </select>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                      <input #mtBoxTitleEn type="text" class="text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                        [value]="box.title?.en || ''" (input)="setMediaTextBoxBilingual(section, i, bi, 'title', 'en', mtBoxTitleEn.value)" placeholder="Title (EN)" />
+                                      <input #mtBoxTitleAr type="text" dir="rtl" class="text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                        [value]="box.title?.ar || ''" (input)="setMediaTextBoxBilingual(section, i, bi, 'title', 'ar', mtBoxTitleAr.value)" placeholder="العنوان" />
+                                      <textarea #mtBoxTextEn rows="2" class="text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                        [value]="box.text?.en || ''" (input)="setMediaTextBoxBilingual(section, i, bi, 'text', 'en', mtBoxTextEn.value)" placeholder="Text (EN)"></textarea>
+                                      <textarea #mtBoxTextAr rows="2" dir="rtl" class="text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                        [value]="box.text?.ar || ''" (input)="setMediaTextBoxBilingual(section, i, bi, 'text', 'ar', mtBoxTextAr.value)" placeholder="النص"></textarea>
+                                    </div>
                                   </div>
-                                  <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
-                                    <input #mtColor type="color" class="h-8 w-full rounded border border-gray-300 cursor-pointer p-0.5"
-                                      [value]="item.textColor || '#ffffff'" (input)="updateArrayItemField(section, 'items', i, 'textColor', mtColor.value)" />
-                                  </div>
-                                  <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Text Width</label>
-                                    <select #mtWidth class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
-                                      [value]="item.maxWidth || 'medium'" (change)="updateArrayItemField(section, 'items', i, 'maxWidth', mtWidth.value)">
-                                      <option value="narrow">Narrow</option>
-                                      <option value="medium">Medium</option>
-                                      <option value="wide">Wide</option>
-                                    </select>
-                                  </div>
-                                </div>
+                                }
+                                <button type="button" (click)="addMediaTextBox(section, i)" class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Text Box</button>
                               </div>
                             }
                           </div>
@@ -2521,6 +2544,53 @@ export class SectionEditorComponent implements OnInit {
     item[key] = { ...(item[key] || {}), [lang]: value };
     items[index] = item;
     this.setContentArray(section, field, items);
+  }
+
+  // ── Media+Text overlay boxes (nested per-item array) ──
+
+  getMediaTextBoxes(section: SectionConfigurationDto, itemIndex: number): any[] {
+    const item = this.getContentArray(section, 'items')[itemIndex] || {};
+    if (Array.isArray(item.boxes) && item.boxes.length) return item.boxes;
+    // Legacy single-box rows saved before multi-box support — surface them as
+    // one editable box so reopening an older row doesn't lose its content.
+    if (item.layout === 'overlay' && (item.title?.en || item.title?.ar || item.text?.en || item.text?.ar)) {
+      return [{
+        anchor: item.overlayPosition || 'bottom-left',
+        title: item.title || { en: '', ar: '' },
+        text: item.text || { en: '', ar: '' },
+        textColor: item.textColor || '#ffffff',
+        maxWidth: item.maxWidth || 'medium'
+      }];
+    }
+    return [];
+  }
+
+  private setMediaTextBoxes(section: SectionConfigurationDto, itemIndex: number, boxes: any[]): void {
+    const items = [...this.getContentArray(section, 'items')];
+    items[itemIndex] = { ...items[itemIndex], boxes };
+    this.setContentArray(section, 'items', items);
+  }
+
+  addMediaTextBox(section: SectionConfigurationDto, itemIndex: number): void {
+    this.setMediaTextBoxes(section, itemIndex, [
+      ...this.getMediaTextBoxes(section, itemIndex),
+      { anchor: 'bottom-left', title: { en: '', ar: '' }, text: { en: '', ar: '' }, textColor: '#ffffff', maxWidth: 'medium' }
+    ]);
+  }
+
+  removeMediaTextBox(section: SectionConfigurationDto, itemIndex: number, boxIndex: number): void {
+    this.setMediaTextBoxes(section, itemIndex, this.getMediaTextBoxes(section, itemIndex).filter((_, i) => i !== boxIndex));
+  }
+
+  setMediaTextBoxField(section: SectionConfigurationDto, itemIndex: number, boxIndex: number, field: string, value: any): void {
+    const boxes = this.getMediaTextBoxes(section, itemIndex).map((b, i) => i === boxIndex ? { ...b, [field]: value } : b);
+    this.setMediaTextBoxes(section, itemIndex, boxes);
+  }
+
+  setMediaTextBoxBilingual(section: SectionConfigurationDto, itemIndex: number, boxIndex: number, field: string, lang: 'en' | 'ar', value: string): void {
+    const boxes = this.getMediaTextBoxes(section, itemIndex).map((b, i) =>
+      i === boxIndex ? { ...b, [field]: { ...(b[field] || {}), [lang]: value } } : b);
+    this.setMediaTextBoxes(section, itemIndex, boxes);
   }
 
   // ── Specs table (nested groups → rows) ──
