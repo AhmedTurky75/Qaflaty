@@ -56,10 +56,10 @@ interface MediaTextItem {
               @if (item.scrim !== 'none') {
                 <div class="absolute inset-0" [class]="scrimClass(item.scrim)"></div>
               }
-              <div class="absolute inset-0 flex p-6 md:p-10" [class]="anchorClasses(item.overlayPosition)">
-                <div [class]="maxWidthClass(item.maxWidth) + ' ' + textAlignClass(item.overlayPosition)" [style.color]="item.textColor">
-                  <h3 class="text-2xl md:text-3xl font-bold mb-3">{{ item.title }}</h3>
-                  <p class="leading-relaxed whitespace-pre-line opacity-90">{{ item.text }}</p>
+              <div class="absolute inset-0 flex p-6 md:p-10 overflow-hidden" [class]="anchorClasses(item.overlayPosition)">
+                <div class="max-h-full overflow-hidden" [class]="maxWidthClass(item.maxWidth) + ' ' + textAlignClass(item.overlayPosition)" [style.color]="item.textColor">
+                  <h3 class="font-bold mb-3" [style.font-size]="overlayTitleFontSize(item)">{{ item.title }}</h3>
+                  <p class="leading-relaxed whitespace-pre-line opacity-90" [style.font-size]="overlayBodyFontSize(item)">{{ item.text }}</p>
                 </div>
               </div>
             </div>
@@ -142,5 +142,41 @@ export class LandingMediaTextComponent {
 
   scrimClass(scrim: string): string {
     return scrim === 'light' ? 'bg-white/40' : 'bg-black/40';
+  }
+
+  // ── Auto-shrinking overlay text ──
+  // The overlay box has a fixed aspect ratio, so unbounded text can exceed it.
+  // Font size is picked from the text length (longer copy → smaller ceiling)
+  // and the chosen max-width (narrower box → smaller ceiling), then wrapped in
+  // a fluid clamp() so it shrinks further on narrow (mobile) viewports too —
+  // no JS measurement, no layout thrash, works before first paint.
+  private readonly overlayWidthFactor: Record<string, number> = {
+    narrow: 0.82, medium: 1, wide: 1.12
+  };
+
+  private fluidFontSize(minRem: number, maxRem: number): string {
+    if (maxRem <= minRem) return `${maxRem}rem`;
+    const minPx = 360, maxPx = 768; // interpolate between small and large phones
+    const slope = (maxRem - minRem) / (maxPx - minPx);
+    const intersection = minRem - slope * minPx;
+    return `clamp(${minRem}rem, ${intersection.toFixed(3)}rem + ${(slope * 100).toFixed(3)}vw, ${maxRem}rem)`;
+  }
+
+  overlayTitleFontSize(item: MediaTextItem): string {
+    const factor = this.overlayWidthFactor[item.maxWidth] ?? 1;
+    const len = item.title.length;
+    const base = len <= 20 ? 1.875 : len <= 40 ? 1.5 : len <= 70 ? 1.25 : len <= 110 ? 1.05 : 0.95;
+    const max = Math.max(0.9, base * factor);
+    const min = Math.max(0.8, max * 0.6);
+    return this.fluidFontSize(min, max);
+  }
+
+  overlayBodyFontSize(item: MediaTextItem): string {
+    const factor = this.overlayWidthFactor[item.maxWidth] ?? 1;
+    const len = item.text.length;
+    const base = len <= 80 ? 1 : len <= 160 ? 0.9375 : len <= 260 ? 0.875 : 0.8125;
+    const max = Math.max(0.75, base * factor);
+    const min = Math.max(0.7, max * 0.78);
+    return this.fluidFontSize(min, max);
   }
 }
