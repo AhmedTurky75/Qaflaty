@@ -537,14 +537,83 @@ interface PageTemplate {
                                 <img [src]="item.imageUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="Preview" />
                               }
                             </div>
-                            <label class="col-span-2 flex items-center gap-2 cursor-pointer">
-                              <input type="checkbox" [checked]="item.reverse" (change)="updateArrayItemField(section, 'items', i, 'reverse', !item.reverse)" class="h-4 w-4 text-blue-600 rounded" />
-                              <span class="text-xs font-medium text-gray-700">Image on the right</span>
-                            </label>
+
+                            <div class="col-span-2">
+                              <label class="block text-xs font-medium text-gray-700 mb-1">Text Position</label>
+                              <div class="flex gap-2">
+                                <button type="button" (click)="updateArrayItemField(section, 'items', i, 'layout', 'side')"
+                                  class="flex-1 text-xs px-2 py-1.5 rounded-md border" [class.border-blue-500]="(item.layout || 'side') === 'side'"
+                                  [class.bg-blue-50]="(item.layout || 'side') === 'side'" [class.border-gray-300]="(item.layout || 'side') !== 'side'">Beside Image</button>
+                                <button type="button" (click)="updateArrayItemField(section, 'items', i, 'layout', 'below')"
+                                  class="flex-1 text-xs px-2 py-1.5 rounded-md border" [class.border-blue-500]="item.layout === 'below'"
+                                  [class.bg-blue-50]="item.layout === 'below'" [class.border-gray-300]="item.layout !== 'below'">Below Image</button>
+                                <button type="button" (click)="updateArrayItemField(section, 'items', i, 'layout', 'overlay')"
+                                  class="flex-1 text-xs px-2 py-1.5 rounded-md border" [class.border-blue-500]="item.layout === 'overlay'"
+                                  [class.bg-blue-50]="item.layout === 'overlay'" [class.border-gray-300]="item.layout !== 'overlay'">Over Image</button>
+                              </div>
+                            </div>
+
+                            @if ((item.layout || 'side') === 'side') {
+                              <label class="col-span-2 flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" [checked]="item.reverse" (change)="updateArrayItemField(section, 'items', i, 'reverse', !item.reverse)" class="h-4 w-4 text-blue-600 rounded" />
+                                <span class="text-xs font-medium text-gray-700">Image on the right</span>
+                              </label>
+                            }
+                            @if (item.layout === 'below') {
+                              <label class="col-span-2 flex items-center gap-2 cursor-pointer">
+                                <input type="checkbox" [checked]="item.reverse" (change)="updateArrayItemField(section, 'items', i, 'reverse', !item.reverse)" class="h-4 w-4 text-blue-600 rounded" />
+                                <span class="text-xs font-medium text-gray-700">Text above the image</span>
+                              </label>
+                            }
+
+                            @if (item.layout === 'overlay') {
+                              <div class="col-span-2 space-y-3 border-t border-gray-100 pt-3">
+                                <div>
+                                  <label class="block text-xs font-medium text-gray-700 mb-1">Text Position on Image</label>
+                                  <div class="grid grid-cols-3 gap-1 w-32">
+                                    @for (pos of overlayPositions; track pos) {
+                                      <button type="button" (click)="updateArrayItemField(section, 'items', i, 'overlayPosition', pos)"
+                                        class="h-9 rounded-md border flex items-center justify-center"
+                                        [class.border-blue-500]="(item.overlayPosition || 'bottom-left') === pos"
+                                        [class.bg-blue-50]="(item.overlayPosition || 'bottom-left') === pos"
+                                        [class.border-gray-300]="(item.overlayPosition || 'bottom-left') !== pos"
+                                        [title]="pos">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                                      </button>
+                                    }
+                                  </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3">
+                                  <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Readability Overlay</label>
+                                    <select #mtScrim class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                                      [value]="item.scrim || 'dark'" (change)="updateArrayItemField(section, 'items', i, 'scrim', mtScrim.value)">
+                                      <option value="dark">Dark</option>
+                                      <option value="light">Light</option>
+                                      <option value="none">None</option>
+                                    </select>
+                                  </div>
+                                  <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
+                                    <input #mtColor type="color" class="h-8 w-full rounded border border-gray-300 cursor-pointer p-0.5"
+                                      [value]="item.textColor || '#ffffff'" (input)="updateArrayItemField(section, 'items', i, 'textColor', mtColor.value)" />
+                                  </div>
+                                  <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Text Width</label>
+                                    <select #mtWidth class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                                      [value]="item.maxWidth || 'medium'" (change)="updateArrayItemField(section, 'items', i, 'maxWidth', mtWidth.value)">
+                                      <option value="narrow">Narrow</option>
+                                      <option value="medium">Medium</option>
+                                      <option value="wide">Wide</option>
+                                    </select>
+                                  </div>
+                                </div>
+                              </div>
+                            }
                           </div>
                         </div>
                       }
-                      <button type="button" (click)="addArrayItem(section, 'items', { imageUrl: '', title: { en: '', ar: '' }, text: { en: '', ar: '' }, reverse: false })"
+                      <button type="button" (click)="addArrayItem(section, 'items', { imageUrl: '', title: { en: '', ar: '' }, text: { en: '', ar: '' }, reverse: false, layout: 'side' })"
                         class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Row</button>
                     </div>
                   }
@@ -1917,6 +1986,13 @@ export class SectionEditorComponent implements OnInit {
 
   /** Products for the product-bound section pickers (Order Form / Bundle / Sticky Bar). */
   productOptions = signal<{ slug: string; name: string }[]>([]);
+
+  /** 9-position anchor grid for Media+Text "over image" text placement, in visual row order. */
+  readonly overlayPositions = [
+    'top-left', 'top-center', 'top-right',
+    'center-left', 'center', 'center-right',
+    'bottom-left', 'bottom-center', 'bottom-right'
+  ];
 
   readonly sectionTypes: SectionTypeInfo[] = [
     { key: 'Hero', label: 'Hero Banner', description: 'Top hero section', defaultVariantId: 'hero-full-image' },
