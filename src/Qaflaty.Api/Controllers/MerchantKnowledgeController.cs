@@ -40,7 +40,7 @@ public class MerchantKnowledgeController : ApiController
     [RequestSizeLimit(20 * 1024 * 1024)] // 20 MB
     public async Task<IActionResult> Upload(
         Guid storeId,
-        [FromForm] IFormFile file,
+        IFormFile file,
         [FromForm] string? title,
         CancellationToken ct)
     {

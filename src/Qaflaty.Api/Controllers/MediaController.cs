@@ -69,7 +69,7 @@ public class MediaController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UploadVideo(
         Guid storeId,
-        [FromForm] IFormFile file,
+        IFormFile file,
         CancellationToken cancellationToken)
     {
         if (file is null || file.Length == 0)
