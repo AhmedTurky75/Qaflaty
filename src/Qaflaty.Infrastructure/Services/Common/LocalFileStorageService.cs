@@ -44,15 +44,29 @@ public class LocalFileStorageService : IFileStorageService
 
     public Task DeleteAsync(string fileUrl, CancellationToken cancellationToken = default)
     {
-        if (Uri.TryCreate(fileUrl, UriKind.Absolute, out var uri))
-        {
-            var fileName = Path.GetFileName(uri.LocalPath);
-            var filePath = Path.Combine(_uploadPath, fileName);
-
-            if (File.Exists(filePath))
-                File.Delete(filePath);
-        }
+        var filePath = ResolveLocalPath(fileUrl);
+        if (filePath is not null && File.Exists(filePath))
+            File.Delete(filePath);
 
         return Task.CompletedTask;
+    }
+
+    public Task<Stream?> OpenReadAsync(string fileUrl, CancellationToken cancellationToken = default)
+    {
+        var filePath = ResolveLocalPath(fileUrl);
+        if (filePath is null || !File.Exists(filePath))
+            return Task.FromResult<Stream?>(null);
+
+        Stream stream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return Task.FromResult<Stream?>(stream);
+    }
+
+    private string? ResolveLocalPath(string fileUrl)
+    {
+        if (!Uri.TryCreate(fileUrl, UriKind.Absolute, out var uri))
+            return null;
+
+        var fileName = Path.GetFileName(uri.LocalPath);
+        return string.IsNullOrEmpty(fileName) ? null : Path.Combine(_uploadPath, fileName);
     }
 }

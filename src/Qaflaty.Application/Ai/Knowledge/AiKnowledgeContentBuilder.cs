@@ -9,8 +9,8 @@ using StoreConfigurationEntity = Qaflaty.Domain.Catalog.Aggregates.StoreConfigur
 namespace Qaflaty.Application.Ai.Knowledge;
 
 /// <summary>
-/// A piece of store knowledge ready to be embedded. The vector store turns each draft
-/// into an <see cref="AiKnowledgeDocument"/> once its <see cref="Content"/> is embedded.
+/// A piece of store knowledge ready to be embedded. Each draft becomes one knowledge document +
+/// chunk in the vector store once its <see cref="Content"/> is embedded.
 /// </summary>
 public sealed record AiKnowledgeDraft(
     string Id,

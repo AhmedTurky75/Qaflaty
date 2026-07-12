@@ -2,7 +2,9 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:16-alpine
+    # pgvector-enabled PostgreSQL image (superset of the stock postgres image). Required for the
+    # RAG vector store; the AddKnowledgeVectorStore migration runs CREATE EXTENSION vector.
+    image: pgvector/pgvector:pg16
     container_name: qaflaty-db
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-qaflaty}

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using Pgvector.EntityFrameworkCore;
 using Qaflaty.Application.Ads.Abstractions;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.Interfaces.Ai;
@@ -12,6 +13,7 @@ using Qaflaty.Domain.Ads.Repositories;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Communication.Aggregates.AiInteraction;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
+using Qaflaty.Domain.Communication.Aggregates.Knowledge;
 using Qaflaty.Domain.Identity.Repositories;
 using Qaflaty.Domain.Identity.Services;
 using Qaflaty.Domain.Ordering.Repositories;
@@ -56,7 +58,7 @@ public static class DependencyInjection
                     "for local development.");
             }
 
-            options.UseNpgsql(connectionString)
+            options.UseNpgsql(connectionString, npgsql => npgsql.UseVector())
                 .AddInterceptors(auditInterceptor, eventInterceptor);
         });
 
@@ -82,6 +84,7 @@ public static class DependencyInjection
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IChatConversationRepository, ChatConversationRepository>();
         services.AddScoped<IAiInteractionLogRepository, AiInteractionLogRepository>();
+        services.AddScoped<IKnowledgeDocumentRepository, KnowledgeDocumentRepository>();
         services.AddScoped<IOrderOtpRepository, OrderOtpRepository>();
         services.AddScoped<ICountryRepository, CountryRepository>();
         services.AddScoped<ICityRepository, CityRepository>();
@@ -117,10 +120,25 @@ public static class DependencyInjection
 
         // AI Assistant Services
         services.Configure<AiAssistantOptions>(configuration.GetSection(AiAssistantOptions.SectionName));
-        services.AddSingleton<IAiKnowledgeStore, InMemoryAiKnowledgeStore>();
 
         services.AddHttpClient<IAiChatCompletionService, OpenAiCompatibleChatCompletionService>(ConfigureAiHttpClient);
         services.AddHttpClient<IAiEmbeddingService, OpenAiCompatibleEmbeddingService>(ConfigureAiHttpClient);
+
+        // Vector store (pluggable RAG backend). PgVector is scoped (uses the DbContext); the in-memory
+        // fallback is a singleton so its state survives across requests.
+        services.Configure<VectorStoreOptions>(configuration.GetSection(VectorStoreOptions.SectionName));
+        var vectorStoreOptions = configuration.GetSection(VectorStoreOptions.SectionName).Get<VectorStoreOptions>()
+            ?? new VectorStoreOptions();
+        if (vectorStoreOptions.ResolvedProvider == VectorStoreProvider.InMemory)
+            services.AddSingleton<IVectorStore, InMemoryVectorStore>();
+        else
+            services.AddScoped<IVectorStore, PgVectorStore>();
+
+        // Knowledge document ingestion (uploads → chunk → embed → vectors).
+        services.AddScoped<IDocumentChunker, DefaultDocumentChunker>();
+        services.AddScoped<IDocumentTextExtractor, PlainTextDocumentExtractor>();
+        services.AddSingleton<IKnowledgeIngestionQueue, ChannelKnowledgeIngestionQueue>();
+        services.AddHostedService<KnowledgeDocumentProcessor>();
 
         // Ads Management Services
         services.AddScoped<ICredentialProtector, DataProtectionCredentialProtector>();

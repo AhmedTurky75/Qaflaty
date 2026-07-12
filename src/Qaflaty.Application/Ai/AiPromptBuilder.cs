@@ -17,7 +17,7 @@ public static class AiPromptBuilder
     public static string BuildSystemPrompt(
         string storeName,
         AiAssistantSettings settings,
-        IReadOnlyList<AiKnowledgeSearchResult> context)
+        IReadOnlyList<VectorSearchHit> context)
     {
         var assistantName = string.IsNullOrWhiteSpace(settings.AssistantName)
             ? "the shopping assistant"
@@ -50,8 +50,8 @@ public static class AiPromptBuilder
             var index = 1;
             foreach (var result in context)
             {
-                sb.AppendLine($"[{index}] {result.Document.Title}");
-                sb.AppendLine(result.Document.Content);
+                sb.AppendLine($"[{index}] {result.Title}");
+                sb.AppendLine(result.Content);
                 sb.AppendLine();
                 index++;
             }

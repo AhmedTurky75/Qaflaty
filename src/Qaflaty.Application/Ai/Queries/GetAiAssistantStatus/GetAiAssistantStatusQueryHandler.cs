@@ -12,18 +12,18 @@ public sealed class GetAiAssistantStatusQueryHandler
     : IQueryHandler<GetAiAssistantStatusQuery, AiAssistantStatusDto>
 {
     private readonly IStoreConfigurationRepository _configRepository;
-    private readonly IAiKnowledgeStore _knowledgeStore;
+    private readonly IVectorStore _vectorStore;
     private readonly IAiChatCompletionService _chatService;
     private readonly IAiEmbeddingService _embeddingService;
 
     public GetAiAssistantStatusQueryHandler(
         IStoreConfigurationRepository configRepository,
-        IAiKnowledgeStore knowledgeStore,
+        IVectorStore vectorStore,
         IAiChatCompletionService chatService,
         IAiEmbeddingService embeddingService)
     {
         _configRepository = configRepository;
-        _knowledgeStore = knowledgeStore;
+        _vectorStore = vectorStore;
         _chatService = chatService;
         _embeddingService = embeddingService;
     }
@@ -38,18 +38,18 @@ public sealed class GetAiAssistantStatusQueryHandler
             return Result.Failure<AiAssistantStatusDto>(CatalogErrors.StoreConfigurationNotFound);
 
         var settings = config.AiAssistantSettings;
-        var stats = _knowledgeStore.GetStats(storeId.Value);
+        var stats = await _vectorStore.GetStatsAsync(storeId, cancellationToken);
 
         var dto = new AiAssistantStatusDto(
             settings.Enabled,
             settings.DisableHumanChat,
             _chatService.IsConfigured && _embeddingService.IsConfigured,
-            _knowledgeStore.HasKnowledge(storeId.Value),
-            stats?.ProductCount ?? 0,
-            stats?.FaqCount ?? 0,
-            stats?.StorePageCount ?? 0,
-            stats?.TotalDocuments ?? 0,
-            stats?.LastRefreshedAtUtc);
+            stats.TotalChunks > 0,
+            stats.ProductCount,
+            stats.FaqCount,
+            stats.StorePageCount,
+            stats.TotalChunks,
+            stats.LastUpdatedUtc);
 
         return Result.Success(dto);
     }

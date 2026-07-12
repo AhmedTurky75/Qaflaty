@@ -16,7 +16,9 @@ using Qaflaty.Domain.Catalog.Aggregates.Store;
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
 using Qaflaty.Domain.Communication.Aggregates.AiInteraction;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
+using Qaflaty.Domain.Communication.Aggregates.Knowledge;
 using Qaflaty.Domain.Communication.Entities;
+using Qaflaty.Infrastructure.Persistence.Records;
 using Qaflaty.Domain.Identity.Aggregates.AccessDeniedReport;
 using Qaflaty.Domain.Identity.Aggregates.LoginOtp;
 using Qaflaty.Domain.Identity.Aggregates.Merchant;
@@ -87,6 +89,8 @@ public class QaflatyDbContext : DbContext
     public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<AiInteractionLog> AiInteractionLogs => Set<AiInteractionLog>();
+    public DbSet<KnowledgeDocument> KnowledgeDocuments => Set<KnowledgeDocument>();
+    public DbSet<KnowledgeChunkRecord> KnowledgeChunks => Set<KnowledgeChunkRecord>();
 
     // Ads
     public DbSet<ProviderIntegration> ProviderIntegrations => Set<ProviderIntegration>();

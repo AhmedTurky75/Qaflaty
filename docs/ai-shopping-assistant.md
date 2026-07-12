@@ -69,7 +69,11 @@ interfaces.
 
 - `IAiChatCompletionService` — chat completion (`/chat/completions`).
 - `IAiEmbeddingService` — embeddings (`/embeddings`).
-- `IAiKnowledgeStore` — in-memory, per-store vector store with cosine-similarity search.
+- `IVectorStore` — pluggable, per-store vector store (upsert/search/delete/stats). This is the
+  single seam a future Qdrant/Pinecone backend implements; the domain never references pgvector.
+- `IKnowledgeDocumentRepository` — persists `KnowledgeDocument` metadata (derived + uploaded).
+- `IDocumentChunker` / `IDocumentTextExtractor` / `IKnowledgeIngestionQueue` — the upload
+  ingestion pipeline (chunk → embed → store) fed by a background worker.
 - `AiPromptBuilder` — builds the grounded system prompt (no hallucination, no unauthorized
   actions, prompt-injection resistance, tenant isolation).
 - `AiKnowledgeContentBuilder` — turns store/FAQ/product data into embeddable text drafts.
@@ -78,8 +82,14 @@ interfaces.
 
 - `OpenAiCompatibleChatCompletionService` / `OpenAiCompatibleEmbeddingService` — typed
   `HttpClient`s configured from the `AiAssistant` options.
-- `InMemoryAiKnowledgeStore` — singleton, partitioned by `storeId` for strict tenant
-  isolation; rebuilt on each "Refresh AI Knowledge".
+- `PgVectorStore` — PostgreSQL + pgvector store (default). Every query is filtered by `store_id`
+  for strict tenant isolation; cosine search runs in SQL with the name-weighted blend for
+  products. `InMemoryVectorStore` is a process-local fallback (`VectorStore:Provider = InMemory`).
+- `KnowledgeDocumentProcessor` — background worker that embeds uploaded documents off the
+  request thread (extract → chunk → embed → persist vectors → mark Ready/Failed).
+- Persistence: `knowledge_documents` (metadata) + `knowledge_chunks` (`vector(768)` embeddings,
+  HNSW cosine indexes), created by the `AddKnowledgeVectorStore` migration. Requires the pgvector
+  extension (see the `pgvector/pgvector` image in `docker-compose.yml`).
 
 ### CQRS
 
@@ -187,7 +197,8 @@ dotnet ef database update \
   components (`ng build`).
 - A `tests/Qaflaty.UnitTests` xUnit project covers the pure-logic surface (no DB/LLM needed):
   `AiAssistantSettings` (defaults, normalization, active-hours incl. overnight),
-  `InMemoryAiKnowledgeStore` (cosine ranking, top-K, min-score, tenant isolation, stats),
+  `InMemoryVectorStore` (cosine ranking, name-blended scoring, top-K, min-score, cross-tenant
+  isolation, stats), `DefaultDocumentChunker` (windowing/overlap),
   `AiPromptBuilder` (guardrails, persona/language, retrieved-context injection), and
   `GetAiAnalyticsQueryHandler` (metric aggregation). Run with `dotnet test`.
 - Backend could not be compiled in this environment (no .NET SDK; SDK download hosts blocked).
