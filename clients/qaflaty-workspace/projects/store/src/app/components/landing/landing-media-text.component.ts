@@ -10,26 +10,40 @@ type AnchorPosition =
   | 'center-left' | 'center' | 'center-right'
   | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
+interface OverlayBox {
+  anchor: AnchorPosition;
+  title: string;
+  text: string;
+  textColor: string;
+  maxWidth: 'narrow' | 'medium' | 'wide';
+}
+
 interface MediaTextItem {
   imageUrl: string;
   title: string;
   text: string;
   reverse?: boolean;
   layout: MediaTextLayout;
-  overlayPosition: AnchorPosition;
   scrim: 'none' | 'dark' | 'light';
-  textColor: string;
-  maxWidth: 'narrow' | 'medium' | 'wide';
+  boxes: OverlayBox[];
 }
 
 /**
  * Alternating image/text rows. Each row picks a layout:
  *  - side: image and text side by side (optionally reversed)
  *  - below: image on top, text stacked underneath, full width
- *  - overlay: text laid over the image, anchored to one of 9 fixed grid
- *    positions (never free-dragged) so it stays legible at every breakpoint —
- *    object-fit: cover crops images differently per viewport width, so pixel
- *    coordinates chosen in the editor wouldn't line up on other screen sizes.
+ *  - overlay: one or more independent text boxes laid over the image, each
+ *    anchored to a fixed grid position (never free-dragged) so it stays
+ *    legible at every breakpoint — object-fit: cover crops the image
+ *    differently per viewport width, so pixel coordinates chosen in the
+ *    editor wouldn't line up on other screen sizes.
+ *
+ *    The grid itself is responsive: on screens narrower than `md` only the 4
+ *    corners are used (less room means fewer, more separated anchor points
+ *    reduce crowding/overlap); at `md` and up the full 9-position grid
+ *    applies. This is done with matching pairs of literal Tailwind
+ *    classes — unprefixed for the mobile/collapsed anchor, `md:`-prefixed for
+ *    the true desktop anchor — so it needs no JS/resize listeners.
  */
 @Component({
   selector: 'app-landing-media-text',
@@ -56,12 +70,18 @@ interface MediaTextItem {
               @if (item.scrim !== 'none') {
                 <div class="absolute inset-0" [class]="scrimClass(item.scrim)"></div>
               }
-              <div class="absolute inset-0 flex p-6 md:p-10 overflow-hidden" [class]="anchorClasses(item.overlayPosition)">
-                <div class="max-h-full overflow-hidden" [class]="maxWidthClass(item.maxWidth) + ' ' + textAlignClass(item.overlayPosition)" [style.color]="item.textColor">
-                  <h3 class="font-bold mb-3" [style.font-size]="overlayTitleFontSize(item)">{{ item.title }}</h3>
-                  <p class="leading-relaxed whitespace-pre-line opacity-90" [style.font-size]="overlayBodyFontSize(item)">{{ item.text }}</p>
+              @for (box of item.boxes; track $index) {
+                <div class="absolute inset-0 flex p-6 md:p-10 overflow-hidden" [class]="anchorClasses(box.anchor)">
+                  <div class="max-h-full overflow-hidden" [class]="maxWidthClass(box.maxWidth) + ' ' + textAlignClass(box.anchor)" [style.color]="box.textColor">
+                    @if (box.title) {
+                      <h3 class="font-bold mb-3" [style.font-size]="overlayTitleFontSize(box.title, box.maxWidth)">{{ box.title }}</h3>
+                    }
+                    @if (box.text) {
+                      <p class="leading-relaxed whitespace-pre-line opacity-90" [style.font-size]="overlayBodyFontSize(box.text, box.maxWidth)">{{ box.text }}</p>
+                    }
+                  </div>
                 </div>
-              </div>
+              }
             </div>
           }
           @default {
@@ -94,20 +114,47 @@ export class LandingMediaTextComponent {
     const lang = this.i18n.currentLanguage();
     const rawItems: any[] = Array.isArray(this.content().items) ? this.content().items : [];
     const productImages = this.product()?.images ?? [];
+    const t = (field: any) => (lang === 'ar' ? field?.ar : field?.en) || '';
 
-    return rawItems.map((item, index) => ({
-      imageUrl: item.imageUrl || productImages[index]?.url || productImages[0]?.url || '',
-      title: (lang === 'ar' ? item.title?.ar : item.title?.en) || '',
-      text: (lang === 'ar' ? item.text?.ar : item.text?.en) || '',
-      reverse: !!item.reverse,
-      layout: (item.layout === 'below' || item.layout === 'overlay') ? item.layout : 'side',
-      overlayPosition: item.overlayPosition || 'bottom-left',
-      scrim: item.scrim === 'light' || item.scrim === 'none' ? item.scrim : 'dark',
-      textColor: item.textColor || '#ffffff',
-      maxWidth: item.maxWidth === 'narrow' || item.maxWidth === 'wide' ? item.maxWidth : 'medium'
-    }));
+    return rawItems.map((item, index) => {
+      const layout: MediaTextLayout = (item.layout === 'below' || item.layout === 'overlay') ? item.layout : 'side';
+
+      let boxes: OverlayBox[] = [];
+      if (layout === 'overlay') {
+        const rawBoxes: any[] = Array.isArray(item.boxes) ? item.boxes : [];
+        if (rawBoxes.length) {
+          boxes = rawBoxes.map(b => ({
+            anchor: b.anchor || 'bottom-left',
+            title: t(b.title),
+            text: t(b.text),
+            textColor: b.textColor || '#ffffff',
+            maxWidth: b.maxWidth === 'narrow' || b.maxWidth === 'wide' ? b.maxWidth : 'medium'
+          }));
+        } else if (item.title || item.text) {
+          // Legacy single-box rows saved before multi-box support.
+          boxes = [{
+            anchor: item.overlayPosition || 'bottom-left',
+            title: t(item.title),
+            text: t(item.text),
+            textColor: item.textColor || '#ffffff',
+            maxWidth: item.maxWidth === 'narrow' || item.maxWidth === 'wide' ? item.maxWidth : 'medium'
+          }];
+        }
+      }
+
+      return {
+        imageUrl: item.imageUrl || productImages[index]?.url || productImages[0]?.url || '',
+        title: t(item.title),
+        text: t(item.text),
+        reverse: !!item.reverse,
+        layout,
+        scrim: item.scrim === 'light' || item.scrim === 'none' ? item.scrim : 'dark',
+        boxes
+      };
+    });
   });
 
+  // Unprefixed = collapsed mobile anchor (4 corners only); md: = true desktop anchor (9-grid).
   private readonly vAnchor: Record<string, string> = {
     top: 'items-start', center: 'items-center', bottom: 'items-end'
   };
@@ -116,6 +163,15 @@ export class LandingMediaTextComponent {
   };
   private readonly hAlign: Record<string, string> = {
     left: 'text-start', center: 'text-center', right: 'text-end'
+  };
+  private readonly vAnchorMd: Record<string, string> = {
+    top: 'md:items-start', center: 'md:items-center', bottom: 'md:items-end'
+  };
+  private readonly hAnchorMd: Record<string, string> = {
+    left: 'md:justify-start', center: 'md:justify-center', right: 'md:justify-end'
+  };
+  private readonly hAlignMd: Record<string, string> = {
+    left: 'md:text-start', center: 'md:text-center', right: 'md:text-end'
   };
   private readonly widthClasses: Record<string, string> = {
     narrow: 'max-w-xs', medium: 'max-w-md', wide: 'max-w-xl'
@@ -126,14 +182,26 @@ export class LandingMediaTextComponent {
     return { v, h: h || 'center' };
   }
 
+  /** Below `md`, only the 4 corners are used: center rows collapse to bottom, center columns to left. */
+  private collapseToCorner(v: string, h: string): { v: string; h: string } {
+    return { v: v === 'center' ? 'bottom' : v, h: h === 'center' ? 'left' : h };
+  }
+
   anchorClasses(position: AnchorPosition): string {
     const { v, h } = this.splitPosition(position);
-    return `${this.vAnchor[v] || 'items-end'} ${this.hAnchor[h] || 'justify-start'}`;
+    const corner = this.collapseToCorner(v, h);
+    return [
+      this.vAnchor[corner.v] || 'items-end',
+      this.hAnchor[corner.h] || 'justify-start',
+      this.vAnchorMd[v] || 'md:items-end',
+      this.hAnchorMd[h] || 'md:justify-start'
+    ].join(' ');
   }
 
   textAlignClass(position: AnchorPosition): string {
     const { h } = this.splitPosition(position);
-    return this.hAlign[h] || 'text-start';
+    const corner = this.collapseToCorner('top', h); // only h matters here
+    return `${this.hAlign[corner.h] || 'text-start'} ${this.hAlignMd[h] || 'md:text-start'}`;
   }
 
   maxWidthClass(width: string): string {
@@ -145,7 +213,7 @@ export class LandingMediaTextComponent {
   }
 
   // ── Auto-shrinking overlay text ──
-  // The overlay box has a fixed aspect ratio, so unbounded text can exceed it.
+  // Each box's box has a fixed aspect ratio, so unbounded text can exceed it.
   // Font size is picked from the text length (longer copy → smaller ceiling)
   // and the chosen max-width (narrower box → smaller ceiling), then wrapped in
   // a fluid clamp() so it shrinks further on narrow (mobile) viewports too —
@@ -174,21 +242,21 @@ export class LandingMediaTextComponent {
     return `clamp(${minRem}rem, ${interceptRem.toFixed(4)}rem + ${vwCoefficient.toFixed(4)}vw, ${maxRem}rem)`;
   }
 
-  overlayTitleFontSize(item: MediaTextItem): string {
-    const factor = this.overlayWidthFactor[item.maxWidth] ?? 1;
-    const len = item.title.length;
-    const base = len <= 20 ? 1.875 : len <= 40 ? 1.5 : len <= 70 ? 1.25 : len <= 110 ? 1.05 : 0.95;
-    const max = Math.max(0.9, base * factor);
-    const min = Math.max(0.8, max * 0.6);
+  overlayTitleFontSize(title: string, maxWidth: string): string {
+    const factor = this.overlayWidthFactor[maxWidth] ?? 1;
+    const len = title.length;
+    const base = len <= 20 ? 2.25 : len <= 40 ? 1.875 : len <= 70 ? 1.5 : len <= 110 ? 1.25 : 1.05;
+    const max = Math.max(1.05, base * factor);
+    const min = Math.max(1, max * 0.75);
     return this.fluidFontSize(min, max);
   }
 
-  overlayBodyFontSize(item: MediaTextItem): string {
-    const factor = this.overlayWidthFactor[item.maxWidth] ?? 1;
-    const len = item.text.length;
-    const base = len <= 80 ? 1 : len <= 160 ? 0.9375 : len <= 260 ? 0.875 : 0.8125;
-    const max = Math.max(0.75, base * factor);
-    const min = Math.max(0.7, max * 0.78);
+  overlayBodyFontSize(text: string, maxWidth: string): string {
+    const factor = this.overlayWidthFactor[maxWidth] ?? 1;
+    const len = text.length;
+    const base = len <= 80 ? 1.125 : len <= 160 ? 1.0625 : len <= 260 ? 1 : 0.9375;
+    const max = Math.max(0.9, base * factor);
+    const min = Math.max(0.85, max * 0.8);
     return this.fluidFontSize(min, max);
   }
 }
