@@ -154,12 +154,24 @@ export class LandingMediaTextComponent {
     narrow: 0.82, medium: 1, wide: 1.12
   };
 
+  /**
+   * Builds `clamp(min, A rem + B vw, max)` so the size equals `minRem` at
+   * `minPx` viewport width, `maxRem` at `maxPx`, and interpolates linearly
+   * between. Math must go through px (1vw = viewportWidthPx/100, independent
+   * of root font size) before converting the constant term back to rem —
+   * skipping that conversion makes the vw coefficient ~16x too small and the
+   * clamp() effectively never leaves its floor.
+   */
   private fluidFontSize(minRem: number, maxRem: number): string {
     if (maxRem <= minRem) return `${maxRem}rem`;
     const minPx = 360, maxPx = 768; // interpolate between small and large phones
-    const slope = (maxRem - minRem) / (maxPx - minPx);
-    const intersection = minRem - slope * minPx;
-    return `clamp(${minRem}rem, ${intersection.toFixed(3)}rem + ${(slope * 100).toFixed(3)}vw, ${maxRem}rem)`;
+    const rootPx = 16;
+    const minFontPx = minRem * rootPx;
+    const maxFontPx = maxRem * rootPx;
+    const slopePxPerPx = (maxFontPx - minFontPx) / (maxPx - minPx);
+    const vwCoefficient = slopePxPerPx * 100;
+    const interceptRem = (minFontPx - slopePxPerPx * minPx) / rootPx;
+    return `clamp(${minRem}rem, ${interceptRem.toFixed(4)}rem + ${vwCoefficient.toFixed(4)}vw, ${maxRem}rem)`;
   }
 
   overlayTitleFontSize(item: MediaTextItem): string {
