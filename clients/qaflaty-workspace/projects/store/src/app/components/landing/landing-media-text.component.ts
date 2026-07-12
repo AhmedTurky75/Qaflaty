@@ -177,18 +177,18 @@ export class LandingMediaTextComponent {
   overlayTitleFontSize(item: MediaTextItem): string {
     const factor = this.overlayWidthFactor[item.maxWidth] ?? 1;
     const len = item.title.length;
-    const base = len <= 20 ? 1.875 : len <= 40 ? 1.5 : len <= 70 ? 1.25 : len <= 110 ? 1.05 : 0.95;
-    const max = Math.max(0.9, base * factor);
-    const min = Math.max(0.8, max * 0.6);
+    const base = len <= 20 ? 2.25 : len <= 40 ? 1.875 : len <= 70 ? 1.5 : len <= 110 ? 1.25 : 1.05;
+    const max = Math.max(1.05, base * factor);
+    const min = Math.max(1, max * 0.75);
     return this.fluidFontSize(min, max);
   }
 
   overlayBodyFontSize(item: MediaTextItem): string {
     const factor = this.overlayWidthFactor[item.maxWidth] ?? 1;
     const len = item.text.length;
-    const base = len <= 80 ? 1 : len <= 160 ? 0.9375 : len <= 260 ? 0.875 : 0.8125;
-    const max = Math.max(0.75, base * factor);
-    const min = Math.max(0.7, max * 0.78);
+    const base = len <= 80 ? 1.125 : len <= 160 ? 1.0625 : len <= 260 ? 1 : 0.9375;
+    const max = Math.max(0.9, base * factor);
+    const min = Math.max(0.85, max * 0.8);
     return this.fluidFontSize(min, max);
   }
 }
