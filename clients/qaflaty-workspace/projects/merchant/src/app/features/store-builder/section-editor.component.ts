@@ -568,23 +568,40 @@ interface PageTemplate {
 
                             @if (item.layout === 'overlay') {
                               <div class="col-span-2 space-y-3 border-t border-gray-100 pt-3">
-                                <div>
-                                  <label class="block text-xs font-medium text-gray-700 mb-1">Text Position on Image</label>
-                                  <div class="grid grid-cols-3 gap-1 w-32">
-                                    @for (pos of overlayPositions; track pos) {
-                                      <button type="button" (click)="updateArrayItemField(section, 'items', i, 'overlayPosition', pos)"
-                                        class="h-9 rounded-md border flex items-center justify-center"
-                                        [class.border-blue-500]="(item.overlayPosition || 'bottom-left') === pos"
-                                        [class.bg-blue-50]="(item.overlayPosition || 'bottom-left') === pos"
-                                        [class.border-gray-300]="(item.overlayPosition || 'bottom-left') !== pos"
-                                        [title]="pos">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-                                      </button>
-                                    }
+                                <div class="flex gap-6">
+                                  <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Start Corner</label>
+                                    <div class="grid grid-cols-3 gap-1 w-28">
+                                      @for (pos of overlayPositions; track pos) {
+                                        <button type="button" (click)="updateArrayItemField(section, 'items', i, 'overlayPosition', pos)"
+                                          class="h-8 rounded-md border flex items-center justify-center"
+                                          [class.border-blue-500]="(item.overlayPosition || 'bottom-left') === pos"
+                                          [class.bg-blue-50]="(item.overlayPosition || 'bottom-left') === pos"
+                                          [class.border-gray-300]="(item.overlayPosition || 'bottom-left') !== pos"
+                                          [title]="pos">
+                                          <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                                        </button>
+                                      }
+                                    </div>
                                   </div>
-                                  <p class="text-[11px] text-gray-400 mt-1">On phones, this collapses to the nearest corner so text doesn't crowd a small screen.</p>
+                                  <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">End Corner</label>
+                                    <div class="grid grid-cols-3 gap-1 w-28">
+                                      @for (pos of overlayPositions; track pos) {
+                                        <button type="button" (click)="updateArrayItemField(section, 'items', i, 'overlayEndPosition', pos)"
+                                          class="h-8 rounded-md border flex items-center justify-center"
+                                          [class.border-blue-500]="(item.overlayEndPosition || item.overlayPosition || 'bottom-left') === pos"
+                                          [class.bg-blue-50]="(item.overlayEndPosition || item.overlayPosition || 'bottom-left') === pos"
+                                          [class.border-gray-300]="(item.overlayEndPosition || item.overlayPosition || 'bottom-left') !== pos"
+                                          [title]="pos">
+                                          <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
+                                        </button>
+                                      }
+                                    </div>
+                                  </div>
                                 </div>
-                                <div class="grid grid-cols-3 gap-3">
+                                <p class="text-[11px] text-gray-400">Pick the same cell twice for a small box, or two different cells for a wider/taller box spanning everything between them (a row, a column, or a rectangle). On phones this collapses to the nearest 2×2 corner so text doesn't crowd a small screen.</p>
+                                <div class="grid grid-cols-2 gap-3">
                                   <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Readability Overlay</label>
                                     <select #mtScrim class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
@@ -599,12 +616,7 @@ interface PageTemplate {
                                     <input #mtColor type="color" class="h-8 w-full rounded border border-gray-300 cursor-pointer p-0.5"
                                       [value]="item.textColor || '#ffffff'" (input)="updateArrayItemField(section, 'items', i, 'textColor', mtColor.value)" />
                                   </div>
-                                  <label class="flex items-center gap-2 cursor-pointer mt-6">
-                                    <input type="checkbox" [checked]="item.wrapText" (change)="updateArrayItemField(section, 'items', i, 'wrapText', !item.wrapText)" class="h-4 w-4 text-blue-600 rounded" />
-                                    <span class="text-xs font-medium text-gray-700">Wrap text (narrow column)</span>
-                                  </label>
                                 </div>
-                                <p class="text-[11px] text-gray-400">Wrap text keeps long copy from stretching wide by capping it to about a third of the image width.</p>
                               </div>
                             }
                           </div>

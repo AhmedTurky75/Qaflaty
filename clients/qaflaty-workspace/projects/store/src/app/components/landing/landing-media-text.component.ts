@@ -17,27 +17,32 @@ interface MediaTextItem {
   reverse?: boolean;
   layout: MediaTextLayout;
   scrim: 'none' | 'dark' | 'light';
+  /** Start corner of the text area on the 3x3 grid. */
   overlayPosition: AnchorPosition;
+  /** End corner; equal to overlayPosition (or unset) means a single cell. */
+  overlayEndPosition: AnchorPosition;
   textColor: string;
-  /** Caps the text column to roughly a third of the image width so long copy wraps instead of stretching wide. */
-  wrapText: boolean;
 }
 
 /**
  * Alternating image/text rows. Each row picks a layout:
  *  - side: image and text side by side (optionally reversed)
  *  - below: image on top, text stacked underneath, full width
- *  - overlay: text laid over the image, anchored to one of 9 fixed grid
- *    positions (never free-dragged) so it stays legible at every breakpoint —
- *    object-fit: cover crops the image differently per viewport width, so
- *    pixel coordinates chosen in the editor wouldn't line up on other screens.
+ *  - overlay: text laid over the image, spanning a rectangle of cells on a
+ *    fixed 3x3 grid — chosen as a start corner + end corner, both snapped to
+ *    grid lines (never free pixels), so the box is always a CSS
+ *    `grid-column`/`grid-row` range: proportional to the container and
+ *    identical in shape at every viewport width. object-fit: cover crops the
+ *    image differently per breakpoint, so pixel/percent coordinates chosen in
+ *    the editor wouldn't line up on other screen sizes — a grid-line range
+ *    doesn't have that problem.
  *
- *    The grid is responsive: below `md` only the 4 corners are used (center
- *    rows collapse to bottom, center columns collapse to start) so the box
- *    has more breathing room on a small screen; `md` and up uses the full
- *    9-position grid. Done with paired literal Tailwind classes (unprefixed
- *    for the mobile/collapsed anchor, `md:`-prefixed for the true desktop
- *    anchor) — pure CSS, no JS resize listeners.
+ *    The grid itself is responsive: below `md` it collapses to 2x2 (center
+ *    rows collapse to bottom, center columns collapse to start) so a box
+ *    keeps proportionally the same footprint with less crowding on a small
+ *    screen; `md` and up uses the full 3x3 grid. Implemented with CSS custom
+ *    properties consumed by a plain media query in this component's
+ *    stylesheet — no JS resize listeners.
  */
 @Component({
   selector: 'app-landing-media-text',
@@ -64,10 +69,14 @@ interface MediaTextItem {
               @if (item.scrim !== 'none') {
                 <div class="absolute inset-0" [class]="scrimClass(item.scrim)"></div>
               }
-              <div class="absolute inset-0 flex p-6 md:p-10 overflow-hidden" [class]="anchorClasses(item.overlayPosition)">
-                <div class="max-h-full overflow-hidden" [class]="wrapWidthClass(item.wrapText) + ' ' + textAlignClass(item.overlayPosition)" [style.color]="item.textColor">
-                  <h3 class="font-bold mb-3" [style.font-size]="overlayTitleFontSize(item.title, item.wrapText)">{{ item.title }}</h3>
-                  <p class="leading-relaxed whitespace-pre-line opacity-90" [style.font-size]="overlayBodyFontSize(item.text, item.wrapText)">{{ item.text }}</p>
+              <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 md:grid-cols-3 md:grid-rows-3 gap-2 p-6 md:p-10">
+                <div class="qf-overlay-box flex overflow-hidden" [class]="cellAlignClasses(item)"
+                  [style.--qf-gc-m]="gridSpan(item).mobileCol" [style.--qf-gr-m]="gridSpan(item).mobileRow"
+                  [style.--qf-gc-d]="gridSpan(item).desktopCol" [style.--qf-gr-d]="gridSpan(item).desktopRow">
+                  <div class="max-h-full overflow-hidden" [style.color]="item.textColor">
+                    <h3 class="font-bold mb-3" [style.font-size]="overlayTitleFontSize(item.title, item)">{{ item.title }}</h3>
+                    <p class="leading-relaxed whitespace-pre-line opacity-90" [style.font-size]="overlayBodyFontSize(item.text, item)">{{ item.text }}</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -86,7 +95,19 @@ interface MediaTextItem {
         }
       }
     </section>
-  `
+  `,
+  styles: [`
+    .qf-overlay-box {
+      grid-column: var(--qf-gc-m);
+      grid-row: var(--qf-gr-m);
+    }
+    @media (min-width: 768px) {
+      .qf-overlay-box {
+        grid-column: var(--qf-gc-d);
+        grid-row: var(--qf-gr-d);
+      }
+    }
+  `]
 })
 export class LandingMediaTextComponent {
   config = input.required<SectionConfigurationDto>();
@@ -106,8 +127,7 @@ export class LandingMediaTextComponent {
 
     return rawItems.map((item, index) => {
       const layout: MediaTextLayout = (item.layout === 'below' || item.layout === 'overlay') ? item.layout : 'side';
-      // Brief multi-box period: fall back to the first saved box so nothing entered then is lost.
-      const legacyBox = Array.isArray(item.boxes) && item.boxes.length ? item.boxes[0] : null;
+      const legacyBox = Array.isArray(item.boxes) && item.boxes.length ? item.boxes[0] : null; // brief multi-box period
 
       return {
         imageUrl: item.imageUrl || productImages[index]?.url || productImages[0]?.url || '',
@@ -117,61 +137,82 @@ export class LandingMediaTextComponent {
         layout,
         scrim: item.scrim === 'light' || item.scrim === 'none' ? item.scrim : 'dark',
         overlayPosition: item.overlayPosition || legacyBox?.anchor || 'bottom-left',
-        textColor: item.textColor || legacyBox?.textColor || '#ffffff',
-        wrapText: typeof item.wrapText === 'boolean' ? item.wrapText : legacyBox?.maxWidth === 'narrow'
+        overlayEndPosition: item.overlayEndPosition || item.overlayPosition || legacyBox?.anchor || 'bottom-left',
+        textColor: item.textColor || legacyBox?.textColor || '#ffffff'
       };
     });
   });
 
-  // Unprefixed = collapsed mobile anchor (4 corners only); md: = true desktop anchor (9-grid).
-  private readonly vAnchor: Record<string, string> = {
-    top: 'items-start', center: 'items-center', bottom: 'items-end'
-  };
-  private readonly hAnchor: Record<string, string> = {
-    left: 'justify-start', center: 'justify-center', right: 'justify-end'
-  };
-  private readonly hAlign: Record<string, string> = {
-    left: 'text-start', center: 'text-center', right: 'text-end'
-  };
-  private readonly vAnchorMd: Record<string, string> = {
-    top: 'md:items-start', center: 'md:items-center', bottom: 'md:items-end'
-  };
-  private readonly hAnchorMd: Record<string, string> = {
-    left: 'md:justify-start', center: 'md:justify-center', right: 'md:justify-end'
-  };
-  private readonly hAlignMd: Record<string, string> = {
-    left: 'md:text-start', center: 'md:text-center', right: 'md:text-end'
-  };
+  private readonly rowIndex: Record<string, number> = { top: 1, center: 2, bottom: 3 };
+  private readonly colIndex: Record<string, number> = { left: 1, center: 2, right: 3 };
+  private readonly rowIndexMobile: Record<string, number> = { top: 1, bottom: 2 };
+  private readonly colIndexMobile: Record<string, number> = { left: 1, right: 2 };
 
   private splitPosition(position: AnchorPosition): { v: string; h: string } {
     const [v, h] = position.split('-');
     return { v, h: h || 'center' };
   }
 
-  /** Below `md`, only the 4 corners are used: center rows collapse to bottom, center columns to left. */
-  private collapseToCorner(v: string, h: string): { v: string; h: string } {
-    return { v: v === 'center' ? 'bottom' : v, h: h === 'center' ? 'left' : h };
+  /** Below `md` only 2 tracks exist per axis: center rows collapse to bottom, center columns to left. */
+  private collapseRowName(name: string): string { return name === 'center' ? 'bottom' : name; }
+  private collapseColName(name: string): string { return name === 'center' ? 'left' : name; }
+
+  /** CSS grid-column/grid-row values (as "<start-line> / <end-line>") for both breakpoints. */
+  gridSpan(item: MediaTextItem): { desktopCol: string; desktopRow: string; mobileCol: string; mobileRow: string } {
+    const a = this.splitPosition(item.overlayPosition);
+    const b = this.splitPosition(item.overlayEndPosition);
+
+    const rowStart = Math.min(this.rowIndex[a.v], this.rowIndex[b.v]);
+    const rowEnd = Math.max(this.rowIndex[a.v], this.rowIndex[b.v]);
+    const colStart = Math.min(this.colIndex[a.h], this.colIndex[b.h]);
+    const colEnd = Math.max(this.colIndex[a.h], this.colIndex[b.h]);
+
+    const aRowM = this.collapseRowName(a.v), bRowM = this.collapseRowName(b.v);
+    const aColM = this.collapseColName(a.h), bColM = this.collapseColName(b.h);
+    const rowStartM = Math.min(this.rowIndexMobile[aRowM], this.rowIndexMobile[bRowM]);
+    const rowEndM = Math.max(this.rowIndexMobile[aRowM], this.rowIndexMobile[bRowM]);
+    const colStartM = Math.min(this.colIndexMobile[aColM], this.colIndexMobile[bColM]);
+    const colEndM = Math.max(this.colIndexMobile[aColM], this.colIndexMobile[bColM]);
+
+    return {
+      desktopCol: `${colStart} / ${colEnd + 1}`,
+      desktopRow: `${rowStart} / ${rowEnd + 1}`,
+      mobileCol: `${colStartM} / ${colEndM + 1}`,
+      mobileRow: `${rowStartM} / ${rowEndM + 1}`
+    };
   }
 
-  anchorClasses(position: AnchorPosition): string {
-    const { v, h } = this.splitPosition(position);
-    const corner = this.collapseToCorner(v, h);
-    return [
-      this.vAnchor[corner.v] || 'items-end',
-      this.hAnchor[corner.h] || 'justify-start',
-      this.vAnchorMd[v] || 'md:items-end',
-      this.hAnchorMd[h] || 'md:justify-start'
-    ].join(' ');
+  private spanIncludesRow(item: MediaTextItem, name: 'top' | 'bottom'): boolean {
+    const a = this.rowIndex[this.splitPosition(item.overlayPosition).v];
+    const b = this.rowIndex[this.splitPosition(item.overlayEndPosition).v];
+    const idx = this.rowIndex[name];
+    return idx >= Math.min(a, b) && idx <= Math.max(a, b);
   }
 
-  textAlignClass(position: AnchorPosition): string {
-    const { h } = this.splitPosition(position);
-    const corner = this.collapseToCorner('top', h); // only h matters here
-    return `${this.hAlign[corner.h] || 'text-start'} ${this.hAlignMd[h] || 'md:text-start'}`;
+  private spanIncludesCol(item: MediaTextItem, name: 'left' | 'right'): boolean {
+    const a = this.colIndex[this.splitPosition(item.overlayPosition).h];
+    const b = this.colIndex[this.splitPosition(item.overlayEndPosition).h];
+    const idx = this.colIndex[name];
+    return idx >= Math.min(a, b) && idx <= Math.max(a, b);
   }
 
-  wrapWidthClass(wrapText: boolean): string {
-    return wrapText ? 'max-w-[33%]' : 'max-w-[65%]';
+  /** How the text sits within its assigned cell(s): anchored to whichever edge(s) the span touches, centered otherwise. */
+  cellAlignClasses(item: MediaTextItem): string {
+    const top = this.spanIncludesRow(item, 'top');
+    const bottom = this.spanIncludesRow(item, 'bottom');
+    const vClass = top && !bottom ? 'items-start' : bottom && !top ? 'items-end' : 'items-center';
+
+    const left = this.spanIncludesCol(item, 'left');
+    const right = this.spanIncludesCol(item, 'right');
+    const hClass = left && !right ? 'justify-start text-start' : right && !left ? 'justify-end text-end' : 'justify-center text-center';
+
+    return `${vClass} ${hClass}`;
+  }
+
+  private colSpanCount(item: MediaTextItem): number {
+    const a = this.colIndex[this.splitPosition(item.overlayPosition).h];
+    const b = this.colIndex[this.splitPosition(item.overlayEndPosition).h];
+    return Math.abs(a - b) + 1;
   }
 
   scrimClass(scrim: string): string {
@@ -179,11 +220,11 @@ export class LandingMediaTextComponent {
   }
 
   // ── Auto-shrinking overlay text ──
-  // The overlay box has a fixed aspect ratio, so unbounded text can exceed it.
-  // Font size is picked from the text length (longer copy → smaller ceiling)
-  // and whether "wrap text" narrows the column, then wrapped in a fluid
-  // clamp() so it shrinks further on narrow (mobile) viewports too — no JS
-  // measurement, no layout thrash, works before first paint.
+  // The box's footprint is now the actual selected grid span, so the font
+  // ceiling scales with how many columns it spans (wider box -> can hold
+  // bigger text), then wrapped in a fluid clamp() so it shrinks further on
+  // narrow (mobile) viewports too — no JS measurement, no layout thrash,
+  // works before first paint.
   private fluidFontSize(minRem: number, maxRem: number): string {
     if (maxRem <= minRem) return `${maxRem}rem`;
     const minPx = 360, maxPx = 768; // interpolate between small and large phones
@@ -196,8 +237,13 @@ export class LandingMediaTextComponent {
     return `clamp(${minRem}rem, ${interceptRem.toFixed(4)}rem + ${vwCoefficient.toFixed(4)}vw, ${maxRem}rem)`;
   }
 
-  overlayTitleFontSize(title: string, wrapText: boolean): string {
-    const factor = wrapText ? 0.82 : 1.1;
+  private spanFactor(item: MediaTextItem): number {
+    const cols = this.colSpanCount(item);
+    return cols <= 1 ? 0.85 : cols === 2 ? 1.05 : 1.25;
+  }
+
+  overlayTitleFontSize(title: string, item: MediaTextItem): string {
+    const factor = this.spanFactor(item);
     const len = title.length;
     const base = len <= 20 ? 2.25 : len <= 40 ? 1.875 : len <= 70 ? 1.5 : len <= 110 ? 1.25 : 1.05;
     const max = Math.max(1.05, base * factor);
@@ -205,8 +251,8 @@ export class LandingMediaTextComponent {
     return this.fluidFontSize(min, max);
   }
 
-  overlayBodyFontSize(text: string, wrapText: boolean): string {
-    const factor = wrapText ? 0.82 : 1.1;
+  overlayBodyFontSize(text: string, item: MediaTextItem): string {
+    const factor = this.spanFactor(item);
     const len = text.length;
     const base = len <= 80 ? 1.125 : len <= 160 ? 1.0625 : len <= 260 ? 1 : 0.9375;
     const max = Math.max(0.9, base * factor);
