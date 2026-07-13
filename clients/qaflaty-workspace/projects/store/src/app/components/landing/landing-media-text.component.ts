@@ -10,14 +10,6 @@ type AnchorPosition =
   | 'center-left' | 'center' | 'center-right'
   | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
-interface OverlayBox {
-  anchor: AnchorPosition;
-  title: string;
-  text: string;
-  textColor: string;
-  maxWidth: 'narrow' | 'medium' | 'wide';
-}
-
 interface MediaTextItem {
   imageUrl: string;
   title: string;
@@ -25,25 +17,27 @@ interface MediaTextItem {
   reverse?: boolean;
   layout: MediaTextLayout;
   scrim: 'none' | 'dark' | 'light';
-  boxes: OverlayBox[];
+  overlayPosition: AnchorPosition;
+  textColor: string;
+  /** Caps the text column to roughly a third of the image width so long copy wraps instead of stretching wide. */
+  wrapText: boolean;
 }
 
 /**
  * Alternating image/text rows. Each row picks a layout:
  *  - side: image and text side by side (optionally reversed)
  *  - below: image on top, text stacked underneath, full width
- *  - overlay: one or more independent text boxes laid over the image, each
- *    anchored to a fixed grid position (never free-dragged) so it stays
- *    legible at every breakpoint — object-fit: cover crops the image
- *    differently per viewport width, so pixel coordinates chosen in the
- *    editor wouldn't line up on other screen sizes.
+ *  - overlay: text laid over the image, anchored to one of 9 fixed grid
+ *    positions (never free-dragged) so it stays legible at every breakpoint —
+ *    object-fit: cover crops the image differently per viewport width, so
+ *    pixel coordinates chosen in the editor wouldn't line up on other screens.
  *
- *    The grid itself is responsive: on screens narrower than `md` only the 4
- *    corners are used (less room means fewer, more separated anchor points
- *    reduce crowding/overlap); at `md` and up the full 9-position grid
- *    applies. This is done with matching pairs of literal Tailwind
- *    classes — unprefixed for the mobile/collapsed anchor, `md:`-prefixed for
- *    the true desktop anchor — so it needs no JS/resize listeners.
+ *    The grid is responsive: below `md` only the 4 corners are used (center
+ *    rows collapse to bottom, center columns collapse to start) so the box
+ *    has more breathing room on a small screen; `md` and up uses the full
+ *    9-position grid. Done with paired literal Tailwind classes (unprefixed
+ *    for the mobile/collapsed anchor, `md:`-prefixed for the true desktop
+ *    anchor) — pure CSS, no JS resize listeners.
  */
 @Component({
   selector: 'app-landing-media-text',
@@ -70,18 +64,12 @@ interface MediaTextItem {
               @if (item.scrim !== 'none') {
                 <div class="absolute inset-0" [class]="scrimClass(item.scrim)"></div>
               }
-              @for (box of item.boxes; track $index) {
-                <div class="absolute inset-0 flex p-6 md:p-10 overflow-hidden" [class]="anchorClasses(box.anchor)">
-                  <div class="max-h-full overflow-hidden" [class]="maxWidthClass(box.maxWidth) + ' ' + textAlignClass(box.anchor)" [style.color]="box.textColor">
-                    @if (box.title) {
-                      <h3 class="font-bold mb-3" [style.font-size]="overlayTitleFontSize(box.title, box.maxWidth)">{{ box.title }}</h3>
-                    }
-                    @if (box.text) {
-                      <p class="leading-relaxed whitespace-pre-line opacity-90" [style.font-size]="overlayBodyFontSize(box.text, box.maxWidth)">{{ box.text }}</p>
-                    }
-                  </div>
+              <div class="absolute inset-0 flex p-6 md:p-10 overflow-hidden" [class]="anchorClasses(item.overlayPosition)">
+                <div class="max-h-full overflow-hidden" [class]="wrapWidthClass(item.wrapText) + ' ' + textAlignClass(item.overlayPosition)" [style.color]="item.textColor">
+                  <h3 class="font-bold mb-3" [style.font-size]="overlayTitleFontSize(item.title, item.wrapText)">{{ item.title }}</h3>
+                  <p class="leading-relaxed whitespace-pre-line opacity-90" [style.font-size]="overlayBodyFontSize(item.text, item.wrapText)">{{ item.text }}</p>
                 </div>
-              }
+              </div>
             </div>
           }
           @default {
@@ -118,38 +106,19 @@ export class LandingMediaTextComponent {
 
     return rawItems.map((item, index) => {
       const layout: MediaTextLayout = (item.layout === 'below' || item.layout === 'overlay') ? item.layout : 'side';
-
-      let boxes: OverlayBox[] = [];
-      if (layout === 'overlay') {
-        const rawBoxes: any[] = Array.isArray(item.boxes) ? item.boxes : [];
-        if (rawBoxes.length) {
-          boxes = rawBoxes.map(b => ({
-            anchor: b.anchor || 'bottom-left',
-            title: t(b.title),
-            text: t(b.text),
-            textColor: b.textColor || '#ffffff',
-            maxWidth: b.maxWidth === 'narrow' || b.maxWidth === 'wide' ? b.maxWidth : 'medium'
-          }));
-        } else if (item.title || item.text) {
-          // Legacy single-box rows saved before multi-box support.
-          boxes = [{
-            anchor: item.overlayPosition || 'bottom-left',
-            title: t(item.title),
-            text: t(item.text),
-            textColor: item.textColor || '#ffffff',
-            maxWidth: item.maxWidth === 'narrow' || item.maxWidth === 'wide' ? item.maxWidth : 'medium'
-          }];
-        }
-      }
+      // Brief multi-box period: fall back to the first saved box so nothing entered then is lost.
+      const legacyBox = Array.isArray(item.boxes) && item.boxes.length ? item.boxes[0] : null;
 
       return {
         imageUrl: item.imageUrl || productImages[index]?.url || productImages[0]?.url || '',
-        title: t(item.title),
-        text: t(item.text),
+        title: t(item.title) || t(legacyBox?.title),
+        text: t(item.text) || t(legacyBox?.text),
         reverse: !!item.reverse,
         layout,
         scrim: item.scrim === 'light' || item.scrim === 'none' ? item.scrim : 'dark',
-        boxes
+        overlayPosition: item.overlayPosition || legacyBox?.anchor || 'bottom-left',
+        textColor: item.textColor || legacyBox?.textColor || '#ffffff',
+        wrapText: typeof item.wrapText === 'boolean' ? item.wrapText : legacyBox?.maxWidth === 'narrow'
       };
     });
   });
@@ -172,9 +141,6 @@ export class LandingMediaTextComponent {
   };
   private readonly hAlignMd: Record<string, string> = {
     left: 'md:text-start', center: 'md:text-center', right: 'md:text-end'
-  };
-  private readonly widthClasses: Record<string, string> = {
-    narrow: 'max-w-xs', medium: 'max-w-md', wide: 'max-w-xl'
   };
 
   private splitPosition(position: AnchorPosition): { v: string; h: string } {
@@ -204,8 +170,8 @@ export class LandingMediaTextComponent {
     return `${this.hAlign[corner.h] || 'text-start'} ${this.hAlignMd[h] || 'md:text-start'}`;
   }
 
-  maxWidthClass(width: string): string {
-    return this.widthClasses[width] || this.widthClasses['medium'];
+  wrapWidthClass(wrapText: boolean): string {
+    return wrapText ? 'max-w-[33%]' : 'max-w-[65%]';
   }
 
   scrimClass(scrim: string): string {
@@ -213,23 +179,11 @@ export class LandingMediaTextComponent {
   }
 
   // ── Auto-shrinking overlay text ──
-  // Each box's box has a fixed aspect ratio, so unbounded text can exceed it.
+  // The overlay box has a fixed aspect ratio, so unbounded text can exceed it.
   // Font size is picked from the text length (longer copy → smaller ceiling)
-  // and the chosen max-width (narrower box → smaller ceiling), then wrapped in
-  // a fluid clamp() so it shrinks further on narrow (mobile) viewports too —
-  // no JS measurement, no layout thrash, works before first paint.
-  private readonly overlayWidthFactor: Record<string, number> = {
-    narrow: 0.82, medium: 1, wide: 1.12
-  };
-
-  /**
-   * Builds `clamp(min, A rem + B vw, max)` so the size equals `minRem` at
-   * `minPx` viewport width, `maxRem` at `maxPx`, and interpolates linearly
-   * between. Math must go through px (1vw = viewportWidthPx/100, independent
-   * of root font size) before converting the constant term back to rem —
-   * skipping that conversion makes the vw coefficient ~16x too small and the
-   * clamp() effectively never leaves its floor.
-   */
+  // and whether "wrap text" narrows the column, then wrapped in a fluid
+  // clamp() so it shrinks further on narrow (mobile) viewports too — no JS
+  // measurement, no layout thrash, works before first paint.
   private fluidFontSize(minRem: number, maxRem: number): string {
     if (maxRem <= minRem) return `${maxRem}rem`;
     const minPx = 360, maxPx = 768; // interpolate between small and large phones
@@ -242,8 +196,8 @@ export class LandingMediaTextComponent {
     return `clamp(${minRem}rem, ${interceptRem.toFixed(4)}rem + ${vwCoefficient.toFixed(4)}vw, ${maxRem}rem)`;
   }
 
-  overlayTitleFontSize(title: string, maxWidth: string): string {
-    const factor = this.overlayWidthFactor[maxWidth] ?? 1;
+  overlayTitleFontSize(title: string, wrapText: boolean): string {
+    const factor = wrapText ? 0.82 : 1.1;
     const len = title.length;
     const base = len <= 20 ? 2.25 : len <= 40 ? 1.875 : len <= 70 ? 1.5 : len <= 110 ? 1.25 : 1.05;
     const max = Math.max(1.05, base * factor);
@@ -251,8 +205,8 @@ export class LandingMediaTextComponent {
     return this.fluidFontSize(min, max);
   }
 
-  overlayBodyFontSize(text: string, maxWidth: string): string {
-    const factor = this.overlayWidthFactor[maxWidth] ?? 1;
+  overlayBodyFontSize(text: string, wrapText: boolean): string {
+    const factor = wrapText ? 0.82 : 1.1;
     const len = text.length;
     const base = len <= 80 ? 1.125 : len <= 160 ? 1.0625 : len <= 260 ? 1 : 0.9375;
     const max = Math.max(0.9, base * factor);
