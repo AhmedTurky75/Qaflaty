@@ -69,11 +69,11 @@ interface MediaTextItem {
               @if (item.scrim !== 'none') {
                 <div class="absolute inset-0" [class]="scrimClass(item.scrim)"></div>
               }
-              <div class="absolute inset-0 grid grid-cols-2 grid-rows-2 md:grid-cols-3 md:grid-rows-3 gap-2 p-6 md:p-10">
+              <div dir="ltr" class="absolute inset-0 grid grid-cols-2 grid-rows-2 md:grid-cols-3 md:grid-rows-3 gap-2 p-6 md:p-10">
                 <div class="qf-overlay-box flex overflow-hidden" [class]="cellAlignClasses(item)"
                   [style.--qf-gc-m]="gridSpan(item).mobileCol" [style.--qf-gr-m]="gridSpan(item).mobileRow"
                   [style.--qf-gc-d]="gridSpan(item).desktopCol" [style.--qf-gr-d]="gridSpan(item).desktopRow">
-                  <div class="max-h-full overflow-hidden" [style.color]="item.textColor">
+                  <div class="max-h-full overflow-hidden" [attr.dir]="textDir()" [style.color]="item.textColor">
                     <h3 class="font-bold mb-3" [style.font-size]="overlayTitleFontSize(item.title, item)">{{ item.title }}</h3>
                     <p class="leading-relaxed whitespace-pre-line opacity-90" [style.font-size]="overlayBodyFontSize(item.text, item)">{{ item.text }}</p>
                   </div>
@@ -196,7 +196,17 @@ export class LandingMediaTextComponent {
     return idx >= Math.min(a, b) && idx <= Math.max(a, b);
   }
 
-  /** How the text sits within its assigned cell(s): anchored to whichever edge(s) the span touches, centered otherwise. */
+  /**
+   * The merchant is anchoring the box to a spot on the photo (e.g. "away from
+   * the product, which sits on the right"), not describing reading order — so
+   * "left" must render on the physical left no matter the storefront
+   * language. The grid/flex container is forced `dir="ltr"` in the template
+   * for exactly this reason; `text-left`/`text-right` (physical) are used
+   * here instead of `text-start`/`text-end` (logical) because the innermost
+   * text wrapper gets its own `dir="rtl"` for correct Arabic glyph shaping,
+   * which would otherwise re-flip a logical start/end value back to the
+   * opposite physical side.
+   */
   cellAlignClasses(item: MediaTextItem): string {
     const top = this.spanIncludesRow(item, 'top');
     const bottom = this.spanIncludesRow(item, 'bottom');
@@ -204,7 +214,7 @@ export class LandingMediaTextComponent {
 
     const left = this.spanIncludesCol(item, 'left');
     const right = this.spanIncludesCol(item, 'right');
-    const hClass = left && !right ? 'justify-start text-start' : right && !left ? 'justify-end text-end' : 'justify-center text-center';
+    const hClass = left && !right ? 'justify-start text-left' : right && !left ? 'justify-end text-right' : 'justify-center text-center';
 
     return `${vClass} ${hClass}`;
   }
@@ -217,6 +227,11 @@ export class LandingMediaTextComponent {
 
   scrimClass(scrim: string): string {
     return scrim === 'light' ? 'bg-white/40' : 'bg-black/40';
+  }
+
+  /** Direction for the innermost text node only — glyph shaping/line-wrap for Arabic, independent of the box's fixed physical position. */
+  textDir(): 'rtl' | 'ltr' {
+    return this.i18n.currentLanguage() === 'ar' ? 'rtl' : 'ltr';
   }
 
   // ── Auto-shrinking overlay text ──
