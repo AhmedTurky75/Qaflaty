@@ -568,39 +568,24 @@ interface PageTemplate {
 
                             @if (item.layout === 'overlay') {
                               <div class="col-span-2 space-y-3 border-t border-gray-100 pt-3">
-                                <div class="flex gap-6">
-                                  <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Start Corner</label>
-                                    <div class="grid grid-cols-3 gap-1 w-28">
-                                      @for (pos of overlayPositions; track pos) {
-                                        <button type="button" (click)="updateArrayItemField(section, 'items', i, 'overlayPosition', pos)"
-                                          class="h-8 rounded-md border flex items-center justify-center"
-                                          [class.border-blue-500]="(item.overlayPosition || 'bottom-left') === pos"
-                                          [class.bg-blue-50]="(item.overlayPosition || 'bottom-left') === pos"
-                                          [class.border-gray-300]="(item.overlayPosition || 'bottom-left') !== pos"
-                                          [title]="pos">
-                                          <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-                                        </button>
-                                      }
-                                    </div>
+                                <div>
+                                  <label class="block text-xs font-medium text-gray-700 mb-1">Text Area</label>
+                                  <div class="grid grid-cols-3 gap-1 w-32">
+                                    @for (pos of overlayPositions; track pos) {
+                                      <button type="button" (click)="selectOverlayCell(section, i, pos)"
+                                        class="h-9 rounded-md border flex items-center justify-center transition-colors"
+                                        [class.bg-green-200]="isOverlayEndpoint(item, pos)"
+                                        [class.border-green-500]="isOverlayEndpoint(item, pos)"
+                                        [class.bg-green-50]="isInOverlaySpan(item, pos) && !isOverlayEndpoint(item, pos)"
+                                        [class.border-green-300]="isInOverlaySpan(item, pos) && !isOverlayEndpoint(item, pos)"
+                                        [class.border-gray-300]="!isInOverlaySpan(item, pos)"
+                                        [title]="pos">
+                                        <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-600]="isInOverlaySpan(item, pos)" [class.bg-gray-400]="!isInOverlaySpan(item, pos)"></span>
+                                      </button>
+                                    }
                                   </div>
-                                  <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">End Corner</label>
-                                    <div class="grid grid-cols-3 gap-1 w-28">
-                                      @for (pos of overlayPositions; track pos) {
-                                        <button type="button" (click)="updateArrayItemField(section, 'items', i, 'overlayEndPosition', pos)"
-                                          class="h-8 rounded-md border flex items-center justify-center"
-                                          [class.border-blue-500]="(item.overlayEndPosition || item.overlayPosition || 'bottom-left') === pos"
-                                          [class.bg-blue-50]="(item.overlayEndPosition || item.overlayPosition || 'bottom-left') === pos"
-                                          [class.border-gray-300]="(item.overlayEndPosition || item.overlayPosition || 'bottom-left') !== pos"
-                                          [title]="pos">
-                                          <span class="w-1.5 h-1.5 rounded-full bg-gray-500"></span>
-                                        </button>
-                                      }
-                                    </div>
-                                  </div>
+                                  <p class="text-[11px] text-gray-400 mt-1">Click a cell to start, then click another to size the box (a row, column, or rectangle) — or click it again for a small box. On phones this collapses to the nearest 2×2 corner so text doesn't crowd a small screen.</p>
                                 </div>
-                                <p class="text-[11px] text-gray-400">Pick the same cell twice for a small box, or two different cells for a wider/taller box spanning everything between them (a row, a column, or a rectangle). On phones this collapses to the nearest 2×2 corner so text doesn't crowd a small screen.</p>
                                 <div class="grid grid-cols-2 gap-3">
                                   <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Readability Overlay</label>
@@ -2002,6 +1987,54 @@ export class SectionEditorComponent implements OnInit {
     'center-left', 'center', 'center-right',
     'bottom-left', 'bottom-center', 'bottom-right'
   ];
+  private readonly overlayRowIndex: Record<string, number> = { top: 1, center: 2, bottom: 3 };
+  private readonly overlayColIndex: Record<string, number> = { left: 1, center: 2, right: 3 };
+
+  /** Row indices (into localSections' Media+Text items) currently waiting for their second ("end") click. */
+  private pickingEndForRow = signal<Set<number>>(new Set());
+
+  /** Single-grid start/end picker: first click sets a 1x1 box and arms the row for
+   *  an extend-click; a second click sizes the box to span between the two cells;
+   *  clicking again after that starts a brand new selection. */
+  selectOverlayCell(section: SectionConfigurationDto, rowIndex: number, pos: string): void {
+    const picking = this.pickingEndForRow();
+    const next = new Set(picking);
+    if (picking.has(rowIndex)) {
+      this.updateArrayItemField(section, 'items', rowIndex, 'overlayEndPosition', pos);
+      next.delete(rowIndex);
+    } else {
+      this.updateArrayItemField(section, 'items', rowIndex, 'overlayPosition', pos);
+      this.updateArrayItemField(section, 'items', rowIndex, 'overlayEndPosition', pos);
+      next.add(rowIndex);
+    }
+    this.pickingEndForRow.set(next);
+  }
+
+  private splitOverlayPosition(pos: string): { v: string; h: string } {
+    const [v, h] = pos.split('-');
+    return { v, h: h || 'center' };
+  }
+
+  isOverlayEndpoint(item: any, pos: string): boolean {
+    const start = item.overlayPosition || 'bottom-left';
+    const end = item.overlayEndPosition || start;
+    return pos === start || pos === end;
+  }
+
+  isInOverlaySpan(item: any, pos: string): boolean {
+    const start = this.splitOverlayPosition(item.overlayPosition || 'bottom-left');
+    const end = this.splitOverlayPosition(item.overlayEndPosition || item.overlayPosition || 'bottom-left');
+    const cur = this.splitOverlayPosition(pos);
+
+    const rowLo = Math.min(this.overlayRowIndex[start.v], this.overlayRowIndex[end.v]);
+    const rowHi = Math.max(this.overlayRowIndex[start.v], this.overlayRowIndex[end.v]);
+    const colLo = Math.min(this.overlayColIndex[start.h], this.overlayColIndex[end.h]);
+    const colHi = Math.max(this.overlayColIndex[start.h], this.overlayColIndex[end.h]);
+
+    const r = this.overlayRowIndex[cur.v];
+    const c = this.overlayColIndex[cur.h];
+    return r >= rowLo && r <= rowHi && c >= colLo && c <= colHi;
+  }
 
   readonly sectionTypes: SectionTypeInfo[] = [
     { key: 'Hero', label: 'Hero Banner', description: 'Top hero section', defaultVariantId: 'hero-full-image' },
