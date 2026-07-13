@@ -39,9 +39,13 @@ export class PreviewComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     window.addEventListener('message', this.listener);
-    // Tell the parent (merchant) we're mounted and ready to receive data.
-    if (window.parent && window.parent !== window) {
-      window.parent.postMessage({ type: 'qaflaty-preview-ready' }, '*');
+    // Tell whoever opened us (an iframe's parent, or the window that popped us
+    // out via window.open) that we're mounted and ready to receive data. A
+    // popup's `parent` is itself (only `opener` points back to the merchant
+    // tab), so both are checked.
+    const target = window.opener || (window.parent !== window ? window.parent : null);
+    if (target) {
+      target.postMessage({ type: 'qaflaty-preview-ready' }, '*');
     }
   }
 

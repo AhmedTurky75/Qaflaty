@@ -136,8 +136,10 @@ type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
 
           <!-- Live preview column (large screens only) -->
           @if (previewUrl()) {
-            <div class="hidden xl:flex flex-col flex-1 min-w-0">
-              <div class="sticky top-6">
+            <div [class]="previewExpanded()
+              ? 'fixed inset-0 z-50 bg-white flex flex-col p-4'
+              : 'hidden xl:flex flex-col flex-1 min-w-0'">
+              <div [class]="previewExpanded() ? 'flex flex-col h-full' : 'sticky top-6'">
                 <!-- Preview toolbar -->
                 <div class="flex items-center justify-between mb-3">
                   <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Live Preview</span>
@@ -156,18 +158,31 @@ type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
                         [class.bg-blue-600]="device() === 'mobile'" [class.text-white]="device() === 'mobile'"
                         [class.text-gray-500]="device() !== 'mobile'" title="Mobile">Mobile</button>
                     </div>
-                    <a [href]="rawPreviewUrl" target="_blank" rel="noopener"
-                      class="p-1.5 text-gray-400 hover:text-blue-600" title="Open preview in new tab">
+                    <button type="button" (click)="previewExpanded.set(!previewExpanded())"
+                      class="p-1.5 text-gray-400 hover:text-blue-600"
+                      [title]="previewExpanded() ? 'Exit fullscreen preview' : 'Expand preview to full width (desktop needs real screen width to look right)'">
+                      @if (previewExpanded()) {
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0v4m0-4h4m7 5l5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m6-4l5 5m0 0v-4m0 4h-4"></path>
+                        </svg>
+                      } @else {
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h4m0 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                        </svg>
+                      }
+                    </button>
+                    <button type="button" (click)="openPopoutPreview()"
+                      class="p-1.5 text-gray-400 hover:text-blue-600" title="Pop out into its own live-updating window">
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                       </svg>
-                    </a>
+                    </button>
                   </div>
                 </div>
 
                 <!-- Device frame -->
-                <div class="bg-gray-100 border border-gray-200 rounded-xl p-4 flex justify-center overflow-auto"
-                  style="height: calc(100vh - 8rem);">
+                <div class="bg-gray-100 border border-gray-200 rounded-xl p-4 flex justify-center overflow-auto flex-1"
+                  [style.height]="previewExpanded() ? 'auto' : 'calc(100vh - 8rem)'">
                   <iframe
                     #previewFrame
                     [src]="previewUrl()"
@@ -180,6 +195,7 @@ type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
                 </div>
                 <p class="mt-2 text-[11px] text-gray-400 truncate">
                   Previewing <span class="font-mono">{{ rawPreviewUrl }}</span> — the storefront app must be running there.
+                  A real desktop layout needs real screen width: use the expand (⛶) or pop-out (↗) button above rather than judging it in this ~600px-narrower split view.
                 </p>
               </div>
             </div>
@@ -208,6 +224,12 @@ export class PageSectionsComponent implements OnInit, OnDestroy {
   device = signal<PreviewDevice>('desktop');
   previewUrl = signal<SafeResourceUrl | null>(null);
   rawPreviewUrl = '';
+  /** Overlays the preview at full viewport width — the split editor+preview
+   *  layout only leaves the preview column ~half the screen (less, once the
+   *  merchant dashboard's own nav is subtracted), so "Desktop" mode there
+   *  renders at roughly tablet width. Expanding removes that constraint. */
+  previewExpanded = signal(false);
+  private previewWindow: Window | null = null;
 
   // A/B testing
   readonly controlWeight = 1;
@@ -314,12 +336,25 @@ export class PageSectionsComponent implements OnInit, OnDestroy {
   }
 
   private pushToPreview(): void {
+    const message = { type: 'qaflaty-preview', sections: this.currentSections };
     const frame = this.previewFrame?.nativeElement;
-    if (!frame?.contentWindow) return;
-    frame.contentWindow.postMessage(
-      { type: 'qaflaty-preview', sections: this.currentSections },
-      this.previewOrigin
-    );
+    if (frame?.contentWindow) {
+      frame.contentWindow.postMessage(message, this.previewOrigin);
+    }
+    if (this.previewWindow && !this.previewWindow.closed) {
+      this.previewWindow.postMessage(message, this.previewOrigin);
+    }
+  }
+
+  /** Opens the live preview in its own real browser window (resizable, can be
+   *  put on a second monitor) instead of the constrained in-page split view;
+   *  keeps receiving live updates same as the embedded iframe does. */
+  openPopoutPreview(): void {
+    if (this.previewWindow && !this.previewWindow.closed) {
+      this.previewWindow.focus();
+      return;
+    }
+    this.previewWindow = window.open(this.rawPreviewUrl, 'qaflaty_live_preview', 'width=1440,height=900');
   }
 
   onSave(data: { sections: SectionConfigurationDto[]; seoSettings: PageSeoSettings }): void {
