@@ -5,10 +5,6 @@ import { I18nService } from '../../services/i18n.service';
 import { Product } from '../../models/product.model';
 
 type MediaTextLayout = 'side' | 'below' | 'overlay';
-type AnchorPosition =
-  | 'top-left' | 'top-center' | 'top-right'
-  | 'center-left' | 'center' | 'center-right'
-  | 'bottom-left' | 'bottom-center' | 'bottom-right';
 
 interface MediaTextItem {
   imageUrl: string;
@@ -17,10 +13,10 @@ interface MediaTextItem {
   reverse?: boolean;
   layout: MediaTextLayout;
   scrim: 'none' | 'dark' | 'light';
-  /** Start corner of the text area on the 3x3 grid. */
-  overlayPosition: AnchorPosition;
-  /** End corner; equal to overlayPosition (or unset) means a single cell. */
-  overlayEndPosition: AnchorPosition;
+  /** Start cell of the text area on the 5x5 grid, as "row-col" (1-based). */
+  overlayPosition: string;
+  /** End cell; equal to overlayPosition (or unset) means a single cell. */
+  overlayEndPosition: string;
   textColor: string;
 }
 
@@ -29,18 +25,18 @@ interface MediaTextItem {
  *  - side: image and text side by side (optionally reversed)
  *  - below: image on top, text stacked underneath, full width
  *  - overlay: text laid over the image, spanning a rectangle of cells on a
- *    fixed 3x3 grid — chosen as a start corner + end corner, both snapped to
- *    grid lines (never free pixels), so the box is always a CSS
+ *    fixed 5x5 grid — chosen as a start cell + end cell, both snapped to grid
+ *    lines (never free pixels), so the box is always a CSS
  *    `grid-column`/`grid-row` range: proportional to the container and
  *    identical in shape at every viewport width. object-fit: cover crops the
  *    image differently per breakpoint, so pixel/percent coordinates chosen in
  *    the editor wouldn't line up on other screen sizes — a grid-line range
  *    doesn't have that problem.
  *
- *    The grid itself is responsive: below `md` it collapses to 2x2 (center
- *    rows collapse to bottom, center columns collapse to start) so a box
- *    keeps proportionally the same footprint with less crowding on a small
- *    screen; `md` and up uses the full 3x3 grid. Implemented with CSS custom
+ *    The grid itself is responsive: below `md` it collapses to 2x2 (the two
+ *    inner rows/columns collapse toward the far edge) so a box keeps
+ *    proportionally the same footprint with less crowding on a small screen;
+ *    `md` and up uses the full 5x5 grid. Implemented with CSS custom
  *    properties consumed by a plain media query in this component's
  *    stylesheet — no JS resize listeners.
  */
@@ -69,7 +65,7 @@ interface MediaTextItem {
               @if (item.scrim !== 'none') {
                 <div class="absolute inset-0" [class]="scrimClass(item.scrim)"></div>
               }
-              <div dir="ltr" class="absolute inset-0 grid grid-cols-2 grid-rows-2 md:grid-cols-3 md:grid-rows-3 gap-2 p-6 md:p-10">
+              <div dir="ltr" class="absolute inset-0 grid grid-cols-2 grid-rows-2 md:grid-cols-5 md:grid-rows-5 gap-2 p-6 md:p-10">
                 <div class="qf-overlay-box flex overflow-hidden" [class]="cellAlignClasses(item)"
                   [style.--qf-gc-m]="gridSpan(item).mobileCol" [style.--qf-gr-m]="gridSpan(item).mobileRow"
                   [style.--qf-gc-d]="gridSpan(item).desktopCol" [style.--qf-gr-d]="gridSpan(item).desktopRow">
@@ -143,36 +139,40 @@ export class LandingMediaTextComponent {
     });
   });
 
-  private readonly rowIndex: Record<string, number> = { top: 1, center: 2, bottom: 3 };
-  private readonly colIndex: Record<string, number> = { left: 1, center: 2, right: 3 };
-  private readonly rowIndexMobile: Record<string, number> = { top: 1, bottom: 2 };
-  private readonly colIndexMobile: Record<string, number> = { left: 1, right: 2 };
+  private readonly GRID = 5;
+  private readonly MID = 3; // Math.ceil(GRID / 2) — the true-center track
 
-  private splitPosition(position: AnchorPosition): { v: string; h: string } {
-    const [v, h] = position.split('-');
-    return { v, h: h || 'center' };
+  // Positions predate the 5x5 grid as named corners/edges ("bottom-left", "center", ...);
+  // these map exactly onto the 9 landmark cells of the 5x5 grid, so old saved rows keep
+  // their exact spot with no migration needed.
+  private readonly legacyRow: Record<string, number> = { top: 1, center: 3, bottom: 5 };
+  private readonly legacyCol: Record<string, number> = { left: 1, center: 3, right: 5 };
+
+  private splitPosition(position: string): { row: number; col: number } {
+    const [a, b] = (position || '').split('-');
+    const row = Number(a), col = Number(b);
+    if (!isNaN(row) && !isNaN(col)) return { row, col };
+    return { row: this.legacyRow[a] ?? this.MID, col: this.legacyCol[b || 'center'] ?? this.MID };
   }
 
-  /** Below `md` only 2 tracks exist per axis: center rows collapse to bottom, center columns to left. */
-  private collapseRowName(name: string): string { return name === 'center' ? 'bottom' : name; }
-  private collapseColName(name: string): string { return name === 'center' ? 'left' : name; }
+  /** Below `md` only 2 tracks exist per axis: the near half maps to track 1, the far half (including the true center) to track 2. */
+  private collapseRowToMobile(row: number): number { return row <= this.MID ? (row < this.MID ? 1 : 2) : 2; }
+  private collapseColToMobile(col: number): number { return col <= this.MID ? (col < this.MID ? 1 : 1) : 2; }
 
   /** CSS grid-column/grid-row values (as "<start-line> / <end-line>") for both breakpoints. */
   gridSpan(item: MediaTextItem): { desktopCol: string; desktopRow: string; mobileCol: string; mobileRow: string } {
     const a = this.splitPosition(item.overlayPosition);
     const b = this.splitPosition(item.overlayEndPosition);
 
-    const rowStart = Math.min(this.rowIndex[a.v], this.rowIndex[b.v]);
-    const rowEnd = Math.max(this.rowIndex[a.v], this.rowIndex[b.v]);
-    const colStart = Math.min(this.colIndex[a.h], this.colIndex[b.h]);
-    const colEnd = Math.max(this.colIndex[a.h], this.colIndex[b.h]);
+    const rowStart = Math.min(a.row, b.row);
+    const rowEnd = Math.max(a.row, b.row);
+    const colStart = Math.min(a.col, b.col);
+    const colEnd = Math.max(a.col, b.col);
 
-    const aRowM = this.collapseRowName(a.v), bRowM = this.collapseRowName(b.v);
-    const aColM = this.collapseColName(a.h), bColM = this.collapseColName(b.h);
-    const rowStartM = Math.min(this.rowIndexMobile[aRowM], this.rowIndexMobile[bRowM]);
-    const rowEndM = Math.max(this.rowIndexMobile[aRowM], this.rowIndexMobile[bRowM]);
-    const colStartM = Math.min(this.colIndexMobile[aColM], this.colIndexMobile[bColM]);
-    const colEndM = Math.max(this.colIndexMobile[aColM], this.colIndexMobile[bColM]);
+    const rowStartM = Math.min(this.collapseRowToMobile(a.row), this.collapseRowToMobile(b.row));
+    const rowEndM = Math.max(this.collapseRowToMobile(a.row), this.collapseRowToMobile(b.row));
+    const colStartM = Math.min(this.collapseColToMobile(a.col), this.collapseColToMobile(b.col));
+    const colEndM = Math.max(this.collapseColToMobile(a.col), this.collapseColToMobile(b.col));
 
     return {
       desktopCol: `${colStart} / ${colEnd + 1}`,
@@ -182,18 +182,16 @@ export class LandingMediaTextComponent {
     };
   }
 
-  private spanIncludesRow(item: MediaTextItem, name: 'top' | 'bottom'): boolean {
-    const a = this.rowIndex[this.splitPosition(item.overlayPosition).v];
-    const b = this.rowIndex[this.splitPosition(item.overlayEndPosition).v];
-    const idx = this.rowIndex[name];
-    return idx >= Math.min(a, b) && idx <= Math.max(a, b);
+  private spanIncludesRow(item: MediaTextItem, targetRow: number): boolean {
+    const a = this.splitPosition(item.overlayPosition).row;
+    const b = this.splitPosition(item.overlayEndPosition).row;
+    return targetRow >= Math.min(a, b) && targetRow <= Math.max(a, b);
   }
 
-  private spanIncludesCol(item: MediaTextItem, name: 'left' | 'right'): boolean {
-    const a = this.colIndex[this.splitPosition(item.overlayPosition).h];
-    const b = this.colIndex[this.splitPosition(item.overlayEndPosition).h];
-    const idx = this.colIndex[name];
-    return idx >= Math.min(a, b) && idx <= Math.max(a, b);
+  private spanIncludesCol(item: MediaTextItem, targetCol: number): boolean {
+    const a = this.splitPosition(item.overlayPosition).col;
+    const b = this.splitPosition(item.overlayEndPosition).col;
+    return targetCol >= Math.min(a, b) && targetCol <= Math.max(a, b);
   }
 
   /**
@@ -208,20 +206,20 @@ export class LandingMediaTextComponent {
    * opposite physical side.
    */
   cellAlignClasses(item: MediaTextItem): string {
-    const top = this.spanIncludesRow(item, 'top');
-    const bottom = this.spanIncludesRow(item, 'bottom');
+    const top = this.spanIncludesRow(item, 1);
+    const bottom = this.spanIncludesRow(item, this.GRID);
     const vClass = top && !bottom ? 'items-start' : bottom && !top ? 'items-end' : 'items-center';
 
-    const left = this.spanIncludesCol(item, 'left');
-    const right = this.spanIncludesCol(item, 'right');
+    const left = this.spanIncludesCol(item, 1);
+    const right = this.spanIncludesCol(item, this.GRID);
     const hClass = left && !right ? 'justify-start text-left' : right && !left ? 'justify-end text-right' : 'justify-center text-center';
 
     return `${vClass} ${hClass}`;
   }
 
   private colSpanCount(item: MediaTextItem): number {
-    const a = this.colIndex[this.splitPosition(item.overlayPosition).h];
-    const b = this.colIndex[this.splitPosition(item.overlayEndPosition).h];
+    const a = this.splitPosition(item.overlayPosition).col;
+    const b = this.splitPosition(item.overlayEndPosition).col;
     return Math.abs(a - b) + 1;
   }
 
@@ -252,9 +250,11 @@ export class LandingMediaTextComponent {
     return `clamp(${minRem}rem, ${interceptRem.toFixed(4)}rem + ${vwCoefficient.toFixed(4)}vw, ${maxRem}rem)`;
   }
 
+  /** Scales continuously with how much of the grid's width the span covers (1..5 of 5 columns). */
   private spanFactor(item: MediaTextItem): number {
     const cols = this.colSpanCount(item);
-    return cols <= 1 ? 0.85 : cols === 2 ? 1.05 : 1.25;
+    const fraction = cols / this.GRID;
+    return 0.7 + fraction * 0.6; // 1 col -> 0.82, 5 cols (full width) -> 1.3
   }
 
   overlayTitleFontSize(title: string, item: MediaTextItem): string {
