@@ -570,10 +570,10 @@ interface PageTemplate {
                               <div class="col-span-2 space-y-3 border-t border-gray-100 pt-3">
                                 <div>
                                   <label class="block text-xs font-medium text-gray-700 mb-1">Text Area</label>
-                                  <div class="grid grid-cols-3 gap-1 w-32">
+                                  <div class="grid grid-cols-5 gap-1 w-48">
                                     @for (pos of overlayPositions; track pos) {
                                       <button type="button" (click)="selectOverlayCell(section, i, pos)"
-                                        class="h-9 rounded-md border flex items-center justify-center transition-colors"
+                                        class="h-8 rounded-md border flex items-center justify-center transition-colors"
                                         [class.bg-green-200]="isOverlayEndpoint(item, pos)"
                                         [class.border-green-500]="isOverlayEndpoint(item, pos)"
                                         [class.bg-green-50]="isInOverlaySpan(item, pos) && !isOverlayEndpoint(item, pos)"
@@ -1981,14 +1981,12 @@ export class SectionEditorComponent implements OnInit {
   /** Products for the product-bound section pickers (Order Form / Bundle / Sticky Bar). */
   productOptions = signal<{ slug: string; name: string }[]>([]);
 
-  /** 9-position anchor grid for Media+Text "over image" text placement, in visual row order. */
-  readonly overlayPositions = [
-    'top-left', 'top-center', 'top-right',
-    'center-left', 'center', 'center-right',
-    'bottom-left', 'bottom-center', 'bottom-right'
-  ];
-  private readonly overlayRowIndex: Record<string, number> = { top: 1, center: 2, bottom: 3 };
-  private readonly overlayColIndex: Record<string, number> = { left: 1, center: 2, right: 3 };
+  /** 5x5 anchor grid ("row-col", 1-based) for Media+Text "over image" text placement, in visual row order. */
+  readonly overlayPositions = Array.from({ length: 25 }, (_, i) => `${Math.floor(i / 5) + 1}-${(i % 5) + 1}`);
+
+  /** Legacy 3x3 named positions (e.g. "bottom-left") map onto the true-center-aligned 5x5 tracks. */
+  private readonly legacyOverlayRow: Record<string, number> = { top: 1, center: 3, bottom: 5 };
+  private readonly legacyOverlayCol: Record<string, number> = { left: 1, center: 3, right: 5 };
 
   /** Row indices (into localSections' Media+Text items) currently waiting for their second ("end") click. */
   private pickingEndForRow = signal<Set<number>>(new Set());
@@ -2010,15 +2008,19 @@ export class SectionEditorComponent implements OnInit {
     this.pickingEndForRow.set(next);
   }
 
-  private splitOverlayPosition(pos: string): { v: string; h: string } {
-    const [v, h] = pos.split('-');
-    return { v, h: h || 'center' };
+  /** Parses "row-col" (new numeric format) or falls back to legacy named positions like "bottom-left". */
+  private splitOverlayPosition(pos: string): { row: number; col: number } {
+    const [a, b] = (pos || '').split('-');
+    const row = Number(a), col = Number(b);
+    if (!isNaN(row) && !isNaN(col)) return { row, col };
+    return { row: this.legacyOverlayRow[a] ?? 3, col: this.legacyOverlayCol[b || 'center'] ?? 3 };
   }
 
   isOverlayEndpoint(item: any, pos: string): boolean {
-    const start = item.overlayPosition || 'bottom-left';
-    const end = item.overlayEndPosition || start;
-    return pos === start || pos === end;
+    const start = this.splitOverlayPosition(item.overlayPosition || 'bottom-left');
+    const end = this.splitOverlayPosition(item.overlayEndPosition || item.overlayPosition || 'bottom-left');
+    const cur = this.splitOverlayPosition(pos);
+    return (cur.row === start.row && cur.col === start.col) || (cur.row === end.row && cur.col === end.col);
   }
 
   isInOverlaySpan(item: any, pos: string): boolean {
@@ -2026,14 +2028,12 @@ export class SectionEditorComponent implements OnInit {
     const end = this.splitOverlayPosition(item.overlayEndPosition || item.overlayPosition || 'bottom-left');
     const cur = this.splitOverlayPosition(pos);
 
-    const rowLo = Math.min(this.overlayRowIndex[start.v], this.overlayRowIndex[end.v]);
-    const rowHi = Math.max(this.overlayRowIndex[start.v], this.overlayRowIndex[end.v]);
-    const colLo = Math.min(this.overlayColIndex[start.h], this.overlayColIndex[end.h]);
-    const colHi = Math.max(this.overlayColIndex[start.h], this.overlayColIndex[end.h]);
+    const rowLo = Math.min(start.row, end.row);
+    const rowHi = Math.max(start.row, end.row);
+    const colLo = Math.min(start.col, end.col);
+    const colHi = Math.max(start.col, end.col);
 
-    const r = this.overlayRowIndex[cur.v];
-    const c = this.overlayColIndex[cur.h];
-    return r >= rowLo && r <= rowHi && c >= colLo && c <= colHi;
+    return cur.row >= rowLo && cur.row <= rowHi && cur.col >= colLo && cur.col <= colHi;
   }
 
   readonly sectionTypes: SectionTypeInfo[] = [
