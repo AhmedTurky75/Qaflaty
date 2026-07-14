@@ -1,3 +1,4 @@
+using Qaflaty.Application.Analytics.Abstractions;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Storefront.Common;
@@ -11,11 +12,19 @@ public class SyncCartCommandHandler : ICommandHandler<SyncCartCommand>
 {
     private readonly ICartRepository _cartRepository;
     private readonly ITenantContext _tenantContext;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
-    public SyncCartCommandHandler(ICartRepository cartRepository, ITenantContext tenantContext)
+    public SyncCartCommandHandler(
+        ICartRepository cartRepository,
+        ITenantContext tenantContext,
+        IUnitOfWork unitOfWork,
+        IRealtimeNotifier realtimeNotifier)
     {
         _cartRepository = cartRepository;
         _tenantContext = tenantContext;
+        _unitOfWork = unitOfWork;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task<Result> Handle(SyncCartCommand request, CancellationToken cancellationToken)
@@ -53,6 +62,11 @@ public class SyncCartCommandHandler : ICommandHandler<SyncCartCommand>
             if (mergeResult.IsFailure)
                 return Result.Failure(mergeResult.Error);
         }
+
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (_tenantContext.CurrentStoreId.HasValue)
+            await _realtimeNotifier.NotifyActiveCartsChangedAsync(_tenantContext.CurrentStoreId.Value, cancellationToken);
 
         return Result.Success();
     }

@@ -1,6 +1,7 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, effect } from '@angular/core';
 import { CommonModule, CurrencyPipe, DatePipe } from '@angular/common';
 import { ActiveCartsService, ActiveCart, ActiveCartItem } from './services/active-carts.service';
+import { AnalyticsRealtimeService } from '../../core/services/analytics-realtime.service';
 
 @Component({
   selector: 'app-active-carts',
@@ -174,6 +175,7 @@ import { ActiveCartsService, ActiveCart, ActiveCartItem } from './services/activ
 })
 export class ActiveCartsComponent implements OnInit {
   private activeCartsService = inject(ActiveCartsService);
+  private analyticsRealtime = inject(AnalyticsRealtimeService);
 
   carts = signal<ActiveCart[]>([]);
   loading = signal(true);
@@ -183,6 +185,21 @@ export class ActiveCartsComponent implements OnInit {
   estimatedRevenue = computed(() =>
     this.carts().reduce((sum, c) => sum + this.cartTotal(c), 0)
   );
+
+  private firstCartsChangedTick = true;
+
+  constructor() {
+    // Live updates: re-fetch whenever the server signals this store's active-cart list changed
+    // (item added/removed, or an order converted a cart) — replaces manual-refresh-only.
+    effect(() => {
+      this.analyticsRealtime.cartsChangedTick();
+      if (this.firstCartsChangedTick) {
+        this.firstCartsChangedTick = false;
+        return;
+      }
+      this.loadCarts();
+    });
+  }
 
   ngOnInit(): void {
     this.loadCarts();
@@ -195,6 +212,10 @@ export class ActiveCartsComponent implements OnInit {
       this.loading.set(false);
       return;
     }
+
+    // Ensures a live connection exists even when this page is opened directly (not just via the
+    // dashboard, which also calls this) — idempotent if already connected to this store.
+    this.analyticsRealtime.connectToStore(storeId);
 
     this.loading.set(true);
     this.error.set(null);

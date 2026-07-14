@@ -1,6 +1,7 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
 using Qaflaty.Domain.Catalog.Aggregates.PromoCode;
 using Qaflaty.Domain.Catalog.Enums;
@@ -33,6 +34,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly IOtpSettings _otpSettings;
     private readonly IStoreConfigurationRepository _storeConfigRepository;
     private readonly IPromoCodeRepository _promoCodeRepository;
+    private readonly ICartConversionService _cartConversionService;
 
     public PlaceOrderCommandHandler(
         IOrderRepository orderRepository,
@@ -45,7 +47,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         IEmailService emailService,
         IOtpSettings otpSettings,
         IStoreConfigurationRepository storeConfigRepository,
-        IPromoCodeRepository promoCodeRepository)
+        IPromoCodeRepository promoCodeRepository,
+        ICartConversionService cartConversionService)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
@@ -58,6 +61,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         _otpSettings = otpSettings;
         _storeConfigRepository = storeConfigRepository;
         _promoCodeRepository = promoCodeRepository;
+        _cartConversionService = cartConversionService;
     }
 
     public async Task<Result<OrderDto>> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -302,6 +306,10 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         {
             // OTP not required — confirm the order immediately
             order.Confirm("Customer");
+
+            // Best-effort: the cart that was checked out should stop showing as "active" to the
+            // merchant right away. Never let a lookup/notification hiccup fail the order itself.
+            await _cartConversionService.ConvertCartAsync(storeId, request.BuyerCustomerId, request.BuyerGuestId, cancellationToken);
         }
 
         return Result.Success(MapToDto(order, customer, store.Currency.Code));

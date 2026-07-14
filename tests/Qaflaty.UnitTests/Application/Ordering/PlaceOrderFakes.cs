@@ -1,4 +1,5 @@
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Catalog.Aggregates.PromoCode;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Identifiers;
@@ -90,6 +91,17 @@ internal sealed class FakeOtpSettings : IOtpSettings
 {
     public string? MockCode { get; }
     public FakeOtpSettings(string? mockCode = "000000") => MockCode = mockCode;
+}
+
+internal sealed class FakeCartConversionService : ICartConversionService
+{
+    public int CallCount { get; private set; }
+
+    public Task ConvertCartAsync(StoreId storeId, Guid? buyerCustomerId, string? buyerGuestId, CancellationToken ct)
+    {
+        CallCount++;
+        return Task.CompletedTask;
+    }
 }
 
 internal sealed class FakePromoCodeRepository : IPromoCodeRepository

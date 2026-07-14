@@ -23,6 +23,23 @@ services:
       - qaflaty-network
     restart: unless-stopped
 
+  redis:
+    # Optional — powers the real-time merchant analytics presence tracker and SignalR backplane.
+    # Set ConnectionStrings__Redis=localhost:6379 to use it; the API falls back to an in-process
+    # (single-instance-only) presence tracker when it's not configured.
+    image: redis:7-alpine
+    container_name: qaflaty-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - qaflaty-network
+    restart: unless-stopped
+
   pgadmin:
     image: dpage/pgadmin4:latest
     container_name: qaflaty-pgadmin

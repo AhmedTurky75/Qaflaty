@@ -78,7 +78,9 @@ public class StorefrontOrdersController : ApiController
             CountryCode: request.DeliveryAddress.CountryCode,
             CityId: request.DeliveryAddress.CityId,
             DistrictId: request.DeliveryAddress.DistrictId,
-            PromoCode: request.PromoCode);
+            PromoCode: request.PromoCode,
+            BuyerCustomerId: CurrentUserService.CustomerId?.Value,
+            BuyerGuestId: Request.Headers["X-Guest-Id"].FirstOrDefault());
 
         var result = await Sender.Send(command, ct);
 
@@ -101,7 +103,9 @@ public class StorefrontOrdersController : ApiController
         var command = new VerifyOrderOtpCommand(
             StoreId: _tenantContext.CurrentStoreId.Value.Value,
             OrderNumber: orderNumber,
-            OtpCode: request.OtpCode);
+            OtpCode: request.OtpCode,
+            BuyerCustomerId: CurrentUserService.CustomerId?.Value,
+            BuyerGuestId: Request.Headers["X-Guest-Id"].FirstOrDefault());
 
         var result = await Sender.Send(command, ct);
         return HandleResult(result);

@@ -47,6 +47,44 @@
       <!-- Store Setup Guide -->
       <app-setup-guide />
 
+      <!-- Live Metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="relative flex h-2.5 w-2.5">
+                  @if (analyticsRealtime.isConnected()) {
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                  }
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5" [class.bg-green-500]="analyticsRealtime.isConnected()" [class.bg-gray-300]="!analyticsRealtime.isConnected()"></span>
+                </span>
+                <p class="text-sm font-medium text-gray-600">Active Users Now</p>
+              </div>
+              <p class="text-2xl font-bold text-gray-900">{{ analyticsRealtime.activeUsers() }}</p>
+              <p class="text-xs text-gray-400 mt-1">Browsing your store in the last 10 minutes</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="flex items-center gap-2 mb-1">
+                <span class="relative flex h-2.5 w-2.5">
+                  @if (analyticsRealtime.isConnected()) {
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                  }
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5" [class.bg-orange-500]="analyticsRealtime.isConnected()" [class.bg-gray-300]="!analyticsRealtime.isConnected()"></span>
+                </span>
+                <p class="text-sm font-medium text-gray-600">Active Carts Now</p>
+              </div>
+              <p class="text-2xl font-bold text-gray-900">{{ analyticsRealtime.activeCartCount() }}</p>
+              <a routerLink="/active-carts" class="text-xs text-primary-600 hover:underline mt-1 inline-block">View carts &rarr;</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Statistics Cards -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         @if (stats()) {

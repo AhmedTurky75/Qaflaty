@@ -11,6 +11,7 @@ import { ThemeService } from './services/theme.service';
 import { CartService } from './services/cart.service';
 import { I18nService } from './services/i18n.service';
 import { TrackingService } from './services/tracking.service';
+import { PresenceService } from './services/presence.service';
 import { filter, switchMap } from 'rxjs';
 
 @Component({
@@ -74,6 +75,7 @@ export class App implements OnInit {
   private cartService = inject(CartService);
   private i18nService = inject(I18nService);
   private trackingService = inject(TrackingService);
+  private presenceService = inject(PresenceService);
   private router = inject(Router);
 
   ngOnInit() {
@@ -95,12 +97,18 @@ export class App implements OnInit {
           .subscribe({ next: () => {}, error: () => {} });
 
         this.trackingService.init();
+        this.presenceService.start();
         // NavigationEnd fires for the initial route too, so this alone covers both the
         // first page load and every subsequent navigation — an extra explicit call here
         // would double-track the first PageView.
         this.router.events.pipe(
           filter((event): event is NavigationEnd => event instanceof NavigationEnd)
-        ).subscribe(() => this.trackingService.track('PageView'));
+        ).subscribe(() => {
+          this.trackingService.track('PageView');
+          // Clears any product-page presence context; product-detail pages re-set it once the
+          // product finishes loading (see TrackingService's ViewContent hook).
+          this.presenceService.onPageView();
+        });
       },
       error: (error) => {
         console.error('Failed to load store:', error);
