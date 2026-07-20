@@ -45,7 +45,7 @@ public class RedisPresenceTracker : IPresenceTracker
 
         var locKey = LocationKey(storeId.Value, visitor.Value);
         var previousProductRaw = await db.StringGetAsync(locKey);
-        var previousProduct = !previousProductRaw.IsNull && Guid.TryParse(previousProductRaw, out var prevGuid)
+        var previousProduct = !previousProductRaw.IsNull && Guid.TryParse((string?)previousProductRaw, out var prevGuid)
             ? (Guid?)prevGuid
             : null;
 
@@ -72,7 +72,7 @@ public class RedisPresenceTracker : IPresenceTracker
 
         await db.SortedSetRemoveAsync(StoreKey(storeId.Value), visitor.Value);
 
-        if (!productRaw.IsNull && Guid.TryParse(productRaw, out var productId))
+        if (!productRaw.IsNull && Guid.TryParse((string?)productRaw, out var productId))
             await db.SortedSetRemoveAsync(ProductKey(storeId.Value, productId), visitor.Value);
 
         await db.KeyDeleteAsync(locKey);
@@ -93,7 +93,7 @@ public class RedisPresenceTracker : IPresenceTracker
         var result = new List<ProductViewerCountDto>();
         foreach (var member in productIds)
         {
-            if (!Guid.TryParse(member!, out var productId)) continue;
+            if (!Guid.TryParse((string?)member, out var productId)) continue;
 
             var count = await db.SortedSetLengthAsync(ProductKey(storeId.Value, productId), nowMs, double.PositiveInfinity, Exclude.Start);
             if (count > 0)
@@ -112,14 +112,14 @@ public class RedisPresenceTracker : IPresenceTracker
 
         foreach (var member in storeMembers)
         {
-            if (!Guid.TryParse(member!, out var storeGuid)) continue;
+            if (!Guid.TryParse((string?)member, out var storeGuid)) continue;
 
             var removed = await db.SortedSetRemoveRangeByScoreAsync(StoreKey(storeGuid), double.NegativeInfinity, nowMs);
 
             var productIds = await db.SetMembersAsync(ProductSetKey(storeGuid));
             foreach (var productMember in productIds)
             {
-                if (!Guid.TryParse(productMember!, out var productId)) continue;
+                if (!Guid.TryParse((string?)productMember, out var productId)) continue;
 
                 var productKey = ProductKey(storeGuid, productId);
                 await db.SortedSetRemoveRangeByScoreAsync(productKey, double.NegativeInfinity, nowMs);
