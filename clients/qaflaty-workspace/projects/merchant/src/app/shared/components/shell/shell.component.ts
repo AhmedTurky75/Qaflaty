@@ -62,6 +62,7 @@ export class ShellComponent implements OnInit {
     const isStoreOwner = !!merchant && !!currentStore && currentStore.merchantId === merchant.id;
     const items = [
       { name: 'Dashboard', icon: 'home', route: '/dashboard' },
+      { name: 'Live', icon: 'live', route: '/live' },
       { name: 'Stores', icon: 'store', route: '/stores' },
       { name: 'Products', icon: 'box', route: '/products' },
       { name: 'Orders', icon: 'shopping-bag', route: '/orders' },

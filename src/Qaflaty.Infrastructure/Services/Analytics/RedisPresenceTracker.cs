@@ -103,32 +103,17 @@ public class RedisPresenceTracker : IPresenceTracker
         return result.OrderByDescending(r => r.ViewerCount).ToList();
     }
 
-    public async Task<IReadOnlyCollection<StoreId>> GetTrackedStoreIdsAsync(CancellationToken ct = default)
-    {
-        var members = await Db.SetMembersAsync(StoresSetKey);
-        var result = new List<StoreId>();
-
-        foreach (var member in members)
-        {
-            if (Guid.TryParse((string?)member, out var storeGuid))
-                result.Add(new StoreId(storeGuid));
-        }
-
-        return result;
-    }
-
-    public async Task<IReadOnlyCollection<StoreId>> SweepExpiredAsync(DateTime nowUtc, CancellationToken ct = default)
+    public async Task SweepExpiredAsync(DateTime nowUtc, CancellationToken ct = default)
     {
         var db = Db;
         var nowMs = ToUnixMs(nowUtc);
         var storeMembers = await db.SetMembersAsync(StoresSetKey);
-        var changed = new List<StoreId>();
 
         foreach (var member in storeMembers)
         {
             if (!Guid.TryParse((string?)member, out var storeGuid)) continue;
 
-            var removed = await db.SortedSetRemoveRangeByScoreAsync(StoreKey(storeGuid), double.NegativeInfinity, nowMs);
+            await db.SortedSetRemoveRangeByScoreAsync(StoreKey(storeGuid), double.NegativeInfinity, nowMs);
 
             var productIds = await db.SetMembersAsync(ProductSetKey(storeGuid));
             foreach (var productMember in productIds)
@@ -145,12 +130,7 @@ public class RedisPresenceTracker : IPresenceTracker
                     await db.SetRemoveAsync(ProductSetKey(storeGuid), productMember);
                 }
             }
-
-            if (removed > 0)
-                changed.Add(new StoreId(storeGuid));
         }
-
-        return changed;
     }
 
     private static long ToUnixMs(DateTime utc) => new DateTimeOffset(DateTime.SpecifyKind(utc, DateTimeKind.Utc)).ToUnixTimeMilliseconds();

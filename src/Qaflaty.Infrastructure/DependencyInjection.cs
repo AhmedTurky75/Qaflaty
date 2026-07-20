@@ -139,6 +139,12 @@ public static class DependencyInjection
             services.AddSingleton<IPresenceTracker, InMemoryPresenceTracker>();
         }
 
+        // Which stores currently have a merchant watching their live dashboard (singleton, shared
+        // between the AnalyticsHub and the PresenceSweeper); product-name enrichment for live
+        // pushes/snapshots (scoped — reads the catalog).
+        services.AddSingleton<IPresenceSubscriberRegistry, PresenceSubscriberRegistry>();
+        services.AddScoped<IProductViewerEnricher, ProductViewerEnricher>();
+
         services.AddScoped<ICartConversionService, CartConversionService>();
 
         // AI Assistant Services

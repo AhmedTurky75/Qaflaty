@@ -82,22 +82,16 @@ public class InMemoryPresenceTracker : IPresenceTracker
         return Task.FromResult(result);
     }
 
-    public Task<IReadOnlyCollection<StoreId>> GetTrackedStoreIdsAsync(CancellationToken ct = default)
-        => Task.FromResult<IReadOnlyCollection<StoreId>>(_stores.Keys.Select(g => new StoreId(g)).ToList());
-
-    public Task<IReadOnlyCollection<StoreId>> SweepExpiredAsync(DateTime nowUtc, CancellationToken ct = default)
+    public Task SweepExpiredAsync(DateTime nowUtc, CancellationToken ct = default)
     {
         var nowTicks = nowUtc.Ticks;
-        var changed = new List<StoreId>();
 
         foreach (var (storeGuid, state) in _stores)
         {
-            var removedAny = false;
-
             foreach (var kv in state.Visitors)
             {
-                if (kv.Value <= nowTicks && state.Visitors.TryRemove(kv.Key, out _))
-                    removedAny = true;
+                if (kv.Value <= nowTicks)
+                    state.Visitors.TryRemove(kv.Key, out _);
             }
 
             foreach (var (productId, set) in state.ProductVisitors)
@@ -118,12 +112,9 @@ public class InMemoryPresenceTracker : IPresenceTracker
                 if (!state.Visitors.ContainsKey(visitorKey))
                     state.VisitorProduct.TryRemove(visitorKey, out _);
             }
-
-            if (removedAny)
-                changed.Add(new StoreId(storeGuid));
         }
 
-        return Task.FromResult<IReadOnlyCollection<StoreId>>(changed);
+        return Task.CompletedTask;
     }
 
     private static void RemoveFromProductSet(StoreState state, Guid productId, string visitorKey)

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Qaflaty.Application.Analytics.Abstractions;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Identifiers;
 
@@ -16,11 +17,16 @@ namespace Qaflaty.Api.Hubs;
 public class AnalyticsHub : Hub
 {
     private readonly IStoreRepository _storeRepository;
+    private readonly IPresenceSubscriberRegistry _subscriberRegistry;
     private readonly ILogger<AnalyticsHub> _logger;
 
-    public AnalyticsHub(IStoreRepository storeRepository, ILogger<AnalyticsHub> logger)
+    public AnalyticsHub(
+        IStoreRepository storeRepository,
+        IPresenceSubscriberRegistry subscriberRegistry,
+        ILogger<AnalyticsHub> logger)
     {
         _storeRepository = storeRepository;
+        _subscriberRegistry = subscriberRegistry;
         _logger = logger;
     }
 
@@ -34,7 +40,8 @@ public class AnalyticsHub : Hub
             return;
         }
 
-        var canAccess = await _storeRepository.CanMerchantAccessStoreAsync(merchantId.Value, new StoreId(storeId));
+        var storeKey = new StoreId(storeId);
+        var canAccess = await _storeRepository.CanMerchantAccessStoreAsync(merchantId.Value, storeKey);
         if (!canAccess)
         {
             _logger.LogWarning(
@@ -45,11 +52,14 @@ public class AnalyticsHub : Hub
         }
 
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(storeId));
+        // Marks the store as watched so the PresenceSweeper starts computing/pushing its metrics.
+        _subscriberRegistry.Subscribe(Context.ConnectionId, storeKey);
     }
 
     public async Task Unsubscribe(Guid storeId)
     {
         await Groups.RemoveFromGroupAsync(Context.ConnectionId, GroupName(storeId));
+        _subscriberRegistry.Unsubscribe(Context.ConnectionId, new StoreId(storeId));
     }
 
     public override async Task OnConnectedAsync()
@@ -60,6 +70,10 @@ public class AnalyticsHub : Hub
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        // Release every store this connection was watching, so a closed dashboard tab stops the
+        // sweeper doing work for it.
+        _subscriberRegistry.RemoveConnection(Context.ConnectionId);
+
         _logger.LogInformation(
             "Analytics client disconnected: {ConnectionId}, Exception: {Exception}",
             Context.ConnectionId, exception?.Message);

@@ -22,6 +22,7 @@ export interface LiveMetrics {
 interface PresenceUpdatedPayload {
   storeId: string;
   activeUsers: number;
+  productViewers: ProductViewerCount[];
 }
 
 interface ActiveCartsChangedPayload {
@@ -29,10 +30,11 @@ interface ActiveCartsChangedPayload {
 }
 
 /**
- * Live merchant-dashboard analytics client. Loads a one-time HTTP snapshot on connect, then
- * streams deltas over the AnalyticsHub SignalR connection — mirrors the pattern established by
- * MerchantChatService (signals-based state, token via ?access_token= query param, automatic
- * reconnect).
+ * Live merchant analytics client. Loads a single HTTP snapshot when it first connects to a store,
+ * then runs purely off the AnalyticsHub websocket: presence updates arrive fully-formed and are
+ * applied directly (no re-fetch). The only follow-up HTTP call is a snapshot refresh when a cart
+ * actually changes — an event driven by a real storefront action, never a timer. Mirrors
+ * MerchantChatService (signals-based state, token via ?access_token= query param, auto-reconnect).
  */
 @Injectable({ providedIn: 'root' })
 export class AnalyticsRealtimeService {
@@ -103,10 +105,9 @@ export class AnalyticsRealtimeService {
 
     this.hubConnection.on('PresenceUpdated', (payload: PresenceUpdatedPayload) => {
       if (payload.storeId !== this.currentStoreId) return;
+      // Fully-formed payload (counts + enriched product rows) — apply directly, no HTTP round-trip.
       this.activeUsers.set(payload.activeUsers);
-      // Per-product viewer names/images require a DB lookup the push intentionally skips —
-      // re-fetch the enriched snapshot instead (same push-signal-then-refetch pattern as carts).
-      this.loadSnapshot(payload.storeId);
+      this.productViewers.set(payload.productViewers ?? []);
     });
 
     this.hubConnection.on('ActiveCartsChanged', (payload: ActiveCartsChangedPayload) => {

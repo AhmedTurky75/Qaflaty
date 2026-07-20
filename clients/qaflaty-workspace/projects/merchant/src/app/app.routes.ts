@@ -56,6 +56,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDER_ROUTES)
       },
       {
+        path: 'live',
+        canActivate: [storeGuard],
+        loadComponent: () => import('./features/live/live.component').then(m => m.LiveComponent)
+      },
+      {
         path: 'active-carts',
         canActivate: [storeGuard],
         loadComponent: () => import('./features/active-carts/active-carts.component').then(m => m.ActiveCartsComponent)

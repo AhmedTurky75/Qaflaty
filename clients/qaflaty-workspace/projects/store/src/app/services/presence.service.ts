@@ -4,10 +4,14 @@ import { environment } from '../../environments/environment';
 import { GuestSessionService } from './guest-session.service';
 
 /**
- * Powers the merchant dashboard's live "active users" / "active users per product" metrics.
- * Sends a heartbeat every 30s (paused while the tab is hidden) plus an immediate one on every
- * page/product change, and a best-effort "leave" beacon on tab/browser close. The 10-minute
- * server-side TTL is the correctness backstop if any of these signals is lost.
+ * Powers the merchant's live "active users" / "active users per product" metrics.
+ *
+ * A heartbeat is sent only while the visitor is genuinely active — the tab is visible AND they've
+ * interacted (moved/scrolled/typed/tapped) within the recent activity window. An idle tab left
+ * open stops sending after that window and drops off the merchant's count once the 10-minute
+ * server TTL lapses; it resumes the instant the visitor interacts again. Page/product changes send
+ * an immediate heartbeat, and tab close sends a best-effort "leave" beacon. This keeps the endpoint
+ * quiet — no fixed forever-polling regardless of what the visitor is doing.
  */
 @Injectable({ providedIn: 'root' })
 export class PresenceService {
@@ -15,23 +19,24 @@ export class PresenceService {
   private guestSession = inject(GuestSessionService);
 
   private static readonly HEARTBEAT_INTERVAL_MS = 30_000;
+  // No interaction for this long → stop heartbeating (visitor is idle; TTL will drop them).
+  private static readonly ACTIVITY_WINDOW_MS = 60_000;
 
   private currentProductId: string | null = null;
   private heartbeatTimer?: ReturnType<typeof setInterval>;
+  private lastActivityAt = Date.now();
   private started = false;
 
   start(): void {
     if (this.started) return;
     this.started = true;
 
+    this.attachActivityListeners();
     this.sendHeartbeat();
-    this.heartbeatTimer = setInterval(() => {
-      if (document.visibilityState === 'visible') this.sendHeartbeat();
-    }, PresenceService.HEARTBEAT_INTERVAL_MS);
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible') this.sendHeartbeat();
-    });
+    this.heartbeatTimer = setInterval(() => {
+      if (this.isActive()) this.sendHeartbeat();
+    }, PresenceService.HEARTBEAT_INTERVAL_MS);
 
     // pagehide fires reliably on tab close/navigation-away across browsers (unlike beforeunload
     // on mobile Safari); beforeunload is kept as a fallback for older desktop browsers.
@@ -39,16 +44,43 @@ export class PresenceService {
     window.addEventListener('beforeunload', () => this.sendLeaveBeacon());
   }
 
-  /** Called on every router navigation — clears product context; a following onViewProduct() call re-sets it. */
+  /** Called on every router navigation — clears product context; a following onViewProduct() re-sets it. */
   onPageView(): void {
     this.currentProductId = null;
-    this.sendHeartbeat();
+    this.lastActivityAt = Date.now();
+    this.sendHeartbeat(); // navigation is an explicit action — reflect the page change immediately
   }
 
   /** Called when a product detail page finishes loading a product. */
   onViewProduct(productId: string): void {
     this.currentProductId = productId;
-    this.sendHeartbeat();
+    this.lastActivityAt = Date.now();
+    this.sendHeartbeat(); // move this visitor onto the new product's live count right away
+  }
+
+  private attachActivityListeners(): void {
+    const opts: AddEventListenerOptions = { passive: true, capture: true };
+    for (const evt of ['pointerdown', 'keydown', 'scroll', 'touchstart', 'mousemove']) {
+      window.addEventListener(evt, () => this.markActivity(), opts);
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') this.markActivity();
+    });
+  }
+
+  /**
+   * Records interaction. Cheap enough to call on every mousemove — it only sends a heartbeat when
+   * resuming from an idle/hidden state, not on every event.
+   */
+  private markActivity(): void {
+    const wasInactive = !this.isActive();
+    this.lastActivityAt = Date.now();
+    if (wasInactive) this.sendHeartbeat();
+  }
+
+  private isActive(): boolean {
+    return document.visibilityState === 'visible'
+      && (Date.now() - this.lastActivityAt) < PresenceService.ACTIVITY_WINDOW_MS;
   }
 
   private sendHeartbeat(): void {

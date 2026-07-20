@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { StoreContextService } from '../../core/services/store-context.service';
-import { AnalyticsRealtimeService } from '../../core/services/analytics-realtime.service';
 import { DashboardService, DashboardStats, SalesChartData, TopProduct, RecentOrderSummary } from './services/dashboard.service';
 import { StatsCardComponent } from './components/stats-card/stats-card.component';
 import { SalesChartComponent } from './components/sales-chart/sales-chart.component';
@@ -12,7 +11,6 @@ import { TopProductsComponent } from './components/top-products/top-products.com
 import { QuickActionsComponent } from './components/quick-actions/quick-actions.component';
 import { LowStockAlertsComponent } from './components/low-stock-alerts/low-stock-alerts.component';
 import { MostWishlistedComponent } from './components/most-wishlisted/most-wishlisted.component';
-import { LiveProductViewsComponent } from './components/live-product-views/live-product-views.component';
 import { SetupGuideComponent } from '../setup-guide/setup-guide.component';
 
 @Component({
@@ -28,7 +26,6 @@ import { SetupGuideComponent } from '../setup-guide/setup-guide.component';
     QuickActionsComponent,
     LowStockAlertsComponent,
     MostWishlistedComponent,
-    LiveProductViewsComponent,
     SetupGuideComponent
   ],
   templateUrl: './dashboard.component.html'
@@ -36,7 +33,6 @@ import { SetupGuideComponent } from '../setup-guide/setup-guide.component';
 export class DashboardComponent {
   private storeContext = inject(StoreContextService);
   private dashboardService = inject(DashboardService);
-  analyticsRealtime = inject(AnalyticsRealtimeService);
 
   loading = signal(true);
   error = signal<string | null>(null);
@@ -53,7 +49,6 @@ export class DashboardComponent {
       const storeId = this.storeContext.currentStoreId();
       if (storeId) {
         this.loadDashboardData(storeId);
-        this.analyticsRealtime.connectToStore(storeId);
       } else {
         this.loading.set(false);
       }

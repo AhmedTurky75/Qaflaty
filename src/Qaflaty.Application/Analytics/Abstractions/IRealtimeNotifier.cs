@@ -1,3 +1,4 @@
+using Qaflaty.Application.Analytics.DTOs;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Analytics.Abstractions;
@@ -11,17 +12,16 @@ namespace Qaflaty.Application.Analytics.Abstractions;
 public interface IRealtimeNotifier
 {
     /// <summary>
-    /// Carries only the active-user count — per-product viewer data needs product names/images,
-    /// which would require a DB hit from the singleton sweeper. The dashboard re-fetches the full
-    /// (enriched) snapshot on receipt, the same "push signal, re-fetch" pattern as
-    /// <see cref="NotifyActiveCartsChangedAsync"/>.
+    /// Pushes the complete, enriched presence snapshot (active users + per-product viewer counts
+    /// with product names/images). The client applies it directly — no follow-up HTTP fetch.
     /// </summary>
-    Task NotifyPresenceChangedAsync(StoreId storeId, int activeUsers, CancellationToken ct = default);
+    Task NotifyPresenceChangedAsync(
+        StoreId storeId, int activeUsers, IReadOnlyList<LiveProductViewerDto> productViewers, CancellationToken ct = default);
 
     /// <summary>
-    /// Signals that a store's active-cart list changed (item added/removed/cart converted).
-    /// Intentionally carries no payload — the merchant dashboard re-fetches the cart list,
-    /// keeping the push cheap and avoiding drift between the pushed and persisted state.
+    /// Signals that a store's active carts changed (item added/removed / cart converted). Fired
+    /// only on real cart mutations, never on a timer — the watching page re-fetches the cart list
+    /// and count in response, which is cheap and always fresh.
     /// </summary>
     Task NotifyActiveCartsChangedAsync(StoreId storeId, CancellationToken ct = default);
 }
