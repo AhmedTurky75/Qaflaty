@@ -103,6 +103,20 @@ public class RedisPresenceTracker : IPresenceTracker
         return result.OrderByDescending(r => r.ViewerCount).ToList();
     }
 
+    public async Task<IReadOnlyCollection<StoreId>> GetTrackedStoreIdsAsync(CancellationToken ct = default)
+    {
+        var members = await Db.SetMembersAsync(StoresSetKey);
+        var result = new List<StoreId>();
+
+        foreach (var member in members)
+        {
+            if (Guid.TryParse((string?)member, out var storeGuid))
+                result.Add(new StoreId(storeGuid));
+        }
+
+        return result;
+    }
+
     public async Task<IReadOnlyCollection<StoreId>> SweepExpiredAsync(DateTime nowUtc, CancellationToken ct = default)
     {
         var db = Db;

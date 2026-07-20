@@ -28,8 +28,12 @@ public interface IPresenceTracker
     Task<List<ProductViewerCountDto>> GetProductViewerCountsAsync(StoreId storeId, DateTime nowUtc, CancellationToken ct = default);
 
     /// <summary>
-    /// Reclaims expired visitors across all tracked stores. Returns the ids of stores whose
-    /// active counts changed as a result, so the caller can push updates only where needed.
+    /// All store ids that currently hold (or very recently held) presence data. Lets the sweeper
+    /// diff every known store's live state each tick — not just ones where a TTL expired —
+    /// so new arrivals and product-page changes get picked up too, not just departures.
     /// </summary>
+    Task<IReadOnlyCollection<StoreId>> GetTrackedStoreIdsAsync(CancellationToken ct = default);
+
+    /// <summary>Reclaims expired visitors across all tracked stores (memory cleanup only — see <see cref="GetTrackedStoreIdsAsync"/> for change detection).</summary>
     Task<IReadOnlyCollection<StoreId>> SweepExpiredAsync(DateTime nowUtc, CancellationToken ct = default);
 }

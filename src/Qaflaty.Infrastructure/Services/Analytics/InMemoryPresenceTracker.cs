@@ -82,6 +82,9 @@ public class InMemoryPresenceTracker : IPresenceTracker
         return Task.FromResult(result);
     }
 
+    public Task<IReadOnlyCollection<StoreId>> GetTrackedStoreIdsAsync(CancellationToken ct = default)
+        => Task.FromResult<IReadOnlyCollection<StoreId>>(_stores.Keys.Select(g => new StoreId(g)).ToList());
+
     public Task<IReadOnlyCollection<StoreId>> SweepExpiredAsync(DateTime nowUtc, CancellationToken ct = default)
     {
         var nowTicks = nowUtc.Ticks;
