@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Qaflaty.Api.Hubs;
 using Qaflaty.Application.Analytics.Abstractions;
-using Qaflaty.Application.Analytics.DTOs;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Api.Services.Analytics;
@@ -24,14 +23,13 @@ public class SignalRRealtimeNotifier : IRealtimeNotifier
         _logger = logger;
     }
 
-    public async Task NotifyPresenceChangedAsync(
-        StoreId storeId, int activeUsers, List<ProductViewerCountDto> productViewers, CancellationToken ct = default)
+    public async Task NotifyPresenceChangedAsync(StoreId storeId, int activeUsers, CancellationToken ct = default)
     {
         try
         {
             await _hubContext.Clients.Group(AnalyticsHub.GroupName(storeId.Value)).SendAsync(
                 "PresenceUpdated",
-                new { storeId = storeId.Value, activeUsers, productViewers },
+                new { storeId = storeId.Value, activeUsers },
                 ct);
         }
         catch (Exception ex)

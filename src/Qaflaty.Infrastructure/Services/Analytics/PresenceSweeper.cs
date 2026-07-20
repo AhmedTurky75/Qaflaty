@@ -47,9 +47,7 @@ public class PresenceSweeper : BackgroundService
                 foreach (var storeId in changedStores)
                 {
                     var activeUsers = await _presenceTracker.GetActiveUserCountAsync(storeId, now, stoppingToken);
-                    var productViewers = await _presenceTracker.GetProductViewerCountsAsync(storeId, now, stoppingToken);
-
-                    await _realtimeNotifier.NotifyPresenceChangedAsync(storeId, activeUsers, productViewers, stoppingToken);
+                    await _realtimeNotifier.NotifyPresenceChangedAsync(storeId, activeUsers, stoppingToken);
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)

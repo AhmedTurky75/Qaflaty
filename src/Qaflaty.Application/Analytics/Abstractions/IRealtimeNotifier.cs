@@ -1,4 +1,3 @@
-using Qaflaty.Application.Analytics.DTOs;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Application.Analytics.Abstractions;
@@ -11,8 +10,13 @@ namespace Qaflaty.Application.Analytics.Abstractions;
 /// </summary>
 public interface IRealtimeNotifier
 {
-    Task NotifyPresenceChangedAsync(
-        StoreId storeId, int activeUsers, List<ProductViewerCountDto> productViewers, CancellationToken ct = default);
+    /// <summary>
+    /// Carries only the active-user count — per-product viewer data needs product names/images,
+    /// which would require a DB hit from the singleton sweeper. The dashboard re-fetches the full
+    /// (enriched) snapshot on receipt, the same "push signal, re-fetch" pattern as
+    /// <see cref="NotifyActiveCartsChangedAsync"/>.
+    /// </summary>
+    Task NotifyPresenceChangedAsync(StoreId storeId, int activeUsers, CancellationToken ct = default);
 
     /// <summary>
     /// Signals that a store's active-cart list changed (item added/removed/cart converted).

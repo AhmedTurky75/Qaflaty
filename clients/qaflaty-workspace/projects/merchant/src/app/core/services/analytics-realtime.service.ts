@@ -7,6 +7,9 @@ import { AuthService } from './auth.service';
 
 export interface ProductViewerCount {
   productId: string;
+  productName: string;
+  productSlug: string;
+  imageUrl: string | null;
   viewerCount: number;
 }
 
@@ -19,7 +22,6 @@ export interface LiveMetrics {
 interface PresenceUpdatedPayload {
   storeId: string;
   activeUsers: number;
-  productViewers: ProductViewerCount[];
 }
 
 interface ActiveCartsChangedPayload {
@@ -102,7 +104,9 @@ export class AnalyticsRealtimeService {
     this.hubConnection.on('PresenceUpdated', (payload: PresenceUpdatedPayload) => {
       if (payload.storeId !== this.currentStoreId) return;
       this.activeUsers.set(payload.activeUsers);
-      this.productViewers.set(payload.productViewers);
+      // Per-product viewer names/images require a DB lookup the push intentionally skips —
+      // re-fetch the enriched snapshot instead (same push-signal-then-refetch pattern as carts).
+      this.loadSnapshot(payload.storeId);
     });
 
     this.hubConnection.on('ActiveCartsChanged', (payload: ActiveCartsChangedPayload) => {
