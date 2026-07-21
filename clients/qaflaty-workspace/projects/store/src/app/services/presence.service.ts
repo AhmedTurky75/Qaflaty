@@ -19,8 +19,10 @@ export class PresenceService {
   private guestSession = inject(GuestSessionService);
 
   private static readonly HEARTBEAT_INTERVAL_MS = 30_000;
-  // No interaction for this long → stop heartbeating (visitor is idle; TTL will drop them).
-  private static readonly ACTIVITY_WINDOW_MS = 60_000;
+  // Keep heartbeating for this long after the last interaction, matching the spec's "active if
+  // interacted within the last 10 minutes" and the server's 10-minute presence TTL. A tab left
+  // idle past this stops sending and drops off once the TTL lapses; any interaction resumes it.
+  private static readonly ACTIVITY_WINDOW_MS = 10 * 60_000;
 
   private currentProductId: string | null = null;
   private heartbeatTimer?: ReturnType<typeof setInterval>;
