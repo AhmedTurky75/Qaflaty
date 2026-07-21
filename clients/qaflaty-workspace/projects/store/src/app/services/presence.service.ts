@@ -1,23 +1,24 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { GuestSessionService } from './guest-session.service';
 
 /**
  * Powers the merchant's live "active users" / "active users per product" metrics.
  *
+ * Presence is route-driven: the current product is read from the page URL (/products/:slug), which
+ * is known synchronously — no waiting for the product's data to load — so the very first heartbeat
+ * on a product page already carries the right product, even on refresh or a pasted URL.
+ *
  * A heartbeat is sent only while the visitor is genuinely active — the tab is visible AND they've
  * interacted (moved/scrolled/typed/tapped) within the recent activity window. An idle tab left
  * open stops sending after that window and drops off the merchant's count once the 10-minute
- * server TTL lapses; it resumes the instant the visitor interacts again. Page/product changes send
- * an immediate heartbeat, and tab close sends a best-effort "leave" beacon. This keeps the endpoint
- * quiet — no fixed forever-polling regardless of what the visitor is doing.
+ * server TTL lapses; it resumes the instant the visitor interacts again. Navigation sends an
+ * immediate heartbeat, and tab close sends a best-effort "leave" beacon.
  */
 @Injectable({ providedIn: 'root' })
 export class PresenceService {
   private http = inject(HttpClient);
-  private router = inject(Router);
   private guestSession = inject(GuestSessionService);
 
   private static readonly HEARTBEAT_INTERVAL_MS = 30_000;
@@ -26,7 +27,6 @@ export class PresenceService {
   // idle past this stops sending and drops off once the TTL lapses; any interaction resumes it.
   private static readonly ACTIVITY_WINDOW_MS = 10 * 60_000;
 
-  private currentProductId: string | null = null;
   private heartbeatTimer?: ReturnType<typeof setInterval>;
   private lastActivityAt = Date.now();
   private started = false;
@@ -36,9 +36,8 @@ export class PresenceService {
     this.started = true;
 
     this.attachActivityListeners();
-    // On a product page, don't send a throwaway productId=null beat — onViewProduct fires the first
-    // beat the moment the product loads, so the very first heartbeat already carries the product id.
-    if (!this.onProductPage()) this.sendHeartbeat();
+    // Beat immediately for the page we loaded on (product slug read from the URL — no fetch needed).
+    this.sendHeartbeat();
 
     this.heartbeatTimer = setInterval(() => {
       if (this.isActive()) this.sendHeartbeat();
@@ -50,20 +49,10 @@ export class PresenceService {
     window.addEventListener('beforeunload', () => this.sendLeaveBeacon());
   }
 
-  /** Called on every router navigation — clears product context; a following onViewProduct() re-sets it. */
+  /** Called on every router navigation — the new product slug is read from the URL at send time. */
   onPageView(): void {
-    this.currentProductId = null;
     this.lastActivityAt = Date.now();
-    // Same as start(): on a product page, let onViewProduct send the first (product-carrying) beat
-    // instead of a throwaway null one. Other pages beat immediately to reflect the navigation.
-    if (!this.onProductPage()) this.sendHeartbeat();
-  }
-
-  /** Called when a product detail page finishes loading a product. */
-  onViewProduct(productId: string): void {
-    this.currentProductId = productId;
-    this.lastActivityAt = Date.now();
-    this.sendHeartbeat(); // move this visitor onto the new product's live count right away
+    this.sendHeartbeat(); // navigation is an explicit action — reflect the new page immediately
   }
 
   private attachActivityListeners(): void {
@@ -91,16 +80,20 @@ export class PresenceService {
       && (Date.now() - this.lastActivityAt) < PresenceService.ACTIVITY_WINDOW_MS;
   }
 
-  /** True on a product detail route (/products/:slug) — the list route (/products) is not a product page. */
-  private onProductPage(): boolean {
-    return /\/products\/[^/]+/.test(this.router.url);
+  /**
+   * The product slug for the current page, read from the URL (/products/:slug), or null when not on
+   * a product detail page. Available synchronously, so a heartbeat never has to wait for product data.
+   */
+  private currentProductSlug(): string | null {
+    const match = window.location.pathname.match(/\/products\/([^/?#]+)/);
+    return match ? decodeURIComponent(match[1]) : null;
   }
 
   private sendHeartbeat(): void {
     if (document.visibilityState === 'hidden') return;
 
     this.http.post(`${environment.apiUrl}/storefront/presence/heartbeat`, {
-      productId: this.currentProductId
+      productSlug: this.currentProductSlug()
     }).subscribe({ next: () => {}, error: () => {} });
   }
 

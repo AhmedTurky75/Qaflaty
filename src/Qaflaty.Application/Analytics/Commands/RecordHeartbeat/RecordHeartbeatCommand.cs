@@ -11,5 +11,5 @@ public record RecordHeartbeatCommand(
     Guid StoreId,
     Guid? CustomerId,
     string? GuestId,
-    Guid? ProductId
+    string? ProductSlug
 ) : ICommand;

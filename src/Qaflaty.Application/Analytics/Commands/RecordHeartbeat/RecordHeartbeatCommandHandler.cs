@@ -39,11 +39,11 @@ public class RecordHeartbeatCommandHandler : ICommandHandler<RecordHeartbeatComm
         // GetLiveMetricsQueryHandler; if they differ, the storefront and the merchant are pointed
         // at different stores (the usual cause of a stuck 0).
         _logger.LogInformation(
-            "[PRESENCE-DEBUG] Heartbeat recorded: store={StoreId} visitor={Visitor} product={ProductId}",
-            request.StoreId, visitor.Value.Value, request.ProductId);
+            "[PRESENCE-DEBUG] Heartbeat recorded: store={StoreId} visitor={Visitor} productSlug={ProductSlug}",
+            request.StoreId, visitor.Value.Value, request.ProductSlug);
 
         await _presenceTracker.TouchAsync(
-            new StoreId(request.StoreId), visitor.Value, request.ProductId, _dateTimeProvider.UtcNow, cancellationToken);
+            new StoreId(request.StoreId), visitor.Value, request.ProductSlug, _dateTimeProvider.UtcNow, cancellationToken);
 
         return Result.Success();
     }

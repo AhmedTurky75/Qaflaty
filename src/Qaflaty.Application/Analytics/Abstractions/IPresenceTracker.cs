@@ -24,11 +24,12 @@ public interface IPresenceTracker
 {
     /// <summary>
     /// Records that <paramref name="visitor"/> is active on <paramref name="storeId"/> right now,
-    /// and — when <paramref name="productId"/> is set — that they viewed that product. Additive:
-    /// it refreshes this person's entry in the store and (if given) the product bucket, and never
-    /// removes them from other products they opened earlier in the window.
+    /// and — when <paramref name="productSlug"/> is set — that they viewed that product. The product
+    /// is identified by its URL slug (known to the storefront immediately, no product fetch needed).
+    /// Additive: it refreshes this person's entry in the store and (if given) the product bucket, and
+    /// never removes them from other products they opened earlier in the window.
     /// </summary>
-    Task TouchAsync(StoreId storeId, VisitorKey visitor, Guid? productId, DateTime nowUtc, CancellationToken ct = default);
+    Task TouchAsync(StoreId storeId, VisitorKey visitor, string? productSlug, DateTime nowUtc, CancellationToken ct = default);
 
     /// <summary>
     /// Explicit "left the site" signal (tab/browser close beacon) — drops the person from the

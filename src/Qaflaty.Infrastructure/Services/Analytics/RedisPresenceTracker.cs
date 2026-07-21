@@ -12,7 +12,7 @@ namespace Qaflaty.Infrastructure.Services.Analytics;
 /// so distinct-user counts are a single <c>ZCOUNT</c> over the live window:
 /// <list type="bullet">
 /// <item><c>presence:store:{id}:persons</c> — members are person keys; store-wide active users.</item>
-/// <item><c>presence:store:{id}:prod:{productId}</c> — members are person keys; distinct viewers of
+/// <item><c>presence:store:{id}:prod:{productSlug}</c> — members are person keys; distinct viewers of
 /// that product. A person's repeat/multi-tab views collapse to one member; opening several products
 /// adds them to several buckets.</item>
 /// </list>
@@ -33,9 +33,9 @@ public class RedisPresenceTracker : IPresenceTracker
 
     private static string PersonsKey(Guid storeId) => $"presence:store:{storeId}:persons";
     private static string ProductsKey(Guid storeId) => $"presence:store:{storeId}:products";
-    private static string ProductKey(Guid storeId, Guid productId) => $"presence:store:{storeId}:prod:{productId}";
+    private static string ProductKey(Guid storeId, string productSlug) => $"presence:store:{storeId}:prod:{productSlug}";
 
-    public async Task TouchAsync(StoreId storeId, VisitorKey visitor, Guid? productId, DateTime nowUtc, CancellationToken ct = default)
+    public async Task TouchAsync(StoreId storeId, VisitorKey visitor, string? productSlug, DateTime nowUtc, CancellationToken ct = default)
     {
         var db = Db;
         var s = storeId.Value;
@@ -45,10 +45,10 @@ public class RedisPresenceTracker : IPresenceTracker
         await db.SetAddAsync(StoresSetKey, s.ToString());
         await db.SortedSetAddAsync(PersonsKey(s), person, expiryMs);
 
-        if (productId.HasValue)
+        if (!string.IsNullOrWhiteSpace(productSlug))
         {
-            await db.SortedSetAddAsync(ProductKey(s, productId.Value), person, expiryMs);
-            await db.SetAddAsync(ProductsKey(s), productId.Value.ToString());
+            await db.SortedSetAddAsync(ProductKey(s, productSlug), person, expiryMs);
+            await db.SetAddAsync(ProductsKey(s), productSlug);
         }
     }
 
@@ -74,11 +74,12 @@ public class RedisPresenceTracker : IPresenceTracker
         var result = new List<ProductViewerCountDto>();
         foreach (var pm in productIds)
         {
-            if (!Guid.TryParse((string?)pm, out var productId)) continue;
+            var slug = (string?)pm;
+            if (string.IsNullOrEmpty(slug)) continue;
 
-            var count = await db.SortedSetLengthAsync(ProductKey(s, productId), nowMs, double.PositiveInfinity, Exclude.Start);
+            var count = await db.SortedSetLengthAsync(ProductKey(s, slug), nowMs, double.PositiveInfinity, Exclude.Start);
             if (count > 0)
-                result.Add(new ProductViewerCountDto(productId, (int)count));
+                result.Add(new ProductViewerCountDto(slug, (int)count));
         }
 
         return result.OrderByDescending(r => r.ViewerCount).ToList();
@@ -99,9 +100,10 @@ public class RedisPresenceTracker : IPresenceTracker
             var productIds = await db.SetMembersAsync(ProductsKey(s));
             foreach (var pm in productIds)
             {
-                if (!Guid.TryParse((string?)pm, out var productId)) continue;
+                var slug = (string?)pm;
+                if (string.IsNullOrEmpty(slug)) continue;
 
-                var pk = ProductKey(s, productId);
+                var pk = ProductKey(s, slug);
                 await db.SortedSetRemoveRangeByScoreAsync(pk, double.NegativeInfinity, nowMs);
 
                 if (await db.SortedSetLengthAsync(pk) == 0)

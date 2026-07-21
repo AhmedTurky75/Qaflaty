@@ -23,22 +23,24 @@ public class InMemoryPresenceTracker : IPresenceTracker
 {
     private sealed class StoreState
     {
+        // personKey -> expiry
         public readonly ConcurrentDictionary<string, long> Persons = new();
-        public readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, long>> ProductViewers = new();
+        // productSlug -> (personKey -> expiry)
+        public readonly ConcurrentDictionary<string, ConcurrentDictionary<string, long>> ProductViewers = new();
     }
 
     private readonly ConcurrentDictionary<Guid, StoreState> _stores = new();
 
-    public Task TouchAsync(StoreId storeId, VisitorKey visitor, Guid? productId, DateTime nowUtc, CancellationToken ct = default)
+    public Task TouchAsync(StoreId storeId, VisitorKey visitor, string? productSlug, DateTime nowUtc, CancellationToken ct = default)
     {
         var state = _stores.GetOrAdd(storeId.Value, static _ => new StoreState());
         var expiryTicks = nowUtc.Add(PresenceSettings.Ttl).Ticks;
 
         state.Persons[visitor.Value] = expiryTicks;
 
-        if (productId.HasValue)
+        if (!string.IsNullOrWhiteSpace(productSlug))
         {
-            var viewers = state.ProductViewers.GetOrAdd(productId.Value, static _ => new ConcurrentDictionary<string, long>());
+            var viewers = state.ProductViewers.GetOrAdd(productSlug, static _ => new ConcurrentDictionary<string, long>());
             viewers[visitor.Value] = expiryTicks;
         }
 
@@ -90,7 +92,7 @@ public class InMemoryPresenceTracker : IPresenceTracker
                     state.Persons.TryRemove(kv.Key, out _);
             }
 
-            foreach (var (productId, viewers) in state.ProductViewers)
+            foreach (var (slug, viewers) in state.ProductViewers)
             {
                 foreach (var kv in viewers)
                 {
@@ -99,7 +101,7 @@ public class InMemoryPresenceTracker : IPresenceTracker
                 }
 
                 if (viewers.IsEmpty)
-                    state.ProductViewers.TryRemove(productId, out _);
+                    state.ProductViewers.TryRemove(slug, out _);
             }
         }
 

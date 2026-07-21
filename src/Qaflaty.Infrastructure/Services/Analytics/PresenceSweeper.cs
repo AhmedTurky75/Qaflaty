@@ -92,7 +92,7 @@ public class PresenceSweeper : BackgroundService
     private static string BuildSignature(int activeUsers, List<ProductViewerCountDto> productViewers)
     {
         var productsPart = string.Join(
-            ",", productViewers.OrderBy(p => p.ProductId).Select(p => $"{p.ProductId}:{p.ViewerCount}"));
+            ",", productViewers.OrderBy(p => p.ProductSlug).Select(p => $"{p.ProductSlug}:{p.ViewerCount}"));
         return $"{activeUsers}|{productsPart}";
     }
 }

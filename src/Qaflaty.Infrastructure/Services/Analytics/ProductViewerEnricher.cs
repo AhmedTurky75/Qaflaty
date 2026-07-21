@@ -20,18 +20,21 @@ public class ProductViewerEnricher : IProductViewerEnricher
         if (rawCounts.Count == 0)
             return [];
 
-        // Scope to this store's products — same enrichment pattern as GetMostWishlistedQueryHandler.
+        // Resolve slugs (what presence tracks) to products for display. A slug with no matching
+        // product (e.g. renamed since it was viewed) is simply dropped.
         var storeProducts = await _productRepository.GetByStoreIdAsync(storeId, ct);
-        var byId = storeProducts.ToDictionary(p => p.Id.Value);
+        var bySlug = storeProducts
+            .GroupBy(p => p.Slug.Value)
+            .ToDictionary(g => g.Key, g => g.First());
 
         return rawCounts
-            .Where(c => byId.ContainsKey(c.ProductId))
+            .Where(c => bySlug.ContainsKey(c.ProductSlug))
             .Select(c =>
             {
-                var product = byId[c.ProductId];
+                var product = bySlug[c.ProductSlug];
                 var image = product.Images.OrderBy(i => i.SortOrder).FirstOrDefault();
                 return new LiveProductViewerDto(
-                    c.ProductId,
+                    product.Id.Value,
                     product.Name.Value,
                     product.Slug.Value,
                     image?.Url,

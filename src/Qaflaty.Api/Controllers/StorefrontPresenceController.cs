@@ -29,7 +29,7 @@ public class StorefrontPresenceController : ApiController
             TenantContext.CurrentStoreId.Value.Value,
             CurrentUserService.CustomerId?.Value,
             Request.Headers["X-Guest-Id"].FirstOrDefault(),
-            request.ProductId);
+            request.ProductSlug);
 
         var result = await Sender.Send(command, ct);
         return HandleResult(result);
@@ -55,4 +55,4 @@ public class StorefrontPresenceController : ApiController
     }
 }
 
-public record PresenceHeartbeatRequest(Guid? ProductId);
+public record PresenceHeartbeatRequest(string? ProductSlug);

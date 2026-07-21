@@ -9,7 +9,6 @@ import { ProductRowComponent } from '../../components/recommendations/product-ro
 import { SectionRendererComponent } from '../../components/sections/section-renderer.component';
 import { RecommendationService } from '../../services/recommendation.service';
 import { SeoService } from '../../services/seo.service';
-import { PresenceService } from '../../services/presence.service';
 
 /**
  * Professional, merchant-configurable landing layout for a single product: buy box, then the
@@ -30,7 +29,6 @@ export class ProductLandingComponent {
   private productService = inject(ProductService);
   private recommendations = inject(RecommendationService);
   private seo = inject(SeoService);
-  private presence = inject(PresenceService);
 
   product = signal<Product | null>(null);
   loading = signal<boolean>(true);
@@ -54,9 +52,6 @@ export class ProductLandingComponent {
         this.product.set(product);
         this.loading.set(false);
         this.loadRecommendations(product.id);
-        // Count this visitor against this product's live viewer total (merchant dashboard) — the
-        // landing layout previously never did this, so product pages showed 0 live viewers.
-        this.presence.onViewProduct(product.id);
       },
       error: (error) => {
         console.error('Failed to load product:', error);
