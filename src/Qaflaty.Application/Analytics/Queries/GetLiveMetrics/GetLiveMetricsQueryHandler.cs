@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Qaflaty.Application.Analytics.Abstractions;
 using Qaflaty.Application.Analytics.DTOs;
 using Qaflaty.Application.Common.CQRS;
@@ -20,6 +21,7 @@ public class GetLiveMetricsQueryHandler : IQueryHandler<GetLiveMetricsQuery, Liv
     private readonly IStoreRepository _storeRepository;
     private readonly ICurrentUserService _currentUserService;
     private readonly IDateTimeProvider _dateTimeProvider;
+    private readonly ILogger<GetLiveMetricsQueryHandler> _logger;
 
     public GetLiveMetricsQueryHandler(
         IPresenceTracker presenceTracker,
@@ -27,7 +29,8 @@ public class GetLiveMetricsQueryHandler : IQueryHandler<GetLiveMetricsQuery, Liv
         ICartRepository cartRepository,
         IStoreRepository storeRepository,
         ICurrentUserService currentUserService,
-        IDateTimeProvider dateTimeProvider)
+        IDateTimeProvider dateTimeProvider,
+        ILogger<GetLiveMetricsQueryHandler> logger)
     {
         _presenceTracker = presenceTracker;
         _productViewerEnricher = productViewerEnricher;
@@ -35,6 +38,7 @@ public class GetLiveMetricsQueryHandler : IQueryHandler<GetLiveMetricsQuery, Liv
         _storeRepository = storeRepository;
         _currentUserService = currentUserService;
         _dateTimeProvider = dateTimeProvider;
+        _logger = logger;
     }
 
     public async Task<Result<LiveMetricsDto>> Handle(GetLiveMetricsQuery request, CancellationToken cancellationToken)
@@ -53,6 +57,13 @@ public class GetLiveMetricsQueryHandler : IQueryHandler<GetLiveMetricsQuery, Liv
         var activeCartCount = await _cartRepository.CountActiveCartsByStoreAsync(storeId, cancellationToken);
         var rawProductViewers = await _presenceTracker.GetProductViewerCountsAsync(storeId, now, cancellationToken);
         var productViewers = await _productViewerEnricher.EnrichAsync(storeId, rawProductViewers, cancellationToken);
+
+        // TEMP [PRESENCE-DEBUG] — remove once diagnosed. If activeUsers is 0 here but a heartbeat was
+        // logged for THIS same store id, the problem is TTL/timing; if the store id differs from the
+        // heartbeat's, the storefront and merchant are on different stores.
+        _logger.LogInformation(
+            "[PRESENCE-DEBUG] Live metrics read: store={StoreId} activeUsers={ActiveUsers} productViewers={ProductViewerCount} carts={Carts}",
+            storeId.Value, activeUsers, productViewers.Count, activeCartCount);
 
         return Result.Success(new LiveMetricsDto(activeUsers, activeCartCount, productViewers));
     }
