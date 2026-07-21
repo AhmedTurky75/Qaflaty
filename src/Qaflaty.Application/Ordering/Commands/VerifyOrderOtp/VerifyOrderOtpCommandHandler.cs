@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
@@ -18,17 +19,20 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
     private readonly IOrderOtpRepository _otpRepository;
     private readonly ICustomerRepository _customerRepository;
     private readonly IStoreRepository _storeRepository;
+    private readonly ICartConversionService _cartConversionService;
 
     public VerifyOrderOtpCommandHandler(
         IOrderRepository orderRepository,
         IOrderOtpRepository otpRepository,
         ICustomerRepository customerRepository,
-        IStoreRepository storeRepository)
+        IStoreRepository storeRepository,
+        ICartConversionService cartConversionService)
     {
         _orderRepository = orderRepository;
         _otpRepository = otpRepository;
         _customerRepository = customerRepository;
         _storeRepository = storeRepository;
+        _cartConversionService = cartConversionService;
     }
 
     public async Task<Result<OrderDto>> Handle(VerifyOrderOtpCommand request, CancellationToken cancellationToken)
@@ -76,6 +80,11 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
             return Result.Failure<OrderDto>(confirmResult.Error);
 
         //_orderRepository.Update(order);
+
+        // The cart survived checkout while OTP was pending — now that the order is actually
+        // confirmed, stop showing it as active to the merchant.
+        await _cartConversionService.ConvertCartAsync(
+            storeId, request.BuyerCustomerId, request.BuyerGuestId, cancellationToken);
 
         var customer = await _customerRepository.GetByIdAsync(order.CustomerId, cancellationToken);
         var customerSnapshot = customer != null

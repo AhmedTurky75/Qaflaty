@@ -33,7 +33,8 @@ public class PlaceOrderCommandHandlerTests
             email ?? new FakeEmailService(),
             new FakeOtpSettings(),
             new FakeStoreConfigRepository(config),
-            new FakePromoCodeRepository(promo, customerRedemptions));
+            new FakePromoCodeRepository(promo, customerRedemptions),
+            new FakeCartConversionService());
 
     private static PlaceOrderCommand Command(
         Guid storeId,
@@ -178,7 +179,8 @@ public class PlaceOrderCommandHandlerTests
             new FakeOrderRepository(), new FakeCustomerRepository(), new FakeStoreRepository(store),
             new InMemoryProductRepository(product), new FakeDeliveryZoneRepository(),
             new FakeOrderNumberGenerator(), new FakeOrderOtpRepository(), new FakeEmailService(),
-            new FakeOtpSettings(), new FakeStoreConfigRepository(null), promoRepo);
+            new FakeOtpSettings(), new FakeStoreConfigRepository(null), promoRepo,
+            new FakeCartConversionService());
 
         var result = await handler.Handle(
             Command(store.Id.Value, product.Id.Value, quantity: 2, promoCode: "SAVE10"), CancellationToken.None);

@@ -41,8 +41,21 @@ builder.Services.AddControllers(options =>
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-// Add SignalR for real-time chat
-builder.Services.AddSignalR();
+// Add SignalR for real-time chat and merchant analytics. A Redis backplane is required for
+// multi-instance deployments (so a push from one API replica reaches connections on another);
+// it's applied only when ConnectionStrings:Redis is configured, matching the presence tracker's
+// own Redis/in-memory fallback in Qaflaty.Infrastructure.
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+var signalRBuilder = builder.Services.AddSignalR();
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    signalRBuilder.AddStackExchangeRedis(redisConnectionString);
+}
+
+// Real-time analytics push (AnalyticsHub). Singleton: IHubContext<T> is itself singleton-safe,
+// and this notifier is injected directly into the singleton PresenceSweeper background service.
+builder.Services.AddSingleton<Qaflaty.Application.Analytics.Abstractions.IRealtimeNotifier,
+    Qaflaty.Api.Services.Analytics.SignalRRealtimeNotifier>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -88,10 +101,11 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            // SignalR: read from query string for the chat hub
+            // SignalR: read from query string for hub connections (browsers can't set an
+            // Authorization header on the WebSocket handshake).
             var accessToken = context.Request.Query["access_token"];
             if (!string.IsNullOrEmpty(accessToken) &&
-                context.HttpContext.Request.Path.StartsWithSegments("/hubs/chat"))
+                context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
             {
                 context.Token = accessToken;
                 return Task.CompletedTask;
@@ -269,8 +283,9 @@ app.UseAuthorization();
 // Tenant resolution for storefront routes
 app.UseMiddleware<TenantMiddleware>();
 
-// Map SignalR Hub
+// Map SignalR Hubs
 app.MapHub<Qaflaty.Api.Hubs.ChatHub>("/hubs/chat");
+app.MapHub<Qaflaty.Api.Hubs.AnalyticsHub>("/hubs/analytics").RequireAuthorization();
 
 app.MapControllers();
 

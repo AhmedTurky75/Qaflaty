@@ -34,6 +34,14 @@ public class CartRepository : ICartRepository
             .OrderByDescending(c => c.UpdatedAt)
             .ToListAsync(ct);
 
+    public async Task<int> CountActiveCartsByStoreAsync(StoreId storeId, CancellationToken ct = default)
+        => await _context.Carts
+            .Where(c => c.Items.Any() &&
+                (c.StoreId == storeId ||
+                 c.Items.Any(i => _context.Products
+                     .Any(p => p.Id == i.ProductId && p.StoreId == storeId))))
+            .CountAsync(ct);
+
     public async Task<int> DeleteExpiredGuestCartsAsync(DateTime cutoff, CancellationToken ct = default)
     {
         var expired = await _context.Carts

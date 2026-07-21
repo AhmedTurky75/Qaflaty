@@ -5,8 +5,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Pgvector.EntityFrameworkCore;
 using Qaflaty.Application.Ads.Abstractions;
+using Qaflaty.Application.Analytics.Abstractions;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Common.Interfaces.Ai;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Infrastructure.Services.Ai;
 using Qaflaty.Application.Identity.Services;
 using Qaflaty.Domain.Ads.Repositories;
@@ -25,10 +27,12 @@ using Qaflaty.Infrastructure.Persistence.Repositories;
 using Qaflaty.Infrastructure.Persistence.Repositories.Communication;
 using Qaflaty.Infrastructure.Services.Ads;
 using Qaflaty.Infrastructure.Services.Ads.Providers;
+using Qaflaty.Infrastructure.Services.Analytics;
 using Qaflaty.Infrastructure.Services.Common;
 using Qaflaty.Infrastructure.Services.Identity;
 using Qaflaty.Infrastructure.Services.Ordering;
 using Qaflaty.Infrastructure.Services.Storefront;
+using StackExchange.Redis;
 
 namespace Qaflaty.Infrastructure;
 
@@ -118,6 +122,31 @@ public static class DependencyInjection
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddSingleton<IOtpSettings, OtpSettings>();
 
+        // Real-time merchant analytics — presence tracking (active users / product viewers) and
+        // cart-conversion clearing. IRealtimeNotifier is implemented in the API layer (it owns the
+        // SignalR Hub type) and registered there. IPresenceTracker is a singleton: Redis-backed and
+        // shared across instances when ConnectionStrings:Redis is configured, otherwise an
+        // in-process fallback (correct for a single instance only — see AnalyticsHub docs).
+        var redisConnectionString = configuration.GetConnectionString("Redis");
+        if (!string.IsNullOrWhiteSpace(redisConnectionString))
+        {
+            services.AddSingleton<IConnectionMultiplexer>(
+                _ => ConnectionMultiplexer.Connect(redisConnectionString));
+            services.AddSingleton<IPresenceTracker, RedisPresenceTracker>();
+        }
+        else
+        {
+            services.AddSingleton<IPresenceTracker, InMemoryPresenceTracker>();
+        }
+
+        // Which stores currently have a merchant watching their live dashboard (singleton, shared
+        // between the AnalyticsHub and the PresenceSweeper); product-name enrichment for live
+        // pushes/snapshots (scoped — reads the catalog).
+        services.AddSingleton<IPresenceSubscriberRegistry, PresenceSubscriberRegistry>();
+        services.AddScoped<IProductViewerEnricher, ProductViewerEnricher>();
+
+        services.AddScoped<ICartConversionService, CartConversionService>();
+
         // AI Assistant Services
         services.Configure<AiAssistantOptions>(configuration.GetSection(AiAssistantOptions.SectionName));
 
@@ -166,6 +195,7 @@ public static class DependencyInjection
         // Background Services
         services.AddHostedService<GuestCartCleanupService>();
         services.AddHostedService<TrackingRetryWorker>();
+        services.AddHostedService<PresenceSweeper>();
 
         return services;
     }

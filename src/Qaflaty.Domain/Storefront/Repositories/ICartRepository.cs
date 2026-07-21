@@ -8,6 +8,12 @@ public interface ICartRepository
     Task<Cart?> GetByCustomerIdAsync(StoreCustomerId customerId, CancellationToken ct = default);
     Task<Cart?> GetByGuestIdAsync(string guestId, StoreId storeId, CancellationToken ct = default);
     Task<List<Cart>> GetActiveCartsByStoreAsync(StoreId storeId, CancellationToken ct = default);
+
+    /// <summary>
+    /// Cheap count of active (non-empty) carts for a store — avoids loading cart items
+    /// when only the count is needed (e.g. the live merchant dashboard tile).
+    /// </summary>
+    Task<int> CountActiveCartsByStoreAsync(StoreId storeId, CancellationToken ct = default);
     Task<int> DeleteExpiredGuestCartsAsync(DateTime cutoff, CancellationToken ct = default);
     Task AddAsync(Cart cart, CancellationToken ct = default);
     void Update(Cart cart);

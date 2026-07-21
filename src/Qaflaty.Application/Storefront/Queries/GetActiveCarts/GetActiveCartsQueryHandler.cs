@@ -68,7 +68,15 @@ public class GetActiveCartsQueryHandler : IQueryHandler<GetActiveCartsQuery, Lis
             {
                 productLookup.TryGetValue(item.ProductId.Value, out var product);
                 var imageUrl = product?.Images.FirstOrDefault()?.Url;
+
+                // Honor the variant price override when one is selected — otherwise the
+                // "revenue at risk" total silently undercounts carts with priced variants.
                 var unitPrice = product?.Pricing.Price.Amount ?? 0;
+                if (product != null && item.VariantId.HasValue)
+                {
+                    var variant = product.GetVariant(item.VariantId.Value);
+                    unitPrice = variant?.PriceOverride?.Amount ?? unitPrice;
+                }
 
                 return new ActiveCartItemDto(
                     item.ProductId.Value,
