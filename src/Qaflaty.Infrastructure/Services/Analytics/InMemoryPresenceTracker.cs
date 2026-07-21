@@ -10,17 +10,21 @@ namespace Qaflaty.Infrastructure.Services.Analytics;
 /// Process-local presence tracker — the default when no Redis connection string is configured.
 /// Correct for a single API instance; state does not survive a restart and is not shared across
 /// instances (see <see cref="RedisPresenceTracker"/> for the load-balanced deployment target).
-/// Counts are correct-by-construction: a visitor's expiry timestamp is checked at read time, so
-/// no explicit cleanup is required for correctness — <see cref="SweepExpiredAsync"/> only reclaims
-/// memory and detects which stores' counts changed for the push notifier.
+///
+/// Two maps per store, both keyed by person for distinct-user counting:
+/// <c>Persons</c> (personKey → expiry) backs the store-wide active-user count, and
+/// <c>ProductViewers</c> (productId → personKey → expiry) backs per-product distinct viewers. A
+/// heartbeat just refreshes the person's expiry in the store and in the product they're viewing;
+/// nothing is removed on navigation, so a user who opens several products counts on each until each
+/// product's entry ages out. Counts filter by expiry at read time, so
+/// <see cref="SweepExpiredAsync"/> is only memory housekeeping.
 /// </summary>
 public class InMemoryPresenceTracker : IPresenceTracker
 {
     private sealed class StoreState
     {
-        public readonly ConcurrentDictionary<string, long> Visitors = new();
-        public readonly ConcurrentDictionary<string, Guid?> VisitorProduct = new();
-        public readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, long>> ProductVisitors = new();
+        public readonly ConcurrentDictionary<string, long> Persons = new();
+        public readonly ConcurrentDictionary<Guid, ConcurrentDictionary<string, long>> ProductViewers = new();
     }
 
     private readonly ConcurrentDictionary<Guid, StoreState> _stores = new();
@@ -30,30 +34,22 @@ public class InMemoryPresenceTracker : IPresenceTracker
         var state = _stores.GetOrAdd(storeId.Value, static _ => new StoreState());
         var expiryTicks = nowUtc.Add(PresenceSettings.Ttl).Ticks;
 
-        state.Visitors[visitor.Value] = expiryTicks;
-
-        var previousProduct = state.VisitorProduct.TryGetValue(visitor.Value, out var prev) ? prev : null;
-        if (previousProduct != productId && previousProduct.HasValue)
-            RemoveFromProductSet(state, previousProduct.Value, visitor.Value);
+        state.Persons[visitor.Value] = expiryTicks;
 
         if (productId.HasValue)
         {
-            var set = state.ProductVisitors.GetOrAdd(productId.Value, static _ => new ConcurrentDictionary<string, long>());
-            set[visitor.Value] = expiryTicks;
+            var viewers = state.ProductViewers.GetOrAdd(productId.Value, static _ => new ConcurrentDictionary<string, long>());
+            viewers[visitor.Value] = expiryTicks;
         }
 
-        state.VisitorProduct[visitor.Value] = productId;
         return Task.CompletedTask;
     }
 
     public Task RemoveAsync(StoreId storeId, VisitorKey visitor, CancellationToken ct = default)
     {
-        if (!_stores.TryGetValue(storeId.Value, out var state))
-            return Task.CompletedTask;
-
-        state.Visitors.TryRemove(visitor.Value, out _);
-        if (state.VisitorProduct.TryRemove(visitor.Value, out var productId) && productId.HasValue)
-            RemoveFromProductSet(state, productId.Value, visitor.Value);
+        // Drop from the store-wide active-user count only; product-view stats age out on their TTL.
+        if (_stores.TryGetValue(storeId.Value, out var state))
+            state.Persons.TryRemove(visitor.Value, out _);
 
         return Task.CompletedTask;
     }
@@ -64,7 +60,7 @@ public class InMemoryPresenceTracker : IPresenceTracker
             return Task.FromResult(0);
 
         var nowTicks = nowUtc.Ticks;
-        return Task.FromResult(state.Visitors.Count(kv => kv.Value > nowTicks));
+        return Task.FromResult(state.Persons.Count(kv => kv.Value > nowTicks));
     }
 
     public Task<List<ProductViewerCountDto>> GetProductViewerCountsAsync(StoreId storeId, DateTime nowUtc, CancellationToken ct = default)
@@ -73,7 +69,7 @@ public class InMemoryPresenceTracker : IPresenceTracker
             return Task.FromResult(new List<ProductViewerCountDto>());
 
         var nowTicks = nowUtc.Ticks;
-        var result = state.ProductVisitors
+        var result = state.ProductViewers
             .Select(kv => new ProductViewerCountDto(kv.Key, kv.Value.Count(v => v.Value > nowTicks)))
             .Where(d => d.ViewerCount > 0)
             .OrderByDescending(d => d.ViewerCount)
@@ -86,44 +82,27 @@ public class InMemoryPresenceTracker : IPresenceTracker
     {
         var nowTicks = nowUtc.Ticks;
 
-        foreach (var (storeGuid, state) in _stores)
+        foreach (var (_, state) in _stores)
         {
-            foreach (var kv in state.Visitors)
+            foreach (var kv in state.Persons)
             {
                 if (kv.Value <= nowTicks)
-                    state.Visitors.TryRemove(kv.Key, out _);
+                    state.Persons.TryRemove(kv.Key, out _);
             }
 
-            foreach (var (productId, set) in state.ProductVisitors)
+            foreach (var (productId, viewers) in state.ProductViewers)
             {
-                foreach (var kv in set)
+                foreach (var kv in viewers)
                 {
                     if (kv.Value <= nowTicks)
-                        set.TryRemove(kv.Key, out _);
+                        viewers.TryRemove(kv.Key, out _);
                 }
 
-                if (set.IsEmpty)
-                    state.ProductVisitors.TryRemove(productId, out _);
-            }
-
-            // Reclaim the reverse index for visitors who fully expired.
-            foreach (var visitorKey in state.VisitorProduct.Keys)
-            {
-                if (!state.Visitors.ContainsKey(visitorKey))
-                    state.VisitorProduct.TryRemove(visitorKey, out _);
+                if (viewers.IsEmpty)
+                    state.ProductViewers.TryRemove(productId, out _);
             }
         }
 
         return Task.CompletedTask;
-    }
-
-    private static void RemoveFromProductSet(StoreState state, Guid productId, string visitorKey)
-    {
-        if (!state.ProductVisitors.TryGetValue(productId, out var set))
-            return;
-
-        set.TryRemove(visitorKey, out _);
-        if (set.IsEmpty)
-            state.ProductVisitors.TryRemove(productId, out _);
     }
 }
