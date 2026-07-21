@@ -4,7 +4,6 @@ import { Injectable, Renderer2, RendererFactory2, inject } from '@angular/core';
 import { environment } from '../../environments/environment';
 import { GuestSessionService } from './guest-session.service';
 import { CustomerAuthService } from './customer-auth.service';
-import { PresenceService } from './presence.service';
 
 export type StandardEventType =
   | 'PageView' | 'ViewContent' | 'Search' | 'AddToCart' | 'InitiateCheckout'
@@ -59,7 +58,6 @@ export class TrackingService {
   private document = inject(DOCUMENT);
   private guestSession = inject(GuestSessionService);
   private customerAuth = inject(CustomerAuthService);
-  private presence = inject(PresenceService);
   private renderer: Renderer2;
   private initialized = false;
   private metaLoaded = false;
@@ -89,12 +87,6 @@ export class TrackingService {
     // or the guest session id everyone already gets) satisfies that for every event, not just
     // ones that happen to carry an email/phone.
     const customerRef = options.customerRef ?? this.resolveCustomerRef();
-
-    // A product page finished loading — count this visitor against that product's live viewer
-    // total on the merchant dashboard until they navigate away (see PresenceService).
-    if (eventType === 'ViewContent' && options.contents?.[0]?.contentId) {
-      this.presence.onViewProduct(options.contents[0].contentId);
-    }
 
     this.fireBrowserPixels(eventType, eventKey, options);
 

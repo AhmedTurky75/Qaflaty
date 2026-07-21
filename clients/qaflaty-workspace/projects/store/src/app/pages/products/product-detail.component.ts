@@ -9,6 +9,7 @@ import { ProductRowComponent } from '../../components/recommendations/product-ro
 import { RecommendationService } from '../../services/recommendation.service';
 import { I18nService } from '../../services/i18n.service';
 import { TrackingService } from '../../services/tracking.service';
+import { PresenceService } from '../../services/presence.service';
 import { ConfigService } from '../../services/config.service';
 
 type ProductTab = 'description' | 'specifications' | 'reviews' | 'shipping';
@@ -26,6 +27,7 @@ export class ProductDetailComponent {
   private recommendations = inject(RecommendationService);
   private i18n = inject(I18nService);
   private tracking = inject(TrackingService);
+  private presence = inject(PresenceService);
   private configService = inject(ConfigService);
 
   product = signal<Product | null>(null);
@@ -65,6 +67,8 @@ export class ProductDetailComponent {
         this.product.set(product);
         this.loading.set(false);
         this.loadRecommendations(product.id);
+        // Count this visitor against this product's live viewer total (merchant dashboard).
+        this.presence.onViewProduct(product.id);
         this.tracking.track('ViewContent', {
           value: product.price,
           currency: this.configService.config()?.currency,
