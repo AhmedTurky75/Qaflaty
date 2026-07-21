@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 import { GuestSessionService } from './guest-session.service';
 
@@ -16,6 +17,7 @@ import { GuestSessionService } from './guest-session.service';
 @Injectable({ providedIn: 'root' })
 export class PresenceService {
   private http = inject(HttpClient);
+  private router = inject(Router);
   private guestSession = inject(GuestSessionService);
 
   private static readonly HEARTBEAT_INTERVAL_MS = 30_000;
@@ -34,7 +36,9 @@ export class PresenceService {
     this.started = true;
 
     this.attachActivityListeners();
-    this.sendHeartbeat();
+    // On a product page, don't send a throwaway productId=null beat — onViewProduct fires the first
+    // beat the moment the product loads, so the very first heartbeat already carries the product id.
+    if (!this.onProductPage()) this.sendHeartbeat();
 
     this.heartbeatTimer = setInterval(() => {
       if (this.isActive()) this.sendHeartbeat();
@@ -50,7 +54,9 @@ export class PresenceService {
   onPageView(): void {
     this.currentProductId = null;
     this.lastActivityAt = Date.now();
-    this.sendHeartbeat(); // navigation is an explicit action — reflect the page change immediately
+    // Same as start(): on a product page, let onViewProduct send the first (product-carrying) beat
+    // instead of a throwaway null one. Other pages beat immediately to reflect the navigation.
+    if (!this.onProductPage()) this.sendHeartbeat();
   }
 
   /** Called when a product detail page finishes loading a product. */
@@ -83,6 +89,11 @@ export class PresenceService {
   private isActive(): boolean {
     return document.visibilityState === 'visible'
       && (Date.now() - this.lastActivityAt) < PresenceService.ACTIVITY_WINDOW_MS;
+  }
+
+  /** True on a product detail route (/products/:slug) — the list route (/products) is not a product page. */
+  private onProductPage(): boolean {
+    return /\/products\/[^/]+/.test(this.router.url);
   }
 
   private sendHeartbeat(): void {
