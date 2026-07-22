@@ -192,6 +192,8 @@ public static class DependencyInjection
         services.AddScoped<ITrackingProvider, GoogleAdsTrackingProvider>();
         services.AddScoped<ITrackingProvider, GtmTrackingProvider>();
 
+        services.Configure<GuestCartOptions>(configuration.GetSection(GuestCartOptions.SectionName));
+
         // Background Services
         services.AddHostedService<GuestCartCleanupService>();
         services.AddHostedService<TrackingRetryWorker>();
