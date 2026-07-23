@@ -66,15 +66,17 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - Decision: kept the existing setup-guide as the "wizard" (it already sequences create-store → add-product → … via real routes). A separate full-screen wizard flow is a new feature/flow — not built unilaterally (Constraint 2); can add on request.
 - Note: `ng build merchant` clean (exit 0). Icon set extended (eye, eye-off, mail, alert-triangle, zap, chevron-up).
 
-### P4 Dashboard
-- [ ] `dashboard` `dashboard` **[+scss]** → tokens.
-- [ ] `stats-card` **[inline-t]** → split + tokens.
-- [ ] `sales-chart` **[inline-t]** → split + tokens.
-- [ ] `recent-orders` **[inline-t]** → split + tokens.
-- [ ] `quick-actions` **[inline-t]** → split + tokens.
-- [ ] `top-products` **[inline-t]** → split + tokens.
-- [ ] `low-stock-alerts` **[inline-t]** → split + tokens.
-- [ ] `most-wishlisted` **[inline-t]** → split + tokens.
+### P4 Dashboard — ✅ DONE
+- [x] `dashboard` → tokens; header/loading/error/no-store states restyled; i18n (`dashboard.*`); stat titles translated via pipe.
+- [x] `stats-card` **[was inline-t]** → split; IconComponent glyphs; token accent chips (primary/success/warning); trend arrows via icons.
+- [x] `sales-chart` **[was inline-t]** → split; SVG restyled with `fill-primary`/`stroke-border`/`fill-text`/`fill-surface` tokens; viewBox made responsive; logic unchanged.
+- [x] `recent-orders` **[was inline-t]** → split; token status chips; i18n.
+- [x] `quick-actions` **[was inline-t]** → split; token dashed action cards.
+- [x] `top-products` **[was inline-t]** → split; token cards + placeholder icon.
+- [x] `low-stock-alerts` **[was inline-t]** → split; warning-token rows, check-circle empty state.
+- [x] `most-wishlisted` **[was inline-t]** → split; heart glyph, token list.
+- Icon set extended: wallet, trend-up, trend-down, chart-bar, heart, check-circle.
+- Note: `ng build merchant` clean (exit 0). All @Input/@Output/service calls unchanged; the two commented-out sales/topProducts API questions left as-is (not in scope).
 
 ### P5 Orders (priority)
 - [ ] `order-list` **[split]** → real table, status chips (New/Packing/Shipped/Delivered/Cancelled), search, status+date filters.

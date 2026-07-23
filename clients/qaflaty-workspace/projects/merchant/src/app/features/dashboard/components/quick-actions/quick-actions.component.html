@@ -1,0 +1,53 @@
+<div class="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+  <h3 class="mb-4 text-base font-bold text-text">{{ 'dashboard.quickActions' | transloco }}</h3>
+  <div class="space-y-3">
+    <a
+      [routerLink]="['/products', 'new']"
+      [queryParams]="{ storeId: storeId }"
+      class="group flex min-h-[44px] items-center justify-between rounded-xl border border-dashed border-border p-4 transition-all hover:border-primary hover:bg-primary-tint focus:outline-none focus:ring-2 focus:ring-primary/40"
+    >
+      <span class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-tint text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+          <app-icon name="plus" [size]="20" />
+        </span>
+        <span>
+          <span class="block text-sm font-medium text-text">{{ 'dashboard.createProduct' | transloco }}</span>
+          <span class="block text-xs text-text-muted">{{ 'dashboard.createProductDesc' | transloco }}</span>
+        </span>
+      </span>
+      <span class="text-text-muted/60 group-hover:text-primary rtl:rotate-180"><app-icon name="chevron-right" [size]="20" /></span>
+    </a>
+
+    <a
+      routerLink="/orders"
+      class="group flex min-h-[44px] items-center justify-between rounded-xl border border-dashed border-border p-4 transition-all hover:border-success hover:bg-success/5 focus:outline-none focus:ring-2 focus:ring-success/40"
+    >
+      <span class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-success/10 text-success transition-colors group-hover:bg-success group-hover:text-white">
+          <app-icon name="orders" [size]="20" />
+        </span>
+        <span>
+          <span class="block text-sm font-medium text-text">{{ 'dashboard.viewOrders' | transloco }}</span>
+          <span class="block text-xs text-text-muted">{{ 'dashboard.viewOrdersDesc' | transloco }}</span>
+        </span>
+      </span>
+      <span class="text-text-muted/60 group-hover:text-success rtl:rotate-180"><app-icon name="chevron-right" [size]="20" /></span>
+    </a>
+
+    <a
+      [routerLink]="['/stores', storeId]"
+      class="group flex min-h-[44px] items-center justify-between rounded-xl border border-dashed border-border p-4 transition-all hover:border-primary hover:bg-primary-tint focus:outline-none focus:ring-2 focus:ring-primary/40"
+    >
+      <span class="flex items-center gap-3">
+        <span class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-tint text-primary transition-colors group-hover:bg-primary group-hover:text-white">
+          <app-icon name="settings" [size]="20" />
+        </span>
+        <span>
+          <span class="block text-sm font-medium text-text">{{ 'dashboard.manageStore' | transloco }}</span>
+          <span class="block text-xs text-text-muted">{{ 'dashboard.manageStoreDesc' | transloco }}</span>
+        </span>
+      </span>
+      <span class="text-text-muted/60 group-hover:text-primary rtl:rotate-180"><app-icon name="chevron-right" [size]="20" /></span>
+    </a>
+  </div>
+</div>

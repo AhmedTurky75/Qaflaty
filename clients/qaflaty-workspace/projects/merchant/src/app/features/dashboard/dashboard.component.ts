@@ -1,6 +1,7 @@
 import { Component, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { forkJoin } from 'rxjs';
 import { StoreContextService } from '../../core/services/store-context.service';
 import { DashboardService, DashboardStats, SalesChartData, TopProduct, RecentOrderSummary } from './services/dashboard.service';
@@ -12,6 +13,7 @@ import { QuickActionsComponent } from './components/quick-actions/quick-actions.
 import { LowStockAlertsComponent } from './components/low-stock-alerts/low-stock-alerts.component';
 import { MostWishlistedComponent } from './components/most-wishlisted/most-wishlisted.component';
 import { SetupGuideComponent } from '../setup-guide/setup-guide.component';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -19,6 +21,7 @@ import { SetupGuideComponent } from '../setup-guide/setup-guide.component';
   imports: [
     CommonModule,
     RouterLink,
+    TranslocoPipe,
     StatsCardComponent,
     SalesChartComponent,
     RecentOrdersComponent,
@@ -26,7 +29,8 @@ import { SetupGuideComponent } from '../setup-guide/setup-guide.component';
     QuickActionsComponent,
     LowStockAlertsComponent,
     MostWishlistedComponent,
-    SetupGuideComponent
+    SetupGuideComponent,
+    IconComponent
   ],
   templateUrl: './dashboard.component.html'
 })
