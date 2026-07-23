@@ -1,200 +1,185 @@
 <div>
-  <!-- Loading State -->
+  <!-- Loading -->
   @if (loading()) {
-    <div class="flex items-center justify-center py-12">
-      <svg class="animate-spin h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24">
+    <div class="flex items-center justify-center py-12 text-primary">
+      <svg class="h-8 w-8 animate-spin" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
       </svg>
     </div>
   }
 
-  <!-- Error State -->
+  <!-- Error -->
   @else if (error()) {
-    <div class="bg-red-50 border border-red-200 rounded-md p-4">
-      <div class="flex">
-        <div class="flex-shrink-0">
-          <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-          </svg>
+    <div class="rounded-xl border border-danger/30 bg-danger/10 p-4">
+      <div class="flex items-start gap-3">
+        <span class="text-danger"><app-icon name="alert-triangle" [size]="20" /></span>
+        <div>
+          <h3 class="text-sm font-medium text-danger">{{ error() }}</h3>
+          <a routerLink="/orders" class="mt-2 inline-block text-sm font-medium text-primary hover:underline">← {{ 'orders.title' | transloco }}</a>
         </div>
-        <div class="ml-3">
-          <h3 class="text-sm font-medium text-red-800">Error loading order</h3>
-          <p class="mt-1 text-sm text-red-700">{{ error() }}</p>
-        </div>
-      </div>
-      <div class="mt-4">
-        <a routerLink="/orders" class="text-sm font-medium text-red-800 hover:text-red-700">
-          ← Back to Orders
-        </a>
       </div>
     </div>
   }
 
-  <!-- Order Detail -->
+  <!-- Order detail -->
   @else if (order(); as orderData) {
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center space-x-4">
-        <a routerLink="/orders" class="text-gray-400 hover:text-gray-600">
-          <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-          </svg>
-        </a>
+    <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <a
+          routerLink="/orders"
+          class="flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40"
+          [attr.aria-label]="'common.back' | transloco"
+        ><span class="rtl:rotate-180"><app-icon name="chevron-left" [size]="22" /></span></a>
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Order {{ orderData.orderNumber }}</h1>
-          <p class="mt-1 text-sm text-gray-600">Placed on {{ formatDate(orderData.createdAt) }}</p>
+          <h1 class="text-2xl font-bold text-text">{{ orderData.orderNumber }}</h1>
+          <p class="mt-1 text-sm text-text-muted">{{ 'orders.placedOn' | transloco: { date: formatDate(orderData.createdAt) } }}</p>
         </div>
       </div>
-      <div class="flex items-center space-x-3">
-        <app-status-badge [status]="orderData.status"></app-status-badge>
+      <div class="flex items-center gap-3">
+        <app-status-badge [status]="orderData.status" />
         @if (orderData.source === 'ChatAssistant') {
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-700" title="Placed by the AI shopping assistant">
-            🤖 Placed by chat bot
+          <span class="inline-flex items-center gap-1 rounded-full bg-primary-tint px-2.5 py-1 text-xs font-medium text-primary" [title]="'orders.placedByChatBot' | transloco">
+            🤖 {{ 'orders.placedByChatBot' | transloco }}
           </span>
         }
         <button
           type="button"
           (click)="onPrintInvoice()"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+          class="inline-flex min-h-[44px] items-center gap-2 rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40"
         >
-          <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-          </svg>
-          Print Invoice
+          <app-icon name="printer" [size]="18" />
+          {{ 'orders.printInvoice' | transloco }}
         </button>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Main Content -->
-      <div class="lg:col-span-2 space-y-6">
-        <!-- Order Items -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Items</h2>
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+      <!-- Main -->
+      <div class="space-y-6 lg:col-span-2">
+        <!-- Items -->
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-4 text-base font-bold text-text">{{ 'orders.orderItems' | transloco }}</h2>
           <div class="space-y-4">
             @for (item of orderData.items; track item.id) {
-              <div class="flex items-center justify-between border-b border-gray-200 pb-4 last:border-0 last:pb-0">
+              <div class="flex items-center justify-between border-b border-border pb-4 last:border-0 last:pb-0">
                 <div class="flex-1">
-                  <h3 class="text-sm font-medium text-gray-900">{{ item.productName }}</h3>
-                  <p class="mt-1 text-sm text-gray-500">Quantity: {{ item.quantity }}</p>
-                  <p class="mt-1 text-sm text-gray-500">{{ formatCurrency(item.unitPrice.amount) }} each</p>
+                  <h3 class="text-sm font-medium text-text">{{ item.productName }}</h3>
+                  <p class="mt-1 text-sm text-text-muted">{{ 'orders.quantity' | transloco }}: {{ item.quantity }}</p>
+                  <p class="mt-1 text-sm text-text-muted">{{ formatCurrency(item.unitPrice.amount) }} {{ 'orders.each' | transloco }}</p>
                 </div>
-                <div class="text-right">
-                  <p class="text-sm font-semibold text-gray-900">{{ formatCurrency(item.total.amount) }}</p>
-                </div>
+                <p class="text-end text-sm font-semibold text-text">{{ formatCurrency(item.total.amount) }}</p>
               </div>
             }
           </div>
 
-          <!-- Pricing Summary -->
-          <div class="mt-6 pt-6 border-t border-gray-200 space-y-2">
+          <div class="mt-6 space-y-2 border-t border-border pt-6">
             <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Subtotal</span>
-              <span class="text-gray-900">{{ formatCurrency(orderData.pricing.subtotal.amount) }}</span>
+              <span class="text-text-muted">{{ 'orders.subtotal' | transloco }}</span>
+              <span class="text-text">{{ formatCurrency(orderData.pricing.subtotal.amount) }}</span>
             </div>
             <div class="flex justify-between text-sm">
-              <span class="text-gray-600">Delivery Fee</span>
-              <span class="text-gray-900">{{ formatCurrency(orderData.pricing.deliveryFee.amount) }}</span>
+              <span class="text-text-muted">{{ 'orders.deliveryFee' | transloco }}</span>
+              <span class="text-text">{{ formatCurrency(orderData.pricing.deliveryFee.amount) }}</span>
             </div>
-            <div class="flex justify-between text-lg font-bold pt-2 border-t border-gray-200">
-              <span class="text-gray-900">Total</span>
-              <span class="text-gray-900">{{ formatCurrency(orderData.pricing.total.amount) }}</span>
+            <div class="flex justify-between border-t border-border pt-2 text-lg font-bold">
+              <span class="text-text">{{ 'orders.total' | transloco }}</span>
+              <span class="text-text">{{ formatCurrency(orderData.pricing.total.amount) }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Delivery Information -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Delivery Information</h2>
+        <!-- Delivery -->
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-4 flex items-center gap-2 text-base font-bold text-text">
+            <span class="text-text-muted"><app-icon name="map-pin" [size]="18" /></span>
+            {{ 'orders.deliveryInfo' | transloco }}
+          </h2>
           <div class="space-y-3">
             <div>
-              <h3 class="text-sm font-medium text-gray-700">Address</h3>
-              <p class="mt-1 text-sm text-gray-900">{{ orderData.delivery.address.street }}</p>
-              <p class="text-sm text-gray-900">
-                {{ orderData.delivery.address.city }}
-                @if (orderData.delivery.address.district) {
-                  , {{ orderData.delivery.address.district }}
-                }
+              <h3 class="text-sm font-medium text-text-muted">{{ 'orders.address' | transloco }}</h3>
+              <p class="mt-1 text-sm text-text">{{ orderData.delivery.address.street }}</p>
+              <p class="text-sm text-text">
+                {{ orderData.delivery.address.city }}@if (orderData.delivery.address.district) {, {{ orderData.delivery.address.district }}}
               </p>
               @if (orderData.delivery.address.postalCode) {
-                <p class="text-sm text-gray-900">{{ orderData.delivery.address.postalCode }}</p>
+                <p class="text-sm text-text">{{ orderData.delivery.address.postalCode }}</p>
               }
-              <p class="text-sm text-gray-900">{{ orderData.delivery.address.country }}</p>
+              <p class="text-sm text-text">{{ orderData.delivery.address.country }}</p>
               @if (orderData.delivery.address.additionalInfo) {
-                <p class="mt-2 text-sm text-gray-600">{{ orderData.delivery.address.additionalInfo }}</p>
+                <p class="mt-2 text-sm text-text-muted">{{ orderData.delivery.address.additionalInfo }}</p>
               }
             </div>
             @if (orderData.delivery.instructions) {
               <div>
-                <h3 class="text-sm font-medium text-gray-700">Delivery Instructions</h3>
-                <p class="mt-1 text-sm text-gray-900">{{ orderData.delivery.instructions }}</p>
+                <h3 class="text-sm font-medium text-text-muted">{{ 'orders.deliveryInstructions' | transloco }}</h3>
+                <p class="mt-1 text-sm text-text">{{ orderData.delivery.instructions }}</p>
               </div>
             }
           </div>
         </div>
 
-        <!-- Payment Information -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Payment Information</h2>
+        <!-- Payment -->
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-4 flex items-center gap-2 text-base font-bold text-text">
+            <span class="text-text-muted"><app-icon name="credit-card" [size]="18" /></span>
+            {{ 'orders.paymentInfo' | transloco }}
+          </h2>
           <div class="space-y-3">
             <div class="flex justify-between">
-              <span class="text-sm text-gray-600">Payment Method</span>
-              <span class="text-sm font-medium text-gray-900">{{ orderData.payment.method }}</span>
+              <span class="text-sm text-text-muted">{{ 'orders.paymentMethod' | transloco }}</span>
+              <span class="text-sm font-medium text-text">{{ orderData.payment.method }}</span>
             </div>
             <div class="flex justify-between">
-              <span class="text-sm text-gray-600">Payment Status</span>
-              <span [class]="orderData.payment.status === PaymentStatus.Paid ? 'text-sm font-medium text-green-600' : orderData.payment.status === PaymentStatus.Failed ? 'text-sm font-medium text-red-600' : 'text-sm font-medium text-yellow-600'">
-                {{ orderData.payment.status }}
-              </span>
+              <span class="text-sm text-text-muted">{{ 'orders.paymentStatus' | transloco }}</span>
+              <span class="text-sm font-medium"
+                [class.text-success]="orderData.payment.status === PaymentStatus.Paid"
+                [class.text-danger]="orderData.payment.status === PaymentStatus.Failed"
+                [class.text-warning]="orderData.payment.status !== PaymentStatus.Paid && orderData.payment.status !== PaymentStatus.Failed"
+              >{{ orderData.payment.status }}</span>
             </div>
             @if (orderData.payment.transactionId) {
               <div class="flex justify-between">
-                <span class="text-sm text-gray-600">Transaction ID</span>
-                <span class="text-sm font-mono text-gray-900">{{ orderData.payment.transactionId }}</span>
+                <span class="text-sm text-text-muted">{{ 'orders.transactionId' | transloco }}</span>
+                <span class="font-mono text-sm text-text">{{ orderData.payment.transactionId }}</span>
               </div>
             }
             @if (orderData.payment.paidAt) {
               <div class="flex justify-between">
-                <span class="text-sm text-gray-600">Paid At</span>
-                <span class="text-sm text-gray-900">{{ formatDate(orderData.payment.paidAt) }}</span>
+                <span class="text-sm text-text-muted">{{ 'orders.paidAt' | transloco }}</span>
+                <span class="text-sm text-text">{{ formatDate(orderData.payment.paidAt) }}</span>
               </div>
             }
             @if (orderData.payment.failureReason) {
-              <div class="pt-3 border-t border-gray-200">
-                <p class="text-sm text-red-600">{{ orderData.payment.failureReason }}</p>
+              <div class="border-t border-border pt-3">
+                <p class="text-sm text-danger">{{ orderData.payment.failureReason }}</p>
               </div>
             }
           </div>
         </div>
 
-        <!-- Order Notes -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-lg font-semibold text-gray-900">Notes</h2>
-            <button
-              type="button"
-              (click)="openNoteModal()"
-              class="text-sm font-medium text-primary-600 hover:text-primary-700"
-            >
-              Add Note
-            </button>
+        <!-- Notes -->
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <div class="mb-4 flex items-center justify-between">
+            <h2 class="text-base font-bold text-text">{{ 'orders.notes' | transloco }}</h2>
+            <button type="button" (click)="openNoteModal()" class="text-sm font-medium text-primary hover:underline">{{ 'orders.addNote' | transloco }}</button>
           </div>
           <div class="space-y-3">
             @if (orderData.notes.customerNotes) {
               <div>
-                <h3 class="text-sm font-medium text-gray-700">Customer Notes</h3>
-                <p class="mt-1 text-sm text-gray-900">{{ orderData.notes.customerNotes }}</p>
+                <h3 class="text-sm font-medium text-text-muted">{{ 'orders.customerNotes' | transloco }}</h3>
+                <p class="mt-1 text-sm text-text">{{ orderData.notes.customerNotes }}</p>
               </div>
             }
             @if (orderData.notes.merchantNotes) {
               <div>
-                <h3 class="text-sm font-medium text-gray-700">Merchant Notes</h3>
-                <p class="mt-1 text-sm text-gray-900">{{ orderData.notes.merchantNotes }}</p>
+                <h3 class="text-sm font-medium text-text-muted">{{ 'orders.merchantNotes' | transloco }}</h3>
+                <p class="mt-1 text-sm text-text">{{ orderData.notes.merchantNotes }}</p>
               </div>
             }
             @if (!orderData.notes.customerNotes && !orderData.notes.merchantNotes) {
-              <p class="text-sm text-gray-500">No notes available</p>
+              <p class="text-sm text-text-muted">{{ 'orders.noNotes' | transloco }}</p>
             }
           </div>
         </div>
@@ -202,246 +187,159 @@
 
       <!-- Sidebar -->
       <div class="space-y-6">
-        <!-- Customer Information -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Customer Information</h2>
+        <!-- Customer -->
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-4 text-base font-bold text-text">{{ 'orders.customerInfo' | transloco }}</h2>
           <div class="space-y-3">
             <div>
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Name</p>
-              <p class="mt-1 text-sm font-medium text-gray-900">{{ orderData.customer.fullName }}</p>
+              <p class="text-xs font-medium uppercase tracking-wide text-text-muted">{{ 'orders.name' | transloco }}</p>
+              <p class="mt-1 text-sm font-medium text-text">{{ orderData.customer.fullName }}</p>
             </div>
             <div>
-              <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Phone</p>
-              <p class="mt-1 text-sm text-gray-900">{{ orderData.customer.phone }}</p>
+              <p class="text-xs font-medium uppercase tracking-wide text-text-muted">{{ 'orders.phone' | transloco }}</p>
+              <p class="mt-1 text-sm text-text">{{ orderData.customer.phone }}</p>
             </div>
             @if (orderData.customer.email) {
               <div>
-                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">Email</p>
-                <p class="mt-1 text-sm text-gray-900">{{ orderData.customer.email }}</p>
+                <p class="text-xs font-medium uppercase tracking-wide text-text-muted">{{ 'orders.email' | transloco }}</p>
+                <p class="mt-1 text-sm text-text">{{ orderData.customer.email }}</p>
               </div>
             }
-            <div class="pt-2 border-t border-gray-100">
-              <a
-                [routerLink]="['/customers', orderData.customerId]"
-                class="text-sm font-medium text-primary-600 hover:text-primary-700"
-              >
-                View customer profile →
-              </a>
+            <div class="border-t border-border pt-2">
+              <a [routerLink]="['/customers', orderData.customerId]" class="text-sm font-medium text-primary hover:underline">{{ 'orders.viewCustomer' | transloco }} →</a>
             </div>
           </div>
         </div>
 
-        <!-- Actions -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Actions</h2>
+        <!-- Actions: one prominent next-step + cancel -->
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-4 text-base font-bold text-text">{{ 'orders.actions' | transloco }}</h2>
           <div class="space-y-3">
             @if (canConfirm()) {
-              <button
-                type="button"
-                (click)="onConfirmOrder()"
-                [disabled]="actionLoading()"
-                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Confirm Order
+              <button type="button" (click)="onConfirmOrder()" [disabled]="actionLoading()"
+                class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+                <app-icon name="check" [size]="18" /> {{ 'orders.confirmOrder' | transloco }}
               </button>
-            }
-            @if (canProcess()) {
-              <button
-                type="button"
-                (click)="onProcessOrder()"
-                [disabled]="actionLoading()"
-                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Process Order
+            } @else if (canProcess()) {
+              <button type="button" (click)="onProcessOrder()" [disabled]="actionLoading()"
+                class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+                <app-icon name="returns" [size]="18" /> {{ 'orders.processOrder' | transloco }}
               </button>
-            }
-            @if (canShip()) {
-              <button
-                type="button"
-                (click)="onShipOrder()"
-                [disabled]="actionLoading()"
-                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Ship Order
+            } @else if (canShip()) {
+              <button type="button" (click)="onShipOrder()" [disabled]="actionLoading()"
+                class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+                <app-icon name="truck" [size]="18" /> {{ 'orders.shipOrder' | transloco }}
               </button>
-            }
-            @if (canDeliver()) {
-              <button
-                type="button"
-                (click)="onDeliverOrder()"
-                [disabled]="actionLoading()"
-                class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Mark as Delivered
+            } @else if (canDeliver()) {
+              <button type="button" (click)="onDeliverOrder()" [disabled]="actionLoading()"
+                class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] bg-success px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-success/40 disabled:opacity-50">
+                <app-icon name="check-circle" [size]="18" /> {{ 'orders.markDelivered' | transloco }}
               </button>
             }
             @if (canCancel()) {
-              <button
-                type="button"
-                (click)="openCancelModal()"
-                [disabled]="actionLoading()"
-                class="w-full inline-flex justify-center items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-red-700 bg-white hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel Order
+              <button type="button" (click)="openCancelModal()" [disabled]="actionLoading()"
+                class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-danger/40 bg-surface px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger/10 focus:outline-none focus:ring-2 focus:ring-danger/40 disabled:opacity-50">
+                <app-icon name="x-circle" [size]="18" /> {{ 'orders.cancelOrder' | transloco }}
               </button>
             }
           </div>
         </div>
 
-        <!-- Status Timeline -->
-        <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <h2 class="text-lg font-semibold text-gray-900 mb-4">Status History</h2>
-          <app-order-timeline [statusHistory]="orderData.statusHistory"></app-order-timeline>
+        <!-- Timeline -->
+        <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-4 text-base font-bold text-text">{{ 'orders.statusHistory' | transloco }}</h2>
+          <app-order-timeline [statusHistory]="orderData.statusHistory" />
         </div>
       </div>
     </div>
   }
 
-  <!-- Ship Order Modal -->
+  <!-- Ship modal -->
   @if (showShipModal()) {
-    <div class="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="showShipModal.set(false)"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Ship Order</h3>
-            <p class="text-sm text-gray-500 mb-4">Add tracking details so the customer can follow their shipment. All fields are optional.</p>
-            <div class="space-y-3">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Carrier</label>
-                <input type="text" [(ngModel)]="shipCarrier"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="e.g. Aramex, SMSA" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tracking Number</label>
-                <input type="text" [(ngModel)]="shipTrackingNumber"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="Tracking number" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Tracking URL</label>
-                <input type="text" [(ngModel)]="shipTrackingUrl"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                  placeholder="https://carrier.com/track/..." />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Estimated Delivery</label>
-                <input type="date" [(ngModel)]="shipEstimatedDelivery"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500" />
-              </div>
+    <div class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true">
+      <div class="fixed inset-0 bg-black/50" (click)="showShipModal.set(false)"></div>
+      <div class="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface shadow-xl">
+        <div class="p-6">
+          <h3 class="mb-1 text-base font-bold text-text">{{ 'orders.shipTitle' | transloco }}</h3>
+          <p class="mb-4 text-sm text-text-muted">{{ 'orders.shipDesc' | transloco }}</p>
+          <div class="space-y-3">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text">{{ 'orders.carrier' | transloco }}</label>
+              <input type="text" [(ngModel)]="shipCarrier" [placeholder]="'orders.carrierPlaceholder' | transloco"
+                class="min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text">{{ 'orders.trackingNumber' | transloco }}</label>
+              <input type="text" [(ngModel)]="shipTrackingNumber"
+                class="min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text">{{ 'orders.trackingUrl' | transloco }}</label>
+              <input type="text" [(ngModel)]="shipTrackingUrl" placeholder="https://…"
+                class="min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text">{{ 'orders.estimatedDelivery' | transloco }}</label>
+              <input type="date" [(ngModel)]="shipEstimatedDelivery"
+                class="min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
             </div>
           </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button type="button" (click)="confirmShipOrder()" [disabled]="actionLoading()"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
-              Mark as Shipped
-            </button>
-            <button type="button" (click)="showShipModal.set(false)" [disabled]="actionLoading()"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
-              Cancel
-            </button>
-          </div>
+        </div>
+        <div class="flex flex-row-reverse gap-3 border-t border-border bg-surface-elevated px-6 py-3">
+          <button type="button" (click)="confirmShipOrder()" [disabled]="actionLoading()"
+            class="min-h-[44px] rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">{{ 'orders.markShipped' | transloco }}</button>
+          <button type="button" (click)="showShipModal.set(false)" [disabled]="actionLoading()"
+            class="min-h-[44px] rounded-[10px] border border-border bg-surface px-4 py-2 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40">{{ 'orders.close' | transloco }}</button>
         </div>
       </div>
     </div>
   }
 
-  <!-- Cancel Order Modal -->
+  <!-- Cancel modal -->
   @if (showCancelModal()) {
-    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="closeCancelModal()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="sm:flex sm:items-start">
-              <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                <svg class="h-6 w-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Cancel Order</h3>
-                <div class="mt-4">
-                  <label for="cancelReason" class="block text-sm font-medium text-gray-700 mb-2">
-                    Cancellation Reason
-                  </label>
-                  <textarea
-                    id="cancelReason"
-                    [(ngModel)]="cancelReason"
-                    rows="4"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Please provide a reason for cancelling this order..."
-                  ></textarea>
-                </div>
+    <div class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true">
+      <div class="fixed inset-0 bg-black/50" (click)="closeCancelModal()"></div>
+      <div class="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface shadow-xl">
+        <div class="p-6">
+          <div class="flex items-start gap-4">
+            <span class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-danger/10 text-danger"><app-icon name="alert-triangle" [size]="22" /></span>
+            <div class="w-full">
+              <h3 class="text-base font-bold text-text">{{ 'orders.cancelTitle' | transloco }}</h3>
+              <div class="mt-4">
+                <label for="cancelReason" class="mb-2 block text-sm font-medium text-text">{{ 'orders.cancelReason' | transloco }}</label>
+                <textarea id="cancelReason" [(ngModel)]="cancelReason" rows="4" [placeholder]="'orders.cancelReasonPlaceholder' | transloco"
+                  class="w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"></textarea>
               </div>
             </div>
           </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              type="button"
-              (click)="onCancelOrder()"
-              [disabled]="actionLoading() || !cancelReason().trim()"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel Order
-            </button>
-            <button
-              type="button"
-              (click)="closeCancelModal()"
-              [disabled]="actionLoading()"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Close
-            </button>
-          </div>
+        </div>
+        <div class="flex flex-row-reverse gap-3 border-t border-border bg-surface-elevated px-6 py-3">
+          <button type="button" (click)="onCancelOrder()" [disabled]="actionLoading() || !cancelReason().trim()"
+            class="min-h-[44px] rounded-[10px] bg-danger px-4 py-2 text-sm font-semibold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-danger/40 disabled:opacity-50">{{ 'orders.cancelOrder' | transloco }}</button>
+          <button type="button" (click)="closeCancelModal()" [disabled]="actionLoading()"
+            class="min-h-[44px] rounded-[10px] border border-border bg-surface px-4 py-2 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40">{{ 'orders.close' | transloco }}</button>
         </div>
       </div>
     </div>
   }
 
-  <!-- Add Note Modal -->
+  <!-- Note modal -->
   @if (showNoteModal()) {
-    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-      <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-        <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" (click)="closeNoteModal()"></div>
-        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-        <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-          <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-            <div class="sm:flex sm:items-start">
-              <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-                <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Add Merchant Note</h3>
-                <div class="mt-4">
-                  <textarea
-                    [(ngModel)]="newNote"
-                    rows="4"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-                    placeholder="Enter your note here..."
-                  ></textarea>
-                </div>
-              </div>
-            </div>
+    <div class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true">
+      <div class="fixed inset-0 bg-black/50" (click)="closeNoteModal()"></div>
+      <div class="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface shadow-xl">
+        <div class="p-6">
+          <h3 class="text-base font-bold text-text">{{ 'orders.addMerchantNote' | transloco }}</h3>
+          <div class="mt-4">
+            <textarea [(ngModel)]="newNote" rows="4" [placeholder]="'orders.notePlaceholder' | transloco"
+              class="w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"></textarea>
           </div>
-          <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-            <button
-              type="button"
-              (click)="onAddNote()"
-              [disabled]="actionLoading() || !newNote().trim()"
-              class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Add Note
-            </button>
-            <button
-              type="button"
-              (click)="closeNoteModal()"
-              [disabled]="actionLoading()"
-              class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-            >
-              Close
-            </button>
-          </div>
+        </div>
+        <div class="flex flex-row-reverse gap-3 border-t border-border bg-surface-elevated px-6 py-3">
+          <button type="button" (click)="onAddNote()" [disabled]="actionLoading() || !newNote().trim()"
+            class="min-h-[44px] rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">{{ 'orders.addNote' | transloco }}</button>
+          <button type="button" (click)="closeNoteModal()" [disabled]="actionLoading()"
+            class="min-h-[44px] rounded-[10px] border border-border bg-surface px-4 py-2 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40">{{ 'orders.close' | transloco }}</button>
         </div>
       </div>
     </div>

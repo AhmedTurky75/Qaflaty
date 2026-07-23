@@ -4,29 +4,27 @@
       <li>
         <div class="relative pb-8">
           @if (!last) {
-            <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-200" aria-hidden="true"></span>
+            <span class="absolute top-4 -ms-px h-full w-0.5 bg-border start-4" aria-hidden="true"></span>
           }
-          <div class="relative flex space-x-3">
+          <div class="relative flex gap-3">
             <div>
-              <span [class]="getStatusColor(change.toStatus) + ' h-8 w-8 rounded-full flex items-center justify-center ring-8 ring-white'">
-                <svg class="h-5 w-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getStatusIcon(change.toStatus)" />
+              <span [class]="getStatusColor(change.toStatus)" class="flex h-8 w-8 items-center justify-center rounded-full text-white ring-8 ring-surface">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="getStatusIcon(change.toStatus)" />
                 </svg>
               </span>
             </div>
-            <div class="flex min-w-0 flex-1 justify-between space-x-4 pt-1.5">
+            <div class="flex min-w-0 flex-1 justify-between gap-4 pt-1.5">
               <div>
-                <p class="text-sm text-gray-900 font-medium">
-                  {{ change.toStatus }}
-                </p>
+                <p class="text-sm font-medium text-text">{{ statusKey(change.toStatus) | transloco }}</p>
                 @if (change.notes) {
-                  <p class="mt-0.5 text-sm text-gray-500">{{ change.notes }}</p>
+                  <p class="mt-0.5 text-sm text-text-muted">{{ change.notes }}</p>
                 }
                 @if (change.changedBy) {
-                  <p class="mt-0.5 text-xs text-gray-400">by {{ change.changedBy }}</p>
+                  <p class="mt-0.5 text-xs text-text-muted">{{ 'orders.by' | transloco }} {{ change.changedBy }}</p>
                 }
               </div>
-              <div class="whitespace-nowrap text-right text-sm text-gray-500">
+              <div class="whitespace-nowrap text-end text-sm text-text-muted">
                 <time [dateTime]="change.changedAt">{{ formatDate(change.changedAt) }}</time>
               </div>
             </div>

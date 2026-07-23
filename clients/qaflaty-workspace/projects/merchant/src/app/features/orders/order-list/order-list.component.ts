@@ -2,14 +2,17 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { OrderService, OrderFilters } from '../services/order.service';
 import { OrderCardComponent } from '../components/order-card/order-card.component';
+import { StatusBadgeComponent } from '../components/status-badge/status-badge.component';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { OrderSummaryDto, OrderStatus } from 'shared';
 
 @Component({
   selector: 'app-order-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, OrderCardComponent],
+  imports: [CommonModule, FormsModule, TranslocoPipe, OrderCardComponent, StatusBadgeComponent, IconComponent],
   templateUrl: './order-list.component.html',
   styleUrls: ['./order-list.component.scss']
 })
@@ -117,6 +120,16 @@ export class OrderListComponent implements OnInit {
 
   onViewOrderDetails(orderId: string): void {
     this.router.navigate(['/orders', orderId]);
+  }
+
+  formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  formatCurrency(amount: number): string {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'SAR' }).format(amount);
   }
 
   getPageNumbers(): number[] {

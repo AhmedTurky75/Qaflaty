@@ -1,43 +1,37 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { OrderStatus } from 'shared';
 
 @Component({
   selector: 'app-status-badge',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <span
-      [class]="badgeClasses"
-      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
-    >
-      {{ statusText }}
-    </span>
-  `
+  imports: [TranslocoPipe],
+  templateUrl: './status-badge.component.html',
+  styleUrl: './status-badge.component.scss',
 })
 export class StatusBadgeComponent {
   @Input({ required: true }) status!: OrderStatus;
 
-  get statusText(): string {
-    return this.status;
+  /** i18n key for the status label. */
+  get statusKey(): string {
+    return `orders.status.${this.status}`;
   }
 
+  /** Token-based chip classes (themeable, AA-safe). */
   get badgeClasses(): string {
     switch (this.status) {
       case OrderStatus.Pending:
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-warning/10 text-warning';
       case OrderStatus.Confirmed:
-        return 'bg-blue-100 text-blue-800';
       case OrderStatus.Processing:
-        return 'bg-purple-100 text-purple-800';
       case OrderStatus.Shipped:
-        return 'bg-indigo-100 text-indigo-800';
+        return 'bg-primary-tint text-primary';
       case OrderStatus.Delivered:
-        return 'bg-green-100 text-green-800';
+        return 'bg-success/10 text-success';
       case OrderStatus.Cancelled:
-        return 'bg-red-100 text-red-800';
+        return 'bg-danger/10 text-danger';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-surface-elevated text-text-muted';
     }
   }
 }

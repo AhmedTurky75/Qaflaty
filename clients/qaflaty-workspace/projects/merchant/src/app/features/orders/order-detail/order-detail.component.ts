@@ -2,15 +2,17 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { OrderService, ShipOrderRequest } from '../services/order.service';
 import { StatusBadgeComponent } from '../components/status-badge/status-badge.component';
 import { OrderTimelineComponent } from '../components/order-timeline/order-timeline.component';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { OrderDto, OrderStatus, PaymentStatus } from 'shared';
 
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, StatusBadgeComponent, OrderTimelineComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslocoPipe, StatusBadgeComponent, OrderTimelineComponent, IconComponent],
   templateUrl: './order-detail.component.html',
   styleUrls: ['./order-detail.component.scss']
 })

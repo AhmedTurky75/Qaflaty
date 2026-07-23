@@ -78,11 +78,15 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - Icon set extended: wallet, trend-up, trend-down, chart-bar, heart, check-circle.
 - Note: `ng build merchant` clean (exit 0). All @Input/@Output/service calls unchanged; the two commented-out sales/topProducts API questions left as-is (not in scope).
 
-### P5 Orders (priority)
-- [ ] `order-list` **[split]** → real table, status chips (New/Packing/Shipped/Delivered/Cancelled), search, status+date filters.
-- [ ] `order-detail` **[split]** → items+totals, shipping, plain-language status timeline, prominent "Update status".
-- [ ] `order-card` **[split]** · `order-statistics` **[split]** · `order-timeline` **[split]** → tokens.
-- [ ] `status-badge` **[inline-t]** → split + tokens.
+### P5 Orders (priority) — ✅ DONE
+- [x] `order-list` → **real table on desktop** (Order/Customer/Date/Status/Total, clickable rows, keyboard-accessible) + **cards on mobile**; token search/status/date filters; token pagination; i18n (`orders.*`). ngModel bindings preserved verbatim.
+- [x] `order-detail` → all sections + 3 modals (ship/cancel/note) restyled to tokens; **one prominent primary "next-step" action** (Confirm→Process→Ship→Deliver, mutually exclusive by status) + danger-outline Cancel; plain-language status timeline; i18n. All handlers/`OrderService` calls unchanged.
+- [x] `status-badge` **[was inline-t]** → split; token chips; i18n status labels (`orders.status.*`).
+- [x] `order-timeline` → tokenized dots (warning/primary/success/danger), `ring-surface`, i18n; icon paths kept.
+- [x] `order-card` → tokenized (mobile list card); IconComponent rows; i18n.
+- [x] `order-statistics` (orphan, unused) → tokenized + i18n to keep the feature consistent.
+- Icon set extended: search, calendar, printer, truck, credit-card, map-pin, x-circle, phone.
+- Note: `ng build merchant` clean (exit 0). Status colours mapped to the 4 semantic tokens (Confirmed/Processing/Shipped all read as primary — the themeable tradeoff vs the old 6 hard-coded hues).
 
 ### P6 Products (core)
 - [ ] `product-list` **[split]** → photo-first cards, stock+status badges, search+filters.
