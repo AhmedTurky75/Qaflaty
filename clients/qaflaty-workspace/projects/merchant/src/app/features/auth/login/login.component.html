@@ -1,66 +1,76 @@
-<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-  <div class="sm:mx-auto sm:w-full sm:max-w-md">
-    <h1 class="text-center text-3xl font-bold text-gray-900">Qaflaty</h1>
-    <h2 class="mt-6 text-center text-2xl font-semibold text-gray-700">
-      @if (step() === 'credentials') { Sign in to your account }
-      @else { Enter verification code }
+<div class="flex min-h-screen flex-col justify-center bg-canvas px-4 py-12 sm:px-6">
+  <div class="mx-auto w-full max-w-md text-center">
+    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-xl font-bold text-white">Q</div>
+    <h1 class="text-2xl font-bold text-text">{{ 'common.appName' | transloco }}</h1>
+    <h2 class="mt-2 text-lg font-semibold text-text-muted">
+      @if (step() === 'credentials') { {{ 'auth.signInTitle' | transloco }} }
+      @else { {{ 'auth.otpTitle' | transloco }} }
     </h2>
   </div>
 
-  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+  <div class="mx-auto mt-8 w-full max-w-md">
+    <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
 
       <!-- Step 1: Credentials -->
       @if (step() === 'credentials') {
-        <form [formGroup]="credentialsForm" (ngSubmit)="onSubmitCredentials()" class="space-y-6">
+        <form [formGroup]="credentialsForm" (ngSubmit)="onSubmitCredentials()" class="space-y-5">
           <div>
-            <label for="emailOrUsername" class="block text-sm font-medium text-gray-700">
-              Email or Username
+            <label for="emailOrUsername" class="mb-1.5 block text-sm font-medium text-text">
+              {{ 'auth.emailOrUsername' | transloco }}
             </label>
-            <input id="emailOrUsername" type="text" formControlName="emailOrUsername" autocomplete="username"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-              [class.border-red-300]="emailOrUsername?.invalid && emailOrUsername?.touched" />
+            <input
+              id="emailOrUsername"
+              type="text"
+              formControlName="emailOrUsername"
+              autocomplete="username"
+              class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+              [class.border-danger]="emailOrUsername?.invalid && emailOrUsername?.touched"
+            />
             @if (emailOrUsername?.invalid && emailOrUsername?.touched) {
-              <p class="mt-1 text-sm text-red-600">Email or username is required</p>
+              <p class="mt-1 text-sm text-danger">{{ 'auth.emailOrUsernameRequired' | transloco }}</p>
             }
           </div>
 
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <div class="mt-1 relative">
-              <input id="password" [type]="passwordVisible() ? 'text' : 'password'"
-                formControlName="password" autocomplete="current-password"
-                class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm pr-10"
-                [class.border-red-300]="password?.invalid && password?.touched" />
-              <button type="button" (click)="togglePasswordVisibility()"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  @if (passwordVisible()) {
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                  } @else {
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  }
-                </svg>
+            <label for="password" class="mb-1.5 block text-sm font-medium text-text">{{ 'auth.password' | transloco }}</label>
+            <div class="relative">
+              <input
+                id="password"
+                [type]="passwordVisible() ? 'text' : 'password'"
+                formControlName="password"
+                autocomplete="current-password"
+                class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 pe-11 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+                [class.border-danger]="password?.invalid && password?.touched"
+              />
+              <button
+                type="button"
+                (click)="togglePasswordVisibility()"
+                class="absolute inset-y-0 end-0 flex items-center pe-3 text-text-muted hover:text-text focus:outline-none focus-visible:text-primary"
+                [attr.aria-label]="(passwordVisible() ? 'auth.hidePassword' : 'auth.showPassword') | transloco"
+              >
+                <app-icon [name]="passwordVisible() ? 'eye-off' : 'eye'" [size]="20" />
               </button>
             </div>
             @if (password?.invalid && password?.touched) {
-              <p class="mt-1 text-sm text-red-600">Password must be at least 8 characters</p>
+              <p class="mt-1 text-sm text-danger">{{ 'auth.passwordMin' | transloco }}</p>
             }
           </div>
 
           @if (error()) {
-            <div class="rounded-md bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+            <div class="rounded-lg bg-danger/10 p-3 text-sm text-danger">{{ error() }}</div>
           }
 
-          <button type="submit" [disabled]="loading()"
-            class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50">
-            @if (loading()) { <span>Sending OTP...</span> } @else { Continue }
+          <button
+            type="submit"
+            [disabled]="loading()"
+            class="flex min-h-[44px] w-full items-center justify-center rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+          >
+            @if (loading()) { {{ 'auth.sendingOtp' | transloco }} } @else { {{ 'auth.continue' | transloco }} }
           </button>
 
-          <p class="text-center text-sm text-gray-600">
-            Don't have an account?
-            <a routerLink="/auth/register" class="font-medium text-primary-600 hover:text-primary-500">Register</a>
+          <p class="text-center text-sm text-text-muted">
+            {{ 'auth.noAccount' | transloco }}
+            <a routerLink="/auth/register" class="font-medium text-primary hover:underline">{{ 'auth.register' | transloco }}</a>
           </p>
         </form>
       }
@@ -69,14 +79,11 @@
       @if (step() === 'otp') {
         <div class="space-y-6 text-center">
           <div>
-            <div class="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg class="w-8 h-8 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+            <div class="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-tint text-primary">
+              <app-icon name="mail" [size]="32" />
             </div>
-            <p class="text-sm text-gray-600">
-              We sent a 6-digit code to <strong>{{ pendingEmail() }}</strong>
+            <p class="text-sm text-text-muted">
+              {{ 'auth.otpSentTo' | transloco }} <strong class="text-text">{{ pendingEmail() }}</strong>
             </p>
           </div>
 
@@ -88,40 +95,47 @@
           />
 
           @if (error()) {
-            <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p class="text-red-700 text-sm">{{ error() }}</p>
+            <div class="rounded-lg border border-danger/30 bg-danger/10 p-3">
+              <p class="text-sm text-danger">{{ error() }}</p>
             </div>
           }
 
-          <button type="button" (click)="onSubmitOtp()"
+          <button
+            type="button"
+            (click)="onSubmitOtp()"
             [disabled]="currentCode().length !== 6 || loading()"
-            class="w-full flex justify-center items-center gap-2 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 transition-colors">
+            class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+          >
             @if (loading()) {
-              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+              <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-              Verifying...
+              {{ 'auth.verifying' | transloco }}
             } @else {
-              Verify & Sign In
+              {{ 'auth.verifySignIn' | transloco }}
             }
           </button>
 
           <div class="space-y-2">
-            <div class="text-sm text-gray-500">
-              Didn't receive the code?
+            <div class="text-sm text-text-muted">
+              {{ 'auth.didntReceive' | transloco }}
               @if (resendCooldown() > 0) {
-                <span class="text-gray-400 ml-1">Resend in {{ resendCooldown() }}s</span>
+                <span class="ms-1 text-text-muted/70">{{ 'auth.resendIn' | transloco: { seconds: resendCooldown() } }}</span>
               } @else {
-                <button type="button" (click)="resendOtp()"
-                  class="ml-1 text-primary-600 font-medium hover:underline">
-                  Resend code
+                <button type="button" (click)="resendOtp()" class="ms-1 font-medium text-primary hover:underline">
+                  {{ 'auth.resendCode' | transloco }}
                 </button>
               }
             </div>
             <div>
-              <button type="button" (click)="goBack()" class="text-sm text-gray-500 hover:text-gray-700">
-                ← Back
+              <button
+                type="button"
+                (click)="goBack()"
+                class="inline-flex items-center gap-1 text-sm text-text-muted hover:text-text"
+              >
+                <app-icon name="chevron-left" [size]="16" class="rtl:rotate-180" />
+                {{ 'common.back' | transloco }}
               </button>
             </div>
           </div>

@@ -1,15 +1,18 @@
 import { Component, inject, signal, computed, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { SetupGuideService } from './services/setup-guide.service';
 import { StoreContextService } from '../../core/services/store-context.service';
 import { SetupTask, SetupPhase, SetupPhaseGroup } from './models/setup-task.model';
+import { IconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-setup-guide',
   standalone: true,
-  imports: [CommonModule, RouterLink],
-  templateUrl: './setup-guide.component.html'
+  imports: [CommonModule, RouterLink, TranslocoPipe, IconComponent],
+  templateUrl: './setup-guide.component.html',
+  styleUrl: './setup-guide.component.scss'
 })
 export class SetupGuideComponent {
   private setupGuideService = inject(SetupGuideService);

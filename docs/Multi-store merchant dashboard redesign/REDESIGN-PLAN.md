@@ -57,12 +57,14 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - [x] i18n: added `nav.*`, `switcher.*`, `user.*`, `crumb.*`, `common.*` keys (EN/AR); all shell strings via Transloco.
 - Note: `ng build merchant` clean (exit 0, no warnings). Bumped **merchant-only** initial budget warning 500→700 kB (shell is eagerly loaded); store/landing budgets untouched. Phase-1 proof widget still present (removed in a later phase).
 
-### P3 Auth & Onboarding
-- [ ] `login` `auth/login` **[split]** → tokens (credentials→OTP styling).
-- [ ] `register` `auth/register` **[split]** → tokens.
-- [ ] `store-select` `auth/store-select` **[inline-t]** → split + tokens.
-- [ ] `access-denied` `access-denied` **[inline-t]** → split + tokens.
-- [ ] `setup-guide` `setup-guide` **[+scss]** → first-run wizard (create store → add product → sell) w/ step tracker + locked-currency warning up front. Reconcile with existing setup-guide.
+### P3 Auth & Onboarding — ✅ DONE
+- [x] `login` **[split]** → tokens; OTP step restyled; eye/eye-off + mail via IconComponent; i18n (`auth.*`).
+- [x] `register` **[split]** → tokens; grouped fields, token inputs, i18n.
+- [x] `store-select` **[was inline-t]** → split into 3 files + tokens + i18n. Logic unchanged (same `/stores` GET + `selectStore`).
+- [x] `access-denied` **[was inline-t]** → split into 3 files + tokens + i18n. Logic unchanged (`reportAccessDenied`).
+- [x] `setup-guide` **[+scss]** → restyled to tokens (it's the dashboard-embedded step tracker: progress bar, phase groups, recommended-next); added scss; added plain-language **currency-locked warning up front**; i18n (`setup.*`). Data/logic untouched.
+- Decision: kept the existing setup-guide as the "wizard" (it already sequences create-store → add-product → … via real routes). A separate full-screen wizard flow is a new feature/flow — not built unilaterally (Constraint 2); can add on request.
+- Note: `ng build merchant` clean (exit 0). Icon set extended (eye, eye-off, mail, alert-triangle, zap, chevron-up).
 
 ### P4 Dashboard
 - [ ] `dashboard` `dashboard` **[+scss]** → tokens.

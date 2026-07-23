@@ -1,106 +1,134 @@
-<div class="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-  <div class="sm:mx-auto sm:w-full sm:max-w-md">
-    <h1 class="text-center text-3xl font-bold text-gray-900">Qaflaty</h1>
-    <h2 class="mt-6 text-center text-2xl font-semibold text-gray-700">Create your merchant account</h2>
-    <p class="mt-2 text-center text-sm text-gray-600">
-      Already have an account?
-      <a routerLink="/auth/login" class="font-medium text-primary-600 hover:text-primary-500">Sign in</a>
+<div class="flex min-h-screen flex-col justify-center bg-canvas px-4 py-12 sm:px-6">
+  <div class="mx-auto w-full max-w-md text-center">
+    <div class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-xl font-bold text-white">Q</div>
+    <h1 class="text-2xl font-bold text-text">{{ 'common.appName' | transloco }}</h1>
+    <h2 class="mt-2 text-lg font-semibold text-text-muted">{{ 'auth.registerTitle' | transloco }}</h2>
+    <p class="mt-2 text-sm text-text-muted">
+      {{ 'auth.haveAccount' | transloco }}
+      <a routerLink="/auth/login" class="font-medium text-primary hover:underline">{{ 'auth.signIn' | transloco }}</a>
     </p>
   </div>
 
-  <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-    <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+  <div class="mx-auto mt-8 w-full max-w-md">
+    <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm sm:p-8">
       <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="space-y-5">
 
         <!-- First & Last Name -->
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-sm font-medium text-gray-700">First Name</label>
-            <input type="text" formControlName="firstName"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-              [class.border-red-300]="firstName?.invalid && firstName?.touched" />
+            <label class="mb-1.5 block text-sm font-medium text-text">{{ 'auth.firstName' | transloco }}</label>
+            <input
+              type="text"
+              formControlName="firstName"
+              class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+              [class.border-danger]="firstName?.invalid && firstName?.touched"
+            />
             @if (firstName?.invalid && firstName?.touched) {
-              <p class="mt-1 text-xs text-red-600">First name required (2-50 chars)</p>
+              <p class="mt-1 text-xs text-danger">{{ 'auth.firstNameError' | transloco }}</p>
             }
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700">Last Name</label>
-            <input type="text" formControlName="lastName"
-              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-              [class.border-red-300]="lastName?.invalid && lastName?.touched" />
+            <label class="mb-1.5 block text-sm font-medium text-text">{{ 'auth.lastName' | transloco }}</label>
+            <input
+              type="text"
+              formControlName="lastName"
+              class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+              [class.border-danger]="lastName?.invalid && lastName?.touched"
+            />
             @if (lastName?.invalid && lastName?.touched) {
-              <p class="mt-1 text-xs text-red-600">Last name required (2-50 chars)</p>
+              <p class="mt-1 text-xs text-danger">{{ 'auth.lastNameError' | transloco }}</p>
             }
           </div>
         </div>
 
         <!-- Username -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Username</label>
-          <input type="text" formControlName="username" autocomplete="username"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-            [class.border-red-300]="username?.invalid && username?.touched" />
+          <label class="mb-1.5 block text-sm font-medium text-text">{{ 'auth.username' | transloco }}</label>
+          <input
+            type="text"
+            formControlName="username"
+            autocomplete="username"
+            class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+            [class.border-danger]="username?.invalid && username?.touched"
+          />
           @if (username?.invalid && username?.touched) {
-            <p class="mt-1 text-xs text-red-600">3-50 chars, letters/numbers/underscore only</p>
+            <p class="mt-1 text-xs text-danger">{{ 'auth.usernameError' | transloco }}</p>
           }
         </div>
 
         <!-- Email -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Email</label>
-          <input type="email" formControlName="email" autocomplete="email"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-            [class.border-red-300]="email?.invalid && email?.touched" />
+          <label class="mb-1.5 block text-sm font-medium text-text">{{ 'auth.email' | transloco }}</label>
+          <input
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+            [class.border-danger]="email?.invalid && email?.touched"
+          />
           @if (email?.invalid && email?.touched) {
-            <p class="mt-1 text-xs text-red-600">Valid email required</p>
+            <p class="mt-1 text-xs text-danger">{{ 'auth.emailError' | transloco }}</p>
           }
         </div>
 
         <!-- Phone -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Phone (optional)</label>
-          <input type="tel" formControlName="phone"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm" />
+          <label class="mb-1.5 block text-sm font-medium text-text">{{ 'auth.phoneOptional' | transloco }}</label>
+          <input
+            type="tel"
+            formControlName="phone"
+            class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
         </div>
 
         <!-- Password -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Password</label>
-          <div class="mt-1 relative">
-            <input [type]="passwordVisible() ? 'text' : 'password'" formControlName="password"
-              class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm pr-10"
-              [class.border-red-300]="password?.invalid && password?.touched" />
-            <button type="button" (click)="togglePasswordVisibility()"
-              class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400">
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
+          <label class="mb-1.5 block text-sm font-medium text-text">{{ 'auth.password' | transloco }}</label>
+          <div class="relative">
+            <input
+              [type]="passwordVisible() ? 'text' : 'password'"
+              formControlName="password"
+              class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 pe-11 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+              [class.border-danger]="password?.invalid && password?.touched"
+            />
+            <button
+              type="button"
+              (click)="togglePasswordVisibility()"
+              class="absolute inset-y-0 end-0 flex items-center pe-3 text-text-muted hover:text-text focus:outline-none focus-visible:text-primary"
+              [attr.aria-label]="(passwordVisible() ? 'auth.hidePassword' : 'auth.showPassword') | transloco"
+            >
+              <app-icon [name]="passwordVisible() ? 'eye-off' : 'eye'" [size]="20" />
             </button>
           </div>
           @if (password?.invalid && password?.touched) {
-            <p class="mt-1 text-xs text-red-600">Min 8 characters</p>
+            <p class="mt-1 text-xs text-danger">{{ 'auth.passwordMinError' | transloco }}</p>
           }
         </div>
 
         <!-- Confirm Password -->
         <div>
-          <label class="block text-sm font-medium text-gray-700">Confirm Password</label>
-          <input type="password" formControlName="confirmPassword"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-            [class.border-red-300]="confirmPassword?.invalid && confirmPassword?.touched" />
+          <label class="mb-1.5 block text-sm font-medium text-text">{{ 'auth.confirmPassword' | transloco }}</label>
+          <input
+            type="password"
+            formControlName="confirmPassword"
+            class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+            [class.border-danger]="confirmPassword?.invalid && confirmPassword?.touched"
+          />
           @if (confirmPassword?.errors?.['passwordMismatch'] && confirmPassword?.touched) {
-            <p class="mt-1 text-xs text-red-600">Passwords do not match</p>
+            <p class="mt-1 text-xs text-danger">{{ 'auth.passwordMismatch' | transloco }}</p>
           }
         </div>
 
         @if (error()) {
-          <div class="rounded-md bg-red-50 p-4 text-sm text-red-700">{{ error() }}</div>
+          <div class="rounded-lg bg-danger/10 p-3 text-sm text-danger">{{ error() }}</div>
         }
 
-        <button type="submit" [disabled]="loading()"
-          class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50">
-          @if (loading()) { Creating account... } @else { Create Account }
+        <button
+          type="submit"
+          [disabled]="loading()"
+          class="flex min-h-[44px] w-full items-center justify-center rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+        >
+          @if (loading()) { {{ 'auth.creatingAccount' | transloco }} } @else { {{ 'auth.createAccount' | transloco }} }
         </button>
       </form>
     </div>
