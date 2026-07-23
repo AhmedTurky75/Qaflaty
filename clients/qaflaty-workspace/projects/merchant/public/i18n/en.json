@@ -6,7 +6,53 @@
     "delete": "Delete",
     "edit": "Edit",
     "search": "Search",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "close": "Close",
+    "back": "Back",
+    "openMenu": "Open menu",
+    "notifications": "Notifications",
+    "showFullPath": "Show full path"
+  },
+  "nav": {
+    "home": "Home",
+    "orders": "Orders",
+    "products": "Products",
+    "customers": "Customers",
+    "stores": "Stores",
+    "settings": "Settings",
+    "more": "More",
+    "live": "Live",
+    "activeCarts": "Active Carts",
+    "returns": "Returns",
+    "reviews": "Reviews",
+    "promoCodes": "Promo Codes",
+    "chat": "Live Chat",
+    "builder": "Store Builder",
+    "ads": "Ads Management",
+    "team": "Team"
+  },
+  "switcher": {
+    "loading": "Loading…",
+    "noStore": "No store selected",
+    "create": "Create new store"
+  },
+  "user": {
+    "profile": "Profile settings",
+    "account": "Account settings",
+    "signOut": "Sign out"
+  },
+  "crumb": {
+    "detail": "Detail",
+    "new": "New",
+    "create": "Create",
+    "categories": "Categories",
+    "profile": "Profile",
+    "password": "Password",
+    "notifications": "Notifications",
+    "crossSell": "Cross-sell",
+    "upsell": "Upsell",
+    "downsell": "Downsell",
+    "related": "Related products"
   },
   "theme": {
     "title": "Appearance",

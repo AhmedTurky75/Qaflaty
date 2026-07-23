@@ -1,0 +1,30 @@
+:host {
+  display: contents;
+}
+
+.drawer-panel {
+  animation: drawer-in 0.22s ease-out;
+}
+
+@keyframes drawer-in {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Mirror the entry slide for RTL (panel is pinned to the start edge). */
+:host-context([dir='rtl']) .drawer-panel {
+  animation-name: drawer-in-rtl;
+}
+
+@keyframes drawer-in-rtl {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

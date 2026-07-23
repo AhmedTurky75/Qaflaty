@@ -1,0 +1,52 @@
+<aside class="flex h-screen w-64 flex-col bg-rail text-rail-text">
+  <!-- Brand -->
+  <div class="flex h-16 flex-shrink-0 items-center gap-2.5 px-5">
+    <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-rail-active text-lg font-bold text-rail-active-text">Q</span>
+    <span class="text-lg font-bold tracking-tight">{{ 'common.appName' | transloco }}</span>
+  </div>
+
+  <!-- Store switcher -->
+  <div class="flex-shrink-0 px-3 pb-3">
+    <app-store-switcher />
+  </div>
+
+  <!-- Core navigation -->
+  <nav class="flex-1 space-y-0.5 overflow-y-auto px-3 py-2" aria-label="Primary">
+    @for (item of coreNav; track item.route) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="bg-rail-active text-rail-active-text hover:bg-rail-active"
+        class="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-rail-muted transition-colors hover:bg-rail-border/10 hover:text-rail-text focus:outline-none focus:ring-2 focus:ring-rail-active"
+      >
+        <app-icon [name]="item.icon" [size]="20" />
+        <span class="text-sm font-medium">{{ item.labelKey | transloco }}</span>
+      </a>
+    }
+
+    <!-- More -->
+    <button
+      type="button"
+      (click)="more.emit()"
+      class="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2.5 text-rail-muted transition-colors hover:bg-rail-border/10 hover:text-rail-text focus:outline-none focus:ring-2 focus:ring-rail-active"
+    >
+      <app-icon name="more" [size]="20" />
+      <span class="text-sm font-medium">{{ 'nav.more' | transloco }}</span>
+      @if (chatUnread() > 0) {
+        <span class="ms-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{{ chatUnread() }}</span>
+      }
+    </button>
+  </nav>
+
+  <!-- User block -->
+  @if (merchant(); as m) {
+    <div class="flex flex-shrink-0 items-center gap-3 border-t border-rail-border/15 p-4">
+      <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-rail-active font-semibold text-rail-active-text">
+        {{ m.fullName.charAt(0).toUpperCase() }}
+      </span>
+      <div class="min-w-0 flex-1">
+        <p class="truncate text-sm font-medium text-rail-text">{{ m.fullName }}</p>
+        <p class="truncate text-xs text-rail-muted">{{ m.email }}</p>
+      </div>
+    </div>
+  }
+</aside>

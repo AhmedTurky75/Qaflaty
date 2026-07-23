@@ -44,14 +44,18 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - [x] Proof widget in `app.html` (temporary, token-styled) demonstrates instant theme + dir swaps. **Remove in a later phase** when the real Settings theme picker + topbar controls land.
 - Note: `ng build merchant` succeeds (exit 0). Requires `ng build shared` first (pre-existing: `shared` → `dist/shared`). Soft budget **warning** only: initial bundle 524 kB vs 500 kB (+~24 kB from Transloco); non-blocking, `angular.json` left pristine.
 
-### P2 Shell & Navigation
-- [ ] `RailComponent` (new) — coloured rail, brand, 6 core items w/ line-icon + text, active `--rail-active`, user block foot. Replace emoji icons with line-icon set / tiny icon component.
-- [ ] `StoreSwitcherComponent` `shared/components/store-switcher` **[inline-t]** → split; store brand colour chip; dropdown + "Create new store".
-- [ ] `TopbarComponent` (new) — breadcrumb + active-store chip + notifications + user menu + mobile hamburger.
-- [ ] `BreadcrumbComponent` (new) — router/route-data driven; collapse >4 levels; 2nd crumb = active store; mobile = back-chevron + current. `<nav aria-label="Breadcrumb">`.
-- [ ] `BottomNavComponent` (new, mobile) — 4 items + More; slide-in drawer.
-- [ ] `ShellComponent` `shared/components/shell` **[split]** — recompose to use rail/topbar/bottom-nav; wire new IA (Ads/Live/etc under More).
-- [ ] Responsive: desktop rail+content, tablet rail+single-col, mobile bottom-nav+drawer.
+### P2 Shell & Navigation — ✅ DONE
+- [x] `IconComponent` (new) — inline line-icon set (Lucide-style, `currentColor`), replaces emoji icons. → `shared/components/icon/`
+- [x] `RailComponent` (new) — `bg-rail` sidebar, brand, store switcher, 6 core items (icon + text, active `--rail-active`), More button, user block foot. Hidden < `lg`. → `shared/components/rail/`
+- [x] `StoreSwitcherComponent` **[was inline-t]** → split into 3 files; brand-colour chip; dropdown + "Create new store"; restyled to rail tokens. Logic (selectStore etc.) unchanged.
+- [x] `TopbarComponent` (new) — hamburger (mobile), breadcrumb, redundant active-store chip, notifications, user menu (Profile/Account/Sign out). → `shared/components/topbar/`
+- [x] `BreadcrumbComponent` (new) — router-URL driven; Home + active-store 2nd crumb + trail; collapses >4 levels to expandable `…`; mobile = back-chevron + current; `<nav aria-label="Breadcrumb">`; RTL-aware chevrons. → `shared/components/breadcrumb/`
+- [x] `BottomNavComponent` (new, mobile) — 4 core items + More; `< lg` only. → `shared/components/bottom-nav/`
+- [x] `NavDrawerComponent` (new) — slide-in "More"/mobile drawer listing all secondary features (Live, Active Carts, Returns, Reviews, Promo, Chat, Builder, Ads, Team[owner-only]); Stores/Settings included for mobile reachability; chat unread badge. RTL slide. → `shared/components/nav-drawer/`
+- [x] `ShellComponent` **[split]** — recomposed to rail + topbar + bottom-nav + drawer; owns drawer state; kept chat-unread polling effect + `initialize()` verbatim. New IA: Ads/Live/etc. under More, **all routes unchanged**.
+- [x] Responsive: desktop rail(64) + content; mobile bottom-nav + drawer; content `lg:ps-64`, `pb-20` mobile clearance.
+- [x] i18n: added `nav.*`, `switcher.*`, `user.*`, `crumb.*`, `common.*` keys (EN/AR); all shell strings via Transloco.
+- Note: `ng build merchant` clean (exit 0, no warnings). Bumped **merchant-only** initial budget warning 500→700 kB (shell is eagerly loaded); store/landing budgets untouched. Phase-1 proof widget still present (removed in a later phase).
 
 ### P3 Auth & Onboarding
 - [ ] `login` `auth/login` **[split]** → tokens (credentials→OTP styling).

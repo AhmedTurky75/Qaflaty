@@ -6,7 +6,53 @@
     "delete": "حذف",
     "edit": "تعديل",
     "search": "بحث",
-    "loading": "جارٍ التحميل…"
+    "loading": "جارٍ التحميل…",
+    "close": "إغلاق",
+    "back": "رجوع",
+    "openMenu": "فتح القائمة",
+    "notifications": "الإشعارات",
+    "showFullPath": "عرض المسار كاملاً"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "orders": "الطلبات",
+    "products": "المنتجات",
+    "customers": "العملاء",
+    "stores": "المتاجر",
+    "settings": "الإعدادات",
+    "more": "المزيد",
+    "live": "المباشر",
+    "activeCarts": "السلات النشطة",
+    "returns": "المرتجعات",
+    "reviews": "التقييمات",
+    "promoCodes": "أكواد الخصم",
+    "chat": "المحادثة المباشرة",
+    "builder": "منشئ المتجر",
+    "ads": "إدارة الإعلانات",
+    "team": "الفريق"
+  },
+  "switcher": {
+    "loading": "جارٍ التحميل…",
+    "noStore": "لم يتم اختيار متجر",
+    "create": "إنشاء متجر جديد"
+  },
+  "user": {
+    "profile": "إعدادات الملف الشخصي",
+    "account": "إعدادات الحساب",
+    "signOut": "تسجيل الخروج"
+  },
+  "crumb": {
+    "detail": "التفاصيل",
+    "new": "جديد",
+    "create": "إنشاء",
+    "categories": "الفئات",
+    "profile": "الملف الشخصي",
+    "password": "كلمة المرور",
+    "notifications": "الإشعارات",
+    "crossSell": "البيع المتقاطع",
+    "upsell": "البيع الأعلى",
+    "downsell": "البيع الأدنى",
+    "related": "منتجات ذات صلة"
   },
   "theme": {
     "title": "المظهر",

@@ -1,0 +1,81 @@
+<div class="relative">
+  <!-- Trigger -->
+  <button
+    type="button"
+    (click)="toggleDropdown()"
+    class="flex w-full min-h-[44px] items-center justify-between gap-2 rounded-lg border border-rail-border/15 bg-rail-border/5 px-3 py-2.5 text-rail-text transition-colors hover:bg-rail-border/10 focus:outline-none focus:ring-2 focus:ring-rail-active"
+    [attr.aria-expanded]="dropdownOpen()"
+    aria-haspopup="listbox"
+  >
+    @if (storeContext.loading()) {
+      <span class="flex items-center gap-2">
+        <span class="h-7 w-7 animate-pulse rounded-md bg-rail-border/20"></span>
+        <span class="text-sm text-rail-muted">{{ 'switcher.loading' | transloco }}</span>
+      </span>
+    } @else if (storeContext.currentStore(); as store) {
+      <span class="flex min-w-0 items-center gap-2">
+        <span
+          class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
+          [style.background-color]="store.branding.primaryColor"
+        >{{ store.name.charAt(0).toUpperCase() }}</span>
+        <span class="truncate text-sm font-semibold text-rail-text">{{ store.name }}</span>
+      </span>
+    } @else {
+      <span class="flex items-center gap-2">
+        <span class="flex h-7 w-7 items-center justify-center rounded-md bg-rail-border/20 text-xs text-rail-muted">?</span>
+        <span class="text-sm text-rail-muted">{{ 'switcher.noStore' | transloco }}</span>
+      </span>
+    }
+    <span class="flex-shrink-0 text-rail-muted transition-transform" [class.rotate-180]="dropdownOpen()">
+      <app-icon name="chevron-down" [size]="16" />
+    </span>
+  </button>
+
+  <!-- Dropdown -->
+  @if (dropdownOpen()) {
+    <div
+      class="absolute start-0 end-0 z-50 mt-1 max-h-64 overflow-y-auto rounded-lg border border-border bg-surface py-1 shadow-xl"
+      role="listbox"
+    >
+      @for (store of storeContext.stores(); track store.id) {
+        <button
+          type="button"
+          (click)="onSelectStore(store.id)"
+          class="flex min-h-[44px] w-full items-center gap-2 px-3 py-2 text-start transition-colors hover:bg-surface-elevated focus:outline-none focus:bg-surface-elevated"
+          [class.bg-primary-tint]="store.id === storeContext.currentStoreId()"
+          role="option"
+          [attr.aria-selected]="store.id === storeContext.currentStoreId()"
+        >
+          <span
+            class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md text-xs font-bold text-white"
+            [style.background-color]="store.branding.primaryColor"
+          >{{ store.name.charAt(0).toUpperCase() }}</span>
+          <span
+            class="truncate text-sm"
+            [class.font-semibold]="store.id === storeContext.currentStoreId()"
+            [class.text-primary]="store.id === storeContext.currentStoreId()"
+            [class.text-text]="store.id !== storeContext.currentStoreId()"
+          >{{ store.name }}</span>
+          @if (store.id === storeContext.currentStoreId()) {
+            <span class="ms-auto flex-shrink-0 text-primary"><app-icon name="check" [size]="16" /></span>
+          }
+        </button>
+      }
+
+      @if (storeContext.stores().length > 0) {
+        <hr class="my-1 border-border" />
+      }
+
+      <a
+        routerLink="/stores/create"
+        (click)="dropdownOpen.set(false)"
+        class="flex min-h-[44px] w-full items-center gap-2 px-3 py-2 text-start text-primary transition-colors hover:bg-surface-elevated focus:outline-none focus:bg-surface-elevated"
+      >
+        <span class="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-md border-2 border-dashed border-primary/40">
+          <app-icon name="plus" [size]="16" />
+        </span>
+        <span class="text-sm font-medium">{{ 'switcher.create' | transloco }}</span>
+      </a>
+    </div>
+  }
+</div>
