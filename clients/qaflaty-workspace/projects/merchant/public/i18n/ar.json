@@ -1,0 +1,24 @@
+{
+  "common": {
+    "appName": "قفلتي",
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "search": "بحث",
+    "loading": "جارٍ التحميل…"
+  },
+  "theme": {
+    "title": "المظهر",
+    "language": "اللغة",
+    "blue": "أزرق",
+    "light": "فاتح",
+    "slate": "داكن",
+    "grey": "رمادي",
+    "purple": "بنفسجي",
+    "amber": "كهرماني",
+    "emerald": "أخضر",
+    "teal": "فيروزي",
+    "rose": "وردي"
+  }
+}

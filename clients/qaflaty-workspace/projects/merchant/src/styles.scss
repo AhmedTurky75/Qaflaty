@@ -1,10 +1,27 @@
 /* You can add global styles to this file, and also import other style files */
 
+/* Theme token palettes (Direction C) — defines the CSS vars the Tailwind
+   token utilities (bg-surface, text-primary, border-border, …) read. Must be
+   imported before Tailwind so :root vars exist when utilities are applied. */
+@import './styles/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Global styles */
+:root {
+  /* IBM Plex Sans + IBM Plex Sans Arabic — one family covers Latin and Arabic
+     so bilingual (EN / AR-RTL) screens stay visually consistent. */
+  --font-sans: 'IBM Plex Sans', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+}
+
+html {
+  background-color: rgb(var(--c-canvas));
+}
+
 body {
-  @apply font-sans antialiased;
+  @apply antialiased;
+  font-family: var(--font-sans);
+  color: rgb(var(--c-text));
 }

@@ -35,13 +35,14 @@ Scope: `clients/qaflaty-workspace/projects/merchant` only. `store` and `landing`
 
 Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+scss]** has html but no scss (add one) · **[split]** already 3 files.
 
-### P1 Foundations (theme + i18n + fonts)
-- [ ] `theme.css` — `:root` + `[data-theme=…]` for all 9 palettes (Blue default, Light, Slate/dark, Grey, Purple, Amber, Green, Teal, Rose). Copy hex verbatim from Design System §02/§05.
-- [ ] IBM Plex Sans + IBM Plex Sans Arabic wired.
-- [ ] `tailwind.config.js` colors read CSS vars (§05 snippet): surface, elevated, border, text, muted, primary, primary-hover, tint, success, warning, danger + rail set.
-- [ ] `ThemeService` (localStorage, sets `data-theme` on `<html>`), `DirectionService` (ltr/rtl, sets `dir`). Provided app-wide.
-- [ ] Transloco installed; EN/AR dictionaries scaffolded; `dir` bound to DirectionService.
-- [ ] Prove theme + dir switch on one test element. No visual redesign yet.
+### P1 Foundations (theme + i18n + fonts) — ✅ DONE
+- [x] `theme.css` — `:root` + `[data-theme=…]` for all 9 palettes (Blue default, Light, Slate/dark, Grey, Purple, Amber, Green, Teal, Rose). Hex copied verbatim from Design System §02/§05, as space-separated RGB channels. → `projects/merchant/src/styles/theme.css`
+- [x] IBM Plex Sans + IBM Plex Sans Arabic wired (Google Fonts `<link>` in index.html; `--font-sans` on body in styles.scss — not via shared Tailwind config, to avoid changing store/landing fonts).
+- [x] `tailwind.config.js` colors read CSS vars (§05 snippet): canvas, surface(+elevated), border, text(+muted), primary(DEFAULT/hover/tint), success, warning, danger + full rail set. **Numbered `primary-50..900` scale preserved** so store/landing + un-migrated merchant classes keep working.
+- [x] `ThemeService` (localStorage, sets `data-theme` on `<html>`) + `DirectionService` (en/ar → ltr/rtl, drives Transloco active lang + sets `dir`/`lang`). Both `providedIn:'root'`, initialised in `App` constructor.
+- [x] Transloco installed (`@jsverse/transloco` ^8.4); HTTP loader + EN/AR dictionaries in `public/i18n/`; provided in `app.config.ts`.
+- [x] Proof widget in `app.html` (temporary, token-styled) demonstrates instant theme + dir swaps. **Remove in a later phase** when the real Settings theme picker + topbar controls land.
+- Note: `ng build merchant` succeeds (exit 0). Requires `ng build shared` first (pre-existing: `shared` → `dist/shared`). Soft budget **warning** only: initial bundle 524 kB vs 500 kB (+~24 kB from Transloco); non-blocking, `angular.json` left pristine.
 
 ### P2 Shell & Navigation
 - [ ] `RailComponent` (new) — coloured rail, brand, 6 core items w/ line-icon + text, active `--rail-active`, user block foot. Replace emoji icons with line-icon set / tiny icon component.

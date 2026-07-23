@@ -1,0 +1,24 @@
+{
+  "common": {
+    "appName": "Qaflaty",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "loading": "Loading…"
+  },
+  "theme": {
+    "title": "Appearance",
+    "language": "Language",
+    "blue": "Blue",
+    "light": "Light",
+    "slate": "Slate",
+    "grey": "Grey",
+    "purple": "Purple",
+    "amber": "Amber",
+    "emerald": "Emerald",
+    "teal": "Teal",
+    "rose": "Rose"
+  }
+}
