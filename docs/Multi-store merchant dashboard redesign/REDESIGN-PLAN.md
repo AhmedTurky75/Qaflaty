@@ -96,12 +96,16 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - Icon set extended: trash, upload, folder, image.
 - Note: `ng build merchant` clean (exit 0). Embedded `variant-manager`/`inventory-history`/`landing-page-panel` still inline — split in P7.
 
-### P7 Products (advanced)
-- [ ] `category-management` **[split]** · `category-tree` **[split]** → tokens.
-- [ ] `variant-manager` **[inline-t, 717L]** → split + tokens.
-- [ ] `inventory-history` **[inline-t]** → split + tokens.
-- [ ] `landing-page-panel` **[inline-t]** → split + tokens.
-- [ ] `related-products` **[split]** · `cross-sell` **[split]** · `upsell` **[split]** · `downsell` **[split]** → tokens.
+### P7 Products (advanced) — ✅ DONE
+- [x] `variant-manager` **[was inline-t, 717L]** → split into .ts/.html/.scss; full table/setup/modal/add-form tokenized; i18n (`products.variants.*`). All FormGroup/generate/adjust logic unchanged.
+- [x] `inventory-history` **[was inline-t]** → split; token table + movement-type chips; i18n (`products.inv.*`).
+- [x] `landing-page-panel` **[was inline-t]** → split; token card; i18n (`products.landing.*`).
+- [x] `category-management` → tokenized modal + states + i18n (`products.cat.*`).
+- [x] `category-tree` (recursive) → tokenized rows/actions, IconComponent, i18n; deleteConfirm via TranslocoService.
+- [x] `related-products` · `cross-sell` · `upsell` · `downsell` → **SCSS tokenized** (hard-coded greys/blue/amber → `rgb(var(--c-*))`, RTL logical props, focus rings, 44px buttons). Templates/logic untouched.
+- Icon set extended: edit (pencil).
+- Note: `ng build merchant` clean (exit 0). Bumped merchant-only `anyComponentStyle` warning 4→6 kB (tokenised `rgb(var())` values are longer than hex); store/landing untouched.
+- Follow-up flagged: the 4 sell-page **templates** keep English strings + emoji (📦/✓) for now — themeable via tokenised SCSS, but their user-facing text i18n is a small targeted follow-up (tracked for P14 sweep).
 
 ### P8 Stores
 - [ ] `store-list` **[split]** → store cards (brand colour, address, counts, manage) + "Add store" card.

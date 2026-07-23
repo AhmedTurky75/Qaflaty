@@ -2,15 +2,17 @@ import { Component, inject, signal, OnInit, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { CategoryService } from '../services/category.service';
 import { CategoryTreeComponent } from '../components/category-tree/category-tree.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { CategoryTreeDto, CategoryDto } from 'shared';
 
 @Component({
   selector: 'app-category-management',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, CategoryTreeComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, TranslocoPipe, CategoryTreeComponent, IconComponent],
   templateUrl: './category-management.component.html',
   styleUrls: ['./category-management.component.scss']
 })

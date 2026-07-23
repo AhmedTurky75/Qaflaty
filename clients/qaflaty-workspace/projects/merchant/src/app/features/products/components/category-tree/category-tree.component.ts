@@ -1,15 +1,18 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { TranslocoService, TranslocoPipe } from '@jsverse/transloco';
 import { CategoryTreeDto } from 'shared';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-category-tree',
   standalone: true,
-  imports: [CommonModule],
+  imports: [TranslocoPipe, IconComponent],
   templateUrl: './category-tree.component.html',
   styleUrls: ['./category-tree.component.scss']
 })
 export class CategoryTreeComponent {
+  private transloco = inject(TranslocoService);
+
   @Input({ required: true }) categories: CategoryTreeDto[] = [];
   @Input() level: number = 0;
   @Output() edit = new EventEmitter<CategoryTreeDto>();
@@ -37,7 +40,7 @@ export class CategoryTreeComponent {
 
   onDelete(category: CategoryTreeDto, event: Event): void {
     event.stopPropagation();
-    if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
+    if (confirm(this.transloco.translate('products.cat.deleteConfirm', { name: category.name }))) {
       this.delete.emit(category);
     }
   }
