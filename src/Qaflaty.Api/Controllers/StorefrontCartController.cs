@@ -8,6 +8,8 @@ using Qaflaty.Application.Storefront.Commands.RemoveCartItem;
 using Qaflaty.Application.Storefront.Commands.SyncCart;
 using Qaflaty.Application.Storefront.Commands.UpdateCartItemQuantity;
 using Qaflaty.Application.Storefront.Queries.GetCustomerCart;
+using Qaflaty.Application.Storefront.Recommendations.GetCartCrossSell;
+using Qaflaty.Application.Storefront.Recommendations.GetCartUpSell;
 
 namespace Qaflaty.Api.Controllers;
 
@@ -23,6 +25,28 @@ public class StorefrontCartController : ApiController
 
         var owner = new CartOwnerContext.CustomerOwner(customerId.Value);
         var result = await Sender.Send(new GetCustomerCartQuery(owner), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("cross-sell")]
+    public async Task<IActionResult> GetCrossSell([FromQuery] int take = 4, CancellationToken ct = default)
+    {
+        var customerId = CurrentUserService.CustomerId;
+        if (customerId == null) return Unauthorized();
+
+        var owner = new CartOwnerContext.CustomerOwner(customerId.Value);
+        var result = await Sender.Send(new GetCartCrossSellQuery(owner, take), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("upsell")]
+    public async Task<IActionResult> GetUpSell([FromQuery] int take = 4, CancellationToken ct = default)
+    {
+        var customerId = CurrentUserService.CustomerId;
+        if (customerId == null) return Unauthorized();
+
+        var owner = new CartOwnerContext.CustomerOwner(customerId.Value);
+        var result = await Sender.Send(new GetCartUpSellQuery(owner, take), ct);
         return HandleResult(result);
     }
 

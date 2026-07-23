@@ -4,6 +4,8 @@ using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Storefront.Recommendations.GetFrequentlyBoughtTogether;
 using Qaflaty.Application.Storefront.Recommendations.GetMostViewedProducts;
 using Qaflaty.Application.Storefront.Recommendations.GetNewArrivals;
+using Qaflaty.Application.Storefront.Recommendations.GetProductCrossSell;
+using Qaflaty.Application.Storefront.Recommendations.GetProductUpSell;
 using Qaflaty.Application.Storefront.Recommendations.GetRecentlyViewedProducts;
 using Qaflaty.Application.Storefront.Recommendations.GetRelatedProducts;
 using Qaflaty.Application.Storefront.Recommendations.TrackProductView;
@@ -48,6 +50,22 @@ public class StorefrontRecommendationsController : ApiController
     public async Task<IActionResult> GetRelated(Guid productId, [FromQuery] int take = 8, CancellationToken ct = default)
     {
         var result = await Sender.Send(new GetRelatedProductsQuery(new ProductId(productId), take), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("products/{productId:guid}/cross-sell")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetCrossSell(Guid productId, [FromQuery] int take = 4, CancellationToken ct = default)
+    {
+        var result = await Sender.Send(new GetProductCrossSellQuery(new ProductId(productId), take), ct);
+        return HandleResult(result);
+    }
+
+    [HttpGet("products/{productId:guid}/upsell")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetUpSell(Guid productId, [FromQuery] int take = 4, CancellationToken ct = default)
+    {
+        var result = await Sender.Send(new GetProductUpSellQuery(new ProductId(productId), take), ct);
         return HandleResult(result);
     }
 

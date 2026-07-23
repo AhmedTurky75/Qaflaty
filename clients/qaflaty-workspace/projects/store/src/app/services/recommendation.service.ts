@@ -29,6 +29,24 @@ export class RecommendationService {
     });
   }
 
+  /**
+   * Merchant-configurable cross-sell: manual picks first, falling back to order
+   * co-occurrence then category affinity. Used for the "Frequently Bought Together" /
+   * "You May Also Like" section on the product-detail page.
+   */
+  getCrossSell(productId: string, take = 4): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.base}/products/${productId}/cross-sell`, {
+      params: new HttpParams().set('take', take)
+    });
+  }
+
+  /** Merchant-configurable upsell: manual picks first, falling back to category + higher-price affinity. */
+  getUpSell(productId: string, take = 4): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.base}/products/${productId}/upsell`, {
+      params: new HttpParams().set('take', take)
+    });
+  }
+
   getMostViewed(take = 8, days?: number): Observable<Product[]> {
     let params = new HttpParams().set('take', take);
     if (days != null) params = params.set('days', days);

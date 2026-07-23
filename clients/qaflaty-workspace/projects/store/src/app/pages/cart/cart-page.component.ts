@@ -1,14 +1,15 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { CartItem, getCartItemKey } from '../../models/cart.model';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 import { DecimalPipe } from '@angular/common';
+import { ProductRowComponent } from '../../components/recommendations/product-row.component';
 
 @Component({
   selector: 'app-cart-page',
   standalone: true,
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, ProductRowComponent],
   template: `
     <div class="min-h-screen bg-gray-50 py-8">
       <div class="max-w-7xl mx-auto px-4">
@@ -122,14 +123,24 @@ import { DecimalPipe } from '@angular/common';
               </div>
             </div>
           </div>
+
+          <app-product-row title="Complete Your Order" [products]="cart.crossSellProducts()" />
+          <app-product-row title="Upgrade Your Choice" [products]="cart.upSellProducts()" />
         }
       </div>
     </div>
   `
 })
-export class CartPageComponent {
+export class CartPageComponent implements OnInit {
   cart = inject(CartService);
   i18n = inject(I18nService);
+
+  ngOnInit(): void {
+    // The backend resolves the cart server-side from the auth/guest-id context, so this
+    // doesn't need to wait on the client-side cart signal — an empty cart just returns [].
+    this.cart.loadCrossSell(4);
+    this.cart.loadUpSell(4);
+  }
 
   t(key: string): string {
     const lang = this.i18n.currentLanguage();

@@ -10,6 +10,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.StackExchangeRedis" Version="10.0.2" />
+    <!-- Pinned above the version SignalR.StackExchangeRedis brings in transitively (2.5.187) to
+         resolve NU1902/NU1903 security advisories (fixed as of 2.5.301). Staying on the 2.x line
+         avoids MessagePack 3.x's breaking API changes, which this SignalR package wasn't built against. -->
+    <PackageReference Include="MessagePack" Version="2.5.302" />
     <PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="8.0.0" />
 	<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">

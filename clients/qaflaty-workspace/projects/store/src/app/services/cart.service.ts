@@ -17,6 +17,8 @@ export class CartService {
   private freeDeliveryThreshold = signal<Money | null>(null);
 
   cartLoading = signal(false);
+  crossSellProducts = signal<Product[]>([]);
+  upSellProducts = signal<Product[]>([]);
 
   private cartApi = inject(CartApiService);
   private authService = inject(CustomerAuthService);
@@ -104,6 +106,28 @@ export class CartService {
         this.cartLoading.set(false);
       });
     }
+  }
+
+  /**
+   * Loads cross-sell recommendations for everything currently in the cart. Call from the
+   * cart page after the cart itself has loaded (cross-sell excludes items already in cart,
+   * so it only makes sense once cart contents are known server-side).
+   */
+  loadCrossSell(take = 4): void {
+    const source$ = this.isLoggedIn
+      ? this.cartApi.getCartCrossSell(take)
+      : this.cartApi.getGuestCartCrossSell(take);
+
+    source$.subscribe(products => this.crossSellProducts.set(products));
+  }
+
+  /** Loads upsell recommendations (upgrade alternatives) for everything currently in the cart. */
+  loadUpSell(take = 4): void {
+    const source$ = this.isLoggedIn
+      ? this.cartApi.getCartUpSell(take)
+      : this.cartApi.getGuestCartUpSell(take);
+
+    source$.subscribe(products => this.upSellProducts.set(products));
   }
 
   private mapBackendItems(backendCart: BackendCart): CartItem[] {

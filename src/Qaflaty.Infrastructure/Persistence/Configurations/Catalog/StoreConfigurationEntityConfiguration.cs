@@ -148,6 +148,12 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
 
         // Recommendations
         builder.Property(sc => sc.RelatedProductsManual).HasColumnName("related_products_manual");
+        builder.Property(sc => sc.CrossSellEnabled).HasColumnName("cross_sell_enabled");
+        builder.Property(sc => sc.CrossSellLimit).HasColumnName("cross_sell_limit");
+        builder.Property(sc => sc.CrossSellExcludeOutOfStock).HasColumnName("cross_sell_exclude_out_of_stock");
+        builder.Property(sc => sc.UpSellEnabled).HasColumnName("up_sell_enabled");
+        builder.Property(sc => sc.UpSellLimit).HasColumnName("up_sell_limit");
+        builder.Property(sc => sc.UpSellExcludeOutOfStock).HasColumnName("up_sell_exclude_out_of_stock");
 
         builder.Property(sc => sc.CreatedAt).HasColumnName("created_at");
         builder.Property(sc => sc.UpdatedAt).HasColumnName("updated_at");

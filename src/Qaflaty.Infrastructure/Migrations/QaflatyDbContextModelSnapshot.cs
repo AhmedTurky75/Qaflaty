@@ -1277,6 +1277,18 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<bool>("CrossSellEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cross_sell_enabled");
+
+                    b.Property<bool>("CrossSellExcludeOutOfStock")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cross_sell_exclude_out_of_stock");
+
+                    b.Property<int>("CrossSellLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("cross_sell_limit");
+
                     b.Property<string>("FooterVariant")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1320,6 +1332,18 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid")
                         .HasColumnName("store_id");
+
+                    b.Property<bool>("UpSellEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("up_sell_enabled");
+
+                    b.Property<bool>("UpSellExcludeOutOfStock")
+                        .HasColumnType("boolean")
+                        .HasColumnName("up_sell_exclude_out_of_stock");
+
+                    b.Property<int>("UpSellLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("up_sell_limit");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -2371,6 +2395,12 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_enabled");
+
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid")
                         .HasColumnName("product_id");
@@ -2378,6 +2408,10 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Property<Guid>("RelatedProductId")
                         .HasColumnType("uuid")
                         .HasColumnName("related_product_id");
+
+                    b.Property<int>("RelationType")
+                        .HasColumnType("integer")
+                        .HasColumnName("relation_type");
 
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer")
@@ -2389,9 +2423,9 @@ namespace Qaflaty.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("ProductId", "RelationType");
 
-                    b.HasIndex("ProductId", "RelatedProductId")
+                    b.HasIndex("ProductId", "RelationType", "RelatedProductId")
                         .IsUnique();
 
                     b.ToTable("related_product_links", (string)null);

@@ -1,6 +1,7 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
+using Qaflaty.Domain.Storefront.Enums;
 using Qaflaty.Domain.Storefront.Repositories;
 using Qaflaty.Application.Storefront.Recommendations;
 
@@ -29,7 +30,8 @@ public class GetManualRelatedProductsQueryHandler
         var config = await _storeConfigRepository.GetByStoreIdAsync(request.StoreId, ct);
         var manual = config?.RelatedProductsManual ?? false;
 
-        var links = await _relatedProductRepository.GetByProductIdAsync(request.ProductId, ct);
+        var links = await _relatedProductRepository.GetByProductIdAsync(
+            request.ProductId, ProductRelationType.Related, ct);
 
         var storeProducts = await _productRepository.GetByStoreIdAsync(request.StoreId, ct);
         var byId = storeProducts.ToDictionary(p => p.Id.Value);

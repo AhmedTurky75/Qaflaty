@@ -57,6 +57,20 @@
       >
         Related
       </a>
+      <a
+        [routerLink]="['/products', product.id, 'cross-sell']"
+        title="Manage cross-sell products"
+        class="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+      >
+        Cross-Sell
+      </a>
+      <a
+        [routerLink]="['/products', product.id, 'upsell']"
+        title="Manage upsell products"
+        class="inline-flex items-center justify-center px-3 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+      >
+        Upsell
+      </a>
       @if (product.status === 'Active') {
         <button
           type="button"

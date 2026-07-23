@@ -37,6 +37,7 @@ export class ProductDetailComponent {
   // Recommendation sections
   relatedProducts = signal<Product[]>([]);
   frequentlyBoughtTogether = signal<Product[]>([]);
+  upSellProducts = signal<Product[]>([]);
   recentlyViewed = signal<Product[]>([]);
   trendingProducts = signal<Product[]>([]);
 
@@ -92,8 +93,12 @@ export class ProductDetailComponent {
       next: (items) => this.relatedProducts.set(items),
       error: () => {}
     });
-    this.recommendations.getFrequentlyBoughtTogether(productId, 4).subscribe({
+    this.recommendations.getCrossSell(productId, 4).subscribe({
       next: (items) => this.frequentlyBoughtTogether.set(items),
+      error: () => {}
+    });
+    this.recommendations.getUpSell(productId, 4).subscribe({
+      next: (items) => this.upSellProducts.set(items),
       error: () => {}
     });
     this.recommendations.getTrending(8).subscribe({

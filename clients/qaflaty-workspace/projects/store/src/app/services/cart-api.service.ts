@@ -1,8 +1,9 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { catchError, EMPTY, Observable, of } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { BackendCart } from '../models/cart.model';
+import { Product } from '../models/product.model';
 
 const BASE       = `${environment.apiUrl}/storefront/cart`;
 const GUEST_BASE = `${environment.apiUrl}/storefront/guest-cart`;
@@ -23,6 +24,34 @@ export class CartApiService {
     return this.http.get<BackendCart>(GUEST_BASE).pipe(
       catchError(() => of(null))
     );
+  }
+
+  // ── Cart cross-sell ("Complete your order") ──────────────────────────────
+
+  getCartCrossSell(take = 4): Observable<Product[]> {
+    return this.http.get<Product[]>(`${BASE}/cross-sell`, {
+      params: new HttpParams().set('take', take)
+    }).pipe(catchError(() => of([])));
+  }
+
+  getGuestCartCrossSell(take = 4): Observable<Product[]> {
+    return this.http.get<Product[]>(`${GUEST_BASE}/cross-sell`, {
+      params: new HttpParams().set('take', take)
+    }).pipe(catchError(() => of([])));
+  }
+
+  // ── Cart upsell ("Upgrade Your Choice") ──────────────────────────────────
+
+  getCartUpSell(take = 4): Observable<Product[]> {
+    return this.http.get<Product[]>(`${BASE}/upsell`, {
+      params: new HttpParams().set('take', take)
+    }).pipe(catchError(() => of([])));
+  }
+
+  getGuestCartUpSell(take = 4): Observable<Product[]> {
+    return this.http.get<Product[]>(`${GUEST_BASE}/upsell`, {
+      params: new HttpParams().set('take', take)
+    }).pipe(catchError(() => of([])));
   }
 
   // ── Authenticated cart (fire-and-forget) ──────────────────────────────

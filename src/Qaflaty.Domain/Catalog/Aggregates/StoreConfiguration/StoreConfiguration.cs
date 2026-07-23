@@ -32,6 +32,16 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     // Recommendations: when true, related products use the merchant's manual selection.
     public bool RelatedProductsManual { get; private set; } // True = merchant hand-picks related products; false = auto-generated recommendations
 
+    // Cross-sell ("Frequently Bought Together" / "You May Also Like") settings.
+    public bool CrossSellEnabled { get; private set; } // Master on/off for cross-sell sections on PDP and cart
+    public int CrossSellLimit { get; private set; } // Max cross-sell products shown at once, e.g. 4
+    public bool CrossSellExcludeOutOfStock { get; private set; } // When true, never recommend an out-of-stock product
+
+    // Upsell ("Upgrade Your Choice" / "Premium Alternatives") settings.
+    public bool UpSellEnabled { get; private set; } // Master on/off for upsell sections on PDP and cart
+    public int UpSellLimit { get; private set; } // Max upsell products shown at once, e.g. 4
+    public bool UpSellExcludeOutOfStock { get; private set; } // When true, never recommend an out-of-stock product
+
     public DateTime CreatedAt { get; private set; } // UTC timestamp when the configuration was created
     public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last configuration change
 
@@ -63,6 +73,12 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
             ReviewsAutoApprove = false,
             ReviewsAllowEditing = true,
             RelatedProductsManual = false,
+            CrossSellEnabled = true,
+            CrossSellLimit = 4,
+            CrossSellExcludeOutOfStock = true,
+            UpSellEnabled = true,
+            UpSellLimit = 4,
+            UpSellExcludeOutOfStock = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -105,6 +121,32 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public Result UpdateRelatedProductsMode(bool manual)
     {
         RelatedProductsManual = manual;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateCrossSellSettings(bool enabled, int limit, bool excludeOutOfStock)
+    {
+        if (limit <= 0)
+            return Result.Failure(new Error(
+                "StoreConfiguration.InvalidCrossSellLimit", "Cross-sell limit must be greater than zero"));
+
+        CrossSellEnabled = enabled;
+        CrossSellLimit = limit;
+        CrossSellExcludeOutOfStock = excludeOutOfStock;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateUpSellSettings(bool enabled, int limit, bool excludeOutOfStock)
+    {
+        if (limit <= 0)
+            return Result.Failure(new Error(
+                "StoreConfiguration.InvalidUpSellLimit", "Upsell limit must be greater than zero"));
+
+        UpSellEnabled = enabled;
+        UpSellLimit = limit;
+        UpSellExcludeOutOfStock = excludeOutOfStock;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

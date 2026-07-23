@@ -28,10 +28,18 @@ public class RelatedProductLinkConfiguration : IEntityTypeConfiguration<RelatedP
             .HasConversion(id => id.Value, value => new ProductId(value))
             .HasColumnName("related_product_id");
 
+        builder.Property(l => l.RelationType)
+            .HasColumnName("relation_type")
+            .HasConversion<int>();
+
         builder.Property(l => l.SortOrder)
             .HasColumnName("sort_order");
 
-        builder.HasIndex(l => l.ProductId);
-        builder.HasIndex(l => new { l.ProductId, l.RelatedProductId }).IsUnique();
+        builder.Property(l => l.IsEnabled)
+            .HasColumnName("is_enabled")
+            .HasDefaultValue(true);
+
+        builder.HasIndex(l => new { l.ProductId, l.RelationType });
+        builder.HasIndex(l => new { l.ProductId, l.RelationType, l.RelatedProductId }).IsUnique();
     }
 }

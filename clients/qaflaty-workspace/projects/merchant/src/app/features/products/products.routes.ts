@@ -18,6 +18,14 @@ export const PRODUCT_ROUTES: Routes = [
     loadComponent: () => import('./related-products/related-products.component').then(m => m.RelatedProductsComponent)
   },
   {
+    path: ':id/cross-sell',
+    loadComponent: () => import('./cross-sell/cross-sell.component').then(m => m.CrossSellComponent)
+  },
+  {
+    path: ':id/upsell',
+    loadComponent: () => import('./upsell/upsell.component').then(m => m.UpSellComponent)
+  },
+  {
     path: ':id',
     loadComponent: () => import('./product-form/product-form.component').then(m => m.ProductFormComponent)
   }

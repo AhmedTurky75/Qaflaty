@@ -75,6 +75,7 @@
 
       <!-- Recommendations -->
       <app-product-row title="Frequently Bought Together" [products]="frequentlyBoughtTogether()" />
+      <app-product-row title="Upgrade Your Choice" [products]="upSellProducts()" [basePrice]="product()?.price" />
       <app-product-row title="You May Also Like" [products]="relatedProducts()" />
       <app-product-row title="Trending Now" [products]="trendingProducts()" />
       <app-product-row title="Recently Viewed" [products]="recentlyViewed()" />

@@ -33,6 +33,9 @@ import { StorePricePipe } from '../../pipes/store-price.pipe';
                   <span class="was">{{ p.compareAtPrice | storePrice }}</span>
                 }
               </div>
+              @if (basePrice() && p.price > basePrice()!) {
+                <div class="rec-card__delta">+{{ p.price - basePrice()! | storePrice }}</div>
+              }
             </a>
           }
         </div>
@@ -61,12 +64,15 @@ import { StorePricePipe } from '../../pipes/store-price.pipe';
     .rec-card__price { padding: 0 .75rem .75rem; display: flex; gap: .5rem; align-items: baseline; }
     .rec-card__price .now { font-weight: 700; color: #1a1a1a; }
     .rec-card__price .was { font-size: .8rem; color: #999; text-decoration: line-through; }
+    .rec-card__delta { padding: 0 .75rem .65rem; font-size: .75rem; font-weight: 600; color: #16a34a; }
   `]
 })
 export class ProductRowComponent {
   i18n = inject(I18nService);
   title = input<string>('');
   products = input<Product[]>([]);
+  /** When set, shows a "+X" delta badge on cards priced higher than this (used for upsell rows). */
+  basePrice = input<number | undefined>(undefined);
 
   discount(p: Product): number {
     if (!p.compareAtPrice || p.compareAtPrice <= p.price) return 0;
