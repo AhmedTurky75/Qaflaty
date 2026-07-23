@@ -26,6 +26,10 @@ export const PRODUCT_ROUTES: Routes = [
     loadComponent: () => import('./upsell/upsell.component').then(m => m.UpSellComponent)
   },
   {
+    path: ':id/downsell',
+    loadComponent: () => import('./downsell/downsell.component').then(m => m.DownsellComponent)
+  },
+  {
     path: ':id',
     loadComponent: () => import('./product-form/product-form.component').then(m => m.ProductFormComponent)
   }

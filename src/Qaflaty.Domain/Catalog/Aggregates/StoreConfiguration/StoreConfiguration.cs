@@ -42,6 +42,12 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public int UpSellLimit { get; private set; } // Max upsell products shown at once, e.g. 4
     public bool UpSellExcludeOutOfStock { get; private set; } // When true, never recommend an out-of-stock product
 
+    // Downsell (retention offers shown on likely-abandonment signals) settings.
+    public bool DownsellEnabled { get; private set; } // Master on/off; defaults to false (opt-in, unlike cross/upsell)
+    public int DownsellMaxShowsPerSession { get; private set; } // Frequency cap: max times a downsell offer is shown per visitor session
+    public int DownsellMinIntervalSeconds { get; private set; } // Frequency cap: minimum cooldown between two downsell shows in the same session
+    public bool DownsellExcludeOutOfStock { get; private set; } // When true, never recommend an out-of-stock alternative
+
     public DateTime CreatedAt { get; private set; } // UTC timestamp when the configuration was created
     public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last configuration change
 
@@ -79,6 +85,10 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
             UpSellEnabled = true,
             UpSellLimit = 4,
             UpSellExcludeOutOfStock = true,
+            DownsellEnabled = false,
+            DownsellMaxShowsPerSession = 2,
+            DownsellMinIntervalSeconds = 300,
+            DownsellExcludeOutOfStock = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -147,6 +157,25 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
         UpSellEnabled = enabled;
         UpSellLimit = limit;
         UpSellExcludeOutOfStock = excludeOutOfStock;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateDownsellSettings(
+        bool enabled, int maxShowsPerSession, int minIntervalSeconds, bool excludeOutOfStock)
+    {
+        if (maxShowsPerSession <= 0)
+            return Result.Failure(new Error(
+                "StoreConfiguration.InvalidDownsellMaxShows", "Max shows per session must be greater than zero"));
+
+        if (minIntervalSeconds < 0)
+            return Result.Failure(new Error(
+                "StoreConfiguration.InvalidDownsellInterval", "Minimum interval cannot be negative"));
+
+        DownsellEnabled = enabled;
+        DownsellMaxShowsPerSession = maxShowsPerSession;
+        DownsellMinIntervalSeconds = minIntervalSeconds;
+        DownsellExcludeOutOfStock = excludeOutOfStock;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

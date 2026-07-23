@@ -4,6 +4,7 @@ import { LayoutRendererComponent } from './components/layout/layout-renderer.com
 import { CartSidebarComponent } from './components/shared/cart-sidebar.component';
 import { WhatsAppButtonComponent } from './components/shared/whatsapp-button.component';
 import { ChatWidgetComponent } from './components/chat/chat-widget.component';
+import { DownsellModalComponent } from './components/downsell/downsell-modal.component';
 import { StoreOfflineComponent } from './pages/store-offline/store-offline.component';
 import { StoreService } from './services/store.service';
 import { ConfigService } from './services/config.service';
@@ -22,6 +23,7 @@ import { filter, switchMap } from 'rxjs';
     CartSidebarComponent,
     WhatsAppButtonComponent,
     ChatWidgetComponent,
+    DownsellModalComponent,
     StoreOfflineComponent
   ],
   template: `
@@ -35,6 +37,7 @@ import { filter, switchMap } from 'rxjs';
         <app-cart-sidebar />
         <app-whatsapp-button variant="floating" position="bottom-right" />
         <app-chat-widget />
+        <app-downsell-modal />
       }
     } @else if (storeService.isInactive()) {
       <app-store-offline [maintenance]="true" />

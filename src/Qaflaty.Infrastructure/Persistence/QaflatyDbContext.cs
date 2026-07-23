@@ -28,6 +28,7 @@ using Qaflaty.Domain.Ordering.Aggregates.Order;
 using Qaflaty.Domain.Ordering.Aggregates.Return;
 using Qaflaty.Domain.Storefront.Aggregates.Wishlist;
 using Qaflaty.Domain.Storefront.Aggregates.Cart;
+using Qaflaty.Domain.Storefront.Aggregates.Downsell;
 using Qaflaty.Domain.Storefront.Aggregates.ProductReview;
 using Qaflaty.Domain.Storefront.Aggregates.ProductView;
 using Qaflaty.Domain.Storefront.Aggregates.RelatedProduct;
@@ -84,6 +85,9 @@ public class QaflatyDbContext : DbContext
     public DbSet<ProductReviewMedia> ProductReviewMedia => Set<ProductReviewMedia>();
     public DbSet<ProductView> ProductViews => Set<ProductView>();
     public DbSet<RelatedProductLink> RelatedProductLinks => Set<RelatedProductLink>();
+    public DbSet<DownsellTriggerRule> DownsellTriggerRules => Set<DownsellTriggerRule>();
+    public DbSet<DownsellOffer> DownsellOffers => Set<DownsellOffer>();
+    public DbSet<DownsellEvent> DownsellEvents => Set<DownsellEvent>();
 
     // Communication
     public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();

@@ -154,6 +154,10 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
         builder.Property(sc => sc.UpSellEnabled).HasColumnName("up_sell_enabled");
         builder.Property(sc => sc.UpSellLimit).HasColumnName("up_sell_limit");
         builder.Property(sc => sc.UpSellExcludeOutOfStock).HasColumnName("up_sell_exclude_out_of_stock");
+        builder.Property(sc => sc.DownsellEnabled).HasColumnName("downsell_enabled");
+        builder.Property(sc => sc.DownsellMaxShowsPerSession).HasColumnName("downsell_max_shows_per_session");
+        builder.Property(sc => sc.DownsellMinIntervalSeconds).HasColumnName("downsell_min_interval_seconds");
+        builder.Property(sc => sc.DownsellExcludeOutOfStock).HasColumnName("downsell_exclude_out_of_stock");
 
         builder.Property(sc => sc.CreatedAt).HasColumnName("created_at");
         builder.Property(sc => sc.UpdatedAt).HasColumnName("updated_at");

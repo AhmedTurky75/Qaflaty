@@ -85,6 +85,9 @@ public static class DependencyInjection
         services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
         services.AddScoped<IProductViewRepository, ProductViewRepository>();
         services.AddScoped<IRelatedProductRepository, RelatedProductRepository>();
+        services.AddScoped<IDownsellTriggerRuleRepository, DownsellTriggerRuleRepository>();
+        services.AddScoped<IDownsellOfferRepository, DownsellOfferRepository>();
+        services.AddScoped<IDownsellEventRepository, DownsellEventRepository>();
         services.AddScoped<ICartRepository, CartRepository>();
         services.AddScoped<IChatConversationRepository, ChatConversationRepository>();
         services.AddScoped<IAiInteractionLogRepository, AiInteractionLogRepository>();
@@ -121,6 +124,10 @@ public static class DependencyInjection
         services.AddScoped<IFileStorageService, LocalFileStorageService>();
         services.AddScoped<IEmailService, SmtpEmailService>();
         services.AddSingleton<IOtpSettings, OtpSettings>();
+
+        // Downsell frequency cap — in-memory, single-instance (see class docs to scale out)
+        services.AddMemoryCache();
+        services.AddSingleton<IDownsellFrequencyCapStore, DownsellFrequencyCapStore>();
 
         // Real-time merchant analytics — presence tracking (active users / product viewers) and
         // cart-conversion clearing. IRealtimeNotifier is implemented in the API layer (it owns the

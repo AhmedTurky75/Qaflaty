@@ -4,6 +4,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using Qaflaty.Application.Common.Behaviors;
 using Qaflaty.Application.Storefront.Recommendations.CrossSell;
+using Qaflaty.Application.Storefront.Recommendations.DownSell;
 using Qaflaty.Application.Storefront.Recommendations.UpSell;
 
 namespace Qaflaty.Application;
@@ -38,6 +39,13 @@ public static class DependencyInjection
         services.AddScoped<IUpSellStrategy, ManualUpSellStrategy>();
         services.AddScoped<IUpSellStrategy, CategoryHigherPriceUpSellStrategy>();
         services.AddScoped<IUpSellRecommendationService, CompositeUpSellStrategy>();
+
+        // Downsell recommendation strategy chain — same shared pool/eligibility policy, plus a
+        // strictly-lower-price predicate. Register a new IDownSellStrategy to add a strategy
+        // (e.g. inventory-aware, AI-powered) without changing any caller.
+        services.AddScoped<IDownSellStrategy, ManualDownSellStrategy>();
+        services.AddScoped<IDownSellStrategy, CategoryLowerPriceDownSellStrategy>();
+        services.AddScoped<IDownSellRecommendationService, CompositeDownSellStrategy>();
 
         return services;
     }
