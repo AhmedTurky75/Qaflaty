@@ -88,10 +88,13 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - Icon set extended: search, calendar, printer, truck, credit-card, map-pin, x-circle, phone.
 - Note: `ng build merchant` clean (exit 0). Status colours mapped to the 4 semantic tokens (Confirmed/Processing/Shipped all read as primary — the themeable tradeoff vs the old 6 hard-coded hues).
 
-### P6 Products (core)
-- [ ] `product-list` **[split]** → photo-first cards, stock+status badges, search+filters.
-- [ ] `product-form` **[split]** → grouped Basic/Images/Organization/Variants, sticky save-cancel.
-- [ ] `product-card` **[split]** · `image-upload` **[split]** → tokens.
+### P6 Products (core) — ✅ DONE
+- [x] `product-list` → tokenized header/actions (categories, CSV import, template, add), token filters (search/status/stock/category), import-result banner, photo-first card grid, token pagination; i18n (`products.*`). ngModel + all service calls verbatim.
+- [x] `product-card` → **photo-first** token card: image with status + stock badges overlay, price, prominent Edit primary, compact funnel links (related/cross/up/down), activate/deactivate + trash delete. `deleteConfirm` via TranslocoService.
+- [x] `product-form` → all sections (Basic details / Pricing / Inventory / Images / Variants / Custom properties / Status) to tokens; **sticky save-cancel** (sticky sidebar on desktop + fixed bottom action bar on mobile); i18n. All FormGroup logic, validators, and create/update flow unchanged.
+- [x] `image-upload` → tokenized grid/overlay/dropzone/URL input; i18n; upload logic unchanged.
+- Icon set extended: trash, upload, folder, image.
+- Note: `ng build merchant` clean (exit 0). Embedded `variant-manager`/`inventory-history`/`landing-page-panel` still inline — split in P7.
 
 ### P7 Products (advanced)
 - [ ] `category-management` **[split]** · `category-tree` **[split]** → tokens.

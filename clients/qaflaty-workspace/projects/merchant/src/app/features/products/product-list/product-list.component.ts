@@ -2,16 +2,18 @@ import { Component, inject, signal, OnInit, computed, effect } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ProductService, ProductFilters, ImportProductsResult } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { ProductCardComponent } from '../components/product-card/product-card.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import {  CategoryDto, ProductDto, ProductStatus } from 'shared';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ProductCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslocoPipe, ProductCardComponent, IconComponent],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.scss']
 })

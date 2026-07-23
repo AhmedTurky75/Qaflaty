@@ -1,173 +1,91 @@
-<div class="image-upload">
-
-  <!-- Images Grid -->
+<div>
+  <!-- Images grid -->
   @if (images.length > 0) {
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-4">
+    <div class="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
       @for (image of images; track $index; let i = $index) {
-        <div class="relative group bg-gray-100 rounded-lg overflow-hidden aspect-square">
+        <div class="group relative aspect-square overflow-hidden rounded-xl bg-surface-elevated">
+          <img [src]="image.url" [alt]="image.altText || 'Product image'" class="h-full w-full object-cover" />
 
-          <!-- Image -->
-          <img
-            [src]="image.url"
-            [alt]="image.altText || 'Product image'"
-            class="w-full h-full object-cover"
-          />
-
-          <!-- Overlay with Actions -->
-          <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+          <!-- Overlay actions -->
+          <div class="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
             @if (i > 0) {
-              <button
-                type="button"
-                (click)="moveUp(i)"
-                class="p-2 bg-white rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                title="Move Up"
-              >
-                <svg class="h-4 w-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                </svg>
+              <button type="button" (click)="moveUp(i)" class="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary" [attr.aria-label]="'common.back' | transloco">
+                <span class="rtl:rotate-180"><app-icon name="chevron-left" [size]="16" /></span>
               </button>
             }
             @if (i < images.length - 1) {
-              <button
-                type="button"
-                (click)="moveDown(i)"
-                class="p-2 bg-white rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                title="Move Down"
-              >
-                <svg class="h-4 w-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
+              <button type="button" (click)="moveDown(i)" class="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary" aria-label="Move down">
+                <span class="rtl:rotate-180"><app-icon name="chevron-right" [size]="16" /></span>
               </button>
             }
-            <button
-              type="button"
-              (click)="removeImage(i)"
-              class="p-2 bg-white rounded-full hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
-              title="Remove"
-            >
-              <svg class="h-4 w-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
+            <button type="button" (click)="removeImage(i)" class="flex h-9 w-9 items-center justify-center rounded-full bg-surface text-danger hover:bg-danger/10 focus:outline-none focus:ring-2 focus:ring-danger" [attr.aria-label]="'products.delete' | transloco">
+              <app-icon name="trash" [size]="16" />
             </button>
           </div>
 
-          <!-- Primary Badge -->
           @if (i === 0) {
-            <div class="absolute top-2 left-2">
-              <span class="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-primary-600 text-white">
-                Primary
-              </span>
+            <div class="absolute top-2 start-2">
+              <span class="inline-flex items-center rounded-md bg-primary px-2 py-1 text-xs font-medium text-white">{{ 'products.img.primary' | transloco }}</span>
             </div>
           }
 
-          <!-- Alt Text Input -->
-          <div class="absolute bottom-0 left-0 right-0 p-2 bg-white bg-opacity-90">
-            <input
-              type="text"
-              [value]="image.altText || ''"
-              (input)="updateAltText(i, $any($event.target).value)"
-              placeholder="Alt text"
-              class="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-primary-500"
-            />
+          <div class="absolute inset-x-0 bottom-0 bg-surface/90 p-2">
+            <input type="text" [value]="image.altText || ''" (input)="updateAltText(i, $any($event.target).value)" [placeholder]="'products.img.altText' | transloco"
+              class="w-full rounded border border-border bg-surface px-2 py-1 text-xs text-text focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary/40" />
           </div>
         </div>
       }
     </div>
   }
 
-  <!-- Upload Error -->
+  <!-- Upload error -->
   @if (uploadError()) {
-    <div class="mb-3 flex items-center gap-2 px-3 py-2 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
-      <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-      </svg>
+    <div class="mb-3 flex items-center gap-2 rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-danger">
+      <app-icon name="alert-triangle" [size]="16" />
       {{ uploadError() }}
     </div>
   }
 
-  <!-- File Upload Drop Zone -->
+  <!-- Drop zone -->
   @if (canAddMore && !uploading()) {
-    <label
-      class="w-full flex flex-col items-center justify-center px-4 py-6 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-primary-400 hover:bg-primary-50 transition-colors"
-    >
-      <input
-        type="file"
-        class="sr-only"
-        multiple
-        accept="image/jpeg,image/jpg,image/png,image/webp,image/gif"
-        (change)="onFilesSelected($event)"
-      />
-      <svg class="h-8 w-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-      </svg>
-      <span class="text-sm font-medium text-gray-700">Click to upload images</span>
-      <span class="text-xs text-gray-500 mt-1">
-        JPEG, PNG, WebP, GIF &bull; max {{ MAX_FILE_SIZE_MB }} MB each &bull; {{ images.length }}/{{ MAX_IMAGES }} used
-      </span>
+    <label class="flex w-full cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-border px-4 py-6 transition-colors hover:border-primary hover:bg-primary-tint">
+      <input type="file" class="sr-only" multiple accept="image/jpeg,image/jpg,image/png,image/webp,image/gif" (change)="onFilesSelected($event)" />
+      <span class="mb-2 text-text-muted"><app-icon name="upload" [size]="32" /></span>
+      <span class="text-sm font-medium text-text">{{ 'products.img.clickUpload' | transloco }}</span>
+      <span class="mt-1 text-xs text-text-muted">{{ 'products.img.uploadHint' | transloco: { max: MAX_FILE_SIZE_MB, used: images.length, total: MAX_IMAGES } }}</span>
     </label>
   }
 
-  <!-- Uploading Spinner -->
+  <!-- Uploading -->
   @if (uploading()) {
-    <div class="w-full flex items-center justify-center gap-3 px-4 py-6 border-2 border-dashed border-primary-300 rounded-lg bg-primary-50">
-      <svg class="animate-spin h-5 w-5 text-primary-600" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-      </svg>
-      <span class="text-sm font-medium text-primary-700">Uploading images...</span>
+    <div class="flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/40 bg-primary-tint px-4 py-6">
+      <svg class="h-5 w-5 animate-spin text-primary" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+      <span class="text-sm font-medium text-primary">{{ 'products.img.uploading' | transloco }}</span>
     </div>
   }
 
-  <!-- At Limit Notice -->
+  <!-- At limit -->
   @if (!canAddMore && !uploading()) {
-    <p class="text-xs text-center text-gray-500 mt-2">
-      Maximum of {{ MAX_IMAGES }} images reached. Remove one to add another.
-    </p>
+    <p class="mt-2 text-center text-xs text-text-muted">{{ 'products.img.limitReached' | transloco: { max: MAX_IMAGES } }}</p>
   }
 
-  <!-- URL Input Toggle (secondary option) -->
+  <!-- URL input -->
   @if (canAddMore && !uploading()) {
     <div class="mt-3">
       @if (!showUrlInput()) {
-        <button
-          type="button"
-          (click)="toggleUrlInput()"
-          class="text-xs text-gray-500 hover:text-primary-600 underline"
-        >
-          Or add by URL
-        </button>
+        <button type="button" (click)="toggleUrlInput()" class="text-xs font-medium text-primary hover:underline">{{ 'products.img.orUrl' | transloco }}</button>
       }
-
       @if (showUrlInput()) {
-        <div class="border border-gray-200 rounded-lg p-3">
-          <label class="block text-xs font-medium text-gray-700 mb-1">Image URL</label>
+        <div class="rounded-xl border border-border p-3">
+          <label class="mb-1 block text-xs font-medium text-text">{{ 'products.img.imageUrl' | transloco }}</label>
           <div class="flex gap-2">
-            <input
-              type="url"
-              [(ngModel)]="imageUrl"
-              placeholder="https://example.com/image.jpg"
-              class="flex-1 px-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500 focus:border-primary-500"
-              (keyup.enter)="addImageUrl()"
-            />
-            <button
-              type="button"
-              (click)="addImageUrl()"
-              [disabled]="!imageUrl().trim()"
-              class="px-3 py-1.5 text-sm border border-transparent rounded-md text-white bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Add
-            </button>
-            <button
-              type="button"
-              (click)="toggleUrlInput()"
-              class="px-3 py-1.5 text-sm border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50"
-            >
-              Cancel
-            </button>
+            <input type="url" [(ngModel)]="imageUrl" placeholder="https://example.com/image.jpg" (keyup.enter)="addImageUrl()"
+              class="min-h-[40px] flex-1 rounded-[10px] border border-border bg-surface-elevated px-3 py-1.5 text-sm text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            <button type="button" (click)="addImageUrl()" [disabled]="!imageUrl().trim()" class="rounded-[10px] bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">{{ 'products.img.add' | transloco }}</button>
+            <button type="button" (click)="toggleUrlInput()" class="rounded-[10px] border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40">{{ 'products.img.cancel' | transloco }}</button>
           </div>
         </div>
       }
     </div>
   }
-
 </div>

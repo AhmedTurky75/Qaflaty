@@ -2,6 +2,7 @@ import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { ProductService } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { BuilderService } from '../../store-builder/services/builder.service';
@@ -10,12 +11,13 @@ import { VariantManagerComponent } from '../components/variant-manager/variant-m
 import { InventoryHistoryComponent } from '../components/inventory-history/inventory-history.component';
 import { LandingPagePanelComponent } from '../components/landing-page-panel/landing-page-panel.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { CategoryDto, ProductStatus, ProductPropertyDefinitionDto } from 'shared';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, ImageUploadComponent, VariantManagerComponent, InventoryHistoryComponent, LandingPagePanelComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, RouterLink, TranslocoPipe, IconComponent, ImageUploadComponent, VariantManagerComponent, InventoryHistoryComponent, LandingPagePanelComponent],
   templateUrl: './product-form.component.html',
   styleUrls: ['./product-form.component.scss']
 })
