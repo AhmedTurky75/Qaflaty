@@ -144,18 +144,26 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - Icon set extended: lock, palette.
 - Note: `ng build merchant` clean (exit 0). All routes unchanged.
 
-### P13 Store Builder (full re-layout — own sub-plan) + Ads
-Store Builder (~7,000L, 33 components, all **[inline-t]** — incl. `section-editor` 2,705L):
-- [ ] `builder-layout` · `builder-hub` · `configuration-panel` · `layout-design-panel` · `delivery-zones-panel`
-      · `faq-manager` · `page-editor` · `product-properties-panel` · `rich-text-editor` **[inline-s]** · `section-editor`
-- [ ] pages: `general-settings` · `layout-design` · `payment-methods` · `search-settings` · `communication`
-      · `social-links` · `ai-assistant` · `pages-manager` · `page-sections` · `faq` · `delivery-zones` · `product-properties`
-- Ads (layout + 7 screens, **[+scss]** — already split, need tokens):
-- [ ] `ads-layout` · `ads-dashboard` · `ads-integrations` · `ads-diagnostics` · `ads-event-timeline`
+### P13 Store Builder (full re-layout — own sub-plan) + Ads — DONE
+Store Builder root panels (split .ts/.html/.scss + tokenized):
+- [x] `builder-layout` · `configuration-panel` · `layout-design-panel` · `delivery-zones-panel`
+      · `faq-manager` · `page-editor` · `product-properties-panel` · `rich-text-editor`
+- [x] `section-editor` (2,705L) — **tokenized in place** (all hard-coded blue/gray/red/green/purple → theme tokens
+      via replace_all; only `bg-black` overlay + `text-white` on primary kept). **Physical .ts→.html split deferred**
+      (single exceptional file; flagged for P14 structural follow-up).
+- [x] pages (split + tokenized): `builder-hub` · `general-settings` · `layout-design` · `payment-methods`
+      · `search-settings` · `communication` · `social-links` · `ai-assistant` · `pages-manager` · `page-sections`
+      · `faq` · `delivery-zones` · `product-properties`
+- Toggle switches tokenized (`bg-border`/`peer-checked:bg-primary`, knob `bg-surface`, `start-1`); back arrows get
+  `rtl:rotate-180` + aria-labels; device/level/status badges mapped to primary/success/warning/danger tokens.
+- Ads (layout + 7 screens, split + tokenized incl. ts color-helper methods):
+- [x] `ads-layout` · `ads-dashboard` · `ads-integrations` · `ads-diagnostics` · `ads-event-timeline`
       · `ads-test-center` · `ads-logs` · `ads-monitoring`
+- Note: `ng build merchant` clean (exit 0). All routes unchanged; presentation-only.
 
 ### P14 Sweep & polish
 - [ ] Audit every screen: residual hard-coded colors, missing focus states, RTL bugs, <44px targets, unsplit inline components.
+- [ ] Physical .ts→.html split of `section-editor` (2,705L) — deferred structural follow-up from P13 (already tokenized).
 - [ ] Verify all 9 themes + RTL on every page.
 
 ---

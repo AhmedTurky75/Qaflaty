@@ -1,0 +1,186 @@
+<div class="min-h-screen bg-canvas">
+  @if (loading()) {
+    <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <div class="rounded-xl border border-border bg-surface p-12 text-center shadow-sm">
+        <p class="text-text-muted">Loading page...</p>
+      </div>
+    </div>
+  }
+
+  @if (loadErr()) {
+    <div class="mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
+      <div class="rounded-xl border border-danger/30 bg-danger/10 p-6 text-center">
+        <p class="text-danger">{{ loadErr() }}</p>
+      </div>
+    </div>
+  }
+
+  @if (!loading() && !loadErr() && page()) {
+    <div class="flex flex-col gap-6 px-4 py-8 sm:px-6 lg:px-8 xl:flex-row">
+      <!-- Editor column -->
+      <div class="w-full xl:w-[600px] xl:flex-shrink-0">
+        @if (saving()) {
+          <div class="mb-4 rounded-xl border border-primary/30 bg-primary-tint p-3 text-center">
+            <p class="text-sm text-primary">Saving...</p>
+          </div>
+        }
+        @if (saved()) {
+          <div class="mb-4 rounded-xl border border-success/30 bg-success/10 p-3 text-center">
+            <p class="text-sm font-medium text-success">Page saved successfully.</p>
+          </div>
+        }
+        @if (saveErr()) {
+          <div class="mb-4 rounded-xl border border-danger/30 bg-danger/10 p-3 text-center">
+            <p class="text-sm text-danger">{{ saveErr() }}</p>
+          </div>
+        }
+        <app-section-editor
+          [page]="page()"
+          (save)="onSave($event)"
+          (sectionsChange)="onSectionsChange($event)"
+          (close)="onClose()"
+        />
+
+        <!-- A/B Testing panel -->
+        <div class="mt-6 rounded-lg border border-border bg-surface shadow-sm">
+          <button type="button" (click)="showAb.set(!showAb())"
+            class="flex w-full items-center justify-between px-6 py-4 text-start">
+            <div>
+              <h3 class="flex items-center gap-2 text-base font-semibold text-text">
+                A/B Testing
+                <span class="rounded bg-primary-tint px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-primary">Beta</span>
+              </h3>
+              <p class="mt-0.5 text-xs text-text-muted">Split traffic between the current layout (control) and alternative variants</p>
+            </div>
+            <svg class="h-5 w-5 text-text-muted transition-transform" [class.rotate-180]="showAb()" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          @if (showAb()) {
+            <div class="space-y-4 border-t border-border px-6 pb-6 pt-4">
+              <!-- Control row -->
+              <div class="flex items-center justify-between rounded-lg border border-border bg-surface-elevated px-4 py-3">
+                <div>
+                  <p class="text-sm font-medium text-text">Control (current layout)</p>
+                  <p class="text-xs text-text-muted">Weight {{ controlWeight }} · always active</p>
+                </div>
+                <span class="text-xs text-text-muted">baseline</span>
+              </div>
+
+              @for (v of variants(); track $index; let i = $index) {
+                <div class="space-y-3 rounded-lg border border-border px-4 py-3">
+                  <div class="flex items-center gap-3">
+                    <input type="text" [value]="v.name" (input)="setVariantField(i, 'name', asValue($event))"
+                      class="flex-1 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text" placeholder="Variant name" />
+                    <div class="flex items-center gap-1">
+                      <label class="text-xs text-text-muted">Weight</label>
+                      <input type="number" min="0" [value]="v.weight" (input)="setVariantField(i, 'weight', +asValue($event))"
+                        class="w-16 rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text" />
+                    </div>
+                    <label class="flex cursor-pointer items-center gap-1.5">
+                      <input type="checkbox" [checked]="v.isActive" (change)="setVariantField(i, 'isActive', asChecked($event))"
+                        class="h-4 w-4 rounded text-primary" />
+                      <span class="text-xs text-text-muted">Active</span>
+                    </label>
+                    <button type="button" (click)="removeVariant(i)" class="text-danger/70 hover:text-danger" title="Delete variant" aria-label="Delete variant">
+                      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="flex items-center gap-4 text-xs text-text-muted">
+                    <span>{{ v.impressions }} impressions</span>
+                    <span>{{ v.conversions }} conversions</span>
+                    <span class="font-medium text-text">{{ conversionRate(v) }} CVR</span>
+                    <span class="ms-auto text-text-muted">{{ splitShare(v) }} of traffic</span>
+                  </div>
+                </div>
+              } @empty {
+                <p class="text-sm text-text-muted">No variants yet. Add one from the current layout to start a test.</p>
+              }
+
+              <div class="flex items-center gap-3 pt-1">
+                <button type="button" (click)="addVariantFromCurrent()"
+                  class="rounded-md bg-surface-elevated px-3 py-2 text-sm text-text hover:bg-border/40">
+                  + New variant from current layout
+                </button>
+                <button type="button" (click)="saveVariants()" [disabled]="abSaving()"
+                  class="rounded-md bg-primary px-3 py-2 text-sm text-white hover:bg-primary-hover disabled:opacity-50">
+                  {{ abSaving() ? 'Saving…' : 'Save Variants' }}
+                </button>
+                @if (abSaved()) { <span class="text-xs text-success">Saved.</span> }
+                @if (abErr()) { <span class="text-xs text-danger">{{ abErr() }}</span> }
+              </div>
+              <p class="text-[11px] text-text-muted">A variant snapshots the current layout when created. Metrics are placeholder counters pending the full analytics pipeline.</p>
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Live preview column (large screens only) -->
+      @if (previewUrl()) {
+        <div [class]="previewExpanded()
+          ? 'fixed inset-0 z-50 bg-surface flex flex-col p-4'
+          : 'hidden xl:flex flex-col flex-1 min-w-0'">
+          <div [class]="previewExpanded() ? 'flex flex-col h-full' : 'sticky top-6'">
+            <!-- Preview toolbar -->
+            <div class="mb-3 flex items-center justify-between">
+              <span class="text-xs font-semibold uppercase tracking-wide text-text-muted">Live Preview</span>
+              <div class="flex items-center gap-1">
+                <div class="inline-flex rounded-lg border border-border bg-surface p-0.5">
+                  <button type="button" (click)="setDevice('desktop')"
+                    class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+                    [class]="device() === 'desktop' ? 'bg-primary text-white' : 'text-text-muted'" title="Desktop">Desktop</button>
+                  <button type="button" (click)="setDevice('tablet')"
+                    class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+                    [class]="device() === 'tablet' ? 'bg-primary text-white' : 'text-text-muted'" title="Tablet">Tablet</button>
+                  <button type="button" (click)="setDevice('mobile')"
+                    class="rounded-md px-2.5 py-1 text-xs font-medium transition-colors"
+                    [class]="device() === 'mobile' ? 'bg-primary text-white' : 'text-text-muted'" title="Mobile">Mobile</button>
+                </div>
+                <button type="button" (click)="previewExpanded.set(!previewExpanded())"
+                  class="p-1.5 text-text-muted hover:text-primary"
+                  [title]="previewExpanded() ? 'Exit fullscreen preview' : 'Expand preview to full width (desktop needs real screen width to look right)'">
+                  @if (previewExpanded()) {
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 9L4 4m0 0v4m0-4h4m7 5l5-5m0 0v4m0-4h-4M9 15l-5 5m0 0v-4m0 4h4m6-4l5 5m0 0v-4m0 4h-4"></path>
+                    </svg>
+                  } @else {
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h4m0 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                    </svg>
+                  }
+                </button>
+                <button type="button" (click)="openPopoutPreview()"
+                  class="p-1.5 text-text-muted hover:text-primary" title="Pop out into its own live-updating window">
+                  <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Device frame -->
+            <div class="flex flex-1 justify-center overflow-auto rounded-xl border border-border bg-surface-elevated p-4"
+              [style.height]="previewExpanded() ? 'auto' : 'calc(100vh - 8rem)'">
+              <iframe
+                #previewFrame
+                [src]="previewUrl()"
+                (load)="onFrameLoad()"
+                class="h-full rounded-lg border border-border bg-surface shadow-sm transition-all duration-200"
+                [style.width]="deviceWidth()"
+                style="max-width: 100%;"
+                title="Storefront live preview"
+              ></iframe>
+            </div>
+            <p class="mt-2 truncate text-[11px] text-text-muted">
+              Previewing <span class="font-mono">{{ rawPreviewUrl }}</span> — the storefront app must be running there.
+              A real desktop layout needs real screen width: use the expand (⛶) or pop-out (↗) button above rather than judging it in this ~600px-narrower split view.
+            </p>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>

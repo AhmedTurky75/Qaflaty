@@ -1,0 +1,101 @@
+<div class="min-h-screen bg-canvas">
+  <div class="border-b border-border bg-surface">
+    <div class="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
+      <a [routerLink]="'/store-builder'" class="text-text-muted hover:text-text" aria-label="Back to store builder">
+        <svg class="h-5 w-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </a>
+      <h1 class="text-lg font-semibold text-text">Layout & Design</h1>
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+    @if (loading()) {
+      <div class="rounded-xl border border-border bg-surface p-12 text-center shadow-sm">
+        <p class="text-text-muted">Loading configuration...</p>
+      </div>
+    }
+
+    @if (loadErr()) {
+      <div class="rounded-xl border border-danger/30 bg-danger/10 p-6 text-center">
+        <p class="text-danger">{{ loadErr() }}</p>
+      </div>
+    }
+
+    @if (!loading() && localConfig) {
+      <div class="space-y-6">
+        <div class="rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-5 text-base font-semibold text-text">Layout Variants</h2>
+          <div class="space-y-5">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text">Header Style</label>
+              <select
+                [(ngModel)]="localConfig!.headerVariant"
+                class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+              >
+                @for (v of headerVariants(); track v.id) {
+                  <option [value]="v.code">{{ v.nameEn }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text">Footer Style</label>
+              <select
+                [(ngModel)]="localConfig!.footerVariant"
+                class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+              >
+                @for (v of footerVariants(); track v.id) {
+                  <option [value]="v.code">{{ v.nameEn }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text">Product Card Style</label>
+              <select
+                [(ngModel)]="localConfig!.productCardVariant"
+                class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+              >
+                @for (v of cardVariants(); track v.id) {
+                  <option [value]="v.code">{{ v.nameEn }}</option>
+                }
+              </select>
+            </div>
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text">Product Grid Layout</label>
+              <select
+                [(ngModel)]="localConfig!.productGridVariant"
+                class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+              >
+                @for (v of gridVariants(); track v.id) {
+                  <option [value]="v.code">{{ v.nameEn }}</option>
+                }
+              </select>
+            </div>
+          </div>
+        </div>
+
+        @if (saved()) {
+          <div class="rounded-xl border border-success/30 bg-success/10 p-4 text-center">
+            <p class="text-sm font-medium text-success">Layout saved successfully.</p>
+          </div>
+        }
+        @if (saveErr()) {
+          <div class="rounded-xl border border-danger/30 bg-danger/10 p-4 text-center">
+            <p class="text-sm text-danger">{{ saveErr() }}</p>
+          </div>
+        }
+
+        <div class="flex justify-end">
+          <button
+            (click)="save()"
+            [disabled]="saving()"
+            class="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
+          >
+            {{ saving() ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

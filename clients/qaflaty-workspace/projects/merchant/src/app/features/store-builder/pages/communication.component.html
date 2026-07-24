@@ -1,0 +1,122 @@
+<div class="min-h-screen bg-canvas">
+  <div class="border-b border-border bg-surface">
+    <div class="mx-auto flex max-w-3xl items-center gap-3 px-4 py-4 sm:px-6 lg:px-8">
+      <a [routerLink]="'/store-builder'" class="text-text-muted hover:text-text" aria-label="Back to store builder">
+        <svg class="h-5 w-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+        </svg>
+      </a>
+      <h1 class="text-lg font-semibold text-text">Communication</h1>
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+    @if (loading()) {
+      <div class="rounded-xl border border-border bg-surface p-12 text-center shadow-sm">
+        <p class="text-text-muted">Loading configuration...</p>
+      </div>
+    }
+
+    @if (loadErr()) {
+      <div class="rounded-xl border border-danger/30 bg-danger/10 p-6 text-center">
+        <p class="text-danger">{{ loadErr() }}</p>
+      </div>
+    }
+
+    @if (!loading() && localConfig) {
+      <div class="space-y-6">
+        <div class="rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-4 text-base font-semibold text-text">WhatsApp</h2>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium text-text">Enable WhatsApp</label>
+              <label class="relative inline-flex cursor-pointer items-center">
+                <input type="checkbox" class="peer sr-only" [(ngModel)]="localConfig!.communicationSettings.whatsAppEnabled" />
+                <div class="h-6 w-10 rounded-full bg-border transition-colors peer-checked:bg-primary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40"></div>
+                <div class="absolute start-1 top-1 h-4 w-4 rounded-full bg-surface shadow transition-transform peer-checked:translate-x-4"></div>
+              </label>
+            </div>
+            @if (localConfig!.communicationSettings.whatsAppEnabled) {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-text">WhatsApp Number</label>
+                <input
+                  type="text"
+                  [(ngModel)]="localConfig!.communicationSettings.whatsAppNumber"
+                  placeholder="+966XXXXXXXXX"
+                  class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+              <div>
+                <label class="mb-1 block text-sm font-medium text-text">Default Message</label>
+                <textarea
+                  [(ngModel)]="localConfig!.communicationSettings.whatsAppDefaultMessage"
+                  rows="3"
+                  placeholder="Hello! I'm interested in..."
+                  class="w-full resize-none rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+                ></textarea>
+              </div>
+            }
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-4 text-base font-semibold text-text">Live Chat</h2>
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium text-text">Enable Live Chat</label>
+            <label class="relative inline-flex cursor-pointer items-center">
+              <input type="checkbox" class="peer sr-only" [(ngModel)]="localConfig!.communicationSettings.liveChatEnabled" />
+              <div class="h-6 w-10 rounded-full bg-border transition-colors peer-checked:bg-primary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40"></div>
+              <div class="absolute start-1 top-1 h-4 w-4 rounded-full bg-surface shadow transition-transform peer-checked:translate-x-4"></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="rounded-xl border border-border bg-surface p-6 shadow-sm">
+          <h2 class="mb-4 text-base font-semibold text-text">AI Chatbot</h2>
+          <div class="space-y-4">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium text-text">Enable AI Chatbot</label>
+              <label class="relative inline-flex cursor-pointer items-center">
+                <input type="checkbox" class="peer sr-only" [(ngModel)]="localConfig!.communicationSettings.aiChatbotEnabled" />
+                <div class="h-6 w-10 rounded-full bg-border transition-colors peer-checked:bg-primary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40"></div>
+                <div class="absolute start-1 top-1 h-4 w-4 rounded-full bg-surface shadow transition-transform peer-checked:translate-x-4"></div>
+              </label>
+            </div>
+            @if (localConfig!.communicationSettings.aiChatbotEnabled) {
+              <div>
+                <label class="mb-1 block text-sm font-medium text-text">Chatbot Name</label>
+                <input
+                  type="text"
+                  [(ngModel)]="localConfig!.communicationSettings.aiChatbotName"
+                  placeholder="Assistant"
+                  class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (saved()) {
+          <div class="rounded-xl border border-success/30 bg-success/10 p-4 text-center">
+            <p class="text-sm font-medium text-success">Communication settings saved successfully.</p>
+          </div>
+        }
+        @if (saveErr()) {
+          <div class="rounded-xl border border-danger/30 bg-danger/10 p-4 text-center">
+            <p class="text-sm text-danger">{{ saveErr() }}</p>
+          </div>
+        }
+
+        <div class="flex justify-end">
+          <button
+            (click)="save()"
+            [disabled]="saving()"
+            class="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
+          >
+            {{ saving() ? 'Saving...' : 'Save Changes' }}
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

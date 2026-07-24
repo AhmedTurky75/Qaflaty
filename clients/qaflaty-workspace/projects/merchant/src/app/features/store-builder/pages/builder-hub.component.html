@@ -1,0 +1,33 @@
+<div class="min-h-screen bg-canvas">
+  <div class="border-b border-border bg-surface">
+    <div class="mx-auto max-w-4xl px-4 py-6 sm:px-6 lg:px-8">
+      <h1 class="text-2xl font-bold text-text">Store Builder</h1>
+      <p class="mt-1 text-sm text-text-muted">Configure your storefront appearance and functionality</p>
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-4xl space-y-8 px-4 py-8 sm:px-6 lg:px-8">
+    @for (section of sections; track section.title) {
+      <div>
+        <h2 class="mb-3 text-xs font-semibold uppercase tracking-wider text-text-muted">{{ section.title }}</h2>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          @for (card of section.cards; track card.route) {
+            <a
+              [routerLink]="card.route"
+              class="flex cursor-pointer items-center gap-4 rounded-xl border border-border bg-surface p-4 no-underline shadow-sm transition-all hover:border-primary/50 hover:shadow-md"
+            >
+              <span class="flex-shrink-0 text-2xl">{{ card.icon }}</span>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-text">{{ card.title }}</p>
+                <p class="mt-0.5 text-xs text-text-muted">{{ card.description }}</p>
+              </div>
+              <svg class="h-4 w-4 flex-shrink-0 text-text-muted rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+              </svg>
+            </a>
+          }
+        </div>
+      </div>
+    }
+  </div>
+</div>
