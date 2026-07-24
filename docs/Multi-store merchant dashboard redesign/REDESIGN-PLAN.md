@@ -130,8 +130,9 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - Icon set extended: send.
 - *English strings kept inline for these secondary realtime screens (flagged for the P14 i18n sweep).* `ng build merchant` clean (exit 0).
 
-### P11 Commerce secondary (under More)
-- [ ] `returns` **[split]** · `reviews` **[split]** · `promo-codes` **[split]** → tokens.
+### P11 Commerce secondary (under More) — ✅ DONE
+- [x] `returns` · `reviews` · `promo-codes` → component **SCSS tokenized** (hard-coded greys/blue/green/amber/red → `rgb(var(--c-*))` incl. status badges, chips, buttons, modal, table), RTL logical properties, focus rings, ≥40–44px controls. Templates/logic untouched.
+- *English strings in templates kept (flagged for P14 i18n sweep).* `ng build merchant` clean (exit 0).
 
 ### P12 Settings + theme picker + "More" hub
 - [ ] `settings-layout` **[+scss]** → tokens; add "More" section linking all secondary features (routes unchanged).
