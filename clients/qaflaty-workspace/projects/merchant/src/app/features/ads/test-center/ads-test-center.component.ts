@@ -14,7 +14,8 @@ const TEST_EVENTS = [
   selector: 'app-ads-test-center',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './ads-test-center.component.html'
+  templateUrl: './ads-test-center.component.html',
+  styleUrl: './ads-test-center.component.scss'
 })
 export class AdsTestCenterComponent {
   private adsService = inject(AdsService);
@@ -48,10 +49,10 @@ export class AdsTestCenterComponent {
 
   statusColor(status: string): string {
     switch (status) {
-      case 'Succeeded': return 'text-green-600';
-      case 'Failed': return 'text-red-600';
-      case 'DeadLettered': return 'text-red-800';
-      default: return 'text-gray-500';
+      case 'Succeeded': return 'text-success';
+      case 'Failed': return 'text-danger';
+      case 'DeadLettered': return 'text-danger';
+      default: return 'text-text-muted';
     }
   }
 }

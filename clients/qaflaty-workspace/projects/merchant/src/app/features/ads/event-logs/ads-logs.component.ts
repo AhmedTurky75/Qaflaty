@@ -8,7 +8,8 @@ import { AdsService, TrackingLogRowDto } from '../services/ads.service';
   selector: 'app-ads-logs',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './ads-logs.component.html'
+  templateUrl: './ads-logs.component.html',
+  styleUrl: './ads-logs.component.scss'
 })
 export class AdsLogsComponent {
   private adsService = inject(AdsService);
@@ -91,12 +92,12 @@ export class AdsLogsComponent {
 
   statusColor(status: string): string {
     switch (status) {
-      case 'Succeeded': return 'text-green-600';
-      case 'Failed': return 'text-red-600';
-      case 'DeadLettered': return 'text-red-800';
-      case 'Processing': return 'text-blue-600';
-      case 'No Providers Enabled': return 'text-yellow-600';
-      default: return 'text-gray-500';
+      case 'Succeeded': return 'text-success';
+      case 'Failed': return 'text-danger';
+      case 'DeadLettered': return 'text-danger';
+      case 'Processing': return 'text-primary';
+      case 'No Providers Enabled': return 'text-warning';
+      default: return 'text-text-muted';
     }
   }
 }

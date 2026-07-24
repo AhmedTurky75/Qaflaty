@@ -44,7 +44,8 @@ const PROVIDERS: ProviderMeta[] = [
   selector: 'app-ads-integrations',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './ads-integrations.component.html'
+  templateUrl: './ads-integrations.component.html',
+  styleUrl: './ads-integrations.component.scss'
 })
 export class AdsIntegrationsComponent {
   private adsService = inject(AdsService);

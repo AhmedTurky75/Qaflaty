@@ -1,27 +1,25 @@
-<div class="py-6">
+<div>
   <div class="mb-6">
-    <h1 class="text-3xl font-bold text-gray-900">Ads Management</h1>
-    <nav class="mt-2" aria-label="Breadcrumb">
-      <ol class="flex items-center space-x-2 text-sm text-gray-500">
-        <li><a routerLink="/dashboard" class="hover:text-gray-700">Dashboard</a></li>
-        <li><span class="mx-2">/</span></li>
-        <li class="text-gray-900">Ads Management</li>
-      </ol>
+    <h1 class="text-2xl font-bold text-text">Ads management</h1>
+    <nav class="mt-2 flex items-center gap-2 text-sm text-text-muted" aria-label="Breadcrumb">
+      <a routerLink="/dashboard" class="hover:text-primary">Dashboard</a>
+      <span class="rtl:rotate-180"><app-icon name="chevron-right" [size]="14" /></span>
+      <span class="text-text">Ads management</span>
     </nav>
   </div>
 
-  <div class="flex flex-col lg:flex-row gap-6">
-    <div class="lg:w-64 flex-shrink-0">
-      <nav class="bg-white rounded-lg shadow">
-        <div class="p-2 space-y-1">
+  <div class="flex flex-col gap-6 lg:flex-row">
+    <div class="flex-shrink-0 lg:w-64">
+      <nav class="rounded-2xl border border-border bg-surface p-2 shadow-sm">
+        <div class="space-y-1">
           @for (item of navigation; track item.path) {
             <a
               [routerLink]="item.path"
-              routerLinkActive="bg-primary-50 text-primary-700"
+              routerLinkActive="bg-primary-tint text-primary"
               [routerLinkActiveOptions]="{ exact: false }"
-              class="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              class="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40"
             >
-              <span class="w-6 mr-3 text-lg">{{ item.icon }}</span>
+              <span class="w-6 text-lg">{{ item.icon }}</span>
               {{ item.name }}
             </a>
           }
@@ -29,7 +27,7 @@
       </nav>
     </div>
 
-    <div class="flex-1 min-w-0">
+    <div class="min-w-0 flex-1">
       <router-outlet></router-outlet>
     </div>
   </div>

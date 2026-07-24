@@ -1,12 +1,13 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-ads-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet, RouterLinkActive],
-  templateUrl: './ads-layout.component.html'
+  imports: [RouterLink, RouterOutlet, RouterLinkActive, IconComponent],
+  templateUrl: './ads-layout.component.html',
+  styleUrl: './ads-layout.component.scss'
 })
 export class AdsLayoutComponent {
   navigation = [

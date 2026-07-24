@@ -7,7 +7,8 @@ import { AdsService, ProviderMonitoringDto } from '../services/ads.service';
   selector: 'app-ads-monitoring',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './ads-monitoring.component.html'
+  templateUrl: './ads-monitoring.component.html',
+  styleUrl: './ads-monitoring.component.scss'
 })
 export class AdsMonitoringComponent {
   private adsService = inject(AdsService);
@@ -35,8 +36,8 @@ export class AdsMonitoringComponent {
   }
 
   rateColor(rate: number): string {
-    if (rate >= 95) return 'text-green-600';
-    if (rate >= 80) return 'text-yellow-600';
-    return 'text-red-600';
+    if (rate >= 95) return 'text-success';
+    if (rate >= 80) return 'text-warning';
+    return 'text-danger';
   }
 }

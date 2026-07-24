@@ -8,7 +8,8 @@ import { AdsService, DiagnosticFindingDto } from '../services/ads.service';
   selector: 'app-ads-diagnostics',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  templateUrl: './ads-diagnostics.component.html'
+  templateUrl: './ads-diagnostics.component.html',
+  styleUrl: './ads-diagnostics.component.scss'
 })
 export class AdsDiagnosticsComponent {
   private adsService = inject(AdsService);
@@ -41,10 +42,10 @@ export class AdsDiagnosticsComponent {
 
   severityClass(severity: string): string {
     switch (severity) {
-      case 'High': return 'border-red-200 bg-red-50';
-      case 'Medium': return 'border-yellow-200 bg-yellow-50';
-      case 'Low': return 'border-blue-200 bg-blue-50';
-      default: return 'border-green-200 bg-green-50';
+      case 'High': return 'border-danger/30 bg-danger/10';
+      case 'Medium': return 'border-warning/30 bg-warning/10';
+      case 'Low': return 'border-primary/30 bg-primary-tint';
+      default: return 'border-success/30 bg-success/10';
     }
   }
 

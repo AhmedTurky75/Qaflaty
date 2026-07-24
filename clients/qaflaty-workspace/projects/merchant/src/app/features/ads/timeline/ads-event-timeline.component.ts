@@ -8,7 +8,8 @@ import { AdsService, EventTimelineDto } from '../services/ads.service';
   selector: 'app-ads-event-timeline',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './ads-event-timeline.component.html'
+  templateUrl: './ads-event-timeline.component.html',
+  styleUrl: './ads-event-timeline.component.scss'
 })
 export class AdsEventTimelineComponent {
   private adsService = inject(AdsService);
@@ -41,11 +42,11 @@ export class AdsEventTimelineComponent {
 
   statusColor(status: string): string {
     switch (status) {
-      case 'Succeeded': return 'text-green-600';
-      case 'Failed': return 'text-red-600';
-      case 'DeadLettered': return 'text-red-800';
-      case 'Processing': return 'text-blue-600';
-      default: return 'text-gray-500';
+      case 'Succeeded': return 'text-success';
+      case 'Failed': return 'text-danger';
+      case 'DeadLettered': return 'text-danger';
+      case 'Processing': return 'text-primary';
+      default: return 'text-text-muted';
     }
   }
 }

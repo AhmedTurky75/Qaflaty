@@ -8,7 +8,8 @@ import { AdsService, AdsDashboardDto } from '../services/ads.service';
   selector: 'app-ads-dashboard',
   standalone: true,
   imports: [CommonModule, RouterLink],
-  templateUrl: './ads-dashboard.component.html'
+  templateUrl: './ads-dashboard.component.html',
+  styleUrl: './ads-dashboard.component.scss'
 })
 export class AdsDashboardComponent {
   private adsService = inject(AdsService);
@@ -41,18 +42,18 @@ export class AdsDashboardComponent {
   }
 
   healthColor(score: number): string {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 50) return 'text-yellow-600';
-    return 'text-red-600';
+    if (score >= 80) return 'text-success';
+    if (score >= 50) return 'text-warning';
+    return 'text-danger';
   }
 
   statusBadgeClass(status: string): string {
     switch (status) {
-      case 'Verified': return 'bg-green-100 text-green-800';
-      case 'Connected': return 'bg-blue-100 text-blue-800';
-      case 'Error': return 'bg-red-100 text-red-800';
-      case 'Disconnected': return 'bg-gray-100 text-gray-600';
-      default: return 'bg-gray-100 text-gray-600';
+      case 'Verified': return 'bg-success/10 text-success';
+      case 'Connected': return 'bg-primary-tint text-primary';
+      case 'Error': return 'bg-danger/10 text-danger';
+      case 'Disconnected': return 'bg-surface-elevated text-text-muted';
+      default: return 'bg-surface-elevated text-text-muted';
     }
   }
 }
