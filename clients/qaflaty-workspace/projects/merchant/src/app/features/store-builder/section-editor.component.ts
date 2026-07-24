@@ -88,7 +88,7 @@ interface PageTemplate {
                 <div class="flex items-center justify-between">
                   <h4 class="text-sm font-semibold text-text">
                     {{ getSectionTypeLabel(section.sectionType) }}
-                    <span class="ml-2 text-xs text-text-muted font-normal">#{{ section.sortOrder }}</span>
+                    <span class="ms-2 text-xs text-text-muted font-normal">#{{ section.sortOrder }}</span>
                   </h4>
                   <div class="flex items-center gap-3">
                     <!-- Enabled Toggle -->
@@ -184,7 +184,7 @@ interface PageTemplate {
                       <div>
                         <label class="block text-xs font-medium text-text mb-1">
                           Title (EN)
-                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
+                          <span class="ms-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
                         </label>
                         <input #heroTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.en || ''"
@@ -223,7 +223,7 @@ interface PageTemplate {
                       <div class="col-span-2">
                         <label class="block text-xs font-medium text-text mb-1">
                           Background Image
-                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="Image alt text impacts search engine rankings">SEO</span>
+                          <span class="ms-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="Image alt text impacts search engine rankings">SEO</span>
                         </label>
                         <div class="flex gap-2">
                           <input #heroImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
@@ -489,7 +489,7 @@ interface PageTemplate {
                         (input)="setContentField(section, 'html', customHtml.value)"
                         placeholder="<div>Your custom HTML here...</div>">
                       </textarea>
-                      <p class="mt-1 text-xs text-amber-600">HTML is rendered as-is. Ensure content is safe.</p>
+                      <p class="mt-1 text-xs text-warning">HTML is rendered as-is. Ensure content is safe.</p>
                     </div>
                   }
                   @case ('MediaText') {
@@ -783,7 +783,7 @@ interface PageTemplate {
                     </div>
                   }
                   @case ('ReviewsShowcase') {
-                    <p class="text-[11px] text-amber-600 mb-2">Shows real customer reviews for the product — only appears on product landing pages. For a home or custom page, use the “Testimonials” section instead.</p>
+                    <p class="text-[11px] text-warning mb-2">Shows real customer reviews for the product — only appears on product landing pages. For a home or custom page, use the “Testimonials” section instead.</p>
                     <div class="grid grid-cols-2 gap-3">
                       <div>
                         <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
@@ -1346,7 +1346,7 @@ interface PageTemplate {
                             <button type="button" (click)="removeSpecGroup(section, gi)" class="text-xs text-danger hover:text-danger whitespace-nowrap">Remove group</button>
                           </div>
                           @for (row of group.rows || []; track $index; let ri = $index) {
-                            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center pl-2 border-l-2 border-border">
+                            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center ps-2 border-s-2 border-border">
                               <input #spLEn type="text" class="text-sm px-2 py-1 border border-border rounded-md"
                                 [value]="row.label?.en || ''" (input)="setSpecRow(section, gi, ri, 'label', 'en', spLEn.value)" placeholder="Label (EN)" />
                               <input #spLAr type="text" dir="rtl" class="text-sm px-2 py-1 border border-border rounded-md"
@@ -1702,7 +1702,7 @@ interface PageTemplate {
                       <div>
                         <label class="block text-xs font-medium text-text mb-1">
                           Device Visibility
-                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="Uses CSS media queries so content stays crawlable">SEO</span>
+                          <span class="ms-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="Uses CSS media queries so content stays crawlable">SEO</span>
                         </label>
                         <select
                           [value]="getSettings(section)?.visibility || 'all'"
@@ -1778,7 +1778,7 @@ interface PageTemplate {
           <div>
             <label class="block text-xs font-medium text-text mb-1">
               Meta Title (EN)
-              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
+              <span class="ms-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
             </label>
             <input
               type="text"
@@ -1790,7 +1790,7 @@ interface PageTemplate {
           <div>
             <label class="block text-xs font-medium text-text mb-1">
               Meta Title (AR)
-              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
+              <span class="ms-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
             </label>
             <input
               type="text"
@@ -1803,7 +1803,7 @@ interface PageTemplate {
           <div>
             <label class="block text-xs font-medium text-text mb-1">
               Meta Description (EN)
-              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
+              <span class="ms-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
             </label>
             <textarea
               rows="2"
@@ -1815,7 +1815,7 @@ interface PageTemplate {
           <div>
             <label class="block text-xs font-medium text-text mb-1">
               Meta Description (AR)
-              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
+              <span class="ms-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
             </label>
             <textarea
               rows="2"
@@ -1903,7 +1903,7 @@ interface PageTemplate {
             @for (type of sectionTypes; track type.key) {
               <button
                 (click)="addSection(type.key)"
-                class="p-3 border-2 border-border rounded-lg text-left hover:border-primary hover:bg-primary-tint transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+                class="p-3 border-2 border-border rounded-lg text-start hover:border-primary hover:bg-primary-tint transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
                 <div class="text-sm font-medium text-text">{{ type.label }}</div>
                 <div class="text-xs text-text-muted mt-0.5">{{ type.description }}</div>
@@ -1917,7 +1917,7 @@ interface PageTemplate {
             @for (preset of sectionPresets; track preset.key) {
               <button
                 (click)="addPreset(preset)"
-                class="p-3 border-2 border-border rounded-lg text-left hover:border-success hover:bg-success/10 transition-colors focus:outline-none focus:ring-2 focus:ring-success/40"
+                class="p-3 border-2 border-border rounded-lg text-start hover:border-success hover:bg-success/10 transition-colors focus:outline-none focus:ring-2 focus:ring-success/40"
               >
                 <div class="text-sm font-medium text-text">{{ preset.label }}</div>
                 <div class="text-xs text-text-muted mt-0.5">{{ preset.description }}</div>
@@ -1931,7 +1931,7 @@ interface PageTemplate {
             @for (tpl of pageTemplates; track tpl.key) {
               <button
                 (click)="applyPageTemplate(tpl)"
-                class="p-3 border-2 border-border rounded-lg text-left hover:border-primary hover:bg-primary-tint transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+                class="p-3 border-2 border-border rounded-lg text-start hover:border-primary hover:bg-primary-tint transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
                 <div class="text-sm font-medium text-text">{{ tpl.label }}</div>
                 <div class="text-xs text-text-muted mt-0.5">{{ tpl.description }}</div>

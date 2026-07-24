@@ -5,7 +5,7 @@
       <p class="subtitle">Moderate customer reviews and configure review policy for your store.</p>
     </div>
     <button type="button" (click)="openAddModal()"
-      class="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 whitespace-nowrap">
+      class="whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover">
       + Add Review
     </button>
   </header>
@@ -106,19 +106,19 @@
 
 <!-- Add manual review modal -->
 @if (showAddModal()) {
-  <div class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Add a review</h3>
-        <button type="button" (click)="showAddModal.set(false)" class="text-gray-400 hover:text-gray-600">✕</button>
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-lg rounded-xl border border-border bg-surface p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-text">Add a review</h3>
+        <button type="button" (click)="showAddModal.set(false)" class="text-text-muted hover:text-text" aria-label="Close">✕</button>
       </div>
-      <p class="text-xs text-gray-500 mb-4">Manually add a review to a product. It is published immediately and shown on the storefront like any other review.</p>
+      <p class="mb-4 text-xs text-text-muted">Manually add a review to a product. It is published immediately and shown on the storefront like any other review.</p>
 
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">Product</label>
+          <label class="mb-1 block text-xs font-medium text-text">Product</label>
           <select [ngModel]="addForm().productId" (ngModelChange)="updateAddField('productId', $event)"
-            class="w-full text-sm px-2 py-2 border border-gray-300 rounded-md bg-white">
+            class="w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-text">
             <option value="">Select a product…</option>
             @for (p of products(); track p.id) {
               <option [value]="p.id">{{ p.name }}</option>
@@ -128,14 +128,14 @@
 
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Author name</label>
+            <label class="mb-1 block text-xs font-medium text-text">Author name</label>
             <input type="text" [ngModel]="addForm().authorName" (ngModelChange)="updateAddField('authorName', $event)"
-              placeholder="e.g. Ahmed M." class="w-full text-sm px-2 py-2 border border-gray-300 rounded-md" />
+              placeholder="e.g. Ahmed M." class="w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-text" />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">Rating</label>
+            <label class="mb-1 block text-xs font-medium text-text">Rating</label>
             <select [ngModel]="addForm().rating" (ngModelChange)="updateAddField('rating', +$event)"
-              class="w-full text-sm px-2 py-2 border border-gray-300 rounded-md bg-white">
+              class="w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-text">
               @for (n of [5,4,3,2,1]; track n) {
                 <option [value]="n">{{ n }} star{{ n > 1 ? 's' : '' }}</option>
               }
@@ -144,27 +144,27 @@
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">Title (optional)</label>
+          <label class="mb-1 block text-xs font-medium text-text">Title (optional)</label>
           <input type="text" [ngModel]="addForm().title" (ngModelChange)="updateAddField('title', $event)"
-            placeholder="Great product!" class="w-full text-sm px-2 py-2 border border-gray-300 rounded-md" />
+            placeholder="Great product!" class="w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-text" />
         </div>
 
         <div>
-          <label class="block text-xs font-medium text-gray-700 mb-1">Comment (optional)</label>
+          <label class="mb-1 block text-xs font-medium text-text">Comment (optional)</label>
           <textarea rows="3" [ngModel]="addForm().comment" (ngModelChange)="updateAddField('comment', $event)"
-            placeholder="Write the review text…" class="w-full text-sm px-2 py-2 border border-gray-300 rounded-md resize-none"></textarea>
+            placeholder="Write the review text…" class="w-full resize-none rounded-md border border-border bg-surface px-2 py-2 text-sm text-text"></textarea>
         </div>
 
         @if (addError()) {
-          <p class="text-xs text-red-600">{{ addError() }}</p>
+          <p class="text-xs text-danger">{{ addError() }}</p>
         }
       </div>
 
       <div class="mt-5 flex justify-end gap-2">
         <button type="button" (click)="showAddModal.set(false)"
-          class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200">Cancel</button>
+          class="rounded-md bg-surface-elevated px-4 py-2 text-sm text-text hover:bg-border/40">Cancel</button>
         <button type="button" (click)="submitManualReview()" [disabled]="submitting()"
-          class="px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50">
+          class="rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary-hover disabled:opacity-50">
           {{ submitting() ? 'Adding…' : 'Add Review' }}
         </button>
       </div>

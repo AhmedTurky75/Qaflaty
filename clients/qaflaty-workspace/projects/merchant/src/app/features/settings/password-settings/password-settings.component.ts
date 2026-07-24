@@ -86,7 +86,7 @@ export class PasswordSettingsComponent {
     color: string;
   } {
     if (!password) {
-      return { level: 'weak', percentage: 0, color: 'bg-gray-300' };
+      return { level: 'weak', percentage: 0, color: 'bg-border' };
     }
 
     let strength = 0;
