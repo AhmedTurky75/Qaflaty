@@ -1,0 +1,300 @@
+<div class="space-y-8">
+  <!-- Page Toggles Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-text">Page Settings</h3>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">About Page</label>
+        <input type="checkbox" [(ngModel)]="localConfig.pageToggles.aboutPage" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Contact Page</label>
+        <input type="checkbox" [(ngModel)]="localConfig.pageToggles.contactPage" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">FAQ Page</label>
+        <input type="checkbox" [(ngModel)]="localConfig.pageToggles.faqPage" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Terms Page</label>
+        <input type="checkbox" [(ngModel)]="localConfig.pageToggles.termsPage" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Privacy Page</label>
+        <input type="checkbox" [(ngModel)]="localConfig.pageToggles.privacyPage" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Shipping & Returns Page</label>
+        <input type="checkbox" [(ngModel)]="localConfig.pageToggles.shippingReturnsPage" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Cart Page</label>
+        <input type="checkbox" [(ngModel)]="localConfig.pageToggles.cartPage" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Feature Toggles Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-text">Feature Settings</h3>
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Wishlist</label>
+        <input type="checkbox" [(ngModel)]="localConfig.featureToggles.wishlist" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Product Reviews</label>
+        <input type="checkbox" [(ngModel)]="localConfig.featureToggles.reviews" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Promo Codes</label>
+        <input type="checkbox" [(ngModel)]="localConfig.featureToggles.promoCodes" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Newsletter</label>
+        <input type="checkbox" [(ngModel)]="localConfig.featureToggles.newsletter" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Product Search</label>
+        <input type="checkbox" [(ngModel)]="localConfig.featureToggles.productSearch" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Social Links</label>
+        <input type="checkbox" [(ngModel)]="localConfig.featureToggles.socialLinks" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Analytics</label>
+        <input type="checkbox" [(ngModel)]="localConfig.featureToggles.analytics" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Tax / VAT Section -->
+  @if (localConfig.taxSettings) {
+    <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+      <h3 class="mb-4 text-lg font-semibold text-text">Tax / VAT</h3>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-text">Enable tax</label>
+          <input type="checkbox" [(ngModel)]="localConfig.taxSettings.enabled" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-text">Label</label>
+          <input type="text" [(ngModel)]="localConfig.taxSettings.label" (change)="onConfigChange()" placeholder="VAT" class="w-40 rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-text">Rate (%)</label>
+          <input type="number" min="0" max="100" step="0.01" [(ngModel)]="localConfig.taxSettings.rate" (change)="onConfigChange()" class="w-40 rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-text">Prices already include tax</label>
+          <input type="checkbox" [(ngModel)]="localConfig.taxSettings.pricesIncludeTax" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Customer Auth Settings Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-text">Customer Authentication</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="mb-2 block text-sm font-medium text-text">Authentication Mode</label>
+        <select
+          [(ngModel)]="localConfig.customerAuthSettings.mode"
+          (change)="onConfigChange()"
+          class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+        >
+          <option value="GuestOnly">Guest Only</option>
+          <option value="Required">Required</option>
+          <option value="Optional">Optional</option>
+        </select>
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Allow Guest Checkout</label>
+        <input type="checkbox" [(ngModel)]="localConfig.customerAuthSettings.allowGuestCheckout" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Require Email Verification</label>
+        <input type="checkbox" [(ngModel)]="localConfig.customerAuthSettings.requireEmailVerification" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <div>
+          <label class="text-sm font-medium text-text">Require OTP on Place Order</label>
+          <p class="mt-0.5 text-xs text-text-muted">Customer must verify email OTP before order is confirmed</p>
+        </div>
+        <input type="checkbox" [(ngModel)]="localConfig.customerAuthSettings.requireOtpOnPlaceOrder" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Search Settings Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <div class="mb-4 flex items-center justify-between">
+      <h3 class="text-lg font-semibold text-text">Search & Filter Settings</h3>
+      <button
+        (click)="saveSearchSettings()"
+        [disabled]="savingSearch()"
+        class="rounded-md bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary-hover disabled:opacity-50"
+      >
+        {{ savingSearch() ? 'Saving...' : 'Save Search' }}
+      </button>
+    </div>
+    @if (searchSettings()) {
+      <div class="space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-text">Enable Text Search</label>
+          <input type="checkbox" [(ngModel)]="searchSettings()!.enableTextSearch" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-text">Category Filter</label>
+          <input type="checkbox" [(ngModel)]="searchSettings()!.enableCategoryFilter" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-text">Price Range Filter</label>
+          <input type="checkbox" [(ngModel)]="searchSettings()!.enablePriceFilter" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div class="flex items-center justify-between">
+          <label class="text-sm font-medium text-text">Custom Property Filters</label>
+          <input type="checkbox" [(ngModel)]="searchSettings()!.enablePropertyFilters" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">Allowed Sort Options</label>
+          <div class="space-y-2">
+            @for (opt of sortOptionList; track opt.value) {
+              <label class="flex cursor-pointer items-center gap-2">
+                <input
+                  type="checkbox"
+                  [checked]="isSortOptionEnabled(opt.value)"
+                  (change)="toggleSortOption(opt.value, $event)"
+                  class="h-4 w-4 rounded text-primary"
+                />
+                <span class="text-sm text-text">{{ opt.label }}</span>
+              </label>
+            }
+          </div>
+        </div>
+      </div>
+    } @else {
+      <p class="text-sm text-text-muted">Loading search settings...</p>
+    }
+  </div>
+
+  <!-- Payment Method Adjustments Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <div class="mb-4 flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-semibold text-text">Payment Methods</h3>
+        <p class="mt-0.5 text-sm text-text-muted">Enable payment methods and optionally add a fee or discount for each</p>
+      </div>
+      <button
+        (click)="savePaymentAdjustments()"
+        [disabled]="savingPayments()"
+        class="rounded-md bg-primary px-3 py-1.5 text-sm text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        {{ savingPayments() ? 'Saving...' : 'Save' }}
+      </button>
+    </div>
+
+    <div class="space-y-2">
+      @for (adj of paymentAdjustments(); track adj.paymentMethod) {
+        <div class="rounded-lg border border-border p-3">
+          <!-- Header row: toggle + name -->
+          <div class="flex items-center gap-3">
+            <input type="checkbox" [(ngModel)]="adj.isEnabled"
+              class="h-4 w-4 cursor-pointer rounded text-primary focus:ring-2 focus:ring-primary/40">
+            <span class="flex-1 text-sm font-medium text-text">
+              {{ adj.defaultLabel }}
+            </span>
+          </div>
+
+          <!-- Fee settings — only visible when enabled -->
+          @if (adj.isEnabled) {
+            <div class="mt-3 grid grid-cols-2 gap-3 border-t border-border pt-3">
+              <div>
+                <label class="mb-1 block text-xs text-text-muted">Fee Type</label>
+                <select [(ngModel)]="adj.adjustmentType"
+                  class="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40">
+                  <option value="Fixed">Fixed Amount</option>
+                  <option value="Percentage">Percentage (%)</option>
+                </select>
+              </div>
+              <div>
+                <label class="mb-1 block text-xs text-text-muted">
+                  Value <span class="text-text-muted">(negative = discount)</span>
+                </label>
+                <input type="number" [(ngModel)]="adj.value" step="0.01" placeholder="0"
+                  class="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40">
+              </div>
+              <div class="col-span-2">
+                <label class="mb-1 block text-xs text-text-muted">Display Label (optional)</label>
+                <input type="text" [(ngModel)]="adj.displayLabel" placeholder="e.g. COD fee +20 SAR"
+                  class="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40">
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Communication Settings Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-text">Communication Settings</h3>
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Enable WhatsApp</label>
+        <input type="checkbox" [(ngModel)]="localConfig.communicationSettings.whatsAppEnabled" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      @if (localConfig.communicationSettings.whatsAppEnabled) {
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">WhatsApp Number</label>
+          <input type="text" [(ngModel)]="localConfig.communicationSettings.whatsAppNumber" (change)="onConfigChange()" placeholder="+966XXXXXXXXX" class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">WhatsApp Default Message</label>
+          <textarea [(ngModel)]="localConfig.communicationSettings.whatsAppDefaultMessage" (change)="onConfigChange()" rows="3" placeholder="Hello! I'm interested in..." class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"></textarea>
+        </div>
+      }
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Enable Live Chat</label>
+        <input type="checkbox" [(ngModel)]="localConfig.communicationSettings.liveChatEnabled" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Enable AI Chatbot</label>
+        <input type="checkbox" [(ngModel)]="localConfig.communicationSettings.aiChatbotEnabled" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      @if (localConfig.communicationSettings.aiChatbotEnabled) {
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">Chatbot Name</label>
+          <input type="text" [(ngModel)]="localConfig.communicationSettings.aiChatbotName" (change)="onConfigChange()" placeholder="Assistant" class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40" />
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Localization Settings Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-text">Localization</h3>
+    <div class="space-y-4">
+      <div>
+        <label class="mb-2 block text-sm font-medium text-text">Default Language</label>
+        <select [(ngModel)]="localConfig.localizationSettings.defaultLanguage" (change)="onConfigChange()" class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40">
+          <option value="ar">Arabic</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <div class="flex items-center justify-between">
+        <label class="text-sm font-medium text-text">Enable Bilingual</label>
+        <input type="checkbox" [(ngModel)]="localConfig.localizationSettings.enableBilingual" (change)="onConfigChange()" class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40" />
+      </div>
+      <div>
+        <label class="mb-2 block text-sm font-medium text-text">Default Direction</label>
+        <select [(ngModel)]="localConfig.localizationSettings.defaultDirection" (change)="onConfigChange()" class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40">
+          <option value="ltr">Left to Right (LTR)</option>
+          <option value="rtl">Right to Left (RTL)</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>

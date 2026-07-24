@@ -1,0 +1,114 @@
+<div class="min-h-screen bg-canvas">
+  <!-- Header -->
+  <div class="border-b border-border bg-surface">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <h1 class="text-2xl font-bold text-text">Store Builder</h1>
+      <p class="mt-1 text-sm text-text-muted">
+        Configure your storefront appearance and functionality
+      </p>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div class="rounded-lg border border-border bg-surface p-12 text-center shadow-sm">
+        <p class="text-text-muted">Loading store configuration...</p>
+      </div>
+    </div>
+  }
+
+  <!-- Main Content -->
+  @if (!loading() && config()) {
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+      <div class="flex gap-6">
+        <!-- Sidebar Navigation -->
+        <div class="w-64 flex-shrink-0">
+          <nav class="divide-y divide-border rounded-lg border border-border bg-surface shadow-sm">
+            @for (tab of tabs; track tab.id) {
+              <button
+                (click)="setActiveTab(tab.id)"
+                [class]="activeTab() === tab.id
+                  ? 'border-s-4 border-primary bg-primary-tint text-primary'
+                  : 'text-text'"
+                class="w-full px-4 py-3 text-start text-sm font-medium hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40"
+              >
+                <div class="flex items-center">
+                  <span class="me-3 h-5 w-5 text-text-muted" [innerHTML]="tab.icon"></span>
+                  {{ tab.label }}
+                </div>
+              </button>
+            }
+          </nav>
+
+          <!-- Save Button for config tabs -->
+          @if (hasUnsavedChanges() && activeTab() !== 'pages' && activeTab() !== 'faq' && activeTab() !== 'delivery-zones' && activeTab() !== 'product-properties') {
+            <button
+              (click)="saveConfiguration()"
+              [disabled]="saving()"
+              class="mt-4 w-full rounded-lg bg-primary px-4 py-3 text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+            >
+              {{ saving() ? 'Saving...' : 'Save Changes' }}
+            </button>
+          }
+        </div>
+
+        <!-- Content Area -->
+        <div class="flex-1">
+          @if (activeTab() === 'general') {
+            <app-configuration-panel
+              [config]="config()!"
+              (configChange)="onConfigChange($event)"
+            />
+          }
+
+          @if (activeTab() === 'layout') {
+            <app-layout-design-panel
+              [config]="config()!"
+              (configChange)="onConfigChange($event)"
+            />
+          }
+
+          @if (activeTab() === 'pages') {
+            @if (editingPage()) {
+              <app-section-editor
+                [page]="editingPage()"
+                (save)="onSaveSections($event)"
+                (close)="closePageEditor()"
+              />
+            } @else {
+              <app-page-editor
+                [pages]="pages()"
+                (editPage)="onEditPage($event)"
+                (togglePage)="onTogglePage($event)"
+                (deletePage)="onDeletePage($event)"
+                (createPage)="onCreatePage($event)"
+              />
+            }
+          }
+
+          @if (activeTab() === 'faq') {
+            <app-faq-manager />
+          }
+
+          @if (activeTab() === 'delivery-zones') {
+            <app-delivery-zones-panel />
+          }
+
+          @if (activeTab() === 'product-properties') {
+            <app-product-properties-panel />
+          }
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Error State -->
+  @if (error()) {
+    <div class="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <div class="rounded-lg bg-danger/10 p-8 text-center">
+        <p class="text-danger">{{ error() }}</p>
+      </div>
+    </div>
+  }
+</div>

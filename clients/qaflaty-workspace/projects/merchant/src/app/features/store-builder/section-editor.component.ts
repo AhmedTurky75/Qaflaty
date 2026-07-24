@@ -41,19 +41,19 @@ interface PageTemplate {
   standalone: true,
   imports: [CommonModule, FormsModule, DragDropModule, RichTextEditorComponent],
   template: `
-    <div class="bg-white rounded-lg shadow">
+    <div class="bg-surface rounded-lg shadow">
       <!-- Header -->
-      <div class="px-6 py-4 border-b border-gray-200">
+      <div class="px-6 py-4 border-b border-border">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-lg font-semibold text-gray-900">
+            <h3 class="text-lg font-semibold text-text">
               Edit Sections: {{ page?.title?.english }}
             </h3>
-            <p class="text-sm text-gray-500 mt-1">
+            <p class="text-sm text-text-muted mt-1">
               Configure the sections displayed on this page
             </p>
           </div>
-          <button (click)="onClose()" class="text-gray-400 hover:text-gray-600">
+          <button (click)="onClose()" class="text-text-muted hover:text-text-muted">
             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
             </svg>
@@ -65,16 +65,16 @@ interface PageTemplate {
       <div class="p-6 space-y-3 max-h-[560px] overflow-y-auto">
         <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="space-y-3">
         @for (section of localSections; track section.id; let idx = $index) {
-          <div cdkDrag [cdkDragDisabled]="isExpanded(section.id)" class="border border-gray-200 rounded-lg overflow-hidden bg-white">
+          <div cdkDrag [cdkDragDisabled]="isExpanded(section.id)" class="border border-border rounded-lg overflow-hidden bg-surface">
             <!-- Drag placeholder shown in the drop gap -->
-            <div class="h-16 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg" *cdkDragPlaceholder></div>
+            <div class="h-16 bg-primary-tint border-2 border-dashed border-primary rounded-lg" *cdkDragPlaceholder></div>
             <!-- Section Row Header -->
-            <div class="p-4 flex items-start gap-3 bg-white">
+            <div class="p-4 flex items-start gap-3 bg-surface">
               <!-- Drag Handle -->
               <button
                 type="button"
                 cdkDragHandle
-                class="pt-1 text-gray-300 hover:text-gray-500 cursor-move disabled:cursor-not-allowed disabled:opacity-30"
+                class="pt-1 text-text-muted hover:text-text-muted cursor-move disabled:cursor-not-allowed disabled:opacity-30"
                 [disabled]="isExpanded(section.id)"
                 [title]="isExpanded(section.id) ? 'Collapse to reorder' : 'Drag to reorder'"
               >
@@ -86,25 +86,25 @@ interface PageTemplate {
               <!-- Section Details -->
               <div class="flex-1 space-y-2">
                 <div class="flex items-center justify-between">
-                  <h4 class="text-sm font-semibold text-gray-900">
+                  <h4 class="text-sm font-semibold text-text">
                     {{ getSectionTypeLabel(section.sectionType) }}
-                    <span class="ml-2 text-xs text-gray-400 font-normal">#{{ section.sortOrder }}</span>
+                    <span class="ml-2 text-xs text-text-muted font-normal">#{{ section.sortOrder }}</span>
                   </h4>
                   <div class="flex items-center gap-3">
                     <!-- Enabled Toggle -->
                     <label class="flex items-center gap-1.5 cursor-pointer">
-                      <span class="text-xs font-medium text-gray-600">Enabled</span>
+                      <span class="text-xs font-medium text-text-muted">Enabled</span>
                       <input
                         type="checkbox"
                         [(ngModel)]="section.isEnabled"
                         (ngModelChange)="notifyChange()"
-                        class="h-4 w-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
+                        class="h-4 w-4 text-primary rounded focus:ring-2 focus:ring-primary/40"
                       />
                     </label>
                     <!-- Expand/Collapse -->
                     <button
                       (click)="toggleExpanded(section.id)"
-                      class="text-gray-400 hover:text-blue-600 transition-colors"
+                      class="text-text-muted hover:text-primary transition-colors"
                       [title]="isExpanded(section.id) ? 'Collapse' : 'Expand to edit content'"
                     >
                       <svg class="w-4 h-4 transition-transform" [class.rotate-180]="isExpanded(section.id)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +114,7 @@ interface PageTemplate {
                     <!-- Duplicate -->
                     <button
                       (click)="duplicateSection(idx)"
-                      class="text-gray-400 hover:text-blue-600 transition-colors"
+                      class="text-text-muted hover:text-primary transition-colors"
                       title="Duplicate section"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +124,7 @@ interface PageTemplate {
                     <!-- Delete -->
                     <button
                       (click)="deleteSection(idx)"
-                      class="text-red-400 hover:text-red-600 transition-colors"
+                      class="text-danger hover:text-danger transition-colors"
                       title="Delete section"
                     >
                       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -138,7 +138,7 @@ interface PageTemplate {
                 <select
                   [(ngModel)]="section.variantId"
                   (ngModelChange)="notifyChange()"
-                  class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+                  class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 bg-surface"
                 >
                   @for (variant of getVariantsForSection(section.sectionType); track variant.id) {
                     <option [value]="variant.id">{{ variant.label }}</option>
@@ -149,26 +149,26 @@ interface PageTemplate {
 
             <!-- Expanded Content Form -->
             @if (isExpanded(section.id)) {
-              <div class="px-4 pb-4 pt-2 border-t border-gray-100 bg-gray-50 space-y-4">
+              <div class="px-4 pb-4 pt-2 border-t border-border bg-surface-elevated space-y-4">
                 <!-- Content / Design tabs -->
-                <div class="flex gap-4 border-b border-gray-200">
+                <div class="flex gap-4 border-b border-border">
                   <button
                     type="button"
                     (click)="setTab(section.id, 'content')"
                     class="pb-2 -mb-px text-sm font-medium border-b-2 transition-colors"
-                    [class.border-blue-600]="!isDesignTab(section.id)"
-                    [class.text-blue-600]="!isDesignTab(section.id)"
+                    [class.border-primary]="!isDesignTab(section.id)"
+                    [class.text-primary]="!isDesignTab(section.id)"
                     [class.border-transparent]="isDesignTab(section.id)"
-                    [class.text-gray-500]="isDesignTab(section.id)"
+                    [class.text-text-muted]="isDesignTab(section.id)"
                   >Content</button>
                   <button
                     type="button"
                     (click)="setTab(section.id, 'design')"
                     class="pb-2 -mb-px text-sm font-medium border-b-2 transition-colors flex items-center gap-1"
-                    [class.border-blue-600]="isDesignTab(section.id)"
-                    [class.text-blue-600]="isDesignTab(section.id)"
+                    [class.border-primary]="isDesignTab(section.id)"
+                    [class.text-primary]="isDesignTab(section.id)"
                     [class.border-transparent]="!isDesignTab(section.id)"
-                    [class.text-gray-500]="!isDesignTab(section.id)"
+                    [class.text-text-muted]="!isDesignTab(section.id)"
                   >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
@@ -182,54 +182,54 @@ interface PageTemplate {
                   @case ('Hero') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                        <label class="block text-xs font-medium text-text mb-1">
                           Title (EN)
-                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="This field impacts search engine rankings">SEO</span>
+                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
                         </label>
-                        <input #heroTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <input #heroTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.en || ''"
                           (input)="setContentBilingual(section, 'title', 'en', heroTitleEn.value)" placeholder="Welcome to Our Store" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #heroTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #heroTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.ar || ''"
                           (input)="setContentBilingual(section, 'title', 'ar', heroTitleAr.value)" placeholder="أهلاً بكم" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (EN)</label>
-                        <input #heroSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (EN)</label>
+                        <input #heroSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.en || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'en', heroSubEn.value)" placeholder="Discover our amazing collection" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (AR)</label>
-                        <input #heroSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (AR)</label>
+                        <input #heroSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.ar || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'ar', heroSubAr.value)" placeholder="اكتشف مجموعتنا" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Text</label>
-                        <input #heroBtn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Button Text</label>
+                        <input #heroBtn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.buttonText || ''"
                           (input)="setContentField(section, 'buttonText', heroBtn.value)" placeholder="Shop Now" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Link</label>
-                        <input #heroBtnLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Button Link</label>
+                        <input #heroBtnLink type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.buttonLink || ''"
                           (input)="setContentField(section, 'buttonLink', heroBtnLink.value)" placeholder="/products" />
                       </div>
                       <div class="col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                        <label class="block text-xs font-medium text-text mb-1">
                           Background Image
-                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="Image alt text impacts search engine rankings">SEO</span>
+                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="Image alt text impacts search engine rankings">SEO</span>
                         </label>
                         <div class="flex gap-2">
-                          <input #heroImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          <input #heroImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                             [value]="getContent(section)?.imageUrl || ''"
                             (input)="setContentField(section, 'imageUrl', heroImg.value)" placeholder="Paste image URL or upload →" />
-                          <label class="cursor-pointer flex-shrink-0 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-md text-xs text-gray-700 flex items-center gap-1.5 transition-colors"
+                          <label class="cursor-pointer flex-shrink-0 px-3 py-1.5 bg-surface-elevated hover:bg-surface-elevated rounded-md text-xs text-text flex items-center gap-1.5 transition-colors"
                             [class.opacity-50]="uploadingField() === section.id + ':imageUrl'">
                             @if (uploadingField() === section.id + ':imageUrl') {
                               <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -249,7 +249,7 @@ interface PageTemplate {
                           </label>
                         </div>
                         @if (getContent(section)?.imageUrl) {
-                          <img [src]="getContent(section).imageUrl" class="mt-2 h-24 w-full object-cover rounded-md border border-gray-200" alt="Preview" />
+                          <img [src]="getContent(section).imageUrl" class="mt-2 h-24 w-full object-cover rounded-md border border-border" alt="Preview" />
                         }
                       </div>
                     </div>
@@ -257,32 +257,32 @@ interface PageTemplate {
                   @case ('FeaturedProducts') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #fpTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #fpTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.en || ''"
                           (input)="setContentBilingual(section, 'title', 'en', fpTitleEn.value)" placeholder="Featured Products" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #fpTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #fpTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.ar || ''"
                           (input)="setContentBilingual(section, 'title', 'ar', fpTitleAr.value)" placeholder="المنتجات المميزة" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (EN)</label>
-                        <input #fpSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (EN)</label>
+                        <input #fpSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.en || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'en', fpSubEn.value)" placeholder="Check out our top picks" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (AR)</label>
-                        <input #fpSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (AR)</label>
+                        <input #fpSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.ar || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'ar', fpSubAr.value)" placeholder="اكتشف أفضل منتجاتنا" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Products to Show</label>
-                        <input #fpPageSize type="number" min="4" max="24" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Products to Show</label>
+                        <input #fpPageSize type="number" min="4" max="24" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getSettings(section)?.pageSize || 8"
                           (input)="setSettingsField(section, 'pageSize', +fpPageSize.value)" />
                       </div>
@@ -291,26 +291,26 @@ interface PageTemplate {
                   @case ('CategoryShowcase') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #csTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #csTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.en || ''"
                           (input)="setContentBilingual(section, 'title', 'en', csTitleEn.value)" placeholder="Shop by Category" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #csTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #csTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.ar || ''"
                           (input)="setContentBilingual(section, 'title', 'ar', csTitleAr.value)" placeholder="تسوق حسب الفئة" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (EN)</label>
-                        <input #csSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (EN)</label>
+                        <input #csSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.en || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'en', csSubEn.value)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (AR)</label>
-                        <input #csSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (AR)</label>
+                        <input #csSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.ar || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'ar', csSubAr.value)" />
                       </div>
@@ -319,55 +319,55 @@ interface PageTemplate {
                   @case ('FeatureHighlights') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #fhTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #fhTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.en || ''"
                           (input)="setContentBilingual(section, 'title', 'en', fhTitleEn.value)" placeholder="Why Choose Us" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #fhTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #fhTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.ar || ''"
                           (input)="setContentBilingual(section, 'title', 'ar', fhTitleAr.value)" placeholder="لماذا تختارنا" />
                       </div>
                     </div>
-                    <p class="text-xs text-gray-500">Feature items can be managed through the store builder API.</p>
+                    <p class="text-xs text-text-muted">Feature items can be managed through the store builder API.</p>
                   }
                   @case ('Newsletter') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #nlTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #nlTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.en || ''"
                           (input)="setContentBilingual(section, 'title', 'en', nlTitleEn.value)" placeholder="Stay in the Loop" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #nlTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #nlTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.ar || ''"
                           (input)="setContentBilingual(section, 'title', 'ar', nlTitleAr.value)" placeholder="ابق على اطلاع" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (EN)</label>
-                        <input #nlSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (EN)</label>
+                        <input #nlSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.en || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'en', nlSubEn.value)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (AR)</label>
-                        <input #nlSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (AR)</label>
+                        <input #nlSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.ar || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'ar', nlSubAr.value)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Input Placeholder</label>
-                        <input #nlPlaceholder type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Input Placeholder</label>
+                        <input #nlPlaceholder type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.placeholder || ''"
                           (input)="setContentField(section, 'placeholder', nlPlaceholder.value)" placeholder="Enter your email" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Text</label>
-                        <input #nlBtn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Button Text</label>
+                        <input #nlBtn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.buttonText || ''"
                           (input)="setContentField(section, 'buttonText', nlBtn.value)" placeholder="Subscribe" />
                       </div>
@@ -376,48 +376,48 @@ interface PageTemplate {
                   @case ('Banner') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #banTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #banTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.en || ''"
                           (input)="setContentBilingual(section, 'title', 'en', banTitleEn.value)" placeholder="Special Offer" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #banTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #banTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.ar || ''"
                           (input)="setContentBilingual(section, 'title', 'ar', banTitleAr.value)" placeholder="عرض خاص" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (EN)</label>
-                        <input #banSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (EN)</label>
+                        <input #banSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.en || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'en', banSubEn.value)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (AR)</label>
-                        <input #banSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (AR)</label>
+                        <input #banSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.subtitle?.ar || ''"
                           (input)="setContentBilingual(section, 'subtitle', 'ar', banSubAr.value)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Text</label>
-                        <input #banBtn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Button Text</label>
+                        <input #banBtn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.buttonText || ''"
                           (input)="setContentField(section, 'buttonText', banBtn.value)" placeholder="Shop Now" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Link</label>
-                        <input #banBtnLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Button Link</label>
+                        <input #banBtnLink type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.buttonLink || ''"
                           (input)="setContentField(section, 'buttonLink', banBtnLink.value)" placeholder="/products" />
                       </div>
                       <div class="col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Banner Image</label>
+                        <label class="block text-xs font-medium text-text mb-1">Banner Image</label>
                         <div class="flex gap-2">
-                          <input #banImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          <input #banImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                             [value]="getContent(section)?.imageUrl || ''"
                             (input)="setContentField(section, 'imageUrl', banImg.value)" placeholder="Paste image URL or upload →" />
-                          <label class="cursor-pointer flex-shrink-0 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-md text-xs text-gray-700 flex items-center gap-1.5 transition-colors"
+                          <label class="cursor-pointer flex-shrink-0 px-3 py-1.5 bg-surface-elevated hover:bg-surface-elevated rounded-md text-xs text-text flex items-center gap-1.5 transition-colors"
                             [class.opacity-50]="uploadingField() === section.id + ':imageUrl'">
                             @if (uploadingField() === section.id + ':imageUrl') {
                               <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -437,7 +437,7 @@ interface PageTemplate {
                           </label>
                         </div>
                         @if (getContent(section)?.imageUrl) {
-                          <img [src]="getContent(section).imageUrl" class="mt-2 h-24 w-full object-cover rounded-md border border-gray-200" alt="Preview" />
+                          <img [src]="getContent(section).imageUrl" class="mt-2 h-24 w-full object-cover rounded-md border border-border" alt="Preview" />
                         }
                       </div>
                     </div>
@@ -445,20 +445,20 @@ interface PageTemplate {
                   @case ('ProductCarousel') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #pcTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #pcTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.en || ''"
                           (input)="setContentBilingual(section, 'title', 'en', pcTitleEn.value)" placeholder="Popular Products" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #pcTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #pcTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.ar || ''"
                           (input)="setContentBilingual(section, 'title', 'ar', pcTitleAr.value)" placeholder="المنتجات الشائعة" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Products to Show</label>
-                        <input #pcPageSize type="number" min="4" max="24" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Products to Show</label>
+                        <input #pcPageSize type="number" min="4" max="24" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getSettings(section)?.pageSize || 8"
                           (input)="setSettingsField(section, 'pageSize', +pcPageSize.value)" />
                       </div>
@@ -467,24 +467,24 @@ interface PageTemplate {
                   @case ('Testimonials') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #testTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #testTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.en || ''"
                           (input)="setContentBilingual(section, 'title', 'en', testTitleEn.value)" placeholder="What Our Customers Say" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #testTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #testTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           [value]="getContent(section)?.title?.ar || ''"
                           (input)="setContentBilingual(section, 'title', 'ar', testTitleAr.value)" placeholder="ماذا يقول عملاؤنا" />
                       </div>
                     </div>
-                    <p class="text-xs text-gray-500">Individual testimonial items can be added through the API.</p>
+                    <p class="text-xs text-text-muted">Individual testimonial items can be added through the API.</p>
                   }
                   @case ('CustomHtml') {
                     <div>
-                      <label class="block text-xs font-medium text-gray-700 mb-1">Custom HTML</label>
-                      <textarea #customHtml rows="6" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 font-mono"
+                      <label class="block text-xs font-medium text-text mb-1">Custom HTML</label>
+                      <textarea #customHtml rows="6" class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 font-mono"
                         [value]="getContent(section)?.html || ''"
                         (input)="setContentField(section, 'html', customHtml.value)"
                         placeholder="<div>Your custom HTML here...</div>">
@@ -495,38 +495,38 @@ interface PageTemplate {
                   @case ('MediaText') {
                     <div class="space-y-4">
                       @for (item of getContentArray(section, 'items'); track $index; let i = $index) {
-                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                        <div class="border border-border rounded-md p-3 space-y-2 bg-surface">
                           <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-500">Row {{ i + 1 }}</span>
-                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                            <span class="text-xs font-semibold text-text-muted">Row {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-danger hover:text-danger">Remove</button>
                           </div>
                           <div class="grid grid-cols-2 gap-3">
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                              <input #mtTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                              <input #mtTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.title?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'en', mtTitleEn.value)" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                              <input #mtTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                              <input #mtTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.title?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'ar', mtTitleAr.value)" />
                             </div>
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
-                              <textarea #mtTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Text (EN)</label>
+                              <textarea #mtTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.text?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'en', mtTextEn.value)"></textarea>
                             </div>
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
-                              <textarea #mtTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Text (AR)</label>
+                              <textarea #mtTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.text?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'ar', mtTextAr.value)"></textarea>
                             </div>
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Image (leave blank to use a product photo)</label>
+                              <label class="block text-xs font-medium text-text mb-1">Image (leave blank to use a product photo)</label>
                               <div class="flex gap-2">
-                                <input #mtImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                <input #mtImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md"
                                   [value]="item.imageUrl || ''" (input)="updateArrayItemField(section, 'items', i, 'imageUrl', mtImg.value)" placeholder="Paste image URL or upload →" />
-                                <label class="cursor-pointer flex-shrink-0 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-md text-xs text-gray-700"
+                                <label class="cursor-pointer flex-shrink-0 px-3 py-1.5 bg-surface-elevated hover:bg-surface-elevated rounded-md text-xs text-text"
                                   [class.opacity-50]="uploadingField() === section.id + ':items:' + i + ':imageUrl'">
                                   Upload
                                   <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden"
@@ -534,62 +534,62 @@ interface PageTemplate {
                                 </label>
                               </div>
                               @if (item.imageUrl) {
-                                <img [src]="item.imageUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="Preview" />
+                                <img [src]="item.imageUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-border" alt="Preview" />
                               }
                             </div>
 
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Text Position</label>
+                              <label class="block text-xs font-medium text-text mb-1">Text Position</label>
                               <div class="flex gap-2">
                                 <button type="button" (click)="updateArrayItemField(section, 'items', i, 'layout', 'side')"
-                                  class="flex-1 text-xs px-2 py-1.5 rounded-md border" [class.border-blue-500]="(item.layout || 'side') === 'side'"
-                                  [class.bg-blue-50]="(item.layout || 'side') === 'side'" [class.border-gray-300]="(item.layout || 'side') !== 'side'">Beside Image</button>
+                                  class="flex-1 text-xs px-2 py-1.5 rounded-md border" [class.border-primary]="(item.layout || 'side') === 'side'"
+                                  [class.bg-primary-tint]="(item.layout || 'side') === 'side'" [class.border-border]="(item.layout || 'side') !== 'side'">Beside Image</button>
                                 <button type="button" (click)="updateArrayItemField(section, 'items', i, 'layout', 'below')"
-                                  class="flex-1 text-xs px-2 py-1.5 rounded-md border" [class.border-blue-500]="item.layout === 'below'"
-                                  [class.bg-blue-50]="item.layout === 'below'" [class.border-gray-300]="item.layout !== 'below'">Below Image</button>
+                                  class="flex-1 text-xs px-2 py-1.5 rounded-md border" [class.border-primary]="item.layout === 'below'"
+                                  [class.bg-primary-tint]="item.layout === 'below'" [class.border-border]="item.layout !== 'below'">Below Image</button>
                                 <button type="button" (click)="updateArrayItemField(section, 'items', i, 'layout', 'overlay')"
-                                  class="flex-1 text-xs px-2 py-1.5 rounded-md border" [class.border-blue-500]="item.layout === 'overlay'"
-                                  [class.bg-blue-50]="item.layout === 'overlay'" [class.border-gray-300]="item.layout !== 'overlay'">Over Image</button>
+                                  class="flex-1 text-xs px-2 py-1.5 rounded-md border" [class.border-primary]="item.layout === 'overlay'"
+                                  [class.bg-primary-tint]="item.layout === 'overlay'" [class.border-border]="item.layout !== 'overlay'">Over Image</button>
                               </div>
                             </div>
 
                             @if ((item.layout || 'side') === 'side') {
                               <label class="col-span-2 flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" [checked]="item.reverse" (change)="updateArrayItemField(section, 'items', i, 'reverse', !item.reverse)" class="h-4 w-4 text-blue-600 rounded" />
-                                <span class="text-xs font-medium text-gray-700">Image on the right</span>
+                                <input type="checkbox" [checked]="item.reverse" (change)="updateArrayItemField(section, 'items', i, 'reverse', !item.reverse)" class="h-4 w-4 text-primary rounded" />
+                                <span class="text-xs font-medium text-text">Image on the right</span>
                               </label>
                             }
                             @if (item.layout === 'below') {
                               <label class="col-span-2 flex items-center gap-2 cursor-pointer">
-                                <input type="checkbox" [checked]="item.reverse" (change)="updateArrayItemField(section, 'items', i, 'reverse', !item.reverse)" class="h-4 w-4 text-blue-600 rounded" />
-                                <span class="text-xs font-medium text-gray-700">Text above the image</span>
+                                <input type="checkbox" [checked]="item.reverse" (change)="updateArrayItemField(section, 'items', i, 'reverse', !item.reverse)" class="h-4 w-4 text-primary rounded" />
+                                <span class="text-xs font-medium text-text">Text above the image</span>
                               </label>
                             }
 
                             @if (item.layout === 'overlay') {
-                              <div class="col-span-2 space-y-3 border-t border-gray-100 pt-3">
+                              <div class="col-span-2 space-y-3 border-t border-border pt-3">
                                 <div>
-                                  <label class="block text-xs font-medium text-gray-700 mb-1">Text Area</label>
+                                  <label class="block text-xs font-medium text-text mb-1">Text Area</label>
                                   <div class="grid grid-cols-5 gap-1 w-48">
                                     @for (pos of overlayPositions; track pos) {
                                       <button type="button" (click)="selectOverlayCell(section, i, pos)"
                                         class="h-8 rounded-md border flex items-center justify-center transition-colors"
-                                        [class.bg-green-200]="isOverlayEndpoint(item, pos)"
-                                        [class.border-green-500]="isOverlayEndpoint(item, pos)"
-                                        [class.bg-green-50]="isInOverlaySpan(item, pos) && !isOverlayEndpoint(item, pos)"
-                                        [class.border-green-300]="isInOverlaySpan(item, pos) && !isOverlayEndpoint(item, pos)"
-                                        [class.border-gray-300]="!isInOverlaySpan(item, pos)"
+                                        [class.bg-success/20]="isOverlayEndpoint(item, pos)"
+                                        [class.border-success]="isOverlayEndpoint(item, pos)"
+                                        [class.bg-success/10]="isInOverlaySpan(item, pos) && !isOverlayEndpoint(item, pos)"
+                                        [class.border-success/40]="isInOverlaySpan(item, pos) && !isOverlayEndpoint(item, pos)"
+                                        [class.border-border]="!isInOverlaySpan(item, pos)"
                                         [title]="pos">
-                                        <span class="w-1.5 h-1.5 rounded-full" [class.bg-green-600]="isInOverlaySpan(item, pos)" [class.bg-gray-400]="!isInOverlaySpan(item, pos)"></span>
+                                        <span class="w-1.5 h-1.5 rounded-full" [class.bg-success]="isInOverlaySpan(item, pos)" [class.bg-border]="!isInOverlaySpan(item, pos)"></span>
                                       </button>
                                     }
                                   </div>
-                                  <p class="text-[11px] text-gray-400 mt-1">Click a cell to start, then click another to size the box (a row, column, or rectangle) — or click it again for a small box. On phones this collapses to the nearest 2×2 corner so text doesn't crowd a small screen.</p>
+                                  <p class="text-[11px] text-text-muted mt-1">Click a cell to start, then click another to size the box (a row, column, or rectangle) — or click it again for a small box. On phones this collapses to the nearest 2×2 corner so text doesn't crowd a small screen.</p>
                                 </div>
                                 <div class="grid grid-cols-2 gap-3">
                                   <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Readability Overlay</label>
-                                    <select #mtScrim class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                                    <label class="block text-xs font-medium text-text mb-1">Readability Overlay</label>
+                                    <select #mtScrim class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                                       [value]="item.scrim || 'dark'" (change)="updateArrayItemField(section, 'items', i, 'scrim', mtScrim.value)">
                                       <option value="dark">Dark</option>
                                       <option value="light">Light</option>
@@ -597,8 +597,8 @@ interface PageTemplate {
                                     </select>
                                   </div>
                                   <div>
-                                    <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
-                                    <input #mtColor type="color" class="h-8 w-full rounded border border-gray-300 cursor-pointer p-0.5"
+                                    <label class="block text-xs font-medium text-text mb-1">Text Color</label>
+                                    <input #mtColor type="color" class="h-8 w-full rounded border border-border cursor-pointer p-0.5"
                                       [value]="item.textColor || '#ffffff'" (input)="updateArrayItemField(section, 'items', i, 'textColor', mtColor.value)" />
                                   </div>
                                 </div>
@@ -608,136 +608,136 @@ interface PageTemplate {
                         </div>
                       }
                       <button type="button" (click)="addArrayItem(section, 'items', { imageUrl: '', title: { en: '', ar: '' }, text: { en: '', ar: '' }, reverse: false, layout: 'side' })"
-                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Row</button>
+                        class="text-xs font-medium text-primary hover:text-primary">+ Add Row</button>
                     </div>
                   }
                   @case ('Benefits') {
                     <div class="space-y-4">
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                          <input #benfTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                          <input #benfTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', benfTitleEn.value)" placeholder="Why You'll Love It" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                          <input #benfTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                          <input #benfTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', benfTitleAr.value)" />
                         </div>
                       </div>
                       @for (item of getContentArray(section, 'items'); track $index; let i = $index) {
-                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                        <div class="border border-border rounded-md p-3 space-y-2 bg-surface">
                           <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-500">Benefit {{ i + 1 }}</span>
-                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                            <span class="text-xs font-semibold text-text-muted">Benefit {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-danger hover:text-danger">Remove</button>
                           </div>
                           <div class="grid grid-cols-2 gap-3">
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Icon (emoji)</label>
-                              <input #benIcon type="text" class="w-20 text-sm px-2 py-1.5 border border-gray-300 rounded-md text-center"
+                              <label class="block text-xs font-medium text-text mb-1">Icon (emoji)</label>
+                              <input #benIcon type="text" class="w-20 text-sm px-2 py-1.5 border border-border rounded-md text-center"
                                 [value]="item.icon || ''" (input)="updateArrayItemField(section, 'items', i, 'icon', benIcon.value)" placeholder="⭐" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                              <input #benTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                              <input #benTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.title?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'en', benTitleEn.value)" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                              <input #benTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                              <input #benTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.title?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'title', 'ar', benTitleAr.value)" />
                             </div>
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
-                              <textarea #benTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Text (EN)</label>
+                              <textarea #benTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.text?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'en', benTextEn.value)"></textarea>
                             </div>
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
-                              <textarea #benTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Text (AR)</label>
+                              <textarea #benTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.text?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'text', 'ar', benTextAr.value)"></textarea>
                             </div>
                           </div>
                         </div>
                       }
                       <button type="button" (click)="addArrayItem(section, 'items', { icon: '⭐', title: { en: '', ar: '' }, text: { en: '', ar: '' } })"
-                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Benefit</button>
+                        class="text-xs font-medium text-primary hover:text-primary">+ Add Benefit</button>
                     </div>
                   }
                   @case ('Faq') {
                     <div class="space-y-4">
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                          <input #faqTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                          <input #faqTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', faqTitleEn.value)" placeholder="Frequently Asked Questions" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                          <input #faqTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                          <input #faqTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', faqTitleAr.value)" />
                         </div>
                       </div>
                       @for (item of getContentArray(section, 'items'); track $index; let i = $index) {
-                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                        <div class="border border-border rounded-md p-3 space-y-2 bg-surface">
                           <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-500">Question {{ i + 1 }}</span>
-                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                            <span class="text-xs font-semibold text-text-muted">Question {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-danger hover:text-danger">Remove</button>
                           </div>
                           <div class="grid grid-cols-2 gap-3">
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Question (EN)</label>
-                              <input #faqQEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Question (EN)</label>
+                              <input #faqQEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.question?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'question', 'en', faqQEn.value)" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Question (AR)</label>
-                              <input #faqQAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Question (AR)</label>
+                              <input #faqQAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.question?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'question', 'ar', faqQAr.value)" />
                             </div>
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Answer (EN)</label>
-                              <textarea #faqAEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Answer (EN)</label>
+                              <textarea #faqAEn rows="2" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.answer?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'answer', 'en', faqAEn.value)"></textarea>
                             </div>
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Answer (AR)</label>
-                              <textarea #faqAAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Answer (AR)</label>
+                              <textarea #faqAAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.answer?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'answer', 'ar', faqAAr.value)"></textarea>
                             </div>
                           </div>
                         </div>
                       }
                       <button type="button" (click)="addArrayItem(section, 'items', { question: { en: '', ar: '' }, answer: { en: '', ar: '' } })"
-                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Question</button>
+                        class="text-xs font-medium text-primary hover:text-primary">+ Add Question</button>
                     </div>
                   }
                   @case ('Guarantee') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Icon (emoji)</label>
-                        <input #gIcon type="text" class="w-20 text-sm px-2 py-1.5 border border-gray-300 rounded-md text-center"
+                        <label class="block text-xs font-medium text-text mb-1">Icon (emoji)</label>
+                        <input #gIcon type="text" class="w-20 text-sm px-2 py-1.5 border border-border rounded-md text-center"
                           [value]="getContent(section)?.icon || ''" (input)="setContentField(section, 'icon', gIcon.value)" placeholder="🛡️" />
                       </div>
                       <div></div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #gTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #gTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', gTitleEn.value)" placeholder="Satisfaction Guaranteed" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #gTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #gTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', gTitleAr.value)" />
                       </div>
                       <div class="col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
-                        <textarea #gTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Text (EN)</label>
+                        <textarea #gTextEn rows="2" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.text?.en || ''" (input)="setContentBilingual(section, 'text', 'en', gTextEn.value)"></textarea>
                       </div>
                       <div class="col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
-                        <textarea #gTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Text (AR)</label>
+                        <textarea #gTextAr rows="2" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.text?.ar || ''" (input)="setContentBilingual(section, 'text', 'ar', gTextAr.value)"></textarea>
                       </div>
                     </div>
@@ -745,40 +745,40 @@ interface PageTemplate {
                   @case ('CallToAction') {
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #ctaTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #ctaTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', ctaTitleEn.value)" placeholder="Ready to get yours?" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #ctaTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #ctaTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', ctaTitleAr.value)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (EN)</label>
-                        <input #ctaSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (EN)</label>
+                        <input #ctaSubEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.subtitle?.en || ''" (input)="setContentBilingual(section, 'subtitle', 'en', ctaSubEn.value)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Subtitle (AR)</label>
-                        <input #ctaSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Subtitle (AR)</label>
+                        <input #ctaSubAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.subtitle?.ar || ''" (input)="setContentBilingual(section, 'subtitle', 'ar', ctaSubAr.value)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
-                        <input #ctaBtnEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Button Text (EN)</label>
+                        <input #ctaBtnEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.buttonText?.en || ''" (input)="setContentBilingual(section, 'buttonText', 'en', ctaBtnEn.value)" placeholder="Shop Now" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
-                        <input #ctaBtnAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Button Text (AR)</label>
+                        <input #ctaBtnAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', ctaBtnAr.value)" />
                       </div>
                       <div class="col-span-2">
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Button Link</label>
-                        <input #ctaBtnLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Button Link</label>
+                        <input #ctaBtnLink type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.buttonLink || ''" (input)="setContentField(section, 'buttonLink', ctaBtnLink.value)" placeholder="/products, https://…, or leave empty to scroll to the buy box" />
-                        <p class="text-[11px] text-gray-400 mt-1">Leave empty on a product page to scroll to the buy box. On other pages, set where the button should go (e.g. /products).</p>
+                        <p class="text-[11px] text-text-muted mt-1">Leave empty on a product page to scroll to the buy box. On other pages, set where the button should go (e.g. /products).</p>
                       </div>
                     </div>
                   }
@@ -786,13 +786,13 @@ interface PageTemplate {
                     <p class="text-[11px] text-amber-600 mb-2">Shows real customer reviews for the product — only appears on product landing pages. For a home or custom page, use the “Testimonials” section instead.</p>
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                        <input #rsTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                        <input #rsTitleEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', rsTitleEn.value)" placeholder="What Customers Say" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                        <input #rsTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                        <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                        <input #rsTitleAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                           [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', rsTitleAr.value)" />
                       </div>
                     </div>
@@ -803,58 +803,58 @@ interface PageTemplate {
                         <label class="flex items-center gap-2 cursor-pointer">
                           <input type="checkbox" [checked]="getContent(section)?.autoplay !== false"
                             (change)="setContentField(section, 'autoplay', !(getContent(section)?.autoplay !== false))"
-                            class="h-4 w-4 text-blue-600 rounded" />
-                          <span class="text-xs font-medium text-gray-700">Autoplay</span>
+                            class="h-4 w-4 text-primary rounded" />
+                          <span class="text-xs font-medium text-text">Autoplay</span>
                         </label>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Interval (ms)</label>
-                          <input #slInterval type="number" min="1500" step="500" class="w-28 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Interval (ms)</label>
+                          <input #slInterval type="number" min="1500" step="500" class="w-28 text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.interval || 5000" (input)="setContentField(section, 'interval', +slInterval.value)" />
                         </div>
                       </div>
                       @for (item of getContentArray(section, 'slides'); track $index; let i = $index) {
-                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                        <div class="border border-border rounded-md p-3 space-y-2 bg-surface">
                           <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-500">Slide {{ i + 1 }}</span>
-                            <button type="button" (click)="removeArrayItem(section, 'slides', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                            <span class="text-xs font-semibold text-text-muted">Slide {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'slides', i)" class="text-xs text-danger hover:text-danger">Remove</button>
                           </div>
                           <div class="grid grid-cols-2 gap-3">
                             <div class="col-span-2">
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Image</label>
+                              <label class="block text-xs font-medium text-text mb-1">Image</label>
                               <div class="flex gap-2">
-                                <input #slImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                <input #slImg type="text" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md"
                                   [value]="item.imageUrl || ''" (input)="updateArrayItemField(section, 'slides', i, 'imageUrl', slImg.value)" placeholder="Image URL or upload →" />
-                                <label class="px-2 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 whitespace-nowrap">
+                                <label class="px-2 py-1.5 text-xs bg-surface-elevated rounded-md cursor-pointer hover:bg-surface-elevated whitespace-nowrap">
                                   Upload
                                   <input type="file" accept="image/*" class="hidden" (change)="uploadArrayItemImage(section, 'slides', i, 'imageUrl', $event)" />
                                 </label>
                               </div>
                               @if (item.imageUrl) {
-                                <img [src]="item.imageUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="Preview" />
+                                <img [src]="item.imageUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-border" alt="Preview" />
                               }
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Link</label>
-                              <input #slLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Link</label>
+                              <input #slLink type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.link || ''" (input)="updateArrayItemField(section, 'slides', i, 'link', slLink.value)" placeholder="/products" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Alt text</label>
-                              <input #slAlt type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Alt text</label>
+                              <input #slAlt type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.alt || ''" (input)="updateArrayItemField(section, 'slides', i, 'alt', slAlt.value)" />
                             </div>
                           </div>
                         </div>
                       }
                       <button type="button" (click)="addArrayItem(section, 'slides', { imageUrl: '', link: '', alt: '' })"
-                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Slide</button>
+                        class="text-xs font-medium text-primary hover:text-primary">+ Add Slide</button>
                     </div>
                   }
                   @case ('Video') {
                     <div class="space-y-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Video Source</label>
-                        <select #vidSrc class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                        <label class="block text-xs font-medium text-text mb-1">Video Source</label>
+                        <select #vidSrc class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                           [value]="getContent(section)?.source || 'youtube'" (change)="setContentField(section, 'source', vidSrc.value)">
                           <option value="youtube">YouTube</option>
                           <option value="upload">Upload a video</option>
@@ -862,37 +862,37 @@ interface PageTemplate {
                       </div>
                       @if ((getContent(section)?.source || 'youtube') === 'upload') {
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Video File (MP4/WebM, max 20 MB)</label>
+                          <label class="block text-xs font-medium text-text mb-1">Video File (MP4/WebM, max 20 MB)</label>
                           <div class="flex items-center gap-2">
-                            <label class="px-3 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200"
+                            <label class="px-3 py-1.5 text-xs bg-surface-elevated rounded-md cursor-pointer hover:bg-surface-elevated"
                               [class.opacity-50]="uploadingField() === section.id + ':videoUrl'">
                               @if (uploadingField() === section.id + ':videoUrl') { Uploading… } @else { Choose Video }
                               <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" class="hidden"
                                 [disabled]="!!uploadingField()" (change)="uploadVideo(section, $event)" />
                             </label>
                             @if (getContent(section)?.videoUrl) {
-                              <span class="text-xs text-green-600">Video uploaded ✓</span>
-                              <button type="button" (click)="setContentField(section, 'videoUrl', '')" class="text-xs text-gray-400 hover:text-red-500">Remove</button>
+                              <span class="text-xs text-success">Video uploaded ✓</span>
+                              <button type="button" (click)="setContentField(section, 'videoUrl', '')" class="text-xs text-text-muted hover:text-danger">Remove</button>
                             }
                           </div>
                           @if (videoUploadError()) {
-                            <p class="text-xs text-red-600 mt-1">{{ videoUploadError() }}</p>
+                            <p class="text-xs text-danger mt-1">{{ videoUploadError() }}</p>
                           }
                           @if (getContent(section)?.videoUrl) {
-                            <video [src]="getContent(section).videoUrl" class="mt-2 w-full max-h-40 rounded-md border border-gray-200 bg-black" controls></video>
+                            <video [src]="getContent(section).videoUrl" class="mt-2 w-full max-h-40 rounded-md border border-border bg-black" controls></video>
                           }
                         </div>
                       } @else {
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">YouTube Video ID or URL</label>
-                          <input #vidId type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">YouTube Video ID or URL</label>
+                          <input #vidId type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.videoId || ''" (input)="setContentField(section, 'videoId', vidId.value)" placeholder="dQw4w9WgXcQ or https://youtu.be/…" />
                         </div>
                       }
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Aspect Ratio</label>
-                          <select #vidAr class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          <label class="block text-xs font-medium text-text mb-1">Aspect Ratio</label>
+                          <select #vidAr class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                             [value]="getContent(section)?.aspectRatio || '16 / 9'" (change)="setContentField(section, 'aspectRatio', vidAr.value)">
                             <option value="16 / 9">16:9 (widescreen)</option>
                             <option value="4 / 3">4:3</option>
@@ -903,8 +903,8 @@ interface PageTemplate {
                         <label class="flex items-center gap-2 cursor-pointer mt-6">
                           <input type="checkbox" [checked]="getContent(section)?.autoplay === true"
                             (change)="setContentField(section, 'autoplay', !(getContent(section)?.autoplay === true))"
-                            class="h-4 w-4 text-blue-600 rounded" />
-                          <span class="text-xs font-medium text-gray-700" title="Browsers only allow autoplay when muted">Autoplay when opened (muted)</span>
+                            class="h-4 w-4 text-primary rounded" />
+                          <span class="text-xs font-medium text-text" title="Browsers only allow autoplay when muted">Autoplay when opened (muted)</span>
                         </label>
                       </div>
                     </div>
@@ -913,29 +913,29 @@ interface PageTemplate {
                     <div class="space-y-3">
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
-                          <input #anEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Text (EN)</label>
+                          <input #anEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.text?.en || ''" (input)="setContentBilingual(section, 'text', 'en', anEn.value)" placeholder="Free shipping on orders over 500!" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
-                          <input #anAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Text (AR)</label>
+                          <input #anAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.text?.ar || ''" (input)="setContentBilingual(section, 'text', 'ar', anAr.value)" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Link (optional)</label>
-                          <input #anLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Link (optional)</label>
+                          <input #anLink type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.link || ''" (input)="setContentField(section, 'link', anLink.value)" placeholder="/products" />
                         </div>
                         <div class="flex gap-3">
                           <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Background</label>
-                            <input #anBg type="color" class="h-8 w-12 rounded border border-gray-300 cursor-pointer p-0"
+                            <label class="block text-xs font-medium text-text mb-1">Background</label>
+                            <input #anBg type="color" class="h-8 w-12 rounded border border-border cursor-pointer p-0"
                               [value]="getContent(section)?.bg || '#111827'" (input)="setContentField(section, 'bg', anBg.value)" />
                           </div>
                           <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
-                            <input #anTc type="color" class="h-8 w-12 rounded border border-gray-300 cursor-pointer p-0"
+                            <label class="block text-xs font-medium text-text mb-1">Text Color</label>
+                            <input #anTc type="color" class="h-8 w-12 rounded border border-border cursor-pointer p-0"
                               [value]="getContent(section)?.textColor || '#ffffff'" (input)="setContentField(section, 'textColor', anTc.value)" />
                           </div>
                         </div>
@@ -943,8 +943,8 @@ interface PageTemplate {
                       <label class="flex items-center gap-2 cursor-pointer">
                         <input type="checkbox" [checked]="getContent(section)?.dismissible === true"
                           (change)="setContentField(section, 'dismissible', !(getContent(section)?.dismissible === true))"
-                          class="h-4 w-4 text-blue-600 rounded" />
-                        <span class="text-xs font-medium text-gray-700">Allow visitors to dismiss</span>
+                          class="h-4 w-4 text-primary rounded" />
+                        <span class="text-xs font-medium text-text">Allow visitors to dismiss</span>
                       </label>
                     </div>
                   }
@@ -952,20 +952,20 @@ interface PageTemplate {
                     <div class="space-y-3">
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                          <input #cdTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                          <input #cdTEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', cdTEn.value)" placeholder="Hurry, offer ends in" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                          <input #cdTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                          <input #cdTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', cdTAr.value)" />
                         </div>
                       </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Timer Type</label>
-                          <select #cdMode class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          <label class="block text-xs font-medium text-text mb-1">Timer Type</label>
+                          <select #cdMode class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                             [value]="getContent(section)?.mode || 'fixed'" (change)="setContentField(section, 'mode', cdMode.value)">
                             <option value="fixed">Fixed date</option>
                             <option value="evergreen">Evergreen (per visitor)</option>
@@ -973,24 +973,24 @@ interface PageTemplate {
                         </div>
                         @if ((getContent(section)?.mode || 'fixed') === 'evergreen') {
                           <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Duration (minutes)</label>
-                            <input #cdDur type="number" min="1" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            <label class="block text-xs font-medium text-text mb-1">Duration (minutes)</label>
+                            <input #cdDur type="number" min="1" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                               [value]="getContent(section)?.durationMinutes || 60" (input)="setContentField(section, 'durationMinutes', +cdDur.value)" />
                           </div>
                         } @else {
                           <div>
-                            <label class="block text-xs font-medium text-gray-700 mb-1">Ends At</label>
-                            <input #cdEnds type="datetime-local" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            <label class="block text-xs font-medium text-text mb-1">Ends At</label>
+                            <input #cdEnds type="datetime-local" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                               [value]="getContent(section)?.endsAt || ''" (input)="setContentField(section, 'endsAt', cdEnds.value)" />
                           </div>
                         }
                       </div>
                       @if ((getContent(section)?.mode || 'fixed') === 'evergreen') {
-                        <p class="text-[11px] text-gray-400">Evergreen: each visitor's timer starts on their first visit and counts down the set duration.</p>
+                        <p class="text-[11px] text-text-muted">Evergreen: each visitor's timer starts on their first visit and counts down the set duration.</p>
                       }
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">When expired</label>
-                        <select #cdExp class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                        <label class="block text-xs font-medium text-text mb-1">When expired</label>
+                        <select #cdExp class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                           [value]="getContent(section)?.expiredBehavior || 'message'" (change)="setContentField(section, 'expiredBehavior', cdExp.value)">
                           <option value="message">Show a message</option>
                           <option value="hide">Hide the section</option>
@@ -998,13 +998,13 @@ interface PageTemplate {
                       </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Expired Text (EN)</label>
-                          <input #cdExEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Expired Text (EN)</label>
+                          <input #cdExEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.expiredText?.en || ''" (input)="setContentBilingual(section, 'expiredText', 'en', cdExEn.value)" placeholder="Offer ended" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Expired Text (AR)</label>
-                          <input #cdExAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Expired Text (AR)</label>
+                          <input #cdExAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.expiredText?.ar || ''" (input)="setContentBilingual(section, 'expiredText', 'ar', cdExAr.value)" />
                         </div>
                       </div>
@@ -1012,16 +1012,16 @@ interface PageTemplate {
                   }
                   @case ('RichText') {
                     <div class="space-y-3">
-                      <p class="text-xs text-gray-500">Format text with the toolbar — no HTML needed. Content is sanitized on render.</p>
+                      <p class="text-xs text-text-muted">Format text with the toolbar — no HTML needed. Content is sanitized on render.</p>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Content (EN)</label>
+                        <label class="block text-xs font-medium text-text mb-1">Content (EN)</label>
                         <app-rich-text-editor
                           [value]="getContent(section)?.html?.en || ''"
                           placeholder="Write your content…"
                           (valueChange)="setContentBilingual(section, 'html', 'en', $event)" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Content (AR)</label>
+                        <label class="block text-xs font-medium text-text mb-1">Content (AR)</label>
                         <app-rich-text-editor
                           dir="rtl"
                           [value]="getContent(section)?.html?.ar || ''"
@@ -1034,18 +1034,18 @@ interface PageTemplate {
                     <div class="space-y-3">
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
-                          <input #cbEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Button Text (EN)</label>
+                          <input #cbEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.text?.en || ''" (input)="setContentBilingual(section, 'text', 'en', cbEn.value)" placeholder="Buy Now" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
-                          <input #cbAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Button Text (AR)</label>
+                          <input #cbAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.text?.ar || ''" (input)="setContentBilingual(section, 'text', 'ar', cbAr.value)" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Style</label>
-                          <select #cbStyle class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          <label class="block text-xs font-medium text-text mb-1">Style</label>
+                          <select #cbStyle class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                             [value]="getContent(section)?.style || 'primary'" (change)="setContentField(section, 'style', cbStyle.value)">
                             <option value="primary">Primary (filled)</option>
                             <option value="outline">Outline</option>
@@ -1053,8 +1053,8 @@ interface PageTemplate {
                           </select>
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Action</label>
-                          <select #cbAction class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          <label class="block text-xs font-medium text-text mb-1">Action</label>
+                          <select #cbAction class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                             [value]="getContent(section)?.action || 'link'" (change)="setContentField(section, 'action', cbAction.value)">
                             <option value="link">Go to link</option>
                             <option value="anchor">Scroll to section</option>
@@ -1065,41 +1065,41 @@ interface PageTemplate {
                         @switch (getContent(section)?.action || 'link') {
                           @case ('whatsapp') {
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">WhatsApp Number</label>
-                              <input #cbWa type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">WhatsApp Number</label>
+                              <input #cbWa type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="getContent(section)?.whatsapp || ''" (input)="setContentField(section, 'whatsapp', cbWa.value)" placeholder="201000000000 (country code, no +)" />
                             </div>
                             <div class="col-span-2 grid grid-cols-2 gap-3">
                               <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Prefilled Message (EN)</label>
-                                <input #cbMsgEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                <label class="block text-xs font-medium text-text mb-1">Prefilled Message (EN)</label>
+                                <input #cbMsgEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                   [value]="getContent(section)?.message?.en || ''" (input)="setContentBilingual(section, 'message', 'en', cbMsgEn.value)" placeholder="I'd like to order…" />
                               </div>
                               <div>
-                                <label class="block text-xs font-medium text-gray-700 mb-1">Prefilled Message (AR)</label>
-                                <input #cbMsgAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                                <label class="block text-xs font-medium text-text mb-1">Prefilled Message (AR)</label>
+                                <input #cbMsgAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                   [value]="getContent(section)?.message?.ar || ''" (input)="setContentBilingual(section, 'message', 'ar', cbMsgAr.value)" />
                               </div>
                             </div>
                           }
                           @case ('phone') {
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Phone Number</label>
-                              <input #cbPhone type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Phone Number</label>
+                              <input #cbPhone type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="getContent(section)?.phone || ''" (input)="setContentField(section, 'phone', cbPhone.value)" placeholder="+20 100 000 0000" />
                             </div>
                           }
                           @case ('anchor') {
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Scroll-to Anchor ID</label>
-                              <input #cbAnchor type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Scroll-to Anchor ID</label>
+                              <input #cbAnchor type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="getContent(section)?.anchor || ''" (input)="setContentField(section, 'anchor', cbAnchor.value)" placeholder="order-form" />
                             </div>
                           }
                           @default {
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Link</label>
-                              <input #cbLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Link</label>
+                              <input #cbLink type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="getContent(section)?.link || ''" (input)="setContentField(section, 'link', cbLink.value)" placeholder="/products" />
                             </div>
                           }
@@ -1111,170 +1111,170 @@ interface PageTemplate {
                     <div class="space-y-4">
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                          <input #stTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                          <input #stTEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', stTEn.value)" placeholder="Trusted by thousands" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                          <input #stTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                          <input #stTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', stTAr.value)" />
                         </div>
                       </div>
                       @for (item of getContentArray(section, 'items'); track $index; let i = $index) {
-                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                        <div class="border border-border rounded-md p-3 space-y-2 bg-surface">
                           <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-500">Stat {{ i + 1 }}</span>
-                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                            <span class="text-xs font-semibold text-text-muted">Stat {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'items', i)" class="text-xs text-danger hover:text-danger">Remove</button>
                           </div>
                           <div class="grid grid-cols-3 gap-2">
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Prefix</label>
-                              <input #stPre type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Prefix</label>
+                              <input #stPre type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.prefix || ''" (input)="updateArrayItemField(section, 'items', i, 'prefix', stPre.value)" placeholder="+" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Value</label>
-                              <input #stVal type="number" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Value</label>
+                              <input #stVal type="number" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.value || 0" (input)="updateArrayItemField(section, 'items', i, 'value', +stVal.value)" placeholder="10000" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Suffix</label>
-                              <input #stSuf type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Suffix</label>
+                              <input #stSuf type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.suffix || ''" (input)="updateArrayItemField(section, 'items', i, 'suffix', stSuf.value)" placeholder="+" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (EN)</label>
-                              <input #stLEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Label (EN)</label>
+                              <input #stLEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.label?.en || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'label', 'en', stLEn.value)" placeholder="Happy customers" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (AR)</label>
-                              <input #stLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Label (AR)</label>
+                              <input #stLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.label?.ar || ''" (input)="updateArrayItemBilingual(section, 'items', i, 'label', 'ar', stLAr.value)" />
                             </div>
                           </div>
                         </div>
                       }
                       <button type="button" (click)="addArrayItem(section, 'items', { prefix: '', value: 0, suffix: '+', label: { en: '', ar: '' } })"
-                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Stat</button>
+                        class="text-xs font-medium text-primary hover:text-primary">+ Add Stat</button>
                     </div>
                   }
                   @case ('Comparison') {
                     <div class="space-y-4">
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                          <input #cmTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                          <input #cmTEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', cmTEn.value)" placeholder="Why choose us" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                          <input #cmTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                          <input #cmTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', cmTAr.value)" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Our Column (EN)</label>
-                          <input #cmUsEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Our Column (EN)</label>
+                          <input #cmUsEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.usLabel?.en || ''" (input)="setContentBilingual(section, 'usLabel', 'en', cmUsEn.value)" placeholder="Us" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Their Column (EN)</label>
-                          <input #cmThEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Their Column (EN)</label>
+                          <input #cmThEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.themLabel?.en || ''" (input)="setContentBilingual(section, 'themLabel', 'en', cmThEn.value)" placeholder="Others" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Our Column (AR)</label>
-                          <input #cmUsAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Our Column (AR)</label>
+                          <input #cmUsAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.usLabel?.ar || ''" (input)="setContentBilingual(section, 'usLabel', 'ar', cmUsAr.value)" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Their Column (AR)</label>
-                          <input #cmThAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Their Column (AR)</label>
+                          <input #cmThAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.themLabel?.ar || ''" (input)="setContentBilingual(section, 'themLabel', 'ar', cmThAr.value)" />
                         </div>
                       </div>
                       @for (item of getContentArray(section, 'rows'); track $index; let i = $index) {
-                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                        <div class="border border-border rounded-md p-3 space-y-2 bg-surface">
                           <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-500">Row {{ i + 1 }}</span>
-                            <button type="button" (click)="removeArrayItem(section, 'rows', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                            <span class="text-xs font-semibold text-text-muted">Row {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'rows', i)" class="text-xs text-danger hover:text-danger">Remove</button>
                           </div>
                           <div class="grid grid-cols-2 gap-2">
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Feature (EN)</label>
-                              <input #cmFEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Feature (EN)</label>
+                              <input #cmFEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.feature?.en || ''" (input)="updateArrayItemBilingual(section, 'rows', i, 'feature', 'en', cmFEn.value)" placeholder="Free delivery" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Feature (AR)</label>
-                              <input #cmFAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Feature (AR)</label>
+                              <input #cmFAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.feature?.ar || ''" (input)="updateArrayItemBilingual(section, 'rows', i, 'feature', 'ar', cmFAr.value)" />
                             </div>
                           </div>
                           <div class="flex items-center gap-4">
                             <label class="flex items-center gap-1.5 cursor-pointer">
-                              <input type="checkbox" [checked]="item.us !== false" (change)="updateArrayItemField(section, 'rows', i, 'us', !(item.us !== false))" class="h-4 w-4 text-blue-600 rounded" />
-                              <span class="text-xs text-gray-600">We have it</span>
+                              <input type="checkbox" [checked]="item.us !== false" (change)="updateArrayItemField(section, 'rows', i, 'us', !(item.us !== false))" class="h-4 w-4 text-primary rounded" />
+                              <span class="text-xs text-text-muted">We have it</span>
                             </label>
                             <label class="flex items-center gap-1.5 cursor-pointer">
-                              <input type="checkbox" [checked]="item.them === true" (change)="updateArrayItemField(section, 'rows', i, 'them', !(item.them === true))" class="h-4 w-4 text-blue-600 rounded" />
-                              <span class="text-xs text-gray-600">They have it</span>
+                              <input type="checkbox" [checked]="item.them === true" (change)="updateArrayItemField(section, 'rows', i, 'them', !(item.them === true))" class="h-4 w-4 text-primary rounded" />
+                              <span class="text-xs text-text-muted">They have it</span>
                             </label>
                           </div>
                         </div>
                       }
                       <button type="button" (click)="addArrayItem(section, 'rows', { feature: { en: '', ar: '' }, us: true, them: false })"
-                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Row</button>
+                        class="text-xs font-medium text-primary hover:text-primary">+ Add Row</button>
                     </div>
                   }
                   @case ('BeforeAfter') {
                     <div class="space-y-3">
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Before Image</label>
+                          <label class="block text-xs font-medium text-text mb-1">Before Image</label>
                           <div class="flex gap-2">
-                            <input #baBefore type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            <input #baBefore type="text" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md"
                               [value]="getContent(section)?.beforeUrl || ''" (input)="setContentField(section, 'beforeUrl', baBefore.value)" placeholder="Before URL" />
-                            <label class="px-2 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200">Upload
+                            <label class="px-2 py-1.5 text-xs bg-surface-elevated rounded-md cursor-pointer hover:bg-surface-elevated">Upload
                               <input type="file" accept="image/*" class="hidden" (change)="uploadImage(section, 'beforeUrl', $event)" />
                             </label>
                           </div>
                           @if (getContent(section)?.beforeUrl) {
-                            <img [src]="getContent(section).beforeUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="Before" />
+                            <img [src]="getContent(section).beforeUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-border" alt="Before" />
                           }
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">After Image</label>
+                          <label class="block text-xs font-medium text-text mb-1">After Image</label>
                           <div class="flex gap-2">
-                            <input #baAfter type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                            <input #baAfter type="text" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md"
                               [value]="getContent(section)?.afterUrl || ''" (input)="setContentField(section, 'afterUrl', baAfter.value)" placeholder="After URL" />
-                            <label class="px-2 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200">Upload
+                            <label class="px-2 py-1.5 text-xs bg-surface-elevated rounded-md cursor-pointer hover:bg-surface-elevated">Upload
                               <input type="file" accept="image/*" class="hidden" (change)="uploadImage(section, 'afterUrl', $event)" />
                             </label>
                           </div>
                           @if (getContent(section)?.afterUrl) {
-                            <img [src]="getContent(section).afterUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-gray-200" alt="After" />
+                            <img [src]="getContent(section).afterUrl" class="mt-2 h-20 w-full object-cover rounded-md border border-border" alt="After" />
                           }
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Before Label (EN)</label>
-                          <input #baBLEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Before Label (EN)</label>
+                          <input #baBLEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.beforeLabel?.en || ''" (input)="setContentBilingual(section, 'beforeLabel', 'en', baBLEn.value)" placeholder="Before" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">After Label (EN)</label>
-                          <input #baALEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">After Label (EN)</label>
+                          <input #baALEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.afterLabel?.en || ''" (input)="setContentBilingual(section, 'afterLabel', 'en', baALEn.value)" placeholder="After" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Before Label (AR)</label>
-                          <input #baBLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Before Label (AR)</label>
+                          <input #baBLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.beforeLabel?.ar || ''" (input)="setContentBilingual(section, 'beforeLabel', 'ar', baBLAr.value)" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">After Label (AR)</label>
-                          <input #baALAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">After Label (AR)</label>
+                          <input #baALAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.afterLabel?.ar || ''" (input)="setContentBilingual(section, 'afterLabel', 'ar', baALAr.value)" />
                         </div>
                       </div>
@@ -1283,39 +1283,39 @@ interface PageTemplate {
                   @case ('Image') {
                     <div class="space-y-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Image</label>
+                        <label class="block text-xs font-medium text-text mb-1">Image</label>
                         <div class="flex gap-2">
-                          <input #imgUrl type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <input #imgUrl type="text" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.imageUrl || ''" (input)="setContentField(section, 'imageUrl', imgUrl.value)" placeholder="Image URL or upload →" />
-                          <label class="px-2 py-1.5 text-xs bg-gray-100 rounded-md cursor-pointer hover:bg-gray-200 whitespace-nowrap"
+                          <label class="px-2 py-1.5 text-xs bg-surface-elevated rounded-md cursor-pointer hover:bg-surface-elevated whitespace-nowrap"
                             [class.opacity-50]="uploadingField() === section.id + ':imageUrl'">
                             @if (uploadingField() === section.id + ':imageUrl') { Uploading… } @else { Upload }
                             <input type="file" accept="image/*" class="hidden" [disabled]="!!uploadingField()" (change)="uploadImage(section, 'imageUrl', $event)" />
                           </label>
                         </div>
                         @if (getContent(section)?.imageUrl) {
-                          <img [src]="getContent(section).imageUrl" class="mt-2 w-full max-h-48 object-contain rounded-md border border-gray-200 bg-gray-50" alt="Preview" />
+                          <img [src]="getContent(section).imageUrl" class="mt-2 w-full max-h-48 object-contain rounded-md border border-border bg-surface-elevated" alt="Preview" />
                         }
                       </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Link (optional)</label>
-                          <input #imgLink type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Link (optional)</label>
+                          <input #imgLink type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.link || ''" (input)="setContentField(section, 'link', imgLink.value)" placeholder="/products or https://…" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Alt text (SEO)</label>
-                          <input #imgAlt type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Alt text (SEO)</label>
+                          <input #imgAlt type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.alt || ''" (input)="setContentField(section, 'alt', imgAlt.value)" placeholder="Describe the image" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Caption (EN)</label>
-                          <input #imgCapEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Caption (EN)</label>
+                          <input #imgCapEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.caption?.en || ''" (input)="setContentBilingual(section, 'caption', 'en', imgCapEn.value)" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Caption (AR)</label>
-                          <input #imgCapAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Caption (AR)</label>
+                          <input #imgCapAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.caption?.ar || ''" (input)="setContentBilingual(section, 'caption', 'ar', imgCapAr.value)" />
                         </div>
                       </div>
@@ -1325,52 +1325,52 @@ interface PageTemplate {
                     <div class="space-y-4">
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                          <input #spTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                          <input #spTEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', spTEn.value)" placeholder="Specifications" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                          <input #spTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                          <input #spTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', spTAr.value)" placeholder="المواصفات" />
                         </div>
                       </div>
 
                       @for (group of getSpecGroups(section); track $index; let gi = $index) {
-                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                        <div class="border border-border rounded-md p-3 space-y-2 bg-surface">
                           <div class="flex items-center gap-2">
-                            <input #spGEn type="text" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md font-medium"
+                            <input #spGEn type="text" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md font-medium"
                               [value]="group.name?.en || ''" (input)="setSpecGroupName(section, gi, 'en', spGEn.value)" placeholder="Group (EN) e.g. Display" />
-                            <input #spGAr type="text" dir="rtl" class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md font-medium"
+                            <input #spGAr type="text" dir="rtl" class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md font-medium"
                               [value]="group.name?.ar || ''" (input)="setSpecGroupName(section, gi, 'ar', spGAr.value)" placeholder="المجموعة" />
-                            <button type="button" (click)="removeSpecGroup(section, gi)" class="text-xs text-red-600 hover:text-red-800 whitespace-nowrap">Remove group</button>
+                            <button type="button" (click)="removeSpecGroup(section, gi)" class="text-xs text-danger hover:text-danger whitespace-nowrap">Remove group</button>
                           </div>
                           @for (row of group.rows || []; track $index; let ri = $index) {
-                            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center pl-2 border-l-2 border-gray-100">
-                              <input #spLEn type="text" class="text-sm px-2 py-1 border border-gray-300 rounded-md"
+                            <div class="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-2 items-center pl-2 border-l-2 border-border">
+                              <input #spLEn type="text" class="text-sm px-2 py-1 border border-border rounded-md"
                                 [value]="row.label?.en || ''" (input)="setSpecRow(section, gi, ri, 'label', 'en', spLEn.value)" placeholder="Label (EN)" />
-                              <input #spLAr type="text" dir="rtl" class="text-sm px-2 py-1 border border-gray-300 rounded-md"
+                              <input #spLAr type="text" dir="rtl" class="text-sm px-2 py-1 border border-border rounded-md"
                                 [value]="row.label?.ar || ''" (input)="setSpecRow(section, gi, ri, 'label', 'ar', spLAr.value)" placeholder="التسمية" />
-                              <input #spVEn type="text" class="text-sm px-2 py-1 border border-gray-300 rounded-md"
+                              <input #spVEn type="text" class="text-sm px-2 py-1 border border-border rounded-md"
                                 [value]="row.value?.en || ''" (input)="setSpecRow(section, gi, ri, 'value', 'en', spVEn.value)" placeholder="Value (EN)" />
-                              <input #spVAr type="text" dir="rtl" class="text-sm px-2 py-1 border border-gray-300 rounded-md"
+                              <input #spVAr type="text" dir="rtl" class="text-sm px-2 py-1 border border-border rounded-md"
                                 [value]="row.value?.ar || ''" (input)="setSpecRow(section, gi, ri, 'value', 'ar', spVAr.value)" placeholder="القيمة" />
-                              <button type="button" (click)="removeSpecRow(section, gi, ri)" class="text-xs text-red-500 hover:text-red-700 px-1">✕</button>
+                              <button type="button" (click)="removeSpecRow(section, gi, ri)" class="text-xs text-danger hover:text-danger px-1">✕</button>
                             </div>
                           }
-                          <button type="button" (click)="addSpecRow(section, gi)" class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Row</button>
+                          <button type="button" (click)="addSpecRow(section, gi)" class="text-xs font-medium text-primary hover:text-primary">+ Add Row</button>
                         </div>
                       }
-                      <button type="button" (click)="addSpecGroup(section)" class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Group</button>
+                      <button type="button" (click)="addSpecGroup(section)" class="text-xs font-medium text-primary hover:text-primary">+ Add Group</button>
                     </div>
                   }
                   @case ('Marquee') {
                     <div class="space-y-4">
-                      <p class="text-[11px] text-gray-400">A bar with text that scrolls forever. Direction follows the store language automatically.</p>
+                      <p class="text-[11px] text-text-muted">A bar with text that scrolls forever. Direction follows the store language automatically.</p>
                       <div class="grid grid-cols-3 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Speed</label>
-                          <select #mqSpeed class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                          <label class="block text-xs font-medium text-text mb-1">Speed</label>
+                          <select #mqSpeed class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                             [value]="getContent(section)?.speed || 'normal'" (change)="setContentField(section, 'speed', mqSpeed.value)">
                             <option value="slow">Slow</option>
                             <option value="normal">Normal</option>
@@ -1378,118 +1378,118 @@ interface PageTemplate {
                           </select>
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Background</label>
-                          <input #mqBg type="color" class="h-8 w-full rounded border border-gray-300 cursor-pointer p-0.5"
+                          <label class="block text-xs font-medium text-text mb-1">Background</label>
+                          <input #mqBg type="color" class="h-8 w-full rounded border border-border cursor-pointer p-0.5"
                             [value]="getContent(section)?.bg || '#111827'" (input)="setContentField(section, 'bg', mqBg.value)" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
-                          <input #mqTc type="color" class="h-8 w-full rounded border border-gray-300 cursor-pointer p-0.5"
+                          <label class="block text-xs font-medium text-text mb-1">Text Color</label>
+                          <input #mqTc type="color" class="h-8 w-full rounded border border-border cursor-pointer p-0.5"
                             [value]="getContent(section)?.textColor || '#ffffff'" (input)="setContentField(section, 'textColor', mqTc.value)" />
                         </div>
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Separator</label>
-                        <input #mqSep type="text" class="w-24 text-sm px-2 py-1.5 border border-gray-300 rounded-md text-center"
+                        <label class="block text-xs font-medium text-text mb-1">Separator</label>
+                        <input #mqSep type="text" class="w-24 text-sm px-2 py-1.5 border border-border rounded-md text-center"
                           [value]="getContent(section)?.separator || ''" (input)="setContentField(section, 'separator', mqSep.value)" placeholder="•" />
                       </div>
                       @for (item of getContentArray(section, 'messages'); track $index; let i = $index) {
-                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                        <div class="border border-border rounded-md p-3 space-y-2 bg-surface">
                           <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-500">Message {{ i + 1 }}</span>
-                            <button type="button" (click)="removeArrayItem(section, 'messages', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                            <span class="text-xs font-semibold text-text-muted">Message {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'messages', i)" class="text-xs text-danger hover:text-danger">Remove</button>
                           </div>
                           <div class="grid grid-cols-2 gap-2">
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (EN)</label>
-                              <input #mqEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Text (EN)</label>
+                              <input #mqEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.text?.en || ''" (input)="updateArrayItemBilingual(section, 'messages', i, 'text', 'en', mqEn.value)" placeholder="Free shipping over 500!" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Text (AR)</label>
-                              <input #mqAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Text (AR)</label>
+                              <input #mqAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.text?.ar || ''" (input)="updateArrayItemBilingual(section, 'messages', i, 'text', 'ar', mqAr.value)" />
                             </div>
                           </div>
                         </div>
                       }
                       <button type="button" (click)="addArrayItem(section, 'messages', { text: { en: '', ar: '' } })"
-                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Message</button>
+                        class="text-xs font-medium text-primary hover:text-primary">+ Add Message</button>
                     </div>
                   }
                   @case ('OrderForm') {
                     <div class="space-y-3">
-                      <p class="text-[11px] text-gray-400">Adds the product to cart; "Buy Now" goes to checkout.</p>
+                      <p class="text-[11px] text-text-muted">Adds the product to cart; "Buy Now" goes to checkout.</p>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Product</label>
-                        <select #ofProd class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                        <label class="block text-xs font-medium text-text mb-1">Product</label>
+                        <select #ofProd class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                           [value]="getContent(section)?.productSlug || ''" (change)="setContentField(section, 'productSlug', ofProd.value)">
                           <option value="">Use the page's product (product pages only)</option>
                           @for (p of productOptions(); track p.slug) {
                             <option [value]="p.slug">{{ p.name }}</option>
                           }
                         </select>
-                        <p class="text-[11px] text-gray-400 mt-1">Pick a product to use this on the home page or a custom page. On a product page, leave it to use that product.</p>
+                        <p class="text-[11px] text-text-muted mt-1">Pick a product to use this on the home page or a custom page. On a product page, leave it to use that product.</p>
                       </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Heading (EN)</label>
-                          <input #ofHEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Heading (EN)</label>
+                          <input #ofHEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.heading?.en || ''" (input)="setContentBilingual(section, 'heading', 'en', ofHEn.value)" placeholder="Order now" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Heading (AR)</label>
-                          <input #ofHAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Heading (AR)</label>
+                          <input #ofHAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.heading?.ar || ''" (input)="setContentBilingual(section, 'heading', 'ar', ofHAr.value)" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
-                          <input #ofBEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Button Text (EN)</label>
+                          <input #ofBEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.buttonText?.en || ''" (input)="setContentBilingual(section, 'buttonText', 'en', ofBEn.value)" placeholder="Buy Now" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
-                          <input #ofBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Button Text (AR)</label>
+                          <input #ofBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', ofBAr.value)" />
                         </div>
                       </div>
                       <div class="flex items-center gap-4">
                         <label class="flex items-center gap-2 cursor-pointer">
                           <input type="checkbox" [checked]="getContent(section)?.showImage !== false"
-                            (change)="setContentField(section, 'showImage', !(getContent(section)?.showImage !== false))" class="h-4 w-4 text-blue-600 rounded" />
-                          <span class="text-xs font-medium text-gray-700">Show product image</span>
+                            (change)="setContentField(section, 'showImage', !(getContent(section)?.showImage !== false))" class="h-4 w-4 text-primary rounded" />
+                          <span class="text-xs font-medium text-text">Show product image</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
                           <input type="checkbox" [checked]="getContent(section)?.showQuantity !== false"
-                            (change)="setContentField(section, 'showQuantity', !(getContent(section)?.showQuantity !== false))" class="h-4 w-4 text-blue-600 rounded" />
-                          <span class="text-xs font-medium text-gray-700">Show quantity selector</span>
+                            (change)="setContentField(section, 'showQuantity', !(getContent(section)?.showQuantity !== false))" class="h-4 w-4 text-primary rounded" />
+                          <span class="text-xs font-medium text-text">Show quantity selector</span>
                         </label>
                       </div>
                     </div>
                   }
                   @case ('StickyBar') {
                     <div class="space-y-3">
-                      <p class="text-[11px] text-gray-400">Pinned to the bottom on mobile only.</p>
+                      <p class="text-[11px] text-text-muted">Pinned to the bottom on mobile only.</p>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Product</label>
-                        <select #sbProd class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                        <label class="block text-xs font-medium text-text mb-1">Product</label>
+                        <select #sbProd class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                           [value]="getContent(section)?.productSlug || ''" (change)="setContentField(section, 'productSlug', sbProd.value)">
                           <option value="">Use the page's product (product pages only)</option>
                           @for (p of productOptions(); track p.slug) {
                             <option [value]="p.slug">{{ p.name }}</option>
                           }
                         </select>
-                        <p class="text-[11px] text-gray-400 mt-1">Pick a product to use this on the home page or a custom page.</p>
+                        <p class="text-[11px] text-text-muted mt-1">Pick a product to use this on the home page or a custom page.</p>
                       </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (EN)</label>
-                          <input #sbBEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Button Text (EN)</label>
+                          <input #sbBEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.buttonText?.en || ''" (input)="setContentBilingual(section, 'buttonText', 'en', sbBEn.value)" placeholder="Buy Now" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Button Text (AR)</label>
-                          <input #sbBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Button Text (AR)</label>
+                          <input #sbBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.buttonText?.ar || ''" (input)="setContentBilingual(section, 'buttonText', 'ar', sbBAr.value)" />
                         </div>
                       </div>
@@ -1497,75 +1497,75 @@ interface PageTemplate {
                   }
                   @case ('Bundle') {
                     <div class="space-y-4">
-                      <p class="text-[11px] text-gray-400">Quantity tiers add N of the product to the cart. The badge is marketing text — actual per-bundle discounts still need a promo rule.</p>
+                      <p class="text-[11px] text-text-muted">Quantity tiers add N of the product to the cart. The badge is marketing text — actual per-bundle discounts still need a promo rule.</p>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Product</label>
-                        <select #buProd class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md bg-white"
+                        <label class="block text-xs font-medium text-text mb-1">Product</label>
+                        <select #buProd class="w-full text-sm px-2 py-1.5 border border-border rounded-md bg-surface"
                           [value]="getContent(section)?.productSlug || ''" (change)="setContentField(section, 'productSlug', buProd.value)">
                           <option value="">Use the page's product (product pages only)</option>
                           @for (p of productOptions(); track p.slug) {
                             <option [value]="p.slug">{{ p.name }}</option>
                           }
                         </select>
-                        <p class="text-[11px] text-gray-400 mt-1">Pick a product to use this on the home page or a custom page.</p>
+                        <p class="text-[11px] text-text-muted mt-1">Pick a product to use this on the home page or a custom page.</p>
                       </div>
                       <div class="grid grid-cols-2 gap-3">
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (EN)</label>
-                          <input #buTEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (EN)</label>
+                          <input #buTEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.en || ''" (input)="setContentBilingual(section, 'title', 'en', buTEn.value)" placeholder="Choose your bundle" />
                         </div>
                         <div>
-                          <label class="block text-xs font-medium text-gray-700 mb-1">Title (AR)</label>
-                          <input #buTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                          <label class="block text-xs font-medium text-text mb-1">Title (AR)</label>
+                          <input #buTAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                             [value]="getContent(section)?.title?.ar || ''" (input)="setContentBilingual(section, 'title', 'ar', buTAr.value)" />
                         </div>
                       </div>
                       @for (item of getContentArray(section, 'tiers'); track $index; let i = $index) {
-                        <div class="border border-gray-200 rounded-md p-3 space-y-2 bg-white">
+                        <div class="border border-border rounded-md p-3 space-y-2 bg-surface">
                           <div class="flex items-center justify-between">
-                            <span class="text-xs font-semibold text-gray-500">Tier {{ i + 1 }}</span>
-                            <button type="button" (click)="removeArrayItem(section, 'tiers', i)" class="text-xs text-red-600 hover:text-red-800">Remove</button>
+                            <span class="text-xs font-semibold text-text-muted">Tier {{ i + 1 }}</span>
+                            <button type="button" (click)="removeArrayItem(section, 'tiers', i)" class="text-xs text-danger hover:text-danger">Remove</button>
                           </div>
                           <div class="grid grid-cols-2 gap-2">
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Quantity</label>
-                              <input #buQty type="number" min="1" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Quantity</label>
+                              <input #buQty type="number" min="1" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.qty || 1" (input)="updateArrayItemField(section, 'tiers', i, 'qty', +buQty.value)" />
                             </div>
                             <label class="flex items-center gap-2 cursor-pointer mt-6">
-                              <input type="checkbox" [checked]="item.highlight === true" (change)="updateArrayItemField(section, 'tiers', i, 'highlight', !(item.highlight === true))" class="h-4 w-4 text-blue-600 rounded" />
-                              <span class="text-xs text-gray-600">Highlight (best value)</span>
+                              <input type="checkbox" [checked]="item.highlight === true" (change)="updateArrayItemField(section, 'tiers', i, 'highlight', !(item.highlight === true))" class="h-4 w-4 text-primary rounded" />
+                              <span class="text-xs text-text-muted">Highlight (best value)</span>
                             </label>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (EN)</label>
-                              <input #buLEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Label (EN)</label>
+                              <input #buLEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.label?.en || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'label', 'en', buLEn.value)" placeholder="Buy 2" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Label (AR)</label>
-                              <input #buLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Label (AR)</label>
+                              <input #buLAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.label?.ar || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'label', 'ar', buLAr.value)" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Badge (EN)</label>
-                              <input #buBEn type="text" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Badge (EN)</label>
+                              <input #buBEn type="text" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.badge?.en || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'badge', 'en', buBEn.value)" placeholder="Most popular" />
                             </div>
                             <div>
-                              <label class="block text-xs font-medium text-gray-700 mb-1">Badge (AR)</label>
-                              <input #buBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md"
+                              <label class="block text-xs font-medium text-text mb-1">Badge (AR)</label>
+                              <input #buBAr type="text" dir="rtl" class="w-full text-sm px-2 py-1.5 border border-border rounded-md"
                                 [value]="item.badge?.ar || ''" (input)="updateArrayItemBilingual(section, 'tiers', i, 'badge', 'ar', buBAr.value)" />
                             </div>
                           </div>
                         </div>
                       }
                       <button type="button" (click)="addArrayItem(section, 'tiers', { qty: 1, label: { en: '', ar: '' }, badge: { en: '', ar: '' }, highlight: false })"
-                        class="text-xs font-medium text-blue-600 hover:text-blue-800">+ Add Tier</button>
+                        class="text-xs font-medium text-primary hover:text-primary">+ Add Tier</button>
                     </div>
                   }
                   @default {
-                    <p class="text-xs text-gray-500 py-2">No content fields available for this section type.</p>
+                    <p class="text-xs text-text-muted py-2">No content fields available for this section type.</p>
                   }
                 }
                 }
@@ -1575,14 +1575,14 @@ interface PageTemplate {
                   <div class="space-y-4">
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Background Color</label>
+                        <label class="block text-xs font-medium text-text mb-1">Background Color</label>
                         <div class="flex items-center gap-2">
                           <input
                             type="color"
                             [value]="getSettings(section)?.backgroundColor || '#ffffff'"
                             (input)="setSettingsField(section, 'backgroundColor', dBg.value)"
                             #dBg
-                            class="h-8 w-10 rounded border border-gray-300 cursor-pointer p-0"
+                            class="h-8 w-10 rounded border border-border cursor-pointer p-0"
                           />
                           <input
                             type="text"
@@ -1590,22 +1590,22 @@ interface PageTemplate {
                             (input)="setSettingsField(section, 'backgroundColor', dBgText.value)"
                             #dBgText
                             placeholder="#ffffff or var(--x)"
-                            class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           />
                           @if (getSettings(section)?.backgroundColor) {
-                            <button type="button" (click)="clearSettingsField(section, 'backgroundColor')" class="text-xs text-gray-400 hover:text-red-500" title="Clear">✕</button>
+                            <button type="button" (click)="clearSettingsField(section, 'backgroundColor')" class="text-xs text-text-muted hover:text-danger" title="Clear">✕</button>
                           }
                         </div>
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Text Color</label>
+                        <label class="block text-xs font-medium text-text mb-1">Text Color</label>
                         <div class="flex items-center gap-2">
                           <input
                             type="color"
                             [value]="getSettings(section)?.textColor || '#111827'"
                             (input)="setSettingsField(section, 'textColor', dText.value)"
                             #dText
-                            class="h-8 w-10 rounded border border-gray-300 cursor-pointer p-0"
+                            class="h-8 w-10 rounded border border-border cursor-pointer p-0"
                           />
                           <input
                             type="text"
@@ -1613,35 +1613,35 @@ interface PageTemplate {
                             (input)="setSettingsField(section, 'textColor', dTextText.value)"
                             #dTextText
                             placeholder="#111827"
-                            class="flex-1 text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                           />
                           @if (getSettings(section)?.textColor) {
-                            <button type="button" (click)="clearSettingsField(section, 'textColor')" class="text-xs text-gray-400 hover:text-red-500" title="Clear">✕</button>
+                            <button type="button" (click)="clearSettingsField(section, 'textColor')" class="text-xs text-text-muted hover:text-danger" title="Clear">✕</button>
                           }
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <label class="block text-xs font-medium text-gray-700 mb-1">Background Image URL</label>
+                      <label class="block text-xs font-medium text-text mb-1">Background Image URL</label>
                       <input
                         type="text"
                         [value]="getSettings(section)?.backgroundImageUrl || ''"
                         (input)="setSettingsField(section, 'backgroundImageUrl', dBgImg.value)"
                         #dBgImg
                         placeholder="https://... (optional, sits behind content)"
-                        class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                       />
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Vertical Padding</label>
+                        <label class="block text-xs font-medium text-text mb-1">Vertical Padding</label>
                         <select
                           [value]="getSettings(section)?.paddingY || ''"
                           (change)="setSettingsField(section, 'paddingY', dPadY.value)"
                           #dPadY
-                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
                         >
                           <option value="">Default</option>
                           <option value="none">None</option>
@@ -1652,12 +1652,12 @@ interface PageTemplate {
                         </select>
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Horizontal Padding</label>
+                        <label class="block text-xs font-medium text-text mb-1">Horizontal Padding</label>
                         <select
                           [value]="getSettings(section)?.paddingX || ''"
                           (change)="setSettingsField(section, 'paddingX', dPadX.value)"
                           #dPadX
-                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
                         >
                           <option value="">Default</option>
                           <option value="none">None</option>
@@ -1667,12 +1667,12 @@ interface PageTemplate {
                         </select>
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Content Width</label>
+                        <label class="block text-xs font-medium text-text mb-1">Content Width</label>
                         <select
                           [value]="getSettings(section)?.maxWidth || ''"
                           (change)="setSettingsField(section, 'maxWidth', dWidth.value)"
                           #dWidth
-                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
                         >
                           <option value="">Default</option>
                           <option value="full">Full Width</option>
@@ -1681,12 +1681,12 @@ interface PageTemplate {
                         </select>
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Corner Radius</label>
+                        <label class="block text-xs font-medium text-text mb-1">Corner Radius</label>
                         <select
                           [value]="getSettings(section)?.borderRadius || ''"
                           (change)="setSettingsField(section, 'borderRadius', dRadius.value)"
                           #dRadius
-                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
                         >
                           <option value="">Default</option>
                           <option value="none">None</option>
@@ -1700,15 +1700,15 @@ interface PageTemplate {
 
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">
+                        <label class="block text-xs font-medium text-text mb-1">
                           Device Visibility
-                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="Uses CSS media queries so content stays crawlable">SEO</span>
+                          <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="Uses CSS media queries so content stays crawlable">SEO</span>
                         </label>
                         <select
                           [value]="getSettings(section)?.visibility || 'all'"
                           (change)="setSettingsField(section, 'visibility', dVis.value)"
                           #dVis
-                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
                         >
                           <option value="all">All Devices</option>
                           <option value="desktop">Desktop Only</option>
@@ -1716,23 +1716,23 @@ interface PageTemplate {
                         </select>
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Anchor ID</label>
+                        <label class="block text-xs font-medium text-text mb-1">Anchor ID</label>
                         <input
                           type="text"
                           [value]="getSettings(section)?.anchorId || ''"
                           (input)="setSettingsField(section, 'anchorId', dAnchor.value)"
                           #dAnchor
                           placeholder="e.g. order-form (for #links)"
-                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
                         />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Scroll Animation</label>
+                        <label class="block text-xs font-medium text-text mb-1">Scroll Animation</label>
                         <select
                           [value]="getSettings(section)?.animation || 'none'"
                           (change)="setSettingsField(section, 'animation', dAnim.value)"
                           #dAnim
-                          class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 bg-white"
+                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
                         >
                           <option value="none">None</option>
                           <option value="fade">Fade in</option>
@@ -1748,8 +1748,8 @@ interface PageTemplate {
             }
           </div>
         } @empty {
-          <div class="bg-gray-50 rounded-lg p-8 text-center">
-            <p class="text-gray-500 mb-4">No sections yet. Add your first section below.</p>
+          <div class="bg-surface-elevated rounded-lg p-8 text-center">
+            <p class="text-text-muted mb-4">No sections yet. Add your first section below.</p>
           </div>
         }
         </div>
@@ -1757,7 +1757,7 @@ interface PageTemplate {
         <!-- Add Section Button -->
         <button
           (click)="showAddModal.set(true)"
-          class="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-sm font-medium text-gray-500 hover:border-blue-400 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+          class="w-full py-3 border-2 border-dashed border-border rounded-lg text-sm font-medium text-text-muted hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -1767,92 +1767,92 @@ interface PageTemplate {
       </div>
 
       <!-- Page SEO Settings -->
-      <div class="px-6 py-5 border-t border-gray-200 bg-gray-50">
-        <h4 class="text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="px-6 py-5 border-t border-border bg-surface-elevated">
+        <h4 class="text-sm font-semibold text-text mb-4 flex items-center gap-2">
+          <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
           Page SEO Settings
         </h4>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">
+            <label class="block text-xs font-medium text-text mb-1">
               Meta Title (EN)
-              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="This field impacts search engine rankings">SEO</span>
+              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
             </label>
             <input
               type="text"
               [(ngModel)]="localSeoSettings.metaTitle.english"
               placeholder="Page title for search engines"
-              class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">
+            <label class="block text-xs font-medium text-text mb-1">
               Meta Title (AR)
-              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="This field impacts search engine rankings">SEO</span>
+              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
             </label>
             <input
               type="text"
               dir="rtl"
               [(ngModel)]="localSeoSettings.metaTitle.arabic"
               placeholder="عنوان الصفحة لمحركات البحث"
-              class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">
+            <label class="block text-xs font-medium text-text mb-1">
               Meta Description (EN)
-              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="This field impacts search engine rankings">SEO</span>
+              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
             </label>
             <textarea
               rows="2"
               [(ngModel)]="localSeoSettings.metaDescription.english"
               placeholder="Brief description of this page (150–160 chars recommended)"
-              class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 resize-none"
             ></textarea>
           </div>
           <div>
-            <label class="block text-xs font-medium text-gray-700 mb-1">
+            <label class="block text-xs font-medium text-text mb-1">
               Meta Description (AR)
-              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700" title="This field impacts search engine rankings">SEO</span>
+              <span class="ml-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="This field impacts search engine rankings">SEO</span>
             </label>
             <textarea
               rows="2"
               dir="rtl"
               [(ngModel)]="localSeoSettings.metaDescription.arabic"
               placeholder="وصف مختصر للصفحة"
-              class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
+              class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 resize-none"
             ></textarea>
           </div>
           <div class="col-span-2">
-            <label class="block text-xs font-medium text-gray-700 mb-1">OG Image URL</label>
+            <label class="block text-xs font-medium text-text mb-1">OG Image URL</label>
             <input
               type="text"
               [(ngModel)]="localSeoSettings.ogImageUrl"
               placeholder="https://... (used when sharing on social media)"
-              class="w-full text-sm px-2 py-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
             />
           </div>
           <div class="flex items-center gap-4">
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="localSeoSettings.noIndex" class="h-4 w-4 text-blue-600 rounded" />
-              <span class="text-xs font-medium text-gray-700">No Index</span>
+              <input type="checkbox" [(ngModel)]="localSeoSettings.noIndex" class="h-4 w-4 text-primary rounded" />
+              <span class="text-xs font-medium text-text">No Index</span>
             </label>
             <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" [(ngModel)]="localSeoSettings.noFollow" class="h-4 w-4 text-blue-600 rounded" />
-              <span class="text-xs font-medium text-gray-700">No Follow</span>
+              <input type="checkbox" [(ngModel)]="localSeoSettings.noFollow" class="h-4 w-4 text-primary rounded" />
+              <span class="text-xs font-medium text-text">No Follow</span>
             </label>
           </div>
         </div>
       </div>
 
       <!-- Footer -->
-      <div class="px-6 py-4 border-t border-gray-200 flex items-center justify-between gap-3 flex-wrap">
+      <div class="px-6 py-4 border-t border-border flex items-center justify-between gap-3 flex-wrap">
         <div class="flex items-center gap-2">
           <button
             (click)="exportJson()"
-            class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-1.5"
+            class="px-3 py-2 text-sm bg-surface-elevated text-text rounded-md hover:bg-surface-elevated flex items-center gap-1.5"
             title="Download this page's sections as a JSON template"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1861,7 +1861,7 @@ interface PageTemplate {
             Export
           </button>
           <label
-            class="px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 flex items-center gap-1.5 cursor-pointer"
+            class="px-3 py-2 text-sm bg-surface-elevated text-text rounded-md hover:bg-surface-elevated flex items-center gap-1.5 cursor-pointer"
             title="Load sections from a JSON template (replaces current, not saved until you Save)"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1871,19 +1871,19 @@ interface PageTemplate {
             <input type="file" accept="application/json,.json" class="hidden" (change)="onImportFile($event)" />
           </label>
           @if (importErr()) {
-            <span class="text-xs text-red-600">{{ importErr() }}</span>
+            <span class="text-xs text-danger">{{ importErr() }}</span>
           }
         </div>
         <div class="flex items-center gap-3">
           <button
             (click)="onClose()"
-            class="px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+            class="px-4 py-2 bg-surface-elevated text-text rounded-md hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-border"
           >
             Cancel
           </button>
           <button
             (click)="onSave()"
-            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
             Save Changes
           </button>
@@ -1894,47 +1894,47 @@ interface PageTemplate {
     <!-- Add Section Modal -->
     @if (showAddModal()) {
       <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[85vh] overflow-y-auto">
-          <h3 class="text-base font-semibold text-gray-900 mb-4">Add New Section</h3>
+        <div class="bg-surface rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[85vh] overflow-y-auto">
+          <h3 class="text-base font-semibold text-text mb-4">Add New Section</h3>
 
           <!-- Blank section types -->
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Section Types</p>
+          <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Section Types</p>
           <div class="grid grid-cols-3 gap-3">
             @for (type of sectionTypes; track type.key) {
               <button
                 (click)="addSection(type.key)"
-                class="p-3 border-2 border-gray-200 rounded-lg text-left hover:border-blue-500 hover:bg-blue-50 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="p-3 border-2 border-border rounded-lg text-left hover:border-primary hover:bg-primary-tint transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
-                <div class="text-sm font-medium text-gray-900">{{ type.label }}</div>
-                <div class="text-xs text-gray-500 mt-0.5">{{ type.description }}</div>
+                <div class="text-sm font-medium text-text">{{ type.label }}</div>
+                <div class="text-xs text-text-muted mt-0.5">{{ type.description }}</div>
               </button>
             }
           </div>
 
           <!-- Pre-filled section presets -->
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-6 mb-2">Presets (pre-filled)</p>
+          <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mt-6 mb-2">Presets (pre-filled)</p>
           <div class="grid grid-cols-3 gap-3">
             @for (preset of sectionPresets; track preset.key) {
               <button
                 (click)="addPreset(preset)"
-                class="p-3 border-2 border-gray-200 rounded-lg text-left hover:border-green-500 hover:bg-green-50 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500"
+                class="p-3 border-2 border-border rounded-lg text-left hover:border-success hover:bg-success/10 transition-colors focus:outline-none focus:ring-2 focus:ring-success/40"
               >
-                <div class="text-sm font-medium text-gray-900">{{ preset.label }}</div>
-                <div class="text-xs text-gray-500 mt-0.5">{{ preset.description }}</div>
+                <div class="text-sm font-medium text-text">{{ preset.label }}</div>
+                <div class="text-xs text-text-muted mt-0.5">{{ preset.description }}</div>
               </button>
             }
           </div>
 
           <!-- Full-page templates -->
-          <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide mt-6 mb-2">Page Templates (replace all)</p>
+          <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mt-6 mb-2">Page Templates (replace all)</p>
           <div class="grid grid-cols-2 gap-3">
             @for (tpl of pageTemplates; track tpl.key) {
               <button
                 (click)="applyPageTemplate(tpl)"
-                class="p-3 border-2 border-gray-200 rounded-lg text-left hover:border-purple-500 hover:bg-purple-50 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
+                class="p-3 border-2 border-border rounded-lg text-left hover:border-primary hover:bg-primary-tint transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
-                <div class="text-sm font-medium text-gray-900">{{ tpl.label }}</div>
-                <div class="text-xs text-gray-500 mt-0.5">{{ tpl.description }}</div>
+                <div class="text-sm font-medium text-text">{{ tpl.label }}</div>
+                <div class="text-xs text-text-muted mt-0.5">{{ tpl.description }}</div>
               </button>
             }
           </div>
@@ -1942,7 +1942,7 @@ interface PageTemplate {
           <div class="mt-6 flex justify-end">
             <button
               (click)="showAddModal.set(false)"
-              class="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+              class="px-4 py-2 text-sm bg-surface-elevated text-text rounded-md hover:bg-surface-elevated"
             >
               Cancel
             </button>

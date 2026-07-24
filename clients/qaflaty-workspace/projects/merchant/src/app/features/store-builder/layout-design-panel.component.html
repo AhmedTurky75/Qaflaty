@@ -1,0 +1,146 @@
+<div class="space-y-8">
+  <!-- Header Variant Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-text">Header Design</h3>
+    <div>
+      <label class="mb-2 block text-sm font-medium text-text">Header Variant</label>
+      <select
+        [(ngModel)]="localConfig.headerVariant"
+        (change)="onConfigChange()"
+        class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+      >
+        <option value="Centered">Centered</option>
+        <option value="LeftAligned">Left Aligned</option>
+        <option value="MinimalCentered">Minimal Centered</option>
+        <option value="SplitNavigation">Split Navigation</option>
+      </select>
+      <p class="mt-2 text-xs text-text-muted">Choose the layout style for your store header</p>
+    </div>
+  </div>
+
+  <!-- Footer Variant Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-text">Footer Design</h3>
+    <div>
+      <label class="mb-2 block text-sm font-medium text-text">Footer Variant</label>
+      <select
+        [(ngModel)]="localConfig.footerVariant"
+        (change)="onConfigChange()"
+        class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+      >
+        <option value="FourColumn">Four Column</option>
+        <option value="ThreeColumn">Three Column</option>
+        <option value="Minimal">Minimal</option>
+        <option value="Stacked">Stacked</option>
+      </select>
+      <p class="mt-2 text-xs text-text-muted">Choose the layout style for your store footer</p>
+    </div>
+  </div>
+
+  <!-- Product Card Variant Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-text">Product Card Design</h3>
+    <div>
+      <label class="mb-2 block text-sm font-medium text-text">Product Card Variant</label>
+      <select
+        [(ngModel)]="localConfig.productCardVariant"
+        (change)="onConfigChange()"
+        class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+      >
+        <option value="Standard">Standard</option>
+        <option value="Compact">Compact</option>
+        <option value="Detailed">Detailed</option>
+        <option value="WithHover">With Hover Effects</option>
+      </select>
+      <p class="mt-2 text-xs text-text-muted">Choose how individual products are displayed</p>
+    </div>
+  </div>
+
+  <!-- Product Grid Variant Section -->
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <h3 class="mb-4 text-lg font-semibold text-text">Product Grid Layout</h3>
+    <div>
+      <label class="mb-2 block text-sm font-medium text-text">Product Grid Variant</label>
+      <select
+        [(ngModel)]="localConfig.productGridVariant"
+        (change)="onConfigChange()"
+        class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+      >
+        <option value="TwoColumn">2 Columns</option>
+        <option value="ThreeColumn">3 Columns</option>
+        <option value="FourColumn">4 Columns</option>
+        <option value="Masonry">Masonry Layout</option>
+      </select>
+      <p class="mt-2 text-xs text-text-muted">Choose the grid layout for product collections</p>
+    </div>
+  </div>
+
+  <!-- Social Links Section -->
+  @if (config.featureToggles.socialLinks) {
+    <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+      <h3 class="mb-4 text-lg font-semibold text-text">Social Links</h3>
+      <div class="space-y-4">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">Facebook</label>
+          <input
+            type="url"
+            [(ngModel)]="localConfig.socialLinks.facebook"
+            (change)="onConfigChange()"
+            placeholder="https://facebook.com/yourstore"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">Instagram</label>
+          <input
+            type="url"
+            [(ngModel)]="localConfig.socialLinks.instagram"
+            (change)="onConfigChange()"
+            placeholder="https://instagram.com/yourstore"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">Twitter</label>
+          <input
+            type="url"
+            [(ngModel)]="localConfig.socialLinks.twitter"
+            (change)="onConfigChange()"
+            placeholder="https://twitter.com/yourstore"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">TikTok</label>
+          <input
+            type="url"
+            [(ngModel)]="localConfig.socialLinks.tikTok"
+            (change)="onConfigChange()"
+            placeholder="https://tiktok.com/@yourstore"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">Snapchat</label>
+          <input
+            type="url"
+            [(ngModel)]="localConfig.socialLinks.snapchat"
+            (change)="onConfigChange()"
+            placeholder="https://snapchat.com/add/yourstore"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+        <div>
+          <label class="mb-2 block text-sm font-medium text-text">YouTube</label>
+          <input
+            type="url"
+            [(ngModel)]="localConfig.socialLinks.youTube"
+            (change)="onConfigChange()"
+            placeholder="https://youtube.com/@yourstore"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+      </div>
+    </div>
+  }
+</div>

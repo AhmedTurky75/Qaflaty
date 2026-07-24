@@ -1,0 +1,121 @@
+<div class="space-y-6">
+  <!-- Header with Create Button -->
+  <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold text-text">Pages</h3>
+    <button
+      (click)="onCreateCustomPage()"
+      class="min-h-[44px] rounded-md bg-primary px-4 py-2 text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40"
+    >
+      Create Custom Page
+    </button>
+  </div>
+
+  <!-- Pages List -->
+  <div class="space-y-3">
+    @for (page of pages; track page.id) {
+      <div class="rounded-lg border border-border bg-surface p-4 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div class="flex-1">
+            <h4 class="text-base font-medium text-text">
+              {{ page.title.english }}
+              @if (page.title.arabic) {
+                <span class="text-sm text-text-muted"> ({{ page.title.arabic }})</span>
+              }
+            </h4>
+            <p class="mt-1 text-sm text-text-muted">
+              Page Type: {{ page.pageType }} | Slug: /{{ page.slug }}
+            </p>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <!-- Enable/Disable Toggle -->
+            <div class="flex items-center">
+              <label class="me-2 text-sm font-medium text-text">Enabled</label>
+              <input
+                type="checkbox"
+                [(ngModel)]="page.isEnabled"
+                (change)="onPageToggle(page)"
+                class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+
+            <!-- Edit Button -->
+            <button
+              (click)="onEditPage(page)"
+              class="rounded-md bg-surface-elevated px-3 py-1 text-text hover:bg-border/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            >
+              Edit Sections
+            </button>
+
+            <!-- Delete Button (only for Custom pages) -->
+            @if (page.pageType === 'Custom') {
+              <button
+                (click)="onDeletePage(page)"
+                class="rounded-md bg-danger/10 px-3 py-1 text-danger hover:bg-danger/20 focus:outline-none focus:ring-2 focus:ring-danger/40"
+              >
+                Delete
+              </button>
+            }
+          </div>
+        </div>
+      </div>
+    } @empty {
+      <div class="rounded-lg bg-surface-elevated p-8 text-center">
+        <p class="text-text-muted">No pages found. Click "Create Custom Page" to add a new page.</p>
+      </div>
+    }
+  </div>
+
+  <!-- Create Custom Page Modal -->
+  @if (showCreateModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div class="mx-4 w-full max-w-md rounded-lg border border-border bg-surface p-6">
+        <h3 class="mb-4 text-lg font-semibold text-text">Create Custom Page</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="mb-2 block text-sm font-medium text-text">English Title</label>
+            <input
+              type="text"
+              [(ngModel)]="newPage.title.english"
+              placeholder="About Us"
+              class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-text">Arabic Title</label>
+            <input
+              type="text"
+              [(ngModel)]="newPage.title.arabic"
+              placeholder="من نحن"
+              class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+          <div>
+            <label class="mb-2 block text-sm font-medium text-text">Slug</label>
+            <input
+              type="text"
+              [(ngModel)]="newPage.slug"
+              placeholder="about-us"
+              class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <p class="mt-1 text-xs text-text-muted">URL-friendly name (e.g., about-us)</p>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            (click)="closeCreateModal()"
+            class="rounded-md bg-surface-elevated px-4 py-2 text-text hover:bg-border/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="confirmCreatePage()"
+            class="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            Create Page
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>
