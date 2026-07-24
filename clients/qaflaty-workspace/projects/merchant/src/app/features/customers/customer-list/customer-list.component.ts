@@ -3,13 +3,15 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { debounceTime, Subject } from 'rxjs';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { CustomerService } from '../services/customer.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { CustomerDto, CustomerFilters, CustomerSortBy } from 'shared';
 
 @Component({
   selector: 'app-customer-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslocoPipe, IconComponent],
   templateUrl: './customer-list.component.html',
   styleUrls: ['./customer-list.component.scss']
 })

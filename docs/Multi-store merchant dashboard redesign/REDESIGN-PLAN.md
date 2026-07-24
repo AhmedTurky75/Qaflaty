@@ -117,8 +117,10 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - [x] `team` **[was inline-t, 530L]** → split into .ts/.html/.scss; token table, role chips, invite/reset modals; token role legend. HTTP/role logic unchanged. *English strings kept inline (flagged).*
 - Note: `ng build merchant` clean (exit 0).
 
-### P9 Customers
-- [ ] `customer-list` **[split]** · `customer-detail` **[split]** → tokens.
+### P9 Customers — ✅ DONE
+- [x] `customer-list` → tokenized table (desktop) + cards (mobile), search/sort/clear, token pagination; i18n (`customers.*`). Math getter + debounced search + ngModel sort preserved.
+- [x] `customer-detail` → tokenized info card, stats, merchant-notes editor, order-history (reuses tokenized order-card); breadcrumb; i18n.
+- Note: `ng build merchant` clean (exit 0).
 
 ### P10 Realtime & Chat (secondary, under More)
 - [ ] `chat-list` **[inline-t, inline-s]** → split + tokens.

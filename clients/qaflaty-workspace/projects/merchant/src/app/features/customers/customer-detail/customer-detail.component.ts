@@ -3,14 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { CustomerService } from '../services/customer.service';
 import { CustomerDto, OrderSummaryDto } from 'shared';
 import { OrderCardComponent } from '../../orders/components/order-card/order-card.component';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-customer-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, OrderCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslocoPipe, OrderCardComponent, IconComponent],
   templateUrl: './customer-detail.component.html',
   styleUrls: ['./customer-detail.component.scss']
 })
