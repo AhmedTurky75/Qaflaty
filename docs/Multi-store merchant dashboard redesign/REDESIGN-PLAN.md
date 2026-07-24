@@ -122,11 +122,13 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - [x] `customer-detail` → tokenized info card, stats, merchant-notes editor, order-history (reuses tokenized order-card); breadcrumb; i18n.
 - Note: `ng build merchant` clean (exit 0).
 
-### P10 Realtime & Chat (secondary, under More)
-- [ ] `chat-list` **[inline-t, inline-s]** → split + tokens.
-- [ ] `chat-detail` **[inline-t, inline-s, 505L]** → split + tokens.
-- [ ] `active-carts` **[inline-t]** → split + tokens.
-- [ ] `live` **[inline-t]** → split + tokens.
+### P10 Realtime & Chat (secondary, under More) — ✅ DONE
+- [x] `live` **[was inline-t]** → split; token metric tiles + live product-viewers list.
+- [x] `chat-list` **[was inline-t/-s]** → split; token stat cards + conversation list with unread badges.
+- [x] `chat-detail` **[was inline-t/-s, 505L]** → split; token message bubbles, typing indicator, customer-profile sidebar; token order-status chips. SignalR/send/close/archive logic unchanged.
+- [x] `active-carts` **[was inline-t]** → split; token stats + cart cards with items. Realtime effect unchanged.
+- Icon set extended: send.
+- *English strings kept inline for these secondary realtime screens (flagged for the P14 i18n sweep).* `ng build merchant` clean (exit 0).
 
 ### P11 Commerce secondary (under More)
 - [ ] `returns` **[split]** · `reviews` **[split]** · `promo-codes` **[split]** → tokens.
