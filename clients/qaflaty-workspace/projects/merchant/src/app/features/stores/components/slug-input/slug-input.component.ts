@@ -2,12 +2,14 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject, sign
 import { CommonModule } from '@angular/common';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, of, takeUntil } from 'rxjs';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { StoreService } from '../../services/store.service';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-slug-input',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule, TranslocoPipe, IconComponent],
   templateUrl: './slug-input.component.html',
   styleUrls: ['./slug-input.component.scss']
 })

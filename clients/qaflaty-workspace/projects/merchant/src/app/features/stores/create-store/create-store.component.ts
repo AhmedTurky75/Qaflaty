@@ -1,16 +1,17 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { CurrencyOption } from 'shared';
 import { StoreService } from '../services/store.service';
 import { SlugInputComponent } from '../components/slug-input/slug-input.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-create-store',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SlugInputComponent],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, SlugInputComponent, IconComponent],
   templateUrl: './create-store.component.html',
   styleUrls: ['./create-store.component.scss']
 })

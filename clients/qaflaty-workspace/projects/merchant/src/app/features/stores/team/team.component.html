@@ -1,0 +1,195 @@
+<div class="min-h-full">
+  <!-- Header -->
+  <div class="mb-6 flex items-center justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-text">Team management</h1>
+      <p class="mt-0.5 text-sm text-text-muted">Manage store staff, roles and access</p>
+    </div>
+    @if (isOwner()) {
+      <button (click)="openInvite()" class="inline-flex min-h-[44px] items-center gap-2 rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40">
+        <app-icon name="plus" [size]="18" />
+        Invite member
+      </button>
+    }
+  </div>
+
+  @if (error()) {
+    <div class="mb-4 rounded-xl border border-danger/30 bg-danger/10 p-4 text-sm text-danger">{{ error() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="flex items-center justify-center py-20 text-primary">
+      <svg class="h-8 w-8 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+    </div>
+  } @else {
+    <div class="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+      @if (members().length === 0) {
+        <div class="py-16 text-center">
+          <span class="mx-auto flex h-12 w-12 items-center justify-center text-text-muted/40"><app-icon name="team" [size]="40" /></span>
+          <p class="mt-3 text-sm text-text-muted">No team members yet.</p>
+          @if (isOwner()) {
+            <button (click)="openInvite()" class="mt-3 text-sm font-medium text-primary hover:underline">Invite your first member</button>
+          }
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-border">
+            <thead class="bg-surface-elevated text-text-muted">
+              <tr>
+                <th class="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider">Member</th>
+                <th class="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider">Role</th>
+                <th class="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider">Status</th>
+                <th class="px-6 py-3 text-start text-xs font-medium uppercase tracking-wider">Joined</th>
+                @if (isOwner()) { <th class="px-6 py-3 text-end text-xs font-medium uppercase tracking-wider">Actions</th> }
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              @for (member of members(); track member.merchantId) {
+                <tr class="hover:bg-surface-elevated">
+                  <td class="px-6 py-4">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-primary-tint text-sm font-semibold text-primary">{{ getInitials(member.fullName) }}</div>
+                      <div>
+                        <div class="flex items-center gap-1.5">
+                          <p class="text-sm font-medium text-text">{{ member.fullName }}</p>
+                          @if (member.isVerified) { <span class="text-primary"><app-icon name="check-circle" [size]="14" /></span> }
+                        </div>
+                        <p class="text-xs text-text-muted">{{ member.email }}</p>
+                        <p class="text-xs text-text-muted/70">&#64;{{ member.username }}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-6 py-4">
+                    @if (isOwner() && member.role !== 'Owner') {
+                      <select [value]="member.role" (change)="updateRole(member, $any($event.target).value)"
+                        class="cursor-pointer rounded-md border border-border bg-surface px-2 py-1.5 text-xs text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30">
+                        @for (r of roles; track r) { <option [value]="r" [selected]="member.role === r">{{ r }}</option> }
+                      </select>
+                    } @else {
+                      <span class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {{ getRoleBadgeClass(member.role) }}">{{ member.role }}</span>
+                    }
+                  </td>
+                  <td class="px-6 py-4">
+                    <span class="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium {{ member.isActive ? 'bg-success/10 text-success' : 'bg-surface-elevated text-text-muted' }}">
+                      <span class="h-1.5 w-1.5 rounded-full {{ member.isActive ? 'bg-success' : 'bg-text-muted' }}"></span>
+                      {{ member.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td class="px-6 py-4 text-sm text-text-muted">{{ formatDate(member.joinedAt) }}</td>
+                  @if (isOwner()) {
+                    <td class="px-6 py-4 text-end">
+                      @if (member.role !== 'Owner') {
+                        <div class="flex items-center justify-end gap-3">
+                          <button (click)="openResetPassword(member)" class="text-xs font-medium text-text-muted hover:text-text">Reset password</button>
+                          <button (click)="removeMember(member)" class="text-xs font-medium text-danger hover:opacity-80">Remove</button>
+                        </div>
+                      } @else { <span class="text-xs text-text-muted/50">—</span> }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
+
+    <div class="mt-4 flex flex-wrap gap-3">
+      @for (info of roleLegend; track info.role) {
+        <div class="flex items-center gap-1.5 text-xs text-text-muted">
+          <span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {{ info.cls }}">{{ info.role }}</span>
+          <span>{{ info.desc }}</span>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- Invite modal -->
+@if (showInviteModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" (click)="closeInvite()"></div>
+    <div class="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface shadow-xl">
+      <div class="flex items-center justify-between border-b border-border px-6 py-4">
+        <h2 class="text-base font-bold text-text">Invite team member</h2>
+        <button (click)="closeInvite()" class="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40" aria-label="Close"><app-icon name="close" [size]="20" /></button>
+      </div>
+      <form [formGroup]="inviteForm" (ngSubmit)="inviteMember()" class="space-y-4 px-6 py-5">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-text">First name</label>
+            <input type="text" formControlName="firstName" placeholder="Ahmed" class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2 text-sm text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" [class.border-danger]="isInvalid('firstName')" />
+            @if (isInvalid('firstName')) { <p class="mt-0.5 text-xs text-danger">Required (min 2 chars)</p> }
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-text">Last name</label>
+            <input type="text" formControlName="lastName" placeholder="Al-Rashid" class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2 text-sm text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" [class.border-danger]="isInvalid('lastName')" />
+            @if (isInvalid('lastName')) { <p class="mt-0.5 text-xs text-danger">Required (min 2 chars)</p> }
+          </div>
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text">Email</label>
+          <input type="email" formControlName="email" placeholder="member@example.com" class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2 text-sm text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" [class.border-danger]="isInvalid('email')" />
+          @if (isInvalid('email')) { <p class="mt-0.5 text-xs text-danger">Valid email required</p> }
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text">Username</label>
+          <input type="text" formControlName="username" placeholder="ahmed_rashid" class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2 text-sm text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" [class.border-danger]="isInvalid('username')" />
+          @if (isInvalid('username')) { <p class="mt-0.5 text-xs text-danger">Required (min 3 chars)</p> }
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text">Initial password</label>
+          <input type="password" formControlName="password" placeholder="Min 8 characters" class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2 text-sm text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" [class.border-danger]="isInvalid('password')" />
+          @if (isInvalid('password')) { <p class="mt-0.5 text-xs text-danger">Required (min 8 chars)</p> }
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-text">Phone <span class="text-text-muted">(optional)</span></label>
+            <input type="tel" formControlName="phone" placeholder="+966 5x xxx xxxx" class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2 text-sm text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-text">Role</label>
+            <select formControlName="role" class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2 text-sm text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30">
+              @for (r of roles; track r) { <option [value]="r">{{ r }}</option> }
+            </select>
+          </div>
+        </div>
+        @if (inviteError()) { <div class="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{{ inviteError() }}</div> }
+        <div class="flex gap-3 pt-1">
+          <button type="submit" [disabled]="inviteLoading()" class="min-h-[44px] flex-1 rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">{{ inviteLoading() ? 'Inviting…' : 'Send invite' }}</button>
+          <button type="button" (click)="closeInvite()" class="min-h-[44px] rounded-[10px] border border-border bg-surface px-4 py-2 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- Reset password modal -->
+@if (showResetModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div class="absolute inset-0 bg-black/50" (click)="closeReset()"></div>
+    <div class="relative w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-surface shadow-xl">
+      <div class="flex items-center justify-between border-b border-border px-6 py-4">
+        <h2 class="text-base font-bold text-text">Reset password</h2>
+        <button (click)="closeReset()" class="flex h-9 w-9 items-center justify-center rounded-lg text-text-muted hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40" aria-label="Close"><app-icon name="close" [size]="20" /></button>
+      </div>
+      <div class="px-6 py-5">
+        @if (selectedMember()) {
+          <p class="mb-4 text-sm text-text-muted">Set a new password for <span class="font-medium text-text">{{ selectedMember()!.fullName }}</span>.</p>
+        }
+        <form [formGroup]="resetForm" (ngSubmit)="submitResetPassword()" class="space-y-4">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-text">New password</label>
+            <input type="password" formControlName="newPassword" placeholder="Min 8 characters" class="block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2 text-sm text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" [class.border-danger]="resetForm.get('newPassword')?.invalid && resetForm.get('newPassword')?.touched" />
+            @if (resetForm.get('newPassword')?.invalid && resetForm.get('newPassword')?.touched) { <p class="mt-0.5 text-xs text-danger">Required (min 8 chars)</p> }
+          </div>
+          @if (resetError()) { <div class="rounded-lg border border-danger/30 bg-danger/10 p-3 text-sm text-danger">{{ resetError() }}</div> }
+          <div class="flex gap-3">
+            <button type="submit" [disabled]="resetLoading()" class="min-h-[44px] flex-1 rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">{{ resetLoading() ? 'Saving…' : 'Reset password' }}</button>
+            <button type="button" (click)="closeReset()" class="min-h-[44px] rounded-[10px] border border-border bg-surface px-4 py-2 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+}

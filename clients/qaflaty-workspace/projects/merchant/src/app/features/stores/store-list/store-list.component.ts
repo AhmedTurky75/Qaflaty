@@ -1,15 +1,16 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { StoreService } from '../services/store.service';
 import { StoreCardComponent } from '../components/store-card/store-card.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StoreDto } from 'shared';
 
 @Component({
   selector: 'app-store-list',
   standalone: true,
-  imports: [CommonModule, StoreCardComponent],
+  imports: [TranslocoPipe, StoreCardComponent, IconComponent],
   templateUrl: './store-list.component.html',
   styleUrls: ['./store-list.component.scss']
 })

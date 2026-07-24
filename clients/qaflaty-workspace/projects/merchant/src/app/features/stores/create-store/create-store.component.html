@@ -1,164 +1,88 @@
-<div class="max-w-3xl mx-auto">
+<div class="mx-auto max-w-3xl">
   <!-- Header -->
   <div class="mb-8">
-    <div class="flex items-center text-sm text-gray-500 mb-4">
-      <a routerLink="/stores" class="hover:text-gray-700">Stores</a>
-      <svg class="mx-2 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
-      </svg>
-      <span class="text-gray-900">Create Store</span>
+    <div class="mb-4 flex items-center gap-2 text-sm text-text-muted">
+      <a routerLink="/stores" class="hover:text-primary">{{ 'stores.title' | transloco }}</a>
+      <span class="rtl:rotate-180"><app-icon name="chevron-right" [size]="14" /></span>
+      <span class="text-text">{{ 'stores.createTitle' | transloco }}</span>
     </div>
-
-    <h1 class="text-3xl font-bold text-gray-900">Create a New Store</h1>
-    <p class="mt-2 text-sm text-gray-600">
-      Set up your online store in just a few steps
-    </p>
+    <h1 class="text-2xl font-bold text-text">{{ 'stores.createHeading' | transloco }}</h1>
+    <p class="mt-2 text-sm text-text-muted">{{ 'stores.createSubtitle' | transloco }}</p>
   </div>
 
-  <!-- Form Card -->
-  <div class="bg-white rounded-lg shadow p-6 md:p-8">
+  <!-- Form card -->
+  <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm md:p-8">
     <form [formGroup]="createForm" (ngSubmit)="onSubmit()" class="space-y-6">
-      <!-- Slug Input -->
-      <app-slug-input
-        [initialValue]="''"
-        (slugChange)="onSlugChange($event)"
-        (validChange)="onSlugValidChange($event)"
-      ></app-slug-input>
+      <app-slug-input [initialValue]="''" (slugChange)="onSlugChange($event)" (validChange)="onSlugValidChange($event)" />
 
-      <!-- Store Name -->
       <div>
-        <label for="name" class="block text-sm font-medium text-gray-700">
-          Store Name *
-        </label>
-        <input
-          id="name"
-          type="text"
-          formControlName="name"
-          placeholder="My Awesome Store"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-          [class.border-red-300]="name?.invalid && name?.touched"
-        />
+        <label for="name" class="block text-sm font-medium text-text">{{ 'stores.name' | transloco }} *</label>
+        <input id="name" type="text" formControlName="name" [placeholder]="'stores.namePlaceholder' | transloco"
+          class="mt-1 block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+          [class.border-danger]="name?.invalid && name?.touched" />
         @if (name?.invalid && name?.touched) {
-          <p class="mt-2 text-sm text-red-600">
-            @if (name?.errors?.['required']) {
-              Store name is required
-            } @else if (name?.errors?.['minlength']) {
-              Name must be at least 2 characters
-            } @else if (name?.errors?.['maxlength']) {
-              Name must not exceed 100 characters
-            }
+          <p class="mt-2 text-sm text-danger">
+            @if (name?.errors?.['required']) { {{ 'stores.nameRequired' | transloco }} }
+            @else if (name?.errors?.['minlength']) { {{ 'stores.nameMin' | transloco }} }
+            @else if (name?.errors?.['maxlength']) { {{ 'stores.nameMax' | transloco }} }
           </p>
         }
-        <p class="mt-1 text-xs text-gray-500">
-          This is the display name of your store that customers will see.
-        </p>
+        <p class="mt-1 text-xs text-text-muted">{{ 'stores.nameHint' | transloco }}</p>
       </div>
 
-      <!-- Description -->
       <div>
-        <label for="description" class="block text-sm font-medium text-gray-700">
-          Description <span class="text-gray-500">(optional)</span>
-        </label>
-        <textarea
-          id="description"
-          formControlName="description"
-          rows="3"
-          placeholder="A brief description of your store..."
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-          [class.border-red-300]="description?.invalid && description?.touched"
-        ></textarea>
-        @if (description?.invalid && description?.touched) {
-          <p class="mt-2 text-sm text-red-600">
-            Description must not exceed 500 characters
-          </p>
-        }
-        <p class="mt-1 text-xs text-gray-500">
-          {{ description?.value?.length || 0 }} / 500 characters
-        </p>
+        <label for="description" class="block text-sm font-medium text-text">{{ 'stores.descriptionLabel' | transloco }} <span class="text-text-muted">({{ 'stores.optional' | transloco }})</span></label>
+        <textarea id="description" formControlName="description" rows="3" [placeholder]="'stores.descriptionPlaceholder' | transloco"
+          class="mt-1 block w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+          [class.border-danger]="description?.invalid && description?.touched"></textarea>
+        @if (description?.invalid && description?.touched) { <p class="mt-2 text-sm text-danger">{{ 'stores.descriptionMax' | transloco }}</p> }
+        <p class="mt-1 text-xs text-text-muted">{{ description?.value?.length || 0 }} / 500</p>
       </div>
 
-      <!-- Currency (set once, then locked) -->
+      <!-- Currency (locked once) -->
       <div>
-        <label for="currency" class="block text-sm font-medium text-gray-700">
-          Store Currency *
-        </label>
-        <select
-          id="currency"
-          formControlName="currency"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-white focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-        >
+        <label for="currency" class="block text-sm font-medium text-text">{{ 'stores.currency' | transloco }} *</label>
+        <select id="currency" formControlName="currency"
+          class="mt-1 block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30">
           @for (c of currencies(); track c.code) {
             <option [value]="c.code">{{ c.code }} — {{ c.name }} ({{ c.symbol }})</option>
           }
         </select>
-        <p class="mt-1 text-xs text-amber-600 font-medium">
-          ⚠ Chosen once and locked afterward. Every product price, delivery fee, and tax in this
-          store will use this currency — a store cannot mix currencies.
+        <p class="mt-2 flex items-start gap-1.5 rounded-lg border border-warning/30 bg-warning/10 p-2.5 text-xs font-medium text-warning">
+          <span class="mt-0.5 flex-shrink-0"><app-icon name="alert-triangle" [size]="14" /></span>
+          {{ 'stores.currencyWarning' | transloco }}
         </p>
       </div>
 
-      <!-- Error Message -->
       @if (error()) {
-        <div class="rounded-md bg-red-50 p-4">
-          <div class="flex">
-            <div class="flex-shrink-0">
-              <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-              </svg>
-            </div>
-            <div class="ml-3">
-              <p class="text-sm font-medium text-red-800">{{ error() }}</p>
-            </div>
-          </div>
-        </div>
+        <div class="rounded-lg bg-danger/10 p-3 text-sm font-medium text-danger">{{ error() }}</div>
       }
 
-      <!-- Action Buttons -->
-      <div class="flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
-        <a
-          routerLink="/stores"
-          class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-        >
-          Cancel
-        </a>
-
-        <button
-          type="submit"
-          [disabled]="loading() || !slugValid()"
-          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
+      <div class="flex items-center justify-end gap-3 border-t border-border pt-6">
+        <a routerLink="/stores" class="min-h-[44px] rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40">{{ 'common.cancel' | transloco }}</a>
+        <button type="submit" [disabled]="loading() || !slugValid()"
+          class="inline-flex min-h-[44px] items-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
           @if (loading()) {
-            <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Creating...
-          } @else {
-            Create Store
-          }
+            <svg class="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+            {{ 'stores.creating' | transloco }}
+          } @else { {{ 'stores.create' | transloco }} }
         </button>
       </div>
     </form>
   </div>
 
-  <!-- Info Box -->
-  <div class="mt-6 bg-blue-50 border border-blue-200 rounded-md p-4">
-    <div class="flex">
-      <div class="flex-shrink-0">
-        <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-        </svg>
-      </div>
-      <div class="ml-3">
-        <h3 class="text-sm font-medium text-blue-800">What happens next?</h3>
-        <div class="mt-2 text-sm text-blue-700">
-          <ul class="list-disc pl-5 space-y-1">
-            <li>Your store will be created with default settings</li>
-            <li>You can customize branding, delivery settings, and more</li>
-            <li>Start adding products to your store</li>
-            <li>Share your store URL with customers</li>
-          </ul>
-        </div>
+  <!-- Info -->
+  <div class="mt-6 rounded-xl border border-primary/20 bg-primary-tint p-4">
+    <div class="flex gap-3">
+      <span class="flex-shrink-0 text-primary"><app-icon name="alert-triangle" [size]="20" /></span>
+      <div>
+        <h3 class="text-sm font-medium text-text">{{ 'stores.nextTitle' | transloco }}</h3>
+        <ul class="mt-2 list-disc space-y-1 ps-5 text-sm text-text-muted">
+          <li>{{ 'stores.next1' | transloco }}</li>
+          <li>{{ 'stores.next2' | transloco }}</li>
+          <li>{{ 'stores.next3' | transloco }}</li>
+          <li>{{ 'stores.next4' | transloco }}</li>
+        </ul>
       </div>
     </div>
   </div>

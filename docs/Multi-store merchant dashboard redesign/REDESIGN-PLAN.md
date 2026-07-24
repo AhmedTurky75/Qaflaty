@@ -107,12 +107,15 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - Note: `ng build merchant` clean (exit 0). Bumped merchant-only `anyComponentStyle` warning 4→6 kB (tokenised `rgb(var())` values are longer than hex); store/landing untouched.
 - Follow-up flagged: the 4 sell-page **templates** keep English strings + emoji (📦/✓) for now — themeable via tokenised SCSS, but their user-facing text i18n is a small targeted follow-up (tracked for P14 sweep).
 
-### P8 Stores
-- [ ] `store-list` **[split]** → store cards (brand colour, address, counts, manage) + "Add store" card.
-- [ ] `create-store` **[split]** → name, address/slug, currency (irreversible flagged).
-- [ ] `store-details` **[split]** → tokens.
-- [ ] `store-card` **[split]** · `color-picker` **[split]** · `slug-input` **[split]** → tokens.
-- [ ] `team` `stores/team` **[inline-t, 530L]** → split + tokens (folds into More).
+### P8 Stores — ✅ DONE
+- [x] `store-list` → token store-card grid + explicit dashed **"Add store"** card; i18n (`stores.*`).
+- [x] `store-card` → token card (brand-colour chip, URL, delivery info, manage/delete); deleteConfirm via TranslocoService.
+- [x] `create-store` → tokens; **irreversible-currency warning** styled as a warning token box; i18n.
+- [x] `store-details` → tabbed settings (general/branding/delivery + maintenance toggle) fully tokenized. *English strings kept inline (flagged for P14 i18n sweep).*
+- [x] `color-picker` → tokenized chrome (swatch hexes kept — they're the brand palette being picked); i18n help text.
+- [x] `slug-input` → tokenized; check/x icons; i18n preview/help.
+- [x] `team` **[was inline-t, 530L]** → split into .ts/.html/.scss; token table, role chips, invite/reset modals; token role legend. HTTP/role logic unchanged. *English strings kept inline (flagged).*
+- Note: `ng build merchant` clean (exit 0).
 
 ### P9 Customers
 - [ ] `customer-list` **[split]** · `customer-detail` **[split]** → tokens.

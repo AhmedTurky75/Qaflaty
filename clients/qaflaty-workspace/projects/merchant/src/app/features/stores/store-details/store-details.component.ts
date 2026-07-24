@@ -5,12 +5,13 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { StoreService } from '../services/store.service';
 import { ColorPickerComponent } from '../components/color-picker/color-picker.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StoreDto } from 'shared';
 
 @Component({
   selector: 'app-store-details',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, ColorPickerComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, ColorPickerComponent, IconComponent],
   templateUrl: './store-details.component.html',
   styleUrls: ['./store-details.component.scss']
 })
