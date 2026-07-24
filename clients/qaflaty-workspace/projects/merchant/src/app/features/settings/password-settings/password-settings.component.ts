@@ -8,7 +8,8 @@ import { AuthService } from '../../../core/services/auth.service';
   selector: 'app-password-settings',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './password-settings.component.html'
+  templateUrl: './password-settings.component.html',
+  styleUrl: './password-settings.component.scss'
 })
 export class PasswordSettingsComponent {
   private fb = inject(FormBuilder);
@@ -98,11 +99,11 @@ export class PasswordSettingsComponent {
     if (/[!@#$%^&*(),.?":{}|<>]/.test(password)) strength += 15;
 
     if (strength < 50) {
-      return { level: 'weak', percentage: strength, color: 'bg-red-500' };
+      return { level: 'weak', percentage: strength, color: 'bg-danger' };
     } else if (strength < 80) {
-      return { level: 'medium', percentage: strength, color: 'bg-yellow-500' };
+      return { level: 'medium', percentage: strength, color: 'bg-warning' };
     } else {
-      return { level: 'strong', percentage: strength, color: 'bg-green-500' };
+      return { level: 'strong', percentage: strength, color: 'bg-success' };
     }
   }
 

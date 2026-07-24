@@ -516,9 +516,20 @@
     "noOrdersTitle": "No orders yet",
     "noOrdersBody": "This customer hasn't placed any orders."
   },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "appearance": "Appearance",
+    "password": "Password",
+    "stores": "Stores",
+    "notifications": "Notifications",
+    "moreHint": "Everything else — reach any feature here. Nothing was removed."
+  },
   "theme": {
     "title": "Appearance",
+    "pickerHint": "Pick a palette. Switching applies instantly across the whole app.",
     "language": "Language",
+    "textSize": "Text size",
     "blue": "Blue",
     "light": "Light",
     "slate": "Slate",
@@ -527,6 +538,8 @@
     "amber": "Amber",
     "emerald": "Emerald",
     "teal": "Teal",
-    "rose": "Rose"
+    "rose": "Rose",
+    "lang": { "en": "English", "ar": "العربية" },
+    "size": { "small": "Small", "normal": "Normal", "large": "Large" }
   }
 }

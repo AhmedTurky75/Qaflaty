@@ -1,0 +1,17 @@
+<div>
+  <h2 class="text-lg font-bold text-text">{{ 'nav.more' | transloco }}</h2>
+  <p class="mt-1 text-sm text-text-muted">{{ 'settings.moreHint' | transloco }}</p>
+
+  <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+    @for (item of items(); track item.route) {
+      <a
+        [routerLink]="item.route"
+        class="flex min-h-[64px] items-center gap-3 rounded-2xl border border-border bg-surface p-4 transition-all hover:border-primary/40 hover:shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+      >
+        <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-primary-tint text-primary"><app-icon [name]="item.icon" [size]="20" /></span>
+        <span class="flex-1 text-sm font-medium text-text">{{ item.labelKey | transloco }}</span>
+        <span class="text-text-muted/60 rtl:rotate-180"><app-icon name="chevron-right" [size]="18" /></span>
+      </a>
+    }
+  </div>
+</div>

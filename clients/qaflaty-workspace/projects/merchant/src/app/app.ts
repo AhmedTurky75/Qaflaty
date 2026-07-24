@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ThemeService, Theme } from './core/services/theme.service';
+import { ThemeService } from './core/services/theme.service';
 import { DirectionService } from './core/services/direction.service';
 
 @Component({
@@ -12,18 +12,12 @@ import { DirectionService } from './core/services/direction.service';
 export class App {
   protected readonly title = signal('merchant');
 
-  // Exposed for the temporary Phase-1 theme proof widget (removed in later phases).
-  protected readonly theme = inject(ThemeService);
-  protected readonly direction = inject(DirectionService);
-  protected readonly proofOpen = signal(false);
+  private readonly theme = inject(ThemeService);
+  private readonly direction = inject(DirectionService);
 
   constructor() {
-    // Apply the persisted theme + language/direction on startup.
+    // Apply the persisted theme + language/direction/text-size on startup.
     this.theme.init();
     this.direction.init();
-  }
-
-  protected setTheme(t: string): void {
-    this.theme.set(t as Theme);
   }
 }

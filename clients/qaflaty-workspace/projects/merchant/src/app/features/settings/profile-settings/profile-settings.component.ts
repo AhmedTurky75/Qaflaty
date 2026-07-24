@@ -8,7 +8,8 @@ import { PhoneInputComponent } from 'shared';
   selector: 'app-profile-settings',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, PhoneInputComponent],
-  templateUrl: './profile-settings.component.html'
+  templateUrl: './profile-settings.component.html',
+  styleUrl: './profile-settings.component.scss'
 })
 export class ProfileSettingsComponent implements OnInit {
   private fb = inject(FormBuilder);

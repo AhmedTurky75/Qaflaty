@@ -18,7 +18,12 @@
 
 html {
   background-color: rgb(var(--c-canvas));
+  font-size: 16px;
 }
+
+/* Text-size presets (Settings ▸ Appearance) scale the whole rem-based UI. */
+html[data-text-size='small'] { font-size: 14px; }
+html[data-text-size='large'] { font-size: 18px; }
 
 body {
   @apply antialiased;

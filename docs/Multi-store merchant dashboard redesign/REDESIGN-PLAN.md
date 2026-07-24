@@ -134,10 +134,15 @@ Legend: **[inline-t]** inline template · **[inline-s]** inline styles · **[+sc
 - [x] `returns` · `reviews` · `promo-codes` → component **SCSS tokenized** (hard-coded greys/blue/green/amber/red → `rgb(var(--c-*))` incl. status badges, chips, buttons, modal, table), RTL logical properties, focus rings, ≥40–44px controls. Templates/logic untouched.
 - *English strings in templates kept (flagged for P14 i18n sweep).* `ng build merchant` clean (exit 0).
 
-### P12 Settings + theme picker + "More" hub
-- [ ] `settings-layout` **[+scss]** → tokens; add "More" section linking all secondary features (routes unchanged).
-- [ ] Theme picker — 9 named palettes as live mini-previews + tick on active (no hex, no sliders); language toggle; text-size control.
-- [ ] `profile-settings` **[+scss]** · `password-settings` **[+scss]** · `store-settings` **[+scss]** · `notification-preferences` **[+scss]** → tokens + scss files.
+### P12 Settings + theme picker + "More" hub — ✅ DONE
+- [x] `settings-layout` **[+scss]** → tokenized sidebar nav (icons + labels) with new **Appearance** and **More** entries; content in a token card; i18n (`settings.*`).
+- [x] **`AppearanceComponent`** (new, route `/settings/appearance`) → **theme picker: 9 palettes as live mini-previews with a tick on the active one** (no hex, no sliders); **language** toggle (EN/AR); **text-size** control (small/normal/large). Uses ThemeService/DirectionService; instant + persisted.
+- [x] Text-size: added `textSize` to ThemeService (`data-text-size` on `<html>`) + `html[data-text-size]` font-size rules in styles.scss.
+- [x] **`MoreComponent`** (new, route `/settings/more`) → hub of every secondary feature (Live, Active Carts, Returns, Reviews, Promo Codes, Live Chat, Store Builder, Ads, owner-only Team) at existing routes.
+- [x] `profile-settings` · `password-settings` · `store-settings` · `notification-preferences` → tokenized + `.scss` added; content de-carded (layout provides the card); password-strength bar colours tokenized in ts.
+- [x] Removed the temporary Phase-1 theme proof widget from `App` (the real picker now exists).
+- Icon set extended: lock, palette.
+- Note: `ng build merchant` clean (exit 0). All routes unchanged.
 
 ### P13 Store Builder (full re-layout — own sub-plan) + Ads
 Store Builder (~7,000L, 33 components, all **[inline-t]** — incl. `section-editor` 2,705L):

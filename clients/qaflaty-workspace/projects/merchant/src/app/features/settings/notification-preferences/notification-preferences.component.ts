@@ -1,11 +1,12 @@
 import { Component, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-notification-preferences',
   standalone: true,
-  imports: [CommonModule],
-  templateUrl: './notification-preferences.component.html'
+  imports: [IconComponent],
+  templateUrl: './notification-preferences.component.html',
+  styleUrl: './notification-preferences.component.scss'
 })
 export class NotificationPreferencesComponent {
   // Placeholder state - not functional yet

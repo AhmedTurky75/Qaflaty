@@ -15,6 +15,14 @@ export const SETTINGS_ROUTES: Routes = [
         loadComponent: () => import('./profile-settings/profile-settings.component').then(m => m.ProfileSettingsComponent)
       },
       {
+        path: 'appearance',
+        loadComponent: () => import('./appearance/appearance.component').then(m => m.AppearanceComponent)
+      },
+      {
+        path: 'more',
+        loadComponent: () => import('./more/more.component').then(m => m.MoreComponent)
+      },
+      {
         path: 'password',
         loadComponent: () => import('./password-settings/password-settings.component').then(m => m.PasswordSettingsComponent)
       },
