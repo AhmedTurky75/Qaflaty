@@ -8,3 +8,21 @@
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/*
+ * Typography for the merchant-authored category content block. The markup is injected via
+ * [innerHTML], so it carries no component attribute and needs ::ng-deep to be styled.
+ */
+:host ::ng-deep .qf-cat-content h1 { font-size: 1.75rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+:host ::ng-deep .qf-cat-content h2 { font-size: 1.5rem; font-weight: 700; margin: 1rem 0 0.5rem; }
+:host ::ng-deep .qf-cat-content h3 { font-size: 1.25rem; font-weight: 600; margin: 0.85rem 0 0.4rem; }
+:host ::ng-deep .qf-cat-content p { margin: 0.6rem 0; }
+:host ::ng-deep .qf-cat-content ul { list-style: disc; padding-inline-start: 1.5rem; margin: 0.6rem 0; }
+:host ::ng-deep .qf-cat-content ol { list-style: decimal; padding-inline-start: 1.5rem; margin: 0.6rem 0; }
+:host ::ng-deep .qf-cat-content li { margin: 0.2rem 0; }
+:host ::ng-deep .qf-cat-content a { color: var(--primary-color, #2563eb); text-decoration: underline; }
+:host ::ng-deep .qf-cat-content strong, :host ::ng-deep .qf-cat-content b { font-weight: 700; }
+:host ::ng-deep .qf-cat-content em, :host ::ng-deep .qf-cat-content i { font-style: italic; }
+:host ::ng-deep .qf-cat-content img { max-width: 100%; height: auto; border-radius: 0.5rem; }
+:host ::ng-deep .qf-cat-content:first-child > :first-child { margin-top: 0; }
+:host ::ng-deep .qf-cat-content > :last-child { margin-bottom: 0; }

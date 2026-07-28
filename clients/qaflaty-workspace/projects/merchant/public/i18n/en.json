@@ -455,7 +455,22 @@
       "noneTitle": "No categories yet",
       "noneBody": "Get started by creating your first category.",
       "addSub": "Add subcategory",
-      "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?"
+      "deleteConfirm": "Are you sure you want to delete \"{{name}}\"?",
+      "order": "Display order",
+      "orderHint": "Lower numbers appear first in the storefront. Categories with the same number fall back to alphabetical order.",
+      "orderInvalid": "Display order must be 0 or greater",
+      "visual": "Image or icon",
+      "visualHint": "Upload an image, or pick an icon when you have no artwork. The image is used when both are set.",
+      "uploadImage": "Upload image",
+      "uploading": "Uploading…",
+      "removeImage": "Remove image",
+      "content": "Content above products (English)",
+      "contentPh": "<h2>Summer shoes</h2><p>Free delivery on orders over 500.</p>",
+      "contentHint": "HTML shown above the product grid when a shopper opens this category. Scripts are stripped when rendered.",
+      "contentAr": "Content above products (Arabic)",
+      "contentArPh": "<h2>أحذية الصيف</h2>",
+      "contentArHint": "Leave blank to reuse the English content.",
+      "hasContent": "Has storefront content"
     },
     "variants": {
       "title": "Product variants",

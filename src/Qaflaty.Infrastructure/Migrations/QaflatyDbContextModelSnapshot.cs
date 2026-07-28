@@ -232,6 +232,16 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("IconName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("icon_name");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("image_url");
+
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uuid")
                         .HasColumnName("parent_id");
@@ -247,6 +257,8 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("StoreId");
+
+                    b.HasIndex("StoreId", "SortOrder");
 
                     b.ToTable("categories", (string)null);
                 });
@@ -2733,6 +2745,31 @@ namespace Qaflaty.Infrastructure.Migrations
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Category.Category", b =>
                 {
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.CategoryContent", "Content", b1 =>
+                        {
+                            b1.Property<Guid>("CategoryId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(20000)
+                                .HasColumnType("character varying(20000)")
+                                .HasColumnName("content_html_ar");
+
+                            b1.Property<string>("English")
+                                .IsRequired()
+                                .HasMaxLength(20000)
+                                .HasColumnType("character varying(20000)")
+                                .HasColumnName("content_html");
+
+                            b1.HasKey("CategoryId");
+
+                            b1.ToTable("categories");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CategoryId");
+                        });
+
                     b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.CategoryName", "Name", b1 =>
                         {
                             b1.Property<Guid>("CategoryId")
@@ -2776,6 +2813,8 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("CategoryId");
                         });
+
+                    b.Navigation("Content");
 
                     b.Navigation("Name")
                         .IsRequired();

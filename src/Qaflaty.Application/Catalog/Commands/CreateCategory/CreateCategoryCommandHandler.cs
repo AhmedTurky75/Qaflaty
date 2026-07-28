@@ -52,13 +52,21 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
 
         CategoryId? parentId = request.ParentId.HasValue ? new CategoryId(request.ParentId.Value) : null;
 
+        // Optional storefront HTML block shown above this category's products
+        var contentResult = CategoryContent.Create(request.ContentHtml, request.ContentHtmlAr);
+        if (contentResult.IsFailure)
+            return Result.Failure<CategoryDto>(contentResult.Error);
+
         // Create category
         var categoryResult = Category.Create(
             storeId,
             nameResult.Value,
             slugResult.Value,
             parentId,
-            request.SortOrder);
+            request.SortOrder,
+            contentResult.Value,
+            request.ImageUrl,
+            request.IconName);
 
         if (categoryResult.IsFailure)
             return Result.Failure<CategoryDto>(categoryResult.Error);
@@ -74,7 +82,11 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
             category.Slug.Value,
             category.ParentId?.Value,
             category.SortOrder,
-            0); // Product count will be calculated by query
+            0, // Product count will be calculated by query
+            category.ImageUrl,
+            category.IconName,
+            category.Content?.English,
+            category.Content?.Arabic);
 
         return Result.Success(dto);
     }

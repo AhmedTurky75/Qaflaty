@@ -2,11 +2,30 @@
   <div class="container mx-auto px-4">
 
     <!-- Page Header -->
-    <div class="mb-6">
+    <div class="mb-6 flex items-center gap-4">
+      @if (currentCategory(); as category) {
+        @if (category.imageUrl) {
+          <img
+            [src]="category.imageUrl"
+            [alt]="i18n.nameFor(category.name, category.nameAr)"
+            class="w-14 h-14 lg:w-16 lg:h-16 rounded-xl object-cover border border-gray-200 shadow-sm"
+          />
+        } @else {
+          <span class="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center text-[var(--primary-color)]">
+            <lib-category-icon [name]="category.iconName" [size]="28" />
+          </span>
+        }
+      }
       <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">
         {{ currentCategory() ? i18n.nameFor(currentCategory()!.name, currentCategory()!.nameAr) : 'All Products' }}
       </h1>
     </div>
+
+    <!-- Merchant-authored content for this category, above the products -->
+    @if (categoryContent()) {
+      <div class="qf-cat-content mb-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 lg:p-6 text-gray-800 leading-relaxed"
+        [innerHTML]="categoryContent()"></div>
+    }
 
     <!-- Mobile: Filter trigger bar -->
     <div class="lg:hidden mb-4">

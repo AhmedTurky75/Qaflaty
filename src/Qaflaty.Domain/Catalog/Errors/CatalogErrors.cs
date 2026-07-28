@@ -52,6 +52,15 @@ public static class CatalogErrors
     public static readonly Error NameTooLong =
         new("Catalog.NameTooLong", "Name is too long");
 
+    public static readonly Error CategoryContentTooLong =
+        new("Catalog.CategoryContentTooLong", "Category content is too long");
+
+    public static readonly Error CategoryImageUrlTooLong =
+        new("Catalog.CategoryImageUrlTooLong", "Category image URL is too long");
+
+    public static readonly Error CategoryIconNameTooLong =
+        new("Catalog.CategoryIconNameTooLong", "Category icon name is too long");
+
     public static readonly Error StoreConfigurationNotFound =
         new("Catalog.StoreConfigurationNotFound", "Store configuration not found");
 

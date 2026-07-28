@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Qaflaty.Domain.Catalog.Aggregates.Category;
+using Qaflaty.Domain.Catalog.ValueObjects;
 using Qaflaty.Domain.Common.Identifiers;
 
 namespace Qaflaty.Infrastructure.Persistence.Configurations.Catalog;
@@ -48,11 +49,34 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
                 .IsRequired();
         });
 
+        // Optional storefront HTML block. Owned + nullable: the two columns are null together when
+        // the merchant authored no content for the category.
+        builder.OwnsOne(c => c.Content, content =>
+        {
+            content.Property(x => x.English)
+                .HasColumnName("content_html")
+                .HasMaxLength(CategoryContent.MaxLength);
+            content.Property(x => x.Arabic)
+                .HasColumnName("content_html_ar")
+                .HasMaxLength(CategoryContent.MaxLength);
+        });
+
+        builder.Property(c => c.ImageUrl)
+            .HasColumnName("image_url")
+            .HasMaxLength(Category.MaxImageUrlLength);
+
+        builder.Property(c => c.IconName)
+            .HasColumnName("icon_name")
+            .HasMaxLength(Category.MaxIconNameLength);
+
         builder.Property(c => c.SortOrder)
             .HasColumnName("sort_order");
 
         builder.Property(c => c.CreatedAt)
             .HasColumnName("created_at");
+
+        // Categories are listed store-wide ordered by their merchant-assigned rank.
+        builder.HasIndex(c => new { c.StoreId, c.SortOrder });
 
         builder.HasIndex(c => c.StoreId);
 
