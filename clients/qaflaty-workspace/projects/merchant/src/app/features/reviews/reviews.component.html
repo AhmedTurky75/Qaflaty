@@ -64,6 +64,21 @@
     <div class="review-cards">
       @for (r of reviews(); track r.id) {
         <article class="card review-card">
+          <!-- What the review is about -->
+          <div class="rc-product">
+            @if (r.productImageUrl) {
+              <img class="rc-product__img" [src]="r.productImageUrl" [alt]="productLabel(r)" loading="lazy" />
+            } @else {
+              <span class="rc-product__img rc-product__img--empty" aria-hidden="true">🖼️</span>
+            }
+            <div class="rc-product__text">
+              <span class="rc-product__name">{{ productLabel(r) || 'Unknown product' }}</span>
+              @if (r.productSlug) {
+                <span class="rc-product__slug">/{{ r.productSlug }}</span>
+              }
+            </div>
+          </div>
+
           <div class="rc-head">
             <div>
               <span class="rc-name">{{ r.customerName }}</span>

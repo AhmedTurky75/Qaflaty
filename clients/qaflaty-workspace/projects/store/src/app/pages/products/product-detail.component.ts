@@ -12,6 +12,7 @@ import { TrackingService } from '../../services/tracking.service';
 import { ConfigService } from '../../services/config.service';
 import { CartService } from '../../services/cart.service';
 import { DownsellService } from '../../services/downsell.service';
+import { FeatureService } from '../../services/feature.service';
 
 type ProductTab = 'description' | 'specifications' | 'reviews' | 'shipping';
 
@@ -35,6 +36,7 @@ export class ProductDetailComponent implements OnDestroy {
   private configService = inject(ConfigService);
   private cart = inject(CartService);
   private downsell = inject(DownsellService);
+  private features = inject(FeatureService);
 
   private dwellTimer?: ReturnType<typeof setInterval>;
   private dwellElapsedSeconds = 0;
@@ -48,6 +50,9 @@ export class ProductDetailComponent implements OnDestroy {
   activeTab = signal<ProductTab>('description');
   loading = signal<boolean>(true);
 
+  /** Reviews are a merchant feature toggle; when off, the tab and its content are not rendered. */
+  reviewsEnabled = this.features.isReviewsEnabled;
+
   // Recommendation sections
   relatedProducts = signal<Product[]>([]);
   frequentlyBoughtTogether = signal<Product[]>([]);
@@ -56,10 +61,14 @@ export class ProductDetailComponent implements OnDestroy {
   trendingProducts = signal<Product[]>([]);
 
   setTab(tab: ProductTab) {
+    // Guard as well as hiding the tab: config can load after the page renders, and deep links or
+    // stale state must never land on a tab the merchant has switched off.
+    if (tab === 'reviews' && !this.reviewsEnabled()) return;
     this.activeTab.set(tab);
   }
 
   scrollToReviews() {
+    if (!this.reviewsEnabled()) return;
     this.activeTab.set('reviews');
     setTimeout(() => document.getElementById('reviews')?.scrollIntoView({ behavior: 'smooth' }), 50);
   }

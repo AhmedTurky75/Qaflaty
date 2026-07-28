@@ -12,6 +12,7 @@ import { ReviewService } from '../../services/review.service';
 import { WishlistService } from '../../services/wishlist.service';
 import { I18nService } from '../../services/i18n.service';
 import { ConfigService } from '../../services/config.service';
+import { FeatureService } from '../../services/feature.service';
 import { StorePricePipe } from '../../pipes/store-price.pipe';
 
 /**
@@ -32,10 +33,14 @@ export class ProductBuyBoxComponent {
   private reviewService = inject(ReviewService);
   private wishlistService = inject(WishlistService);
   private i18n = inject(I18nService);
+  private features = inject(FeatureService);
   whatsAppService = inject(WhatsAppService);
 
   product = input.required<Product>();
   reviewsClick = output<void>();
+
+  /** Reviews are a merchant feature toggle; when off, the rating summary is not shown or fetched. */
+  reviewsEnabled = this.features.isReviewsEnabled;
 
   displayName = computed(() => this.i18n.nameFor(this.product().name, this.product().nameAr));
 
@@ -122,6 +127,9 @@ export class ProductBuyBoxComponent {
   }
 
   private loadRatingSummary(productId: string) {
+    // Nothing renders the summary when reviews are off, so don't spend a request fetching it.
+    if (!this.reviewsEnabled()) return;
+
     this.reviewService.getReviews(productId, { page: 1, pageSize: 1 }).subscribe({
       next: (res) => {
         this.averageRating.set(res.summary.averageRating);

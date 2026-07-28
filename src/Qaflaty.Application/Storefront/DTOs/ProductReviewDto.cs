@@ -39,6 +39,12 @@ public record ProductReviewListDto(
 public record ReviewModerationDto(
     Guid Id,
     Guid ProductId,
+    // Product identity for the moderation list — a merchant reviewing a queue needs to see what the
+    // review is about without opening each product. Null when the product has since been deleted.
+    string? ProductName,
+    string? ProductNameAr,
+    string? ProductSlug,
+    string? ProductImageUrl,
     string CustomerName,
     int Rating,
     string? Title,

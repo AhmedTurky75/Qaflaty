@@ -1,6 +1,7 @@
 import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoService } from '@jsverse/transloco';
 import { StoreContextService } from '../../core/services/store-context.service';
 import { ProductService } from '../products/services/product.service';
 import {
@@ -28,6 +29,7 @@ export class ReviewsComponent implements OnInit {
   private storeContext = inject(StoreContextService);
   private service = inject(ReviewAdminService);
   private productService = inject(ProductService);
+  private transloco = inject(TranslocoService);
 
   readonly statuses = ['Pending', 'Approved', 'Rejected', 'Hidden'];
 
@@ -46,6 +48,15 @@ export class ReviewsComponent implements OnInit {
   addForm = signal<ManualReviewForm>(this.emptyForm());
 
   pendingCount = computed(() => this.reviews().filter(r => r.status === 'Pending').length);
+
+  /** Product name in the active language, falling back to the other one, then to the slug. */
+  productLabel(review: ReviewModerationDto): string {
+    const preferArabic = this.transloco.getActiveLang() === 'ar';
+    const primary = preferArabic ? review.productNameAr : review.productName;
+    const secondary = preferArabic ? review.productName : review.productNameAr;
+
+    return primary?.trim() || secondary?.trim() || review.productSlug || '';
+  }
 
   private get storeId(): string | null {
     return this.storeContext.currentStoreId();

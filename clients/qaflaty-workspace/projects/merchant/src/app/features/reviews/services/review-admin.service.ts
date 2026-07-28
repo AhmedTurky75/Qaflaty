@@ -12,6 +12,11 @@ export interface ReviewMediaDto {
 export interface ReviewModerationDto {
   id: string;
   productId: string;
+  /** Product identity for the moderation list. Null when the product has since been deleted. */
+  productName?: string | null;
+  productNameAr?: string | null;
+  productSlug?: string | null;
+  productImageUrl?: string | null;
   customerName: string;
   rating: number;
   title?: string | null;
