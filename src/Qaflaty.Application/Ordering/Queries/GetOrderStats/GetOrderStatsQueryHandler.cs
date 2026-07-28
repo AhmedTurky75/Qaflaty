@@ -37,7 +37,12 @@ public class GetOrderStatsQueryHandler : IQueryHandler<GetOrderStatsQuery, Order
 
         var orders = await _orderRepository.GetByStoreIdAsync(storeId, cancellationToken);
 
-        var totalOrders = orders.Count;
+        var blockedOrders = orders.Count(o => o.Status == OrderStatus.Blocked);
+
+        // Orders held against the phone blocklist are not real orders yet — the merchant has not
+        // accepted them — so they are surfaced as their own figure rather than folded into the total.
+        var totalOrders = orders.Count - blockedOrders;
+
         var pendingOrders = orders.Count(o => o.Status == OrderStatus.Pending);
         var confirmedOrders = orders.Count(o => o.Status == OrderStatus.Confirmed);
         var processingOrders = orders.Count(o => o.Status == OrderStatus.Processing);
@@ -59,6 +64,7 @@ public class GetOrderStatsQueryHandler : IQueryHandler<GetOrderStatsQuery, Order
             shippedOrders,
             deliveredOrders,
             cancelledOrders,
+            blockedOrders,
             totalRevenue,
             averageOrderValue
         ));

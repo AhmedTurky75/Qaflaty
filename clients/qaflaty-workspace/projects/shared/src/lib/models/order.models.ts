@@ -12,6 +12,8 @@ export interface OrderSummaryDto {
   paymentStatus: PaymentStatus;
   createdAt: string;
   source?: string;
+  /** Non-null when this order's phone is on the store blocklist; pass it back to unblock. */
+  blockedPhoneId?: string | null;
 }
 
 export interface CustomerSnapshot {
@@ -95,7 +97,9 @@ export enum OrderStatus {
   Processing = 'Processing',
   Shipped = 'Shipped',
   Delivered = 'Delivered',
-  Cancelled = 'Cancelled'
+  Cancelled = 'Cancelled',
+  /** Held for merchant review: placed from a number on the store's phone blocklist. */
+  Blocked = 'Blocked'
 }
 
 export enum PaymentStatus {

@@ -1,4 +1,13 @@
 <div>
+  @if (dialog(); as dialogConfig) {
+    <app-confirm-dialog
+      [config]="dialogConfig"
+      [pending]="blockPending()"
+      (confirmed)="onDialogConfirmed($event)"
+      (cancelled)="onDialogCancelled()"
+    />
+  }
+
   <!-- Breadcrumb -->
   <nav class="mb-6 flex items-center gap-2 text-sm" aria-label="Breadcrumb">
     <a routerLink="/dashboard" class="font-medium text-text-muted hover:text-primary">{{ 'nav.home' | transloco }}</a>
@@ -6,7 +15,7 @@
     <a routerLink="/customers" class="font-medium text-text-muted hover:text-primary">{{ 'customers.title' | transloco }}</a>
     @if (customer()) {
       <span class="text-text-muted rtl:rotate-180"><app-icon name="chevron-right" [size]="14" /></span>
-      <span class="font-medium text-text" aria-current="page">{{ customer()!.contact.fullName }}</span>
+      <span class="font-medium text-text" aria-current="page">{{ customer()!.fullName }}</span>
     }
   </nav>
 
@@ -18,7 +27,7 @@
     </button>
     <div>
       <h1 class="text-2xl font-bold text-text">{{ 'customers.detailTitle' | transloco }}</h1>
-      @if (customer()) { <p class="mt-1 text-sm text-text-muted">{{ customer()!.contact.fullName }}</p> }
+      @if (customer()) { <p class="mt-1 text-sm text-text-muted">{{ customer()!.fullName }}</p> }
     </div>
   </div>
 
@@ -46,22 +55,67 @@
       <div class="space-y-6 lg:col-span-1">
         <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
           <div class="mb-6 flex items-center gap-4">
-            <span class="flex h-16 w-16 items-center justify-center rounded-full bg-primary-tint text-2xl font-bold text-primary">{{ customer()!.contact.fullName.charAt(0).toUpperCase() }}</span>
+            <span class="flex h-16 w-16 items-center justify-center rounded-full bg-primary-tint text-2xl font-bold text-primary">{{ (customer()!.fullName || '?').charAt(0).toUpperCase() }}</span>
             <div>
-              <h2 class="text-xl font-bold text-text">{{ customer()!.contact.fullName }}</h2>
+              <h2 class="text-xl font-bold text-text">{{ customer()!.fullName }}</h2>
               <p class="text-sm text-text-muted">{{ 'customers.since' | transloco }} {{ formatDate(customer()!.createdAt) }}</p>
             </div>
+          </div>
+
+          <!-- Phone blocklist state -->
+          @if (isPhoneBlocked()) {
+            <div class="mb-6 rounded-xl border border-danger/30 bg-danger/10 p-4">
+              <div class="flex items-start gap-3">
+                <span class="mt-0.5 flex-shrink-0 text-danger"><app-icon name="phone-off" [size]="20" /></span>
+                <div class="min-w-0">
+                  <h3 class="text-sm font-semibold text-danger">{{ 'customers.blockedTitle' | transloco }}</h3>
+                  <p class="mt-1 text-sm text-text">{{ 'customers.blockedBody' | transloco }}</p>
+                  <dl class="mt-3 space-y-1 text-sm">
+                    <div class="flex gap-2">
+                      <dt class="text-text-muted">{{ 'customers.blockedReason' | transloco }}:</dt>
+                      <dd class="text-text">{{ customer()!.blockReason || ('customers.blockedNoReason' | transloco) }}</dd>
+                    </div>
+                    @if (customer()!.blockedAt) {
+                      <div class="flex gap-2">
+                        <dt class="text-text-muted">{{ 'customers.blockedOn' | transloco }}:</dt>
+                        <dd class="text-text">{{ formatDate(customer()!.blockedAt!) }}</dd>
+                      </div>
+                    }
+                  </dl>
+                </div>
+              </div>
+            </div>
+          }
+
+          @if (blockError()) {
+            <div class="mb-4 rounded-xl border border-danger/30 bg-danger/10 p-3">
+              <p class="text-sm text-danger">{{ blockError() }}</p>
+            </div>
+          }
+
+          <div class="mb-6">
+            @if (isPhoneBlocked()) {
+              <button type="button" (click)="onUnblockPhone()" [disabled]="blockPending()"
+                class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm font-medium text-text transition-colors hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+                <app-icon name="check-circle" [size]="18" /> {{ 'customers.unblockPhone' | transloco }}
+              </button>
+            } @else {
+              <button type="button" (click)="onBlockPhone()" [disabled]="blockPending()"
+                class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-danger/40 bg-surface px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger/10 focus:outline-none focus:ring-2 focus:ring-danger/40 disabled:opacity-50">
+                <app-icon name="phone-off" [size]="18" /> {{ 'customers.blockPhone' | transloco }}
+              </button>
+            }
           </div>
 
           <div class="space-y-4">
             <div>
               <label class="mb-1 block text-xs font-medium uppercase tracking-wider text-text-muted">{{ 'customers.phone' | transloco }}</label>
-              <div class="flex items-center gap-2 text-text"><span class="text-text-muted"><app-icon name="phone" [size]="18" /></span>{{ customer()!.contact.phone }}</div>
+              <div class="flex items-center gap-2 text-text"><span class="text-text-muted"><app-icon name="phone" [size]="18" /></span>{{ customer()!.phone }}</div>
             </div>
-            @if (customer()!.contact.email) {
+            @if (customer()!.email) {
               <div>
                 <label class="mb-1 block text-xs font-medium uppercase tracking-wider text-text-muted">{{ 'customers.email' | transloco }}</label>
-                <div class="flex items-center gap-2 text-text"><span class="text-text-muted"><app-icon name="mail" [size]="18" /></span>{{ customer()!.contact.email }}</div>
+                <div class="flex items-center gap-2 text-text"><span class="text-text-muted"><app-icon name="mail" [size]="18" /></span>{{ customer()!.email }}</div>
               </div>
             }
             <div>
@@ -69,10 +123,10 @@
               <div class="flex items-start gap-2 text-text">
                 <span class="mt-0.5 flex-shrink-0 text-text-muted"><app-icon name="map-pin" [size]="18" /></span>
                 <div>
-                  <p>{{ customer()!.address.street }}</p>
-                  <p>{{ customer()!.address.city }}, {{ customer()!.address.country }}</p>
-                  @if (customer()!.address.district) { <p>{{ customer()!.address.district }}</p> }
-                  @if (customer()!.address.postalCode) { <p>{{ customer()!.address.postalCode }}</p> }
+                  <p>{{ customer()!.street }}</p>
+                  <p>{{ customer()!.city }}, {{ customer()!.country }}</p>
+                  @if (customer()!.district) { <p>{{ customer()!.district }}</p> }
+                  @if (customer()!.postalCode) { <p>{{ customer()!.postalCode }}</p> }
                 </div>
               </div>
             </div>
@@ -80,7 +134,7 @@
 
           <div class="mt-6 border-t border-border pt-6">
             <div class="grid grid-cols-2 gap-4">
-              <div><p class="text-xs uppercase tracking-wider text-text-muted">{{ 'customers.colOrders' | transloco }}</p><p class="text-2xl font-bold text-text">{{ customer()!.totalOrders }}</p></div>
+              <div><p class="text-xs uppercase tracking-wider text-text-muted">{{ 'customers.colOrders' | transloco }}</p><p class="text-2xl font-bold text-text">{{ customer()!.orderCount }}</p></div>
               <div><p class="text-xs uppercase tracking-wider text-text-muted">{{ 'customers.colSpent' | transloco }}</p><p class="text-2xl font-bold text-text">{{ formatCurrency(customer()!.totalSpent) }}</p></div>
             </div>
             <div class="mt-4 grid grid-cols-2 gap-4">

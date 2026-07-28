@@ -84,6 +84,29 @@
     </div>
   </div>
 
+  <!-- Row action result -->
+  @if (actionMessage()) {
+    <div class="mb-4 flex items-start gap-3 rounded-xl border border-success/30 bg-success/10 p-4">
+      <span class="text-success"><app-icon name="check-circle" [size]="20" /></span>
+      <p class="text-sm text-text">{{ actionMessage() }}</p>
+    </div>
+  }
+  @if (actionError()) {
+    <div class="mb-4 flex items-start gap-3 rounded-xl border border-danger/30 bg-danger/10 p-4">
+      <span class="text-danger"><app-icon name="alert-triangle" [size]="20" /></span>
+      <p class="text-sm text-text">{{ actionError() }}</p>
+    </div>
+  }
+
+  @if (dialog(); as dialogConfig) {
+    <app-confirm-dialog
+      [config]="dialogConfig"
+      [pending]="actionPending()"
+      (confirmed)="onDialogConfirmed($event)"
+      (cancelled)="onDialogCancelled()"
+    />
+  }
+
   <!-- Loading -->
   @if (loading()) {
     <div class="flex items-center justify-center py-12 text-primary">
@@ -128,6 +151,7 @@
               <th class="px-4 py-3 text-start font-semibold">{{ 'orders.colDate' | transloco }}</th>
               <th class="px-4 py-3 text-start font-semibold">{{ 'orders.colStatus' | transloco }}</th>
               <th class="px-4 py-3 text-end font-semibold">{{ 'orders.colTotal' | transloco }}</th>
+              <th class="w-12 px-4 py-3 text-end font-semibold"><span class="sr-only">{{ 'orders.colActions' | transloco }}</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border">
@@ -154,6 +178,16 @@
                 <td class="whitespace-nowrap px-4 py-3 text-text-muted">{{ formatDate(order.createdAt) }}</td>
                 <td class="px-4 py-3"><app-status-badge [status]="order.status" /></td>
                 <td class="whitespace-nowrap px-4 py-3 text-end font-semibold text-text">{{ formatCurrency(order.total) }}</td>
+                <td class="px-4 py-3 text-end">
+                  <button
+                    type="button"
+                    (click)="toggleRowMenu($event, order.id)"
+                    [disabled]="actionPending()"
+                    [attr.aria-expanded]="openMenuOrderId() === order.id"
+                    [attr.aria-label]="'orders.rowActions' | transloco"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-elevated hover:text-text focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-40"
+                  ><app-icon name="more-vertical" [size]="18" /></button>
+                </td>
               </tr>
             }
           </tbody>
@@ -167,6 +201,76 @@
         <app-order-card [order]="order" (viewDetails)="onViewOrderDetails($event)" />
       }
     </div>
+
+    <!-- Row action menu. Fixed-positioned so the table wrapper's overflow rules can't clip it. -->
+    @if (openMenuOrderId(); as menuOrderId) {
+      <div class="fixed inset-0 z-40" (click)="closeRowMenu()"></div>
+      @for (order of orders(); track order.id) {
+        @if (order.id === menuOrderId) {
+          <div
+            role="menu"
+            class="fixed z-50 w-56 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-lg"
+            [style.top.px]="menuPosition().top"
+            [style.left.px]="menuPosition().left"
+          >
+            <button
+              type="button"
+              role="menuitem"
+              (click)="onViewOrderDetails(order.id)"
+              class="flex w-full items-center gap-2 px-4 py-2.5 text-start text-sm text-text transition-colors hover:bg-surface-elevated focus:bg-surface-elevated focus:outline-none"
+            >
+              <app-icon name="eye" [size]="16" />
+              {{ 'orders.viewDetails' | transloco }}
+            </button>
+
+            @if (order.status === OrderStatus.Blocked) {
+              <button
+                type="button"
+                role="menuitem"
+                (click)="onReleaseBlockedOrder($event, order)"
+                class="flex w-full items-center gap-2 px-4 py-2.5 text-start text-sm text-success transition-colors hover:bg-surface-elevated focus:bg-surface-elevated focus:outline-none"
+              >
+                <app-icon name="check-circle" [size]="16" />
+                {{ 'orders.releaseOrder' | transloco }}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                (click)="onRejectBlockedOrder($event, order)"
+                class="flex w-full items-center gap-2 px-4 py-2.5 text-start text-sm text-danger transition-colors hover:bg-surface-elevated focus:bg-surface-elevated focus:outline-none"
+              >
+                <app-icon name="x-circle" [size]="16" />
+                {{ 'orders.rejectOrder' | transloco }}
+              </button>
+            }
+
+            <div class="my-1 border-t border-border"></div>
+
+            @if (order.blockedPhoneId) {
+              <button
+                type="button"
+                role="menuitem"
+                (click)="onUnblockPhone($event, order)"
+                class="flex w-full items-center gap-2 px-4 py-2.5 text-start text-sm text-text transition-colors hover:bg-surface-elevated focus:bg-surface-elevated focus:outline-none"
+              >
+                <app-icon name="check-circle" [size]="16" />
+                {{ 'orders.unblockPhone' | transloco }}
+              </button>
+            } @else {
+              <button
+                type="button"
+                role="menuitem"
+                (click)="onBlockPhone($event, order)"
+                class="flex w-full items-center gap-2 px-4 py-2.5 text-start text-sm text-danger transition-colors hover:bg-surface-elevated focus:bg-surface-elevated focus:outline-none"
+              >
+                <app-icon name="phone-off" [size]="16" />
+                {{ 'orders.blockPhone' | transloco }}
+              </button>
+            }
+          </div>
+        }
+      }
+    }
 
     <!-- Pagination -->
     @if (totalPages() > 1) {

@@ -15,6 +15,7 @@ public sealed class Order : AggregateRoot<OrderId>
     public CustomerId CustomerId { get; private set; } // Customer who placed the order
     public OrderNumber OrderNumber { get; private set; } = null!; // Human-readable unique order reference shown to customer, e.g. "ORD-2026-000123"
     public OrderStatus Status { get; private set; } // Order lifecycle state: Pending → Confirmed → Processing → Shipped → Delivered (or Cancelled)
+    public string? BlockReason { get; private set; } // Why the order was flagged against the merchant's phone blocklist; null for ordinary orders
     public OrderSource Source { get; private set; } // Channel the order originated from, e.g. Storefront (online) or Manual (merchant-entered)
     public OrderPricing Pricing { get; private set; } = null!; // Computed totals value object: subtotal, delivery fee, discount, tax, grand total
     public string? AppliedPromoCode { get; private set; } // Promo/discount code applied to the order, if any, e.g. "SUMMER20"
@@ -183,8 +184,86 @@ public sealed class Order : AggregateRoot<OrderId>
         if (Status == OrderStatus.Delivered || Status == OrderStatus.Cancelled)
             return Result.Failure(OrderingErrors.InvalidStatusTransition);
 
+        // A Blocked order never reserved stock, so it must not travel through this path:
+        // OrderCancelledEvent restores stock unconditionally and would inflate inventory.
+        // Use RejectBlocked instead.
+        if (Status == OrderStatus.Blocked)
+            return Result.Failure(OrderingErrors.InvalidStatusTransition);
+
         ChangeStatus(OrderStatus.Cancelled, changedBy, reason);
         RaiseDomainEvent(new OrderCancelledEvent(Id, reason));
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Records that the order came from a blocked phone number, while leaving it Pending so the
+    /// customer-facing flow (including OTP verification) proceeds exactly as it would normally.
+    /// The block is applied later by <see cref="MarkBlocked"/> at the point of confirmation.
+    /// </summary>
+    public Result FlagBlocked(string reason)
+    {
+        if (Status != OrderStatus.Pending)
+            return Result.Failure(OrderingErrors.InvalidStatusTransition);
+
+        if (string.IsNullOrWhiteSpace(reason))
+            return Result.Failure(OrderingErrors.BlockReasonRequired);
+
+        BlockReason = reason;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Parks a flagged order for merchant review instead of confirming it. Deliberately raises no
+    /// domain events: stock stays unreserved and no Purchase is tracked until the merchant releases it.
+    /// </summary>
+    public Result MarkBlocked(string changedBy)
+    {
+        if (Status != OrderStatus.Pending)
+            return Result.Failure(OrderingErrors.InvalidStatusTransition);
+
+        if (string.IsNullOrWhiteSpace(BlockReason))
+            return Result.Failure(OrderingErrors.OrderNotFlaggedBlocked);
+
+        if (!_items.Any())
+            return Result.Failure(OrderingErrors.EmptyOrder);
+
+        ChangeStatus(OrderStatus.Blocked, changedBy, BlockReason);
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Merchant approved a blocked order. Confirms it and raises the same events a normal
+    /// confirmation would, so stock is reserved and the Purchase is tracked now rather than at placement.
+    /// </summary>
+    public Result ReleaseFromBlock(string changedBy)
+    {
+        if (Status != OrderStatus.Blocked)
+            return Result.Failure(OrderingErrors.InvalidStatusTransition);
+
+        if (!_items.Any())
+            return Result.Failure(OrderingErrors.EmptyOrder);
+
+        BlockReason = null;
+        ChangeStatus(OrderStatus.Confirmed, changedBy);
+        RaiseDomainEvent(new OrderConfirmedEvent(Id));
+
+        var itemSnapshots = _items.Select(i => new OrderItemSnapshot(i.ProductId, i.Quantity)).ToList();
+        RaiseDomainEvent(new OrderPlacedEvent(Id, StoreId, CustomerId, OrderNumber, itemSnapshots, Pricing.Total));
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Merchant rejected a blocked order. Cancels it without raising OrderCancelledEvent, because
+    /// the order never reserved stock and there is nothing to restore.
+    /// </summary>
+    public Result RejectBlocked(string reason, string changedBy)
+    {
+        if (Status != OrderStatus.Blocked)
+            return Result.Failure(OrderingErrors.InvalidStatusTransition);
+
+        ChangeStatus(OrderStatus.Cancelled, changedBy, reason);
         return Result.Success();
     }
 

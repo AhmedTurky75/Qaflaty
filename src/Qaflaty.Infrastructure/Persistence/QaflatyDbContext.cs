@@ -23,6 +23,7 @@ using Qaflaty.Domain.Identity.Aggregates.AccessDeniedReport;
 using Qaflaty.Domain.Identity.Aggregates.LoginOtp;
 using Qaflaty.Domain.Identity.Aggregates.Merchant;
 using Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
+using Qaflaty.Domain.Ordering.Aggregates.BlockedPhone;
 using Qaflaty.Domain.Ordering.Aggregates.Customer;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
 using Qaflaty.Domain.Ordering.Aggregates.Return;
@@ -73,6 +74,7 @@ public class QaflatyDbContext : DbContext
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<OrderOtp> OrderOtps => Set<OrderOtp>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<BlockedPhone> BlockedPhones => Set<BlockedPhone>();
     public DbSet<ReturnRequest> ReturnRequests => Set<ReturnRequest>();
     public DbSet<ReturnRequestItem> ReturnRequestItems => Set<ReturnRequestItem>();
 

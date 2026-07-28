@@ -1,4 +1,5 @@
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Application.Ordering.Common;
 using Qaflaty.Application.Ordering.DTOs;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
@@ -47,7 +48,7 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
 
         return Result.Success(new OrderTrackingDto(
             order.OrderNumber.Value,
-            order.Status.ToString(),
+            CustomerFacingOrderStatus.Map(order.Status),
             order.Items.Select(i => new TrackOrderItemDto(
                 i.ProductId.Value,
                 i.ProductName,
@@ -70,7 +71,7 @@ public class TrackOrderQueryHandler : IQueryHandler<TrackOrderQuery, OrderTracki
                 order.Payment.Method.ToString(),
                 order.Payment.Status.ToString()
             ),
-            order.StatusHistory.Select(s => new OrderStatusChangeDto(
+            order.StatusHistory.Where(CustomerFacingOrderStatus.IsVisibleToCustomer).Select(s => new OrderStatusChangeDto(
                 s.Id,
                 s.FromStatus.ToString(),
                 s.ToStatus.ToString(),

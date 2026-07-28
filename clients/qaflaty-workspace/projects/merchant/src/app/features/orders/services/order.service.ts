@@ -109,4 +109,23 @@ export class OrderService {
     const params = new HttpParams().set('storeId', storeId);
     return this.http.get<OrderStats>(`${this.API_URL}/stats`, { params });
   }
+
+  /**
+   * Approves an order held against the phone blocklist. This is the point at which stock is
+   * reserved and the purchase is tracked — none of that happened when the order was placed.
+   */
+  releaseBlockedOrder(storeId: string, orderId: string, alsoUnblockPhone: boolean): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/stores/${storeId}/orders/${orderId}/release`,
+      { alsoUnblockPhone }
+    );
+  }
+
+  /** Rejects a held order, cancelling it without restoring stock it never reserved. */
+  rejectBlockedOrder(storeId: string, orderId: string, reason?: string | null): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/stores/${storeId}/orders/${orderId}/reject`,
+      { reason }
+    );
+  }
 }

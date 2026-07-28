@@ -1874,6 +1874,46 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("store_customers", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.BlockedPhone.BlockedPhone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("BlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at");
+
+                    b.Property<string>("BlockedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("blocked_by");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid?>("SourceOrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_order_id");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("blocked_phones", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Customer.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1910,6 +1950,11 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasMaxLength(40)
                         .HasColumnType("character varying(40)")
                         .HasColumnName("applied_promo_code");
+
+                    b.Property<string>("BlockReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("block_reason");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -4113,6 +4158,38 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Navigation("Phone");
 
                     b.Navigation("SecondaryPhone");
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.BlockedPhone.BlockedPhone", b =>
+                {
+                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.PhoneNumber", "Phone", b1 =>
+                        {
+                            b1.Property<Guid>("BlockedPhoneId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("phone_country_code");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("phone");
+
+                            b1.HasKey("BlockedPhoneId");
+
+                            b1.HasIndex("Value");
+
+                            b1.ToTable("blocked_phones");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BlockedPhoneId");
+                        });
+
+                    b.Navigation("Phone")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Customer.Customer", b =>

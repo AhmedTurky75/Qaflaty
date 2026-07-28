@@ -2,24 +2,39 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { OrderService, ShipOrderRequest } from '../services/order.service';
 import { StatusBadgeComponent } from '../components/status-badge/status-badge.component';
 import { OrderTimelineComponent } from '../components/order-timeline/order-timeline.component';
 import { IconComponent } from '../../../shared/components/icon/icon.component';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogConfig,
+  ConfirmDialogResult
+} from '../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { OrderDto, OrderStatus, PaymentStatus } from 'shared';
 
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TranslocoPipe, StatusBadgeComponent, OrderTimelineComponent, IconComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslocoPipe, StatusBadgeComponent, OrderTimelineComponent, IconComponent, ConfirmDialogComponent],
   templateUrl: './order-detail.component.html',
   styleUrls: ['./order-detail.component.scss']
 })
 export class OrderDetailComponent implements OnInit {
   private orderService = inject(OrderService);
+  private transloco = inject(TranslocoService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+
+  private get storeId(): string {
+    return localStorage.getItem('currentStoreId') || '';
+  }
+
+  // Blocked-order review dialog. `pendingBlockAction` tells the shared dialog which action to run.
+  dialog = signal<ConfirmDialogConfig | null>(null);
+  blockActionError = signal<string | null>(null);
+  private pendingBlockAction = signal<'release' | 'reject' | null>(null);
 
   order = signal<OrderDto | null>(null);
   loading = signal(true);
@@ -89,7 +104,86 @@ export class OrderDetailComponent implements OnInit {
 
   canCancel(): boolean {
     const status = this.order()?.status;
-    return status !== OrderStatus.Delivered && status !== OrderStatus.Cancelled;
+    // A blocked order is cancelled through Reject instead: the ordinary cancel path restores stock,
+    // and a blocked order never reserved any.
+    return status !== OrderStatus.Delivered &&
+           status !== OrderStatus.Cancelled &&
+           status !== OrderStatus.Blocked;
+  }
+
+  isBlocked(): boolean {
+    return this.order()?.status === OrderStatus.Blocked;
+  }
+
+  onReleaseBlockedOrder(): void {
+    const order = this.order();
+    if (!order) return;
+
+    this.pendingBlockAction.set('release');
+    this.dialog.set({
+      title: this.transloco.translate('orders.releaseOrder'),
+      message: this.transloco.translate('orders.releaseConfirm', { number: order.orderNumber }),
+      confirmLabel: this.transloco.translate('orders.releaseOrder'),
+      cancelLabel: this.transloco.translate('orders.close'),
+      variant: 'primary',
+      icon: 'check-circle',
+      checkbox: { label: this.transloco.translate('orders.releaseAlsoUnblock') }
+    });
+  }
+
+  onRejectBlockedOrder(): void {
+    const order = this.order();
+    if (!order) return;
+
+    this.pendingBlockAction.set('reject');
+    this.dialog.set({
+      title: this.transloco.translate('orders.rejectOrder'),
+      message: this.transloco.translate('orders.rejectConfirm', { number: order.orderNumber }),
+      confirmLabel: this.transloco.translate('orders.rejectOrder'),
+      cancelLabel: this.transloco.translate('orders.close'),
+      variant: 'danger',
+      icon: 'x-circle',
+      reason: {
+        label: this.transloco.translate('orders.rejectReasonLabel'),
+        placeholder: this.transloco.translate('orders.rejectReasonPlaceholder')
+      }
+    });
+  }
+
+  onDialogCancelled(): void {
+    this.dialog.set(null);
+    this.pendingBlockAction.set(null);
+  }
+
+  onDialogConfirmed(result: ConfirmDialogResult): void {
+    const order = this.order();
+    const action = this.pendingBlockAction();
+    if (!order || !action) return;
+
+    this.actionLoading.set(true);
+    this.blockActionError.set(null);
+
+    const request$ = action === 'release'
+      ? this.orderService.releaseBlockedOrder(this.storeId, order.id, result.checked)
+      : this.orderService.rejectBlockedOrder(this.storeId, order.id, result.reason);
+
+    request$.subscribe({
+      next: () => {
+        this.actionLoading.set(false);
+        this.dialog.set(null);
+        this.pendingBlockAction.set(null);
+        this.loadOrder(order.id);
+      },
+      error: (err) => {
+        this.actionLoading.set(false);
+        this.dialog.set(null);
+        this.pendingBlockAction.set(null);
+        this.blockActionError.set(
+          err?.error?.message ||
+          this.transloco.translate(action === 'release' ? 'orders.releaseFailed' : 'orders.rejectFailed')
+        );
+      }
+    });
   }
 
   onConfirmOrder(): void {

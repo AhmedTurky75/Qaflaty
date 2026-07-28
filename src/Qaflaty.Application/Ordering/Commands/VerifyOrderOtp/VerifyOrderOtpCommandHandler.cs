@@ -1,4 +1,5 @@
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Application.Ordering.Common;
 using Qaflaty.Application.Ordering.DTOs;
 using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Catalog.Repositories;
@@ -75,9 +76,15 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
             return Result.Failure<OrderDto>(OrderingErrors.OtpInvalid);
         }
 
-        var confirmResult = order.Confirm("Customer");
-        if (confirmResult.IsFailure)
-            return Result.Failure<OrderDto>(confirmResult.Error);
+        // The code was correct, so from the customer's side the order is verified either way. An
+        // order flagged against the phone blocklist at placement parks in Blocked rather than
+        // confirming, so the merchant decides before any stock is reserved or Purchase is tracked.
+        var settleResult = string.IsNullOrWhiteSpace(order.BlockReason)
+            ? order.Confirm("Customer")
+            : order.MarkBlocked("System");
+
+        if (settleResult.IsFailure)
+            return Result.Failure<OrderDto>(settleResult.Error);
 
         //_orderRepository.Update(order);
 
@@ -105,7 +112,7 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
         order.StoreId.Value,
         order.CustomerId.Value,
         order.OrderNumber.Value,
-        order.Status.ToString(),
+        CustomerFacingOrderStatus.Map(order.Status),
         customerSnapshot,
         order.Items.Select(i => new OrderItemDto(
             i.Id.Value,
@@ -141,7 +148,7 @@ public class VerifyOrderOtpCommandHandler : ICommandHandler<VerifyOrderOtpComman
             order.Delivery.Instructions
         ),
         new OrderNotesDto(order.Notes.CustomerNotes, order.Notes.MerchantNotes),
-        order.StatusHistory.Select(s => new OrderStatusChangeDto(
+        order.StatusHistory.Where(CustomerFacingOrderStatus.IsVisibleToCustomer).Select(s => new OrderStatusChangeDto(
             s.Id,
             s.FromStatus.ToString(),
             s.ToStatus.ToString(),

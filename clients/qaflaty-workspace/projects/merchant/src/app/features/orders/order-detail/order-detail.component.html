@@ -215,6 +215,25 @@
         <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
           <h2 class="mb-4 text-base font-bold text-text">{{ 'orders.actions' | transloco }}</h2>
           <div class="space-y-3">
+            @if (isBlocked()) {
+              <div class="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/10 p-4">
+                <span class="text-warning"><app-icon name="phone-off" [size]="20" /></span>
+                <p class="text-sm text-text">{{ 'orders.blockedNotice' | transloco }}</p>
+              </div>
+              @if (blockActionError()) {
+                <div class="rounded-xl border border-danger/30 bg-danger/10 p-3">
+                  <p class="text-sm text-danger">{{ blockActionError() }}</p>
+                </div>
+              }
+              <button type="button" (click)="onReleaseBlockedOrder()" [disabled]="actionLoading()"
+                class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] bg-success px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-success/40 disabled:opacity-50">
+                <app-icon name="check-circle" [size]="18" /> {{ 'orders.releaseOrder' | transloco }}
+              </button>
+              <button type="button" (click)="onRejectBlockedOrder()" [disabled]="actionLoading()"
+                class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-danger/40 bg-surface px-4 py-2.5 text-sm font-medium text-danger transition-colors hover:bg-danger/10 focus:outline-none focus:ring-2 focus:ring-danger/40 disabled:opacity-50">
+                <app-icon name="x-circle" [size]="18" /> {{ 'orders.rejectOrder' | transloco }}
+              </button>
+            }
             @if (canConfirm()) {
               <button type="button" (click)="onConfirmOrder()" [disabled]="actionLoading()"
                 class="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
@@ -296,6 +315,15 @@
   }
 
   <!-- Cancel modal -->
+  @if (dialog(); as dialogConfig) {
+    <app-confirm-dialog
+      [config]="dialogConfig"
+      [pending]="actionLoading()"
+      (confirmed)="onDialogConfirmed($event)"
+      (cancelled)="onDialogCancelled()"
+    />
+  }
+
   @if (showCancelModal()) {
     <div class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true">
       <div class="fixed inset-0 bg-black/50" (click)="closeCancelModal()"></div>

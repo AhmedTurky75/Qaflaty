@@ -30,6 +30,9 @@ export class StatusBadgeComponent {
         return 'bg-success/10 text-success';
       case OrderStatus.Cancelled:
         return 'bg-danger/10 text-danger';
+      case OrderStatus.Blocked:
+        // Held, not resolved — reads as "needs your attention" rather than a failure.
+        return 'bg-warning/20 text-warning ring-1 ring-warning/40';
       default:
         return 'bg-surface-elevated text-text-muted';
     }

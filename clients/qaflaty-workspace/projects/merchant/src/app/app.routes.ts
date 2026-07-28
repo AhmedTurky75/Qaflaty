@@ -76,6 +76,11 @@ export const routes: Routes = [
         loadComponent: () => import('./features/reviews/reviews.component').then(m => m.ReviewsComponent)
       },
       {
+        path: 'blocked-phones',
+        canActivate: [storeGuard],
+        loadComponent: () => import('./features/blocked-phones/blocked-phones.component').then(m => m.BlockedPhonesComponent)
+      },
+      {
         path: 'promo-codes',
         canActivate: [storeGuard],
         loadComponent: () => import('./features/promo-codes/promo-codes.component').then(m => m.PromoCodesComponent)

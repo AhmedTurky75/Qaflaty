@@ -72,6 +72,8 @@ export class OrderStatisticsComponent implements OnInit {
         return 'text-success bg-success/10';
       case OrderStatus.Cancelled:
         return 'text-danger bg-danger/10';
+      case OrderStatus.Blocked:
+        return 'text-warning bg-warning/20';
       default:
         return 'text-text-muted bg-surface-elevated';
     }

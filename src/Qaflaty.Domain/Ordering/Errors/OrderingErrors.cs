@@ -60,4 +60,19 @@ public static class OrderingErrors
 
     public static readonly Error OrderNotPending =
         new("Ordering.OrderNotPending", "Order is not in pending status");
+
+    public static readonly Error BlockReasonRequired =
+        new("Ordering.BlockReasonRequired", "A reason is required when blocking an order");
+
+    public static readonly Error OrderNotFlaggedBlocked =
+        new("Ordering.OrderNotFlaggedBlocked", "Order was not flagged against the phone blocklist");
+
+    public static readonly Error OrderNotBlocked =
+        new("Ordering.OrderNotBlocked", "Order is not awaiting blocked-number review");
+
+    public static readonly Error BlockedPhoneNotFound =
+        new("Ordering.BlockedPhoneNotFound", "Blocked phone number not found");
+
+    public static readonly Error PhoneAlreadyBlocked =
+        new("Ordering.PhoneAlreadyBlockedConflict", "This phone number is already blocked");
 }

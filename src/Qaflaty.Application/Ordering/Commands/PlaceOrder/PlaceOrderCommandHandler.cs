@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Ordering.Common;
 using Qaflaty.Application.Ordering.DTOs;
 using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
@@ -35,6 +36,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly IStoreConfigurationRepository _storeConfigRepository;
     private readonly IPromoCodeRepository _promoCodeRepository;
     private readonly ICartConversionService _cartConversionService;
+    private readonly IBlockedPhoneRepository _blockedPhoneRepository;
 
     public PlaceOrderCommandHandler(
         IOrderRepository orderRepository,
@@ -48,7 +50,8 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         IOtpSettings otpSettings,
         IStoreConfigurationRepository storeConfigRepository,
         IPromoCodeRepository promoCodeRepository,
-        ICartConversionService cartConversionService)
+        ICartConversionService cartConversionService,
+        IBlockedPhoneRepository blockedPhoneRepository)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
@@ -62,6 +65,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         _storeConfigRepository = storeConfigRepository;
         _promoCodeRepository = promoCodeRepository;
         _cartConversionService = cartConversionService;
+        _blockedPhoneRepository = blockedPhoneRepository;
     }
 
     public async Task<Result<OrderDto>> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -91,6 +95,12 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             return Result.Failure<OrderDto>(phoneResult.Error);
 
         var contact = CustomerContact.Create(nameResult.Value, phoneResult.Value, emailResult.Value);
+
+        // Screen the number against the merchant's blocklist. A blocked order is still created and
+        // still walks the customer through the ordinary flow (including OTP) — it simply parks in
+        // Blocked instead of Confirmed at the end, for the merchant to release or reject.
+        var blockedPhone = await _blockedPhoneRepository.GetByPhoneAsync(storeId, phoneResult.Value, cancellationToken);
+        var isBlocked = blockedPhone != null;
 
         // Create address
         var addressResult = Address.Create(
@@ -273,12 +283,30 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             if (applyResult.IsFailure)
                 return Result.Failure<OrderDto>(applyResult.Error);
 
-            promo.RecordRedemption();
-            _promoCodeRepository.Update(promo);
+            // The discount is reflected in the order's pricing either way, so the merchant reviews
+            // the real total. But a blocked order must not consume a redemption — otherwise anyone
+            // on the blocklist could drain a limited promo code by placing orders that never ship.
+            // The redemption is recorded when (and only if) the merchant releases the order.
+            if (!isBlocked)
+            {
+                promo.RecordRedemption();
+                _promoCodeRepository.Update(promo);
 
-            var redemption = PromoCodeRedemption.Create(
-                promo.Id, storeId, order.Id, customer.Id, promo.Code, discountValue);
-            await _promoCodeRepository.AddRedemptionAsync(redemption, cancellationToken);
+                var redemption = PromoCodeRedemption.Create(
+                    promo.Id, storeId, order.Id, customer.Id, promo.Code, discountValue);
+                await _promoCodeRepository.AddRedemptionAsync(redemption, cancellationToken);
+            }
+        }
+
+        if (isBlocked)
+        {
+            var blockReason = string.IsNullOrWhiteSpace(blockedPhone!.Reason)
+                ? "Placed from a phone number on the store blocklist"
+                : $"Placed from a blocked phone number: {blockedPhone.Reason}";
+
+            var flagResult = order.FlagBlocked(blockReason);
+            if (flagResult.IsFailure)
+                return Result.Failure<OrderDto>(flagResult.Error);
         }
 
         await _orderRepository.AddAsync(order, cancellationToken);
@@ -304,8 +332,13 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         }
         else
         {
-            // OTP not required — confirm the order immediately
-            order.Confirm("Customer");
+            // OTP not required — settle the order immediately. A flagged order parks in Blocked
+            // instead of confirming, which deliberately raises no domain events: stock stays
+            // unreserved and no Purchase is tracked until the merchant releases it.
+            if (isBlocked)
+                order.MarkBlocked("System");
+            else
+                order.Confirm("Customer");
 
             // Best-effort: the cart that was checked out should stop showing as "active" to the
             // merchant right away. Never let a lookup/notification hiccup fail the order itself.
@@ -362,7 +395,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         order.StoreId.Value,
         order.CustomerId.Value,
         order.OrderNumber.Value,
-        order.Status.ToString(),
+        CustomerFacingOrderStatus.Map(order.Status),
         new CustomerSnapshotDto(
             customer.Contact.FullName.FullName,
             customer.Contact.Phone.Value,
@@ -401,7 +434,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             order.Delivery.Instructions
         ),
         new OrderNotesDto(order.Notes.CustomerNotes, order.Notes.MerchantNotes),
-        order.StatusHistory.Select(s => new OrderStatusChangeDto(
+        order.StatusHistory.Where(CustomerFacingOrderStatus.IsVisibleToCustomer).Select(s => new OrderStatusChangeDto(
             s.Id,
             s.FromStatus.ToString(),
             s.ToStatus.ToString(),

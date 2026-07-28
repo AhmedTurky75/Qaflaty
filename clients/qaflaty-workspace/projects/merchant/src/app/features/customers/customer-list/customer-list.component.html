@@ -1,4 +1,13 @@
 <div>
+  @if (dialog(); as dialogConfig) {
+    <app-confirm-dialog
+      [config]="dialogConfig"
+      [pending]="blockPending()"
+      (confirmed)="onDialogConfirmed($event)"
+      (cancelled)="onDialogCancelled()"
+    />
+  }
+
   <!-- Header -->
   <div class="mb-6">
     <h1 class="text-2xl font-bold text-text">{{ 'customers.title' | transloco }}</h1>
@@ -90,22 +99,40 @@
               <tr class="cursor-pointer hover:bg-surface-elevated" (click)="onViewCustomerDetails(customer.id)">
                 <td class="whitespace-nowrap px-6 py-4">
                   <div class="flex items-center gap-4">
-                    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-tint text-sm font-medium text-primary">{{ customer.contact.fullName.charAt(0).toUpperCase() }}</span>
+                    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary-tint text-sm font-medium text-primary">{{ (customer.fullName || '?').charAt(0).toUpperCase() }}</span>
                     <div>
-                      <div class="text-sm font-medium text-text">{{ customer.contact.fullName }}</div>
-                      <div class="text-sm text-text-muted">{{ customer.address.city }}</div>
+                      <div class="flex items-center gap-2">
+                        <span class="text-sm font-medium text-text">{{ customer.fullName }}</span>
+                        @if (customer.blockedPhoneId) {
+                          <span class="inline-flex items-center gap-1 rounded-full bg-danger/10 px-2 py-0.5 text-[11px] font-medium text-danger" [title]="'customers.blockedTitle' | transloco">
+                            <app-icon name="phone-off" [size]="12" />
+                            {{ 'customers.blockedBadge' | transloco }}
+                          </span>
+                        }
+                      </div>
+                      <div class="text-sm text-text-muted">{{ customer.city }}</div>
                     </div>
                   </div>
                 </td>
                 <td class="whitespace-nowrap px-6 py-4">
-                  <div class="text-sm text-text">{{ customer.contact.phone }}</div>
-                  @if (customer.contact.email) { <div class="text-sm text-text-muted">{{ customer.contact.email }}</div> }
+                  <div class="text-sm text-text">{{ customer.phone }}</div>
+                  @if (customer.email) { <div class="text-sm text-text-muted">{{ customer.email }}</div> }
                 </td>
-                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-text">{{ customer.totalOrders }}</td>
+                <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-text">{{ customer.orderCount }}</td>
                 <td class="whitespace-nowrap px-6 py-4 text-sm font-medium text-text">{{ formatCurrency(customer.totalSpent) }}</td>
                 <td class="whitespace-nowrap px-6 py-4 text-sm text-text">{{ formatDate(customer.lastOrderDate) }}</td>
                 <td class="whitespace-nowrap px-6 py-4 text-end">
-                  <button type="button" (click)="onViewCustomerDetails(customer.id); $event.stopPropagation()" class="text-sm font-medium text-primary hover:underline">{{ 'customers.viewDetails' | transloco }}</button>
+                  <div class="flex items-center justify-end gap-3">
+                    <button type="button" (click)="onViewCustomerDetails(customer.id); $event.stopPropagation()" class="text-sm font-medium text-primary hover:underline">{{ 'customers.viewDetails' | transloco }}</button>
+                    <button
+                      type="button"
+                      (click)="onToggleBlock($event, customer)"
+                      [disabled]="blockPending()"
+                      [class]="customer.blockedPhoneId
+                        ? 'text-sm font-medium text-text-muted hover:underline disabled:opacity-40'
+                        : 'text-sm font-medium text-danger hover:underline disabled:opacity-40'"
+                    >{{ (customer.blockedPhoneId ? 'customers.unblockPhone' : 'customers.blockPhone') | transloco }}</button>
+                  </div>
                 </td>
               </tr>
             }
@@ -121,22 +148,39 @@
       @for (customer of customers(); track customer.id) {
         <div (click)="onViewCustomerDetails(customer.id)" class="cursor-pointer rounded-2xl border border-border bg-surface p-6 shadow-sm transition-shadow hover:shadow-md">
           <div class="flex items-center gap-3">
-            <span class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary-tint font-medium text-primary">{{ customer.contact.fullName.charAt(0).toUpperCase() }}</span>
+            <span class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-primary-tint font-medium text-primary">{{ (customer.fullName || '?').charAt(0).toUpperCase() }}</span>
             <div>
-              <h3 class="text-lg font-semibold text-text">{{ customer.contact.fullName }}</h3>
-              <p class="text-sm text-text-muted">{{ customer.address.city }}</p>
+              <h3 class="text-lg font-semibold text-text">{{ customer.fullName }}</h3>
+              <p class="text-sm text-text-muted">{{ customer.city }}</p>
+              @if (customer.blockedPhoneId) {
+                <span class="mt-1 inline-flex items-center gap-1 rounded-full bg-danger/10 px-2 py-0.5 text-[11px] font-medium text-danger">
+                  <app-icon name="phone-off" [size]="12" />
+                  {{ 'customers.blockedBadge' | transloco }}
+                </span>
+              }
             </div>
           </div>
           <div class="mt-4 space-y-2">
-            <div class="flex items-center gap-2 text-sm text-text-muted"><app-icon name="phone" [size]="16" /> {{ customer.contact.phone }}</div>
-            @if (customer.contact.email) { <div class="flex items-center gap-2 text-sm text-text-muted"><app-icon name="mail" [size]="16" /> {{ customer.contact.email }}</div> }
+            <div class="flex items-center gap-2 text-sm text-text-muted"><app-icon name="phone" [size]="16" /> {{ customer.phone }}</div>
+            @if (customer.email) { <div class="flex items-center gap-2 text-sm text-text-muted"><app-icon name="mail" [size]="16" /> {{ customer.email }}</div> }
           </div>
           <div class="mt-4 border-t border-border pt-4">
             <div class="grid grid-cols-2 gap-4">
-              <div><p class="text-xs text-text-muted">{{ 'customers.colOrders' | transloco }}</p><p class="text-lg font-semibold text-text">{{ customer.totalOrders }}</p></div>
+              <div><p class="text-xs text-text-muted">{{ 'customers.colOrders' | transloco }}</p><p class="text-lg font-semibold text-text">{{ customer.orderCount }}</p></div>
               <div><p class="text-xs text-text-muted">{{ 'customers.colSpent' | transloco }}</p><p class="text-lg font-semibold text-text">{{ formatCurrency(customer.totalSpent) }}</p></div>
             </div>
             <div class="mt-2"><p class="text-xs text-text-muted">{{ 'customers.colLastOrder' | transloco }}</p><p class="text-sm text-text">{{ formatDate(customer.lastOrderDate) }}</p></div>
+            <button
+              type="button"
+              (click)="onToggleBlock($event, customer)"
+              [disabled]="blockPending()"
+              [class]="customer.blockedPhoneId
+                ? 'mt-4 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-border bg-surface px-4 py-2.5 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-40'
+                : 'mt-4 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[10px] border border-danger/40 bg-surface px-4 py-2.5 text-sm font-medium text-danger hover:bg-danger/10 focus:outline-none focus:ring-2 focus:ring-danger/40 disabled:opacity-40'"
+            >
+              <app-icon [name]="customer.blockedPhoneId ? 'check-circle' : 'phone-off'" [size]="16" />
+              {{ (customer.blockedPhoneId ? 'customers.unblockPhone' : 'customers.blockPhone') | transloco }}
+            </button>
           </div>
         </div>
       }

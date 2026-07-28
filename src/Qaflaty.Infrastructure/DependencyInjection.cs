@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<IFaqItemRepository, FaqItemRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<ICustomerRepository, CustomerRepository>();
+        services.AddScoped<IBlockedPhoneRepository, BlockedPhoneRepository>();
         services.AddScoped<IReturnRequestRepository, ReturnRequestRepository>();
         services.AddScoped<IWishlistRepository, WishlistRepository>();
         services.AddScoped<IProductReviewRepository, ProductReviewRepository>();

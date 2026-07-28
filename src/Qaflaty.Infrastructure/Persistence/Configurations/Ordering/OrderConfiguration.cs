@@ -45,6 +45,10 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             .HasConversion<string>()
             .HasMaxLength(20);
 
+        builder.Property(o => o.BlockReason)
+            .HasColumnName("block_reason")
+            .HasMaxLength(500);
+
         builder.OwnsOne(o => o.Pricing, pricing =>
         {
             pricing.OwnsOne(p => p.Subtotal, money =>

@@ -99,7 +99,10 @@ public record OrderListDto(
     string PaymentMethod,
     string PaymentStatus,
     DateTime CreatedAt,
-    string Source
+    string Source,
+    // Non-null when this order's phone is on the store blocklist, so the row can offer Unblock
+    // instead of a Block action that would only fail with "already blocked".
+    Guid? BlockedPhoneId
 );
 
 // --- Track order (public, no auth) ---
@@ -164,6 +167,7 @@ public record OrderStatsDto(
     int ShippedOrders,
     int DeliveredOrders,
     int CancelledOrders,
+    int BlockedOrders,
     decimal TotalRevenue,
     decimal AverageOrderValue
 );

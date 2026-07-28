@@ -34,10 +34,10 @@ All frontend commands run from `clients/qaflaty-workspace/`:
 ```bash
 npm install
 
-# Serve the merchant dashboard (port 4202)
+# Serve the merchant dashboard (port 4201)
 npm run start:merchant
 
-# Serve the customer store app (port 4201)
+# Serve the customer store app (port 4202)
 npm run start:store
 
 # Run Angular tests (Karma/Jasmine)
@@ -99,8 +99,8 @@ src/
 
 Located in `clients/qaflaty-workspace/projects/`:
 
-- **merchant** — dashboard at port 4202; core services (`auth.service`, `store-context.service`), interceptors (`auth.interceptor`, `error.interceptor`), feature modules: `auth`, `stores`, `products`, `customers`, `orders`, `chat`, `store-builder`, `settings`, `dashboard`, `active-carts`
-- **store** — customer-facing storefront at port 4201; interceptors: `store-header.interceptor` (injects `X-Store-Slug`), `guest-cart.interceptor`, `customer-auth.interceptor`
+- **merchant** — dashboard at port 4201; core services (`auth.service`, `store-context.service`), interceptors (`auth.interceptor`, `error.interceptor`), feature modules: `auth`, `stores`, `products`, `customers`, `orders`, `chat`, `store-builder`, `settings`, `dashboard`, `active-carts`
+- **store** — customer-facing storefront at port 4202; interceptors: `store-header.interceptor` (injects `X-Store-Slug`), `guest-cart.interceptor`, `customer-auth.interceptor`
 - **shared** — shared Angular library consumed by merchant and store apps
 - **landing** — marketing landing page
 
