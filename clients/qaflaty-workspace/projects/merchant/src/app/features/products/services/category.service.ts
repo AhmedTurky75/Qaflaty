@@ -40,8 +40,9 @@ export class CategoryService {
     return this.http.put<CategoryDto>(`${this.storeUrl(storeId)}/${id}`, request);
   }
 
-  updateCategorySortOrder(storeId: string, id: string, sortOrder: number): Observable<CategoryDto> {
-    return this.http.patch<CategoryDto>(`${this.storeUrl(storeId)}/${id}/sort`, { sortOrder });
+  /** Persists a new sibling order after a drag-and-drop reorder in the category tree. */
+  reorderCategories(storeId: string, items: { categoryId: string; sortOrder: number }[]): Observable<void> {
+    return this.http.put<void>(`${this.storeUrl(storeId)}/reorder`, { items });
   }
 
   deleteCategory(storeId: string, id: string): Observable<void> {

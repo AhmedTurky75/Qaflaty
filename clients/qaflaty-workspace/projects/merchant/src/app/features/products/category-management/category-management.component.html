@@ -72,18 +72,6 @@
                       <p class="mt-1 text-xs text-text-muted">{{ 'products.cat.parentHint' | transloco }}</p>
                     </div>
 
-                    <!-- Display order (priority) -->
-                    <div>
-                      <label for="categorySortOrder" class="mb-1 block text-sm font-medium text-text">{{ 'products.cat.order' | transloco }}</label>
-                      <input type="number" id="categorySortOrder" formControlName="sortOrder" min="0" step="1"
-                        class="min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        [class.border-danger]="sortOrder?.invalid && sortOrder?.touched" />
-                      <p class="mt-1 text-xs text-text-muted">{{ 'products.cat.orderHint' | transloco }}</p>
-                      @if (sortOrder?.invalid && sortOrder?.touched) {
-                        <p class="mt-1 text-sm text-danger">{{ 'products.cat.orderInvalid' | transloco }}</p>
-                      }
-                    </div>
-
                     <!-- Image or icon -->
                     <div>
                       <span class="mb-1 block text-sm font-medium text-text">{{ 'products.cat.visual' | transloco }}</span>
@@ -197,12 +185,14 @@
 
   <!-- Tree -->
   @else if (!error()) {
+    <p class="mb-2 text-xs text-text-muted">{{ 'products.cat.dragHint' | transloco }}</p>
     <div class="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
       <app-category-tree
         [categories]="categories()"
         (edit)="onEditCategory($event)"
         (delete)="onDeleteCategory($event)"
         (addChild)="onAddChildCategory($event)"
+        (reorder)="onReorderCategories($event)"
       />
     </div>
   }

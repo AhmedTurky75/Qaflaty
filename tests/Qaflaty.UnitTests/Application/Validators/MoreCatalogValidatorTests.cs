@@ -4,6 +4,7 @@ using Qaflaty.Application.Catalog.Commands.CreateCategory;
 using Qaflaty.Application.Catalog.Commands.CreateCustomPage;
 using Qaflaty.Application.Catalog.Commands.CreateFaqItem;
 using Qaflaty.Application.Catalog.Commands.CreateStore;
+using Qaflaty.Application.Catalog.Commands.ReorderCategories;
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Domain.Common.Identifiers;
 using Xunit;
@@ -33,6 +34,35 @@ public class CreateCategoryCommandValidatorTests
     [Fact]
     public void NegativeSortOrder_Fails()
         => Validator.ValidateCommand(Valid(sortOrder: -1)).ShouldHaveErrorFor("SortOrder");
+}
+
+public class ReorderCategoriesCommandValidatorTests
+{
+    private static readonly ReorderCategoriesCommandValidator Validator = new();
+
+    private static ReorderCategoriesCommand Valid()
+        => new(Guid.NewGuid(), [new CategoryOrderItem(Guid.NewGuid(), 0), new CategoryOrderItem(Guid.NewGuid(), 1)]);
+
+    [Fact]
+    public void Valid_Passes() => Validator.ValidateCommand(Valid()).ShouldBeValid();
+
+    [Fact]
+    public void EmptyStoreId_Fails()
+        => Validator.ValidateCommand(Valid() with { StoreId = Guid.Empty }).ShouldHaveErrorFor("StoreId");
+
+    [Fact]
+    public void EmptyItems_Fails()
+        => Validator.ValidateCommand(Valid() with { Items = [] }).ShouldHaveErrorFor("Items");
+
+    [Fact]
+    public void ItemWithEmptyCategoryId_Fails()
+        => Validator.ValidateCommand(Valid() with { Items = [new CategoryOrderItem(Guid.Empty, 0)] })
+            .ShouldHaveErrorStartingWith("Items[0].CategoryId");
+
+    [Fact]
+    public void ItemWithNegativeSortOrder_Fails()
+        => Validator.ValidateCommand(Valid() with { Items = [new CategoryOrderItem(Guid.NewGuid(), -1)] })
+            .ShouldHaveErrorStartingWith("Items[0].SortOrder");
 }
 
 public class CreateStoreCommandValidatorTests
