@@ -1,7 +1,7 @@
 {
   "name": "smoke",
   "baseUrl": "http://localhost:5001/api",
-  "storeSlug": "demo-store",
+  "storeSlug": "turky4",
 
   "orders": 1,
 

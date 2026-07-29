@@ -20,7 +20,7 @@ const TOOL_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const USAGE = `
 qaflaty order-bot — places storefront orders for volume testing
 
-  node src/main.ts run <scenario.json> [options]
+  node bot.mjs run <scenario.json> [options]
 
 Options
   --orders <n>     Override the scenario's order count
@@ -28,7 +28,7 @@ Options
   --help           Show this message
 
 Example
-  node src/main.ts run scenarios/smoke.json --orders 25
+  node bot.mjs run scenarios/smoke.json --orders 25
 `;
 
 async function main(argv: string[]): Promise<number> {

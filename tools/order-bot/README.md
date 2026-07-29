@@ -12,17 +12,22 @@ ramp-up and pacing personas are Phase 2.
 
 ## Requirements
 
-Node 22.6+ only — no dependencies, no `npm install`. TypeScript runs natively via Node's
-type stripping. (`npm install` is only needed for `npm run typecheck`.)
+Node 22.6+ only — no dependencies, no `npm install`. The TypeScript sources run without a
+build step via Node's type stripping. (`npm install` is only needed for
+`npm run typecheck`.)
+
+Node 22.18+ or 24+ strips types with no flags. On 22.6–22.17 the flag is still required,
+so **start from `bot.mjs`, not `src/main.ts`** — it re-execs with the flag when the running
+Node needs it.
 
 ## Usage
 
 ```bash
 cd tools/order-bot
 
-node src/main.ts run scenarios/smoke.json
-node src/main.ts run scenarios/smoke.json --orders 25
-node src/main.ts --help
+node bot.mjs run scenarios/smoke.json
+node bot.mjs run scenarios/smoke.json --orders 25
+node bot.mjs --help
 ```
 
 Exit code is `0` when every order was placed, `1` when any failed.
