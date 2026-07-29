@@ -51,7 +51,6 @@ export class CategoryManagementComponent implements OnInit {
       nameAr: ['', [Validators.maxLength(100)]],
       slug: ['', Validators.required],
       parentId: [''],
-      sortOrder: [0, [Validators.required, Validators.min(0)]],
       iconName: ['grid'],
       contentHtml: ['', [Validators.maxLength(MAX_CONTENT_LENGTH)]],
       contentHtmlAr: ['', [Validators.maxLength(MAX_CONTENT_LENGTH)]]
@@ -62,6 +61,15 @@ export class CategoryManagementComponent implements OnInit {
       if (name && !this.isEditMode()) {
         const slug = this.categoryService.generateSlug(name);
         this.categoryForm.patchValue({ slug }, { emitEvent: false });
+      }
+    });
+
+    // Keep the new category's target rank in sync if the merchant changes the parent dropdown
+    // after opening the "add" form, so it still lands at the end of the parent it's actually saved
+    // under, not the one selected when the form was first opened.
+    this.categoryForm.get('parentId')?.valueChanges.subscribe(parentId => {
+      if (!this.isEditMode()) {
+        this.pendingSortOrder = this.nextSortOrder(parentId || null);
       }
     });
   }
@@ -103,17 +111,22 @@ export class CategoryManagementComponent implements OnInit {
     });
   }
 
+  /** Rank assigned to the category being created — the end of its sibling group; not user-editable. */
+  private pendingSortOrder = 0;
+
   onAddCategory(): void {
     this.isEditMode.set(false);
     this.editingCategoryId.set(null);
-    this.resetFormState({ parentId: '', sortOrder: this.nextSortOrder(null) });
+    this.pendingSortOrder = this.nextSortOrder(null);
+    this.resetFormState({ parentId: '' });
     this.showCategoryForm.set(true);
   }
 
   onAddChildCategory(parent: CategoryTreeDto): void {
     this.isEditMode.set(false);
     this.editingCategoryId.set(null);
-    this.resetFormState({ parentId: parent.id, sortOrder: this.nextSortOrder(parent.id) });
+    this.pendingSortOrder = this.nextSortOrder(parent.id);
+    this.resetFormState({ parentId: parent.id });
     this.showCategoryForm.set(true);
   }
 
@@ -127,7 +140,6 @@ export class CategoryManagementComponent implements OnInit {
       nameAr: category.nameAr || '',
       slug: category.slug,
       parentId: category.parentId || '',
-      sortOrder: category.sortOrder ?? 0,
       iconName: category.iconName || 'grid',
       contentHtml: category.contentHtml || '',
       contentHtmlAr: category.contentHtmlAr || ''
@@ -150,11 +162,29 @@ export class CategoryManagementComponent implements OnInit {
       nameAr: '',
       slug: '',
       parentId: '',
-      sortOrder: 0,
       iconName: 'grid',
       contentHtml: '',
       contentHtmlAr: '',
       ...patch
+    });
+  }
+
+  /**
+   * Persists a drag-and-drop reorder from the category tree. `categories` is the full sibling
+   * group at whichever level was reordered, already in its new order — sortOrder is just each
+   * item's index within that group.
+   */
+  onReorderCategories(categories: CategoryTreeDto[]): void {
+    const storeId = this.storeContext.currentStoreId() || '';
+    if (!storeId) return;
+
+    const items = categories.map((c, index) => ({ categoryId: c.id, sortOrder: index }));
+    this.categoryService.reorderCategories(storeId, items).subscribe({
+      next: () => this.loadCategories(),
+      error: (err) => {
+        alert(`Failed to save the new order: ${err.message}`);
+        this.loadCategories();
+      }
     });
   }
 
@@ -227,7 +257,6 @@ export class CategoryManagementComponent implements OnInit {
       nameAr: formValue.nameAr || undefined,
       slug: formValue.slug,
       parentId: formValue.parentId || undefined,
-      sortOrder: Number(formValue.sortOrder) || 0,
       imageUrl: image,
       iconName: image ? null : (formValue.iconName || null),
       contentHtml: formValue.contentHtml || null,
@@ -235,17 +264,9 @@ export class CategoryManagementComponent implements OnInit {
     };
 
     if (this.isEditMode() && this.editingCategoryId()) {
-      // Update existing category
-      this.categoryService.updateCategory(storeId, this.editingCategoryId()!, {
-        name: categoryData.name,
-        nameAr: categoryData.nameAr,
-        parentId: categoryData.parentId || null,
-        sortOrder: categoryData.sortOrder,
-        imageUrl: categoryData.imageUrl,
-        iconName: categoryData.iconName,
-        contentHtml: categoryData.contentHtml,
-        contentHtmlAr: categoryData.contentHtmlAr
-      }).subscribe({
+      // Update existing category. sortOrder is omitted — reordering is done by dragging in the
+      // tree (onReorderCategories), so an edit here must never disturb the current rank.
+      this.categoryService.updateCategory(storeId, this.editingCategoryId()!, categoryData).subscribe({
         next: () => {
           this.closeForm();
           this.loadCategories();
@@ -255,8 +276,8 @@ export class CategoryManagementComponent implements OnInit {
         }
       });
     } else {
-      // Create new category
-      this.categoryService.createCategory(storeId, categoryData).subscribe({
+      // Create new category at the end of its sibling group.
+      this.categoryService.createCategory(storeId, { ...categoryData, sortOrder: this.pendingSortOrder }).subscribe({
         next: () => {
           this.closeForm();
           this.loadCategories();
@@ -291,10 +312,6 @@ export class CategoryManagementComponent implements OnInit {
 
   get slug() {
     return this.categoryForm.get('slug');
-  }
-
-  get sortOrder() {
-    return this.categoryForm.get('sortOrder');
   }
 
   get iconName() {

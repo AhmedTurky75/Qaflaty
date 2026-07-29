@@ -1,11 +1,14 @@
-<div>
-  @for (category of categories; track category.id) {
-    <div>
+<div cdkDropList (cdkDropListDropped)="onDrop($event)">
+  @for (category of displayCategories; track category.id) {
+    <div cdkDrag>
       <div
-        class="flex items-center justify-between border-b border-border px-4 py-3 hover:bg-surface-elevated"
+        class="flex items-center justify-between border-b border-border bg-surface px-4 py-3 hover:bg-surface-elevated"
         [style.paddingInlineStart]="getIndentation()"
       >
         <div class="flex flex-1 items-center gap-3">
+          <span cdkDragHandle class="cursor-grab touch-none text-text-muted hover:text-text active:cursor-grabbing" [attr.aria-label]="'products.cat.dragHandle' | transloco">
+            <app-icon name="grip-vertical" [size]="16" />
+          </span>
           @if (category.children && category.children.length > 0) {
             <button type="button" (click)="toggleExpand(category.id)" class="text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-primary/40 rounded" aria-label="Toggle">
               <app-icon [name]="isExpanded(category.id) ? 'chevron-down' : 'chevron-right'" [size]="18" />
@@ -53,6 +56,7 @@
           (edit)="edit.emit($event)"
           (delete)="delete.emit($event)"
           (addChild)="addChild.emit($event)"
+          (reorder)="reorder.emit($event)"
         />
       }
     </div>
