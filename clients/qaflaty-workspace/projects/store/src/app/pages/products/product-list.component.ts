@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, effect, DestroyRef, SecurityContext } from '@angular/core';
+import { Component, inject, signal, computed, effect, DestroyRef, Renderer2, SecurityContext } from '@angular/core';
 import { CommonModule, NgClass, DOCUMENT } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
@@ -139,8 +139,10 @@ export class ProductListComponent {
    * Angular's template compiler special-cases a literal <style> element written in a component's
    * template (treating it like the `styles:` metadata array), so a runtime-bound
    * `<style [textContent]="...">` doesn't reliably carry dynamic content to the DOM. Applied
-   * instead via the effect below, which inserts/updates a real <style> element in <head> directly
-   * through the DOM API, bypassing Angular's template rendering for it entirely.
+   * instead via the effect below, which inserts/updates a real <style> element in <head> through
+   * Renderer2 — Angular's own cross-platform DOM abstraction (the same one structural directives
+   * and animations use under the hood) — rather than touching `document` directly, so this stays
+   * safe under server-side rendering or any non-browser renderer.
    *
    * This CSS is global to the page (categories don't get a scoped stylesheet), so merchants should
    * scope their own selectors (e.g. under `.qf-cat-content`) to avoid affecting the rest of the
@@ -149,25 +151,31 @@ export class ProductListComponent {
   categoryStyle = computed(() => this.categoryContentParts().css);
 
   private document = inject(DOCUMENT);
+  private renderer = inject(Renderer2);
   private categoryStyleEl: HTMLStyleElement | null = null;
 
   private applyCategoryStyleEffect = effect(() => {
     const css = this.categoryStyle();
 
-    this.categoryStyleEl?.remove();
-    this.categoryStyleEl = null;
+    this.removeCategoryStyleEl();
 
     if (!css) return;
 
-    const style = this.document.createElement('style');
-    style.setAttribute('data-qf-category-style', '');
-    style.textContent = css;
-    this.document.head.appendChild(style);
+    const style = this.renderer.createElement('style') as HTMLStyleElement;
+    this.renderer.setAttribute(style, 'data-qf-category-style', '');
+    this.renderer.setProperty(style, 'textContent', css);
+    this.renderer.appendChild(this.document.head, style);
     this.categoryStyleEl = style;
   });
 
+  private removeCategoryStyleEl(): void {
+    if (!this.categoryStyleEl) return;
+    this.renderer.removeChild(this.document.head, this.categoryStyleEl);
+    this.categoryStyleEl = null;
+  }
+
   constructor() {
-    inject(DestroyRef).onDestroy(() => this.categoryStyleEl?.remove());
+    inject(DestroyRef).onDestroy(() => this.removeCategoryStyleEl());
   }
 
   pageNumbers = computed(() => {
