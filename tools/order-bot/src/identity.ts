@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { generateNationalPhone } from './geo.ts';
+import { generatePhone } from './geo.ts';
 
 export interface IdentityConfig {
   /** ISO 3166-1 alpha-2 region the phone number is validated against, e.g. "SA". */
@@ -15,7 +15,9 @@ export interface Shopper {
   index: number;
   guestId: string;
   fullName: string;
+  /** E.164, e.g. +966501234567 — what the storefront's phone input posts. */
   phone: string;
+  /** ISO 3166-1 alpha-2, e.g. "SA" — posted alongside the number, as the checkout does. */
   phoneCountryCode: string;
   email: string;
   street: string;
@@ -47,7 +49,7 @@ export function createShopper(
   random: () => number,
 ): Shopper {
   const first = pick(FIRST_NAMES, random);
-  const phone = generateNationalPhone(config.phoneRegion, index, random);
+  const phone = generatePhone(config.phoneRegion, index, random);
 
   return {
     index,
