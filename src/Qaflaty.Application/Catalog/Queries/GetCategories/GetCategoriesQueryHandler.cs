@@ -36,6 +36,7 @@ public class GetCategoriesQueryHandler : IQueryHandler<GetCategoriesQuery, List<
 
         var result = categories
             .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name.Value)
             .Select(c => new CategoryDto(
                 c.Id.Value,
                 c.Name.Value,
@@ -43,7 +44,11 @@ public class GetCategoriesQueryHandler : IQueryHandler<GetCategoriesQuery, List<
                 c.Slug.Value,
                 c.ParentId?.Value,
                 c.SortOrder,
-                products.Count(p => p.CategoryId?.Value == c.Id.Value)
+                products.Count(p => p.CategoryId?.Value == c.Id.Value),
+                c.ImageUrl,
+                c.IconName,
+                c.Content?.English,
+                c.Content?.Arabic
             )).ToList();
 
         return Result.Success(result);

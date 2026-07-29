@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, inject, signal, computed, SecurityContext } from '@angular/core';
 import { CommonModule, NgClass } from '@angular/common';
+import { DomSanitizer } from '@angular/platform-browser';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
@@ -11,12 +12,12 @@ import { Category } from '../../models/category.model';
 import { ProductCardComponent } from '../../components/products/product-card.component';
 import { I18nService } from '../../services/i18n.service';
 import { TrackingService } from '../../services/tracking.service';
-import { FilterablePropertyDefinition } from 'shared';
+import { FilterablePropertyDefinition, CategoryIconComponent } from 'shared';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, NgClass, RouterModule, FormsModule, ProductCardComponent],
+  imports: [CommonModule, NgClass, RouterModule, FormsModule, ProductCardComponent, CategoryIconComponent],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
@@ -29,6 +30,7 @@ export class ProductListComponent {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private tracking = inject(TrackingService);
+  private sanitizer = inject(DomSanitizer);
 
   readonly ALL_SORT_OPTIONS = [
     { value: ProductSortBy.Newest, label: 'Newest' },
@@ -99,6 +101,22 @@ export class ProductListComponent {
   currentCategory = computed(() => {
     const catId = this.selectedCategory();
     return catId ? this.categories().find(c => c.id === catId) : null;
+  });
+
+  /**
+   * Merchant-authored HTML for the open category, rendered above the product grid. Sanitized here
+   * (scripts and event handlers stripped) because the markup is authored in the merchant dashboard
+   * and stored verbatim.
+   */
+  categoryContent = computed(() => {
+    const category = this.currentCategory();
+    if (!category) return '';
+
+    const raw = this.i18n.currentLanguage() === 'ar'
+      ? (category.contentHtmlAr || category.contentHtml)
+      : (category.contentHtml || category.contentHtmlAr);
+
+    return raw ? this.sanitizer.sanitize(SecurityContext.HTML, raw) : '';
   });
 
   pageNumbers = computed(() => {

@@ -1,12 +1,12 @@
 import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
 import { TranslocoService, TranslocoPipe } from '@jsverse/transloco';
-import { CategoryTreeDto } from 'shared';
+import { CategoryTreeDto, CategoryIconComponent } from 'shared';
 import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-category-tree',
   standalone: true,
-  imports: [TranslocoPipe, IconComponent],
+  imports: [TranslocoPipe, IconComponent, CategoryIconComponent],
   templateUrl: './category-tree.component.html',
   styleUrls: ['./category-tree.component.scss']
 })

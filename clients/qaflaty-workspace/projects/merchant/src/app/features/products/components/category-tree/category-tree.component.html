@@ -14,9 +14,23 @@
             <div class="w-[18px]"></div>
           }
 
-          <span class="text-text-muted"><app-icon name="folder" [size]="18" /></span>
+          @if (category.imageUrl) {
+            <img [src]="category.imageUrl" alt="" class="h-8 w-8 flex-shrink-0 rounded-lg border border-border object-cover" />
+          } @else {
+            <span class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-surface-elevated text-text-muted">
+              <lib-category-icon [name]="category.iconName" [size]="18" />
+            </span>
+          }
           <span class="text-sm font-medium text-text">{{ category.name }}</span>
           <span class="text-xs text-text-muted">({{ category.slug }})</span>
+          <span class="rounded-full bg-surface-elevated px-2 py-0.5 text-xs text-text-muted" [attr.title]="'products.cat.order' | transloco">
+            #{{ category.sortOrder }}
+          </span>
+          @if (category.contentHtml) {
+            <span class="text-text-muted" [attr.title]="'products.cat.hasContent' | transloco">
+              <app-icon name="edit" [size]="14" />
+            </span>
+          }
         </div>
 
         <div class="flex items-center gap-2">

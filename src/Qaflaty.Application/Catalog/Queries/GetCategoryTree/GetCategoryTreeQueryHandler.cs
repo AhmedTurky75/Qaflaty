@@ -32,6 +32,7 @@ public class GetCategoryTreeQueryHandler : IQueryHandler<GetCategoryTreeQuery, L
 
         var lookup = categories
             .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name.Value)
             .ToLookup(c => c.ParentId?.Value);
 
         return Result.Success(BuildTree(lookup, null));
@@ -45,7 +46,13 @@ public class GetCategoryTreeQueryHandler : IQueryHandler<GetCategoryTreeQuery, L
                 c.Name.Value,
                 c.Name.Arabic,
                 c.Slug.Value,
-                BuildTree(lookup, c.Id.Value)
+                BuildTree(lookup, c.Id.Value),
+                c.ParentId?.Value,
+                c.SortOrder,
+                c.ImageUrl,
+                c.IconName,
+                c.Content?.English,
+                c.Content?.Arabic
             )).ToList();
     }
 }

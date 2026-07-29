@@ -7,7 +7,11 @@ public record CategoryDto(
     string Slug,
     Guid? ParentId,
     int SortOrder,
-    int ProductCount
+    int ProductCount,
+    string? ImageUrl = null,
+    string? IconName = null,
+    string? ContentHtml = null,
+    string? ContentHtmlAr = null
 );
 
 public record CategoryTreeDto(
@@ -15,5 +19,11 @@ public record CategoryTreeDto(
     string Name,
     string NameAr,
     string Slug,
-    List<CategoryTreeDto> Children
+    List<CategoryTreeDto> Children,
+    Guid? ParentId = null,
+    int SortOrder = 0,
+    string? ImageUrl = null,
+    string? IconName = null,
+    string? ContentHtml = null,
+    string? ContentHtmlAr = null
 );

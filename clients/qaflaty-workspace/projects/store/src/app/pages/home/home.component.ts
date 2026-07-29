@@ -8,14 +8,14 @@ import { ConfigService } from '../../services/config.service';
 import { ExperimentService } from '../../services/experiment.service';
 import { SeoService } from '../../services/seo.service';
 import { Category } from '../../models/category.model';
-import { SectionConfigurationDto } from 'shared';
+import { SectionConfigurationDto, CategoryIconComponent } from 'shared';
 import { ProductCardComponent } from '../../components/products/product-card.component';
 import { SectionRendererComponent } from '../../components/sections/section-renderer.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterModule, ProductCardComponent, SectionRendererComponent],
+  imports: [CommonModule, RouterModule, ProductCardComponent, SectionRendererComponent, CategoryIconComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
