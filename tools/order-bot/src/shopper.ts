@@ -11,7 +11,8 @@ import {
 import { viewProduct, type PublicProduct } from './api/storefront.ts';
 import type { ProductSelector, Scenario } from './config.ts';
 import { createShopper } from './identity.ts';
-import { randomInt } from './random.ts';
+import { think, type PacingProfile } from './pacing.ts';
+import { createRandom, randomInt, seedForIndex } from './random.ts';
 
 export interface AttemptItem {
   productId: string;
@@ -48,7 +49,9 @@ export interface JourneyContext {
   paymentMethod: string;
   location: OrderLocation;
   runId: string;
-  random: () => number;
+  pacing: PacingProfile;
+  /** Base seed for the run; each shopper derives its own RNG from this — see seedForIndex. */
+  seed: number | null;
 }
 
 /**
@@ -60,7 +63,10 @@ export async function placeOneOrder(
   context: JourneyContext,
   index: number,
 ): Promise<OrderAttempt> {
-  const { scenario, random } = context;
+  const { scenario } = context;
+  // Each shopper gets its own RNG so a seeded run is reproducible no matter how many workers
+  // are running or the order in which their network calls happen to resolve.
+  const random = createRandom(seedForIndex(context.seed, index));
   const shopper = createShopper(index, context.runId, scenario.identity, random);
   const client = new StorefrontClient({
     baseUrl: scenario.baseUrl,
@@ -69,7 +75,7 @@ export async function placeOneOrder(
     timeoutMs: scenario.timeoutMs,
   });
 
-  const selection = selectItems(context, index);
+  const selection = selectItems(context, index, random);
   const items: OrderItemInput[] = selection.map((item) => ({
     productId: item.productId,
     quantity: item.quantity,
@@ -101,10 +107,14 @@ export async function placeOneOrder(
 
     // A run should leave the same footprint a browsing customer would, not just an order row.
     if (firstSlug) await viewProduct(client, firstSlug, shopper.guestId);
+    await think(context.pacing.afterProductView, random);
 
-    for (const item of items) {
+    for (const [itemIndex, item] of items.entries()) {
+      if (itemIndex > 0) await think(context.pacing.betweenCartItems, random);
       await addCartItem(client, shopper.guestId, item);
     }
+
+    await think(context.pacing.beforePlaceOrder, random);
 
     // Not required to place the order, but it is what the checkout page does first and it surfaces
     // an undeliverable address as a clean flag instead of an Order.DeliveryNotAvailable failure.
@@ -175,8 +185,8 @@ function buildNotes(scenario: Scenario, runId: string): string {
   return scenario.notes ? `${scenario.notes} ${tag}` : tag;
 }
 
-function selectItems(context: JourneyContext, index: number): AttemptItem[] {
-  const { scenario, catalog, random } = context;
+function selectItems(context: JourneyContext, index: number, random: () => number): AttemptItem[] {
+  const { scenario, catalog } = context;
   const count = Math.min(
     randomInt(random, scenario.itemsPerOrder.min, scenario.itemsPerOrder.max),
     catalog.length,

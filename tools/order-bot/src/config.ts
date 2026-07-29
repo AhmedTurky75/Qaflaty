@@ -1,6 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { findCity, findCountry, supportedPhoneRegions } from './geo.ts';
+import { PACING_MODES, type PacingMode } from './pacing.ts';
 
 export interface ProductSelector {
   id: string;
@@ -15,6 +16,11 @@ export interface Scenario {
   baseUrl: string;
   storeSlug: string;
   orders: number;
+  /** How many shoppers place orders at the same time. */
+  concurrency: number;
+  /** Spreads worker start times across this many seconds, instead of starting them all at once. */
+  rampUpSeconds: number;
+  pacing: PacingMode;
   /** Empty means "discover from the catalog at run time". */
   products: ProductSelector[];
   itemsPerOrder: { min: number; max: number };
@@ -39,6 +45,7 @@ export interface Overrides {
 }
 
 const MAX_ORDERS = 500;
+const MAX_CONCURRENCY = 20;
 
 const LOOPBACK_HOSTS = new Set(['localhost', '127.0.0.1', '::1', '[::1]', '0.0.0.0']);
 
@@ -77,6 +84,9 @@ function applyDefaults(input: Record<string, unknown>, path: string): Scenario {
     baseUrl: str(input.baseUrl, ''),
     storeSlug: str(input.storeSlug, ''),
     orders: num(input.orders, 1),
+    concurrency: num(input.concurrency, 1),
+    rampUpSeconds: num(input.rampUpSeconds, 0),
+    pacing: str(input.pacing, 'fast') as PacingMode,
     products: parseProducts(input.products, path),
     itemsPerOrder: {
       min: num(itemsPerOrder.min, 1),
@@ -148,6 +158,20 @@ function validate(scenario: Scenario, allowRemote: boolean): void {
     problems.push("'orders' must be a positive integer");
   } else if (scenario.orders > MAX_ORDERS) {
     problems.push(`'orders' is capped at ${MAX_ORDERS} (asked for ${scenario.orders})`);
+  }
+
+  if (!Number.isInteger(scenario.concurrency) || scenario.concurrency < 1) {
+    problems.push("'concurrency' must be a positive integer");
+  } else if (scenario.concurrency > MAX_CONCURRENCY) {
+    problems.push(`'concurrency' is capped at ${MAX_CONCURRENCY} (asked for ${scenario.concurrency})`);
+  }
+
+  if (!Number.isFinite(scenario.rampUpSeconds) || scenario.rampUpSeconds < 0) {
+    problems.push("'rampUpSeconds' must be zero or a positive number");
+  }
+
+  if (!PACING_MODES.includes(scenario.pacing)) {
+    problems.push(`'pacing' must be one of ${PACING_MODES.join(', ')} (got '${scenario.pacing}')`);
   }
 
   if (scenario.itemsPerOrder.min < 1) problems.push("'itemsPerOrder.min' must be at least 1");

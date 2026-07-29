@@ -8,12 +8,19 @@ export interface RunSummary {
   runId: string;
   storeSlug: string;
   baseUrl: string;
+  concurrency: number;
+  pacing: string;
+  aborted: boolean;
+  abortReason: string | null;
   attempted: number;
   placed: number;
   failed: number;
   statuses: Record<string, number>;
   errorCodes: Record<string, number>;
   totalValue: number;
+  /** End-to-end duration per order (all steps, including pacing think-time), not per HTTP call. */
+  latencyMs: { p50: number; p95: number; p99: number };
+  ordersPerSecond: number;
   durationMs: number;
 }
 
@@ -39,7 +46,7 @@ export class RunReport {
     await appendFile(join(this.directory, 'orders.jsonl'), `${JSON.stringify(attempt)}\n`, 'utf8');
   }
 
-  summarize(): RunSummary {
+  summarize(aborted: boolean, abortReason: string | null): RunSummary {
     const statuses: Record<string, number> = {};
     const errorCodes: Record<string, number> = {};
     let totalValue = 0;
@@ -55,23 +62,37 @@ export class RunReport {
       }
     }
 
+    const durations = this.attempts.map((attempt) => attempt.durationMs).sort((a, b) => a - b);
+    const elapsedMs = Math.round(performance.now() - this.startedAt);
+
     return {
       scenario: this.scenario.name,
       runId: this.runId,
       storeSlug: this.scenario.storeSlug,
       baseUrl: this.scenario.baseUrl,
+      concurrency: this.scenario.concurrency,
+      pacing: this.scenario.pacing,
+      aborted,
+      abortReason,
       attempted: this.attempts.length,
       placed: this.attempts.filter((attempt) => attempt.outcome === 'placed').length,
       failed: this.attempts.filter((attempt) => attempt.outcome === 'failed').length,
       statuses,
       errorCodes,
       totalValue: Math.round(totalValue * 100) / 100,
-      durationMs: Math.round(performance.now() - this.startedAt),
+      latencyMs: {
+        p50: Math.round(percentile(durations, 0.5)),
+        p95: Math.round(percentile(durations, 0.95)),
+        p99: Math.round(percentile(durations, 0.99)),
+      },
+      ordersPerSecond:
+        elapsedMs > 0 ? Math.round((this.attempts.length / (elapsedMs / 1000)) * 100) / 100 : 0,
+      durationMs: elapsedMs,
     };
   }
 
-  async close(): Promise<RunSummary> {
-    const summary = this.summarize();
+  async close(aborted = false, abortReason: string | null = null): Promise<RunSummary> {
+    const summary = this.summarize(aborted, abortReason);
     await writeFile(
       join(this.directory, 'summary.json'),
       `${JSON.stringify(summary, null, 2)}\n`,
@@ -111,6 +132,12 @@ export function printSummary(summary: RunSummary, reportPath: string): void {
   console.log('');
   console.log(`Scenario   ${summary.scenario}  (run ${summary.runId})`);
   console.log(`Target     ${summary.baseUrl}  store '${summary.storeSlug}'`);
+  console.log(`Workers    ${summary.concurrency} concurrent, pacing '${summary.pacing}'`);
+
+  if (summary.aborted) {
+    console.log(`Aborted    ${summary.abortReason ?? 'stopped early'}`);
+  }
+
   console.log(`Orders     ${summary.placed} placed / ${summary.attempted} attempted`);
 
   const statuses = Object.entries(summary.statuses);
@@ -124,8 +151,18 @@ export function printSummary(summary: RunSummary, reportPath: string): void {
   }
 
   console.log(`Value      ${formatMoney(summary.totalValue)}`);
+  console.log(
+    `Latency    p50=${summary.latencyMs.p50}ms  p95=${summary.latencyMs.p95}ms  p99=${summary.latencyMs.p99}ms` +
+      `  (${summary.ordersPerSecond} orders/sec)`,
+  );
   console.log(`Elapsed    ${(summary.durationMs / 1000).toFixed(1)}s`);
   console.log(`Report     ${reportPath}`);
+}
+
+function percentile(sortedValues: number[], p: number): number {
+  if (sortedValues.length === 0) return 0;
+  const index = Math.min(sortedValues.length - 1, Math.floor(p * sortedValues.length));
+  return sortedValues[index]!;
 }
 
 function formatMoney(amount: number | null): string {
