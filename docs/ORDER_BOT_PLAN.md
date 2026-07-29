@@ -220,7 +220,7 @@ Only two, both cheap:
 |-------|-------------|--------|
 | **0** | Seed script / documented store setup | Documented as prerequisites in `tools/order-bot/README.md`; no script yet |
 | **1** | HTTP bot core — full journey from a scenario file, sequential orders, JSONL + summary | **Done** — `tools/order-bot/` |
-| **2** | Volume: concurrency, ramp-up, pacing personas, latency percentiles | Next; delivers S1–S4 |
+| **2** | Volume: concurrency, ramp-up, pacing personas, latency percentiles | **Done** — `src/runner.ts`, `src/pacing.ts` |
 
 **Not now, tracked in case the need returns:** a merchant-side helper (login, block phone,
 release/reject) would unlock blocklist and promo-abuse assertions; a cleanup command would

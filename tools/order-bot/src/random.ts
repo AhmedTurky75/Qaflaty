@@ -18,3 +18,16 @@ export function createRandom(seed: number | null): () => number {
 export function randomInt(random: () => number, min: number, max: number): number {
   return min + Math.floor(random() * (max - min + 1));
 }
+
+/**
+ * Derives an independent, deterministic seed per shopper from the scenario's base seed.
+ *
+ * Every shopper needs its own RNG rather than sharing one draw-by-draw: under concurrency,
+ * several shoppers' random() calls interleave in whatever order their network calls happen to
+ * resolve in, so a single shared generator would make a "seeded" run different every time it's
+ * replayed. Keying by index instead makes shopper #7 always the same shopper, however many
+ * workers are running or in what order they finish.
+ */
+export function seedForIndex(baseSeed: number | null, index: number): number | null {
+  return baseSeed === null ? null : (baseSeed + index * 104_729) >>> 0;
+}

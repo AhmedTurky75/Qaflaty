@@ -7,8 +7,8 @@ API over HTTP exactly as the store SPA does — same endpoints, same headers, sa
 Bot orders are left in the database; identities carry a run tag so they stay filterable.
 
 See [`docs/ORDER_BOT_PLAN.md`](../../docs/ORDER_BOT_PLAN.md) for the design and the phases.
-**This is Phase 1: one shopper at a time, orders placed sequentially.** Concurrency,
-ramp-up and pacing personas are Phase 2.
+**Phases 1 and 2 are both done:** the full storefront journey per order (Phase 1), plus
+concurrency, ramp-up, pacing personas and latency reporting (Phase 2).
 
 ## Requirements
 
@@ -25,12 +25,39 @@ Node needs it.
 ```bash
 cd tools/order-bot
 
-node bot.mjs run scenarios/smoke.json
+node bot.mjs run scenarios/smoke.json                # 1 order, sequential — a quick check
+node bot.mjs run scenarios/volume.json                # 50 orders, 10 at a time, fast pacing
+node bot.mjs run scenarios/human-paced.json           # 10 orders, human-like browsing speed
 node bot.mjs run scenarios/smoke.json --orders 25
 node bot.mjs --help
 ```
 
-Exit code is `0` when every order was placed, `1` when any failed.
+Exit code is `0` when every order was placed and the run wasn't aborted early, `1` otherwise.
+
+## Concurrency, ramp-up and pacing
+
+A scenario doesn't just say how many orders to place — it says how they should arrive.
+
+- **`concurrency`** — how many shoppers place orders at the same time (default `1`, capped
+  at `20`). `1` is a single shopper doing everything one order after another, the way Phase 1
+  worked. `10` is ten shoppers checking out at once, each picking up the next order the
+  moment it finishes its last one.
+- **`rampUpSeconds`** — instead of all workers starting in the same instant, their *first*
+  order is spread evenly across this many seconds. `concurrency: 10, rampUpSeconds: 5` means
+  worker 1 starts immediately, worker 10 starts around the 4.5s mark — traffic building up
+  rather than slamming the store all at once. `0` (the default) starts every worker together.
+- **`pacing`** — how long a shopper pauses between steps, i.e. whether it behaves like a
+  script or like someone actually reading the page:
+
+  | Mode | Behaviour | Use it for |
+  |------|-----------|-------------|
+  | `burst` | Zero delay anywhere — every request fires as fast as the network allows | The undefended baseline: what does traffic look like with no pacing at all |
+  | `fast` (default) | Short, small pauses — a fraction of a second per step | Just filling a store with data quickly, without looking like a zero-delay attacker |
+  | `human` | Seconds-long pauses: reading a product page, thinking between adding items, filling in the checkout form | Making dashboard/analytics data (active shoppers, order timing) look like real customers, not a script |
+
+A run whose failure rate hits 50% after at least 10 attempts stops itself early instead of
+placing hundreds more orders that are unlikely to succeed — the summary reports this as
+`aborted` with the reason, and the exit code is non-zero.
 
 ## Before the first run
 
@@ -56,6 +83,9 @@ The bot needs a store it can actually order from:
   "storeSlug": "demo-store",
 
   "orders": 1,                       // capped at 500
+  "concurrency": 1,                  // shoppers placing orders at once; capped at 20
+  "rampUpSeconds": 0,                // spread worker start times across this many seconds
+  "pacing": "fast",                  // burst | fast | human — see "Concurrency, ramp-up and pacing"
 
   // Empty = discover in-stock products from the catalog.
   // Otherwise: [{ "id": "<guid>", "quantityMin": 1, "quantityMax": 5, "weight": 3,
@@ -81,7 +111,7 @@ The bot needs a store it can actually order from:
 
   "otp": { "mode": "mock", "code": "000000" },  // "none" leaves OTP orders Pending
 
-  "seed": 1,                         // null = non-deterministic
+  "seed": 1,                         // null = non-deterministic; reproducible even under concurrency
   "allowedHosts": [],                // non-loopback hosts this scenario may target
   "userAgent": "qaflaty-order-bot/0.1",
   "timeoutMs": 15000
@@ -109,8 +139,12 @@ Prices, names and totals are resolved server-side, so the bot only ever supplies
 Each run writes to `runs/<timestamp>-<scenario>/`:
 
 - `orders.jsonl` — one line per attempt: shopper, items, order number, final status, total,
-  every HTTP step with its status and latency, and the error when one failed.
-- `summary.json` — counts by status, error-code histogram, total value, elapsed time.
+  every HTTP step with its status and latency, and the error when one failed. With
+  `concurrency` above 1, lines land in *completion* order, not the shopper's `index` — that's
+  expected, not a bug.
+- `summary.json` — counts by status, error-code histogram, total value, end-to-end latency
+  percentiles (p50/p95/p99) per order, throughput in orders/sec, and whether the run was
+  aborted early by the failure-rate breaker.
 
 ## Notes
 

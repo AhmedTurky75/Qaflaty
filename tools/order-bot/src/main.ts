@@ -11,9 +11,10 @@ import {
 import type { OrderLocation } from './api/orders.ts';
 import { loadScenario, type Scenario } from './config.ts';
 import { findCity, findCountry } from './geo.ts';
-import { createRandom } from './random.ts';
+import { profileFor } from './pacing.ts';
 import { printAttempt, printSummary, RunReport } from './report.ts';
-import { buildCatalog, placeOneOrder, type JourneyContext } from './shopper.ts';
+import { runOrders } from './runner.ts';
+import { buildCatalog, type JourneyContext } from './shopper.ts';
 
 const TOOL_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -58,7 +59,6 @@ async function main(argv: string[]): Promise<number> {
 
 async function runScenario(scenario: Scenario): Promise<number> {
   const runId = createRunId();
-  const random = createRandom(scenario.seed);
 
   const client = new StorefrontClient({
     baseUrl: scenario.baseUrl,
@@ -116,25 +116,30 @@ async function runScenario(scenario: Scenario): Promise<number> {
     paymentMethod,
     location,
     runId,
-    random,
+    pacing: profileFor(scenario.pacing),
+    seed: scenario.seed,
   };
 
   const report = new RunReport(scenario, runId, join(TOOL_ROOT, 'runs'));
   await report.open();
 
+  const effectiveConcurrency = Math.max(1, Math.min(scenario.concurrency, scenario.orders));
+  const rampUp = scenario.rampUpSeconds > 0 ? `, ramp-up ${scenario.rampUpSeconds}s` : '';
+  console.log(`  workers  ${effectiveConcurrency} concurrent${rampUp}, pacing '${scenario.pacing}'`);
   console.log(`  placing  ${scenario.orders} order(s)`);
   console.log('');
 
-  for (let index = 1; index <= scenario.orders; index += 1) {
-    const attempt = await placeOneOrder(context, index);
-    await report.record(attempt);
-    printAttempt(attempt);
+  const outcome = await runOrders(scenario, context, report, printAttempt);
+
+  if (outcome.aborted) {
+    console.log('');
+    console.log(`  aborted  ${outcome.abortReason}`);
   }
 
-  const summary = await report.close();
+  const summary = await report.close(outcome.aborted, outcome.abortReason);
   printSummary(summary, report.path);
 
-  return summary.failed === 0 ? 0 : 1;
+  return !outcome.aborted && summary.failed === 0 ? 0 : 1;
 }
 
 /**
