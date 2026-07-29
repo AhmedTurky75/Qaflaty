@@ -1,0 +1,30 @@
+{
+  "name": "smoke",
+  "baseUrl": "http://localhost:5000/api",
+  "storeSlug": "demo-store",
+
+  "orders": 1,
+
+  "products": [],
+  "itemsPerOrder": { "min": 1, "max": 2 },
+
+  "identity": {
+    "phoneRegion": "SA",
+    "emailDomain": "qaflaty-bot.test",
+    "namePrefix": "Bot"
+  },
+
+  "location": {
+    "countryCode": 682,
+    "cityId": 6821,
+    "districtId": null
+  },
+
+  "paymentMethod": "auto",
+  "promoCode": null,
+  "notes": null,
+
+  "otp": { "mode": "mock", "code": "000000" },
+
+  "seed": 1
+}

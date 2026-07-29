@@ -52,7 +52,7 @@ Mirrors the storefront's real sequence. Every call carries `X-Store-Slug` (requi
  4. GET  /api/storefront/products/{slug}            → product page view  [pacing: human only]
  5. POST /api/storefront/presence/heartbeat         → shows up in merchant "active carts"
  6. POST /api/storefront/guest-cart/items           → { productId, quantity, variantId? }  × N items
- 7. GET  /api/storefront/locations/{countries|cities|districts}
+ 7. (delivery location comes from the shared static geo table, not the API — see below)
  8. POST /api/storefront/orders/calculate           → totals preview, catches delivery-zone rejects early
  9. POST /api/storefront/orders                     → 201 + { orderNumber, status, ... }
 10. POST /api/storefront/orders/{orderNumber}/verify → { otpCode } — only if the store requires OTP
@@ -77,15 +77,25 @@ Prices, product names and totals are resolved server-side, so the bot only ever 
   (`PlaceOrderCommandHandler.cs:140-151`)
 - **Delivery zones can refuse the address** (`Order.DeliveryNotAvailable`) at district,
   city or country level. Location must be configurable and the failure reported clearly.
+- **Locations are not read from `/api/storefront/locations`.** Those endpoints exist, but the
+  checkout page uses the static tables in
+  `clients/qaflaty-workspace/projects/shared/src/lib/models/geo-data.ts`, and posts
+  `countryCode` as the ISO 3166-1 *numeric* code (682 = Saudi Arabia) with a city id from
+  the same tables. The bot mirrors a subset of that file rather than calling the API.
+- **Generated phone numbers must be region-valid.** `PhoneNumber.Create` runs
+  libphonenumber's `IsValidNumberForRegion` against the alpha-2 code in `phoneCountryCode`,
+  so random digits are rejected — numbers have to be built from real mobile prefixes.
 - **OTP is conditional** on `CustomerAuthSettings.RequireOtpOnPlaceOrder`. When the API
   runs with `MockOtp:Enabled=true` the code is fixed (`000000` in
   `appsettings.Development.json`), so the bot needs no mailbox. Against an environment
   without MockOtp, an OTP-requiring store needs a mail-catcher — avoid that for now by
   running against a store with OTP off, or with MockOtp enabled.
-- **A phone on the merchant's blocklist silently parks the order in `Blocked`** rather
-  than failing it. Not a target scenario here, but the bot should report the tracked
-  status so a batch that lands in `Blocked` isn't mistaken for success.
-  (`PlaceOrderCommandHandler.cs:99-104, 301-310`)
+- **A blocked order is invisible to the bot.** A phone on the merchant's blocklist parks the
+  order in `Blocked` rather than failing it, and `CustomerFacingOrderStatus.Map` reports
+  `Blocked` to storefront callers as `Confirmed`. So the bot can only ever observe `Pending`
+  or `Confirmed`, and cannot tell a blocked order apart from a confirmed one — checking that
+  is a merchant-side job.
+  (`PlaceOrderCommandHandler.cs:99-104, 301-310`; `CustomerFacingOrderStatus.cs:22-25`)
 - **There is no rate limiting or CAPTCHA on the storefront order route today**, so nothing
   will throttle the bot. Worth knowing before pointing it at a shared environment.
 
@@ -95,31 +105,33 @@ Prices, product names and totals are resolved server-side, so the bot only ever 
 
 ### Stack
 
-**Node 20 + TypeScript**, plain `fetch`, no framework. Rationale: zero coupling to the
-solution (test code can never ship inside the product) and trivial concurrency for the
-volume runs. A .NET console project is a reasonable alternative if you prefer a single
-toolchain — the design below is stack-agnostic — but it pulls test tooling into
-`Qaflaty.slnx`.
+**Node 22 + TypeScript**, plain `fetch`, no framework and no runtime dependencies — Node's
+native type stripping runs the `.ts` files directly, so there is nothing to install before
+a run. Rationale: zero coupling to the solution (test code can never ship inside the
+product) and trivial concurrency for the volume runs. A .NET console project is a
+reasonable alternative if you prefer a single toolchain — the design is stack-agnostic —
+but it pulls test tooling into `Qaflaty.slnx`.
 
 ### Layout
 
 ```
 tools/order-bot/                 # not in Qaflaty.slnx, not in the Angular workspace
-├── package.json
+├── package.json                 # devDependencies only: typescript + @types/node
 ├── README.md
 ├── src/
-│   ├── main.ts                  # CLI: order-bot run <scenario> [--orders N] [--concurrency C]
-│   ├── config.ts                # load + validate scenario file, host allowlist
+│   ├── main.ts                  # CLI: run <scenario> [--orders N] [--allow-remote]
+│   ├── config.ts                # load + validate scenario file, host allowlist, caps
 │   ├── api/
-│   │   ├── client.ts            # fetch wrapper: tenant headers, retries, latency capture
-│   │   ├── storefront.ts        # store, products, categories, payment-methods, locations
+│   │   ├── client.ts            # fetch wrapper: tenant headers, error unpacking, latency
+│   │   ├── storefront.ts        # store, products, payment-method resolution
 │   │   ├── cart.ts              # guest-cart + presence
 │   │   └── orders.ts            # calculate, place, verify-otp, track
 │   ├── shopper.ts               # one virtual shopper = identity + guest id + full journey
-│   ├── identity.ts              # name / phone / email generation
-│   ├── pacing.ts                # human | fast | burst think-times and jitter
-│   ├── runner.ts                # N orders across C workers, ramp-up, abort-on-error-rate
-│   └── report.ts                # JSONL per order + summary
+│   ├── identity.ts              # name / phone / email generation, run-tagged
+│   ├── geo.ts                   # country/city subset + region-valid phone generation
+│   ├── random.ts                # seedable PRNG, so a run can be replayed
+│   ├── report.ts                # JSONL per order + summary
+│   └── pacing.ts, runner.ts     # Phase 2: think-times, N orders across C workers
 └── scenarios/                   # one file per scenario in §4
 ```
 
@@ -202,11 +214,11 @@ Only two, both cheap:
 
 ## 7. Phasing
 
-| Phase | Deliverable | Notes |
-|-------|-------------|-------|
-| **0** | Seed script / documented store setup | Unblocks everything else |
-| **1** | HTTP bot core — one order end-to-end from a scenario file | The proof the approach works |
-| **2** | Volume: concurrency, ramp-up, pacing personas, JSONL + summary reporting | Delivers S1–S4 |
+| Phase | Deliverable | Status |
+|-------|-------------|--------|
+| **0** | Seed script / documented store setup | Documented as prerequisites in `tools/order-bot/README.md`; no script yet |
+| **1** | HTTP bot core — full journey from a scenario file, sequential orders, JSONL + summary | **Done** — `tools/order-bot/` |
+| **2** | Volume: concurrency, ramp-up, pacing personas, latency percentiles | Next; delivers S1–S4 |
 
 **Not now, tracked in case the need returns:** a merchant-side helper (login, block phone,
 release/reject) would unlock blocklist and promo-abuse assertions; a cleanup command would
