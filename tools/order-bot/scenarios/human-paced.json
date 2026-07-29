@@ -1,7 +1,7 @@
 {
   "name": "human-paced",
-  "baseUrl": "http://localhost:5000/api",
-  "storeSlug": "demo-store",
+  "baseUrl": "http://localhost:5001/api",
+  "storeSlug": "turky4",
 
   "orders": 10,
   "concurrency": 3,
