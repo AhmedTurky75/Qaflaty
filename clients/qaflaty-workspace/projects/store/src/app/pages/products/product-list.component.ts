@@ -1,5 +1,5 @@
-import { Component, inject, signal, computed, SecurityContext } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
+import { Component, inject, signal, computed, effect, DestroyRef, Renderer2, SecurityContext } from '@angular/core';
+import { CommonModule, NgClass, DOCUMENT } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -106,23 +106,16 @@ export class ProductListComponent {
   /**
    * Splits merchant-authored HTML into its <style> blocks and the remaining markup. Angular's HTML
    * sanitizer strips <style> elements outright (it isn't in the sanitizer's tag whitelist), so any
-   * CSS left inline would silently vanish. Pulling it out here lets it be rendered separately as a
-   * real <style> element (see categoryStyle below) while the body markup still goes through
-   * DomSanitizer as before.
+   * CSS left inline would silently vanish. Pulling it out here lets the CSS be applied separately
+   * (see the effect below) while the body markup still goes through DomSanitizer as before.
    */
   private categoryContentParts = computed(() => {
     const category = this.currentCategory();
-    // DEBUG: confirms whether the selected category was even resolved from `categories()`.
-    console.log('[cat-style-debug] currentCategory:', category);
     if (!category) return { body: '', css: '' };
 
     const raw = this.i18n.currentLanguage() === 'ar'
       ? (category.contentHtmlAr || category.contentHtml)
       : (category.contentHtml || category.contentHtmlAr);
-
-    // DEBUG: this is the exact string the API returned for this category — if <style> is missing
-    // here, the problem is upstream (not saved, or the backend/migration isn't deployed).
-    console.log('[cat-style-debug] raw contentHtml from API:', JSON.stringify(raw));
 
     if (!raw) return { body: '', css: '' };
 
@@ -132,37 +125,58 @@ export class ProductListComponent {
       return '';
     });
 
-    // DEBUG: confirms the regex actually pulled the CSS out of the raw string.
-    console.log('[cat-style-debug] extracted body:', JSON.stringify(body));
-    console.log('[cat-style-debug] extracted css:', JSON.stringify(css.trim()));
-
     return { body, css: css.trim() };
   });
 
   /** Merchant-authored HTML for the open category, rendered above the product grid. */
   categoryContent = computed(() => {
     const { body } = this.categoryContentParts();
-    const sanitized = body ? this.sanitizer.sanitize(SecurityContext.HTML, body) : '';
-    // DEBUG: what DomSanitizer let through for the body markup.
-    console.log('[cat-style-debug] sanitized categoryContent:', JSON.stringify(sanitized));
-    return sanitized;
+    return body ? this.sanitizer.sanitize(SecurityContext.HTML, body) : '';
   });
 
   /**
-   * CSS pulled from <style> blocks in the category content. Rendered via `<style [textContent]="...">`
-   * in the template: HTML treats <style> as a raw-text element, so Angular can't interpolate inside
-   * it directly (the `{{ }}` would render as literal text), and `[textContent]` sets the DOM property
-   * straight — bypassing both that parsing quirk and Angular's innerHTML sanitizer, which would
-   * otherwise mangle CSS containing `<`/`>` combinators. Note this CSS is global to the page
-   * (categories don't get a scoped stylesheet), so merchants should scope their own selectors
-   * (e.g. under `.qf-cat-content`) to avoid affecting the rest of the storefront.
+   * CSS pulled from <style> blocks in the category content. Not used directly in the template —
+   * Angular's template compiler special-cases a literal <style> element written in a component's
+   * template (treating it like the `styles:` metadata array), so a runtime-bound
+   * `<style [textContent]="...">` doesn't reliably carry dynamic content to the DOM. Applied
+   * instead via the effect below, which inserts/updates a real <style> element in <head> through
+   * Renderer2 — Angular's own cross-platform DOM abstraction (the same one structural directives
+   * and animations use under the hood) — rather than touching `document` directly, so this stays
+   * safe under server-side rendering or any non-browser renderer.
+   *
+   * This CSS is global to the page (categories don't get a scoped stylesheet), so merchants should
+   * scope their own selectors (e.g. under `.qf-cat-content`) to avoid affecting the rest of the
+   * storefront.
    */
-  categoryStyle = computed(() => {
-    const css = this.categoryContentParts().css;
-    // DEBUG: the exact value bound to <style [textContent]="categoryStyle()"> in the template.
-    console.log('[cat-style-debug] categoryStyle (final css to DOM):', JSON.stringify(css));
-    return css;
+  categoryStyle = computed(() => this.categoryContentParts().css);
+
+  private document = inject(DOCUMENT);
+  private renderer = inject(Renderer2);
+  private categoryStyleEl: HTMLStyleElement | null = null;
+
+  private applyCategoryStyleEffect = effect(() => {
+    const css = this.categoryStyle();
+
+    this.removeCategoryStyleEl();
+
+    if (!css) return;
+
+    const style = this.renderer.createElement('style') as HTMLStyleElement;
+    this.renderer.setAttribute(style, 'data-qf-category-style', '');
+    this.renderer.setProperty(style, 'textContent', css);
+    this.renderer.appendChild(this.document.head, style);
+    this.categoryStyleEl = style;
   });
+
+  private removeCategoryStyleEl(): void {
+    if (!this.categoryStyleEl) return;
+    this.renderer.removeChild(this.document.head, this.categoryStyleEl);
+    this.categoryStyleEl = null;
+  }
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.removeCategoryStyleEl());
+  }
 
   pageNumbers = computed(() => {
     const total = this.totalPages();
