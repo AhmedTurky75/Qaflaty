@@ -82,9 +82,11 @@ Prices, product names and totals are resolved server-side, so the bot only ever 
   `clients/qaflaty-workspace/projects/shared/src/lib/models/geo-data.ts`, and posts
   `countryCode` as the ISO 3166-1 *numeric* code (682 = Saudi Arabia) with a city id from
   the same tables. The bot mirrors a subset of that file rather than calling the API.
-- **Generated phone numbers must be region-valid.** `PhoneNumber.Create` runs
-  libphonenumber's `IsValidNumberForRegion` against the alpha-2 code in `phoneCountryCode`,
-  so random digits are rejected — numbers have to be built from real mobile prefixes.
+- **Phone numbers go up in E.164, and must be region-valid.** The shared
+  `PhoneInputComponent` emits `${dialCode}${digits}`, so the checkout posts `+966501234567`
+  alongside `phoneCountryCode: "SA"`. `PhoneNumber.Create` then runs libphonenumber's
+  `IsValidNumberForRegion` against that alpha-2 code, so random digits are rejected —
+  numbers have to be built from real mobile prefixes.
 - **OTP is conditional** on `CustomerAuthSettings.RequireOtpOnPlaceOrder`. When the API
   runs with `MockOtp:Enabled=true` the code is fixed (`000000` in
   `appsettings.Development.json`), so the bot needs no mailbox. Against an environment

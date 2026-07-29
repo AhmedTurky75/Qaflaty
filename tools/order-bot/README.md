@@ -114,9 +114,11 @@ Each run writes to `runs/<timestamp>-<scenario>/`:
 
 ## Notes
 
-- **Generated phone numbers are region-valid.** `PhoneNumber.Create` runs libphonenumber's
-  `IsValidNumberForRegion`, so numbers are built from real mobile prefixes for the chosen
-  region. Adding a region means adding its prefixes to `src/geo.ts`.
+- **Phone numbers are E.164 and region-valid**, e.g. `+966501234567` with
+  `phoneCountryCode: "SA"` — the shape the shared `PhoneInputComponent` posts, since it emits
+  `${dialCode}${digits}`. `PhoneNumber.Create` runs libphonenumber's `IsValidNumberForRegion`,
+  so numbers are built from real mobile prefixes for the chosen region. Adding a region means
+  adding its dial code and prefixes to `src/geo.ts`.
 - **Locations are static, not from the API.** The checkout page reads them from
   `clients/qaflaty-workspace/projects/shared/src/lib/models/geo-data.ts`, and `countryCode`
   is the ISO numeric code, not a dial code. `src/geo.ts` mirrors a subset of that file —

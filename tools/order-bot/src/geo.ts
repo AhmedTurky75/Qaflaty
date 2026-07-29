@@ -47,22 +47,24 @@ export const CITIES: Record<number, City[]> = {
 };
 
 /**
- * Mobile number shapes, in *national* format — the API parses `phone` against the alpha-2 region
- * in `phoneCountryCode` and rejects anything libphonenumber considers invalid for that region
- * (PhoneNumber.Create → IsValidNumberForRegion), so these prefixes and lengths are not decorative.
+ * Mobile number shapes. The API parses `phone` against the alpha-2 region in `phoneCountryCode`
+ * and rejects anything libphonenumber considers invalid for that region (PhoneNumber.Create →
+ * IsValidNumberForRegion), so these prefixes and lengths are not decorative.
  */
 interface PhoneRule {
+  /** E.164 country calling code, including the leading '+'. */
+  dialCode: string;
   prefixes: string[];
   /** Total digits of the national number, prefix included. */
   nationalLength: number;
 }
 
 const PHONE_RULES: Record<string, PhoneRule> = {
-  EG: { prefixes: ['10', '11', '12', '15'], nationalLength: 10 },
-  SA: { prefixes: ['50', '53', '54', '55', '56', '57', '58', '59'], nationalLength: 9 },
-  AE: { prefixes: ['50', '52', '54', '55', '56', '58'], nationalLength: 9 },
-  KW: { prefixes: ['51', '55', '60', '65', '66', '90', '97', '99'], nationalLength: 8 },
-  JO: { prefixes: ['77', '78', '79'], nationalLength: 9 },
+  EG: { dialCode: '+20', prefixes: ['10', '11', '12', '15'], nationalLength: 10 },
+  SA: { dialCode: '+966', prefixes: ['50', '53', '54', '55', '56', '57', '58', '59'], nationalLength: 9 },
+  AE: { dialCode: '+971', prefixes: ['50', '52', '54', '55', '56', '58'], nationalLength: 9 },
+  KW: { dialCode: '+965', prefixes: ['51', '55', '60', '65', '66', '90', '97', '99'], nationalLength: 8 },
+  JO: { dialCode: '+962', prefixes: ['77', '78', '79'], nationalLength: 9 },
 };
 
 export function supportedPhoneRegions(): string[] {
@@ -80,10 +82,11 @@ export function findCity(isoNumeric: number, cityId: number | null): City | unde
 }
 
 /**
- * A mobile number valid for `region`, in national format. `seed` makes the tail deterministic
- * per shopper so a run's numbers don't collide with each other.
+ * A mobile number valid for `region`, in E.164 form (+9665XXXXXXXX) — the same shape the shared
+ * PhoneInputComponent produces, since it emits `${dialCode}${digits}`. `seed` makes the tail
+ * deterministic per shopper so a run's numbers don't collide with each other.
  */
-export function generateNationalPhone(region: string, seed: number, random: () => number): string {
+export function generatePhone(region: string, seed: number, random: () => number): string {
   const rule = PHONE_RULES[region];
   if (!rule) {
     throw new Error(
@@ -100,5 +103,5 @@ export function generateNationalPhone(region: string, seed: number, random: () =
     Math.floor(random() * 10),
   ).join('');
 
-  return `${prefix}${randomPart}${seedPart}`;
+  return `${rule.dialCode}${prefix}${randomPart}${seedPart}`;
 }
