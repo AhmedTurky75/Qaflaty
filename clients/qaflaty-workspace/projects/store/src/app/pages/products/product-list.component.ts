@@ -112,11 +112,17 @@ export class ProductListComponent {
    */
   private categoryContentParts = computed(() => {
     const category = this.currentCategory();
+    // DEBUG: confirms whether the selected category was even resolved from `categories()`.
+    console.log('[cat-style-debug] currentCategory:', category);
     if (!category) return { body: '', css: '' };
 
     const raw = this.i18n.currentLanguage() === 'ar'
       ? (category.contentHtmlAr || category.contentHtml)
       : (category.contentHtml || category.contentHtmlAr);
+
+    // DEBUG: this is the exact string the API returned for this category — if <style> is missing
+    // here, the problem is upstream (not saved, or the backend/migration isn't deployed).
+    console.log('[cat-style-debug] raw contentHtml from API:', JSON.stringify(raw));
 
     if (!raw) return { body: '', css: '' };
 
@@ -126,13 +132,20 @@ export class ProductListComponent {
       return '';
     });
 
+    // DEBUG: confirms the regex actually pulled the CSS out of the raw string.
+    console.log('[cat-style-debug] extracted body:', JSON.stringify(body));
+    console.log('[cat-style-debug] extracted css:', JSON.stringify(css.trim()));
+
     return { body, css: css.trim() };
   });
 
   /** Merchant-authored HTML for the open category, rendered above the product grid. */
   categoryContent = computed(() => {
     const { body } = this.categoryContentParts();
-    return body ? this.sanitizer.sanitize(SecurityContext.HTML, body) : '';
+    const sanitized = body ? this.sanitizer.sanitize(SecurityContext.HTML, body) : '';
+    // DEBUG: what DomSanitizer let through for the body markup.
+    console.log('[cat-style-debug] sanitized categoryContent:', JSON.stringify(sanitized));
+    return sanitized;
   });
 
   /**
@@ -144,7 +157,12 @@ export class ProductListComponent {
    * (categories don't get a scoped stylesheet), so merchants should scope their own selectors
    * (e.g. under `.qf-cat-content`) to avoid affecting the rest of the storefront.
    */
-  categoryStyle = computed(() => this.categoryContentParts().css);
+  categoryStyle = computed(() => {
+    const css = this.categoryContentParts().css;
+    // DEBUG: the exact value bound to <style [textContent]="categoryStyle()"> in the template.
+    console.log('[cat-style-debug] categoryStyle (final css to DOM):', JSON.stringify(css));
+    return css;
+  });
 
   pageNumbers = computed(() => {
     const total = this.totalPages();
