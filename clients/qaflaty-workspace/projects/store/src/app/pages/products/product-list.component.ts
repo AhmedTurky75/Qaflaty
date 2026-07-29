@@ -104,20 +104,47 @@ export class ProductListComponent {
   });
 
   /**
-   * Merchant-authored HTML for the open category, rendered above the product grid. Sanitized here
-   * (scripts and event handlers stripped) because the markup is authored in the merchant dashboard
-   * and stored verbatim.
+   * Splits merchant-authored HTML into its <style> blocks and the remaining markup. Angular's HTML
+   * sanitizer strips <style> elements outright (it isn't in the sanitizer's tag whitelist), so any
+   * CSS left inline would silently vanish. Pulling it out here lets it be rendered separately as a
+   * real <style> element (see categoryStyle below) while the body markup still goes through
+   * DomSanitizer as before.
    */
-  categoryContent = computed(() => {
+  private categoryContentParts = computed(() => {
     const category = this.currentCategory();
-    if (!category) return '';
+    if (!category) return { body: '', css: '' };
 
     const raw = this.i18n.currentLanguage() === 'ar'
       ? (category.contentHtmlAr || category.contentHtml)
       : (category.contentHtml || category.contentHtmlAr);
 
-    return raw ? this.sanitizer.sanitize(SecurityContext.HTML, raw) : '';
+    if (!raw) return { body: '', css: '' };
+
+    let css = '';
+    const body = raw.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (_match, inner) => {
+      css += `${inner}\n`;
+      return '';
+    });
+
+    return { body, css: css.trim() };
   });
+
+  /** Merchant-authored HTML for the open category, rendered above the product grid. */
+  categoryContent = computed(() => {
+    const { body } = this.categoryContentParts();
+    return body ? this.sanitizer.sanitize(SecurityContext.HTML, body) : '';
+  });
+
+  /**
+   * CSS pulled from <style> blocks in the category content. Rendered via `<style [textContent]="...">`
+   * in the template: HTML treats <style> as a raw-text element, so Angular can't interpolate inside
+   * it directly (the `{{ }}` would render as literal text), and `[textContent]` sets the DOM property
+   * straight — bypassing both that parsing quirk and Angular's innerHTML sanitizer, which would
+   * otherwise mangle CSS containing `<`/`>` combinators. Note this CSS is global to the page
+   * (categories don't get a scoped stylesheet), so merchants should scope their own selectors
+   * (e.g. under `.qf-cat-content`) to avoid affecting the rest of the storefront.
+   */
+  categoryStyle = computed(() => this.categoryContentParts().css);
 
   pageNumbers = computed(() => {
     const total = this.totalPages();

@@ -23,6 +23,9 @@
 
     <!-- Merchant-authored content for this category, above the products -->
     @if (categoryContent()) {
+      @if (categoryStyle()) {
+        <style [textContent]="categoryStyle()"></style>
+      }
       <div class="qf-cat-content mb-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 lg:p-6 text-gray-800 leading-relaxed"
         [innerHTML]="categoryContent()"></div>
     }
