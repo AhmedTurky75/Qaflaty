@@ -7,8 +7,11 @@
   "engines": {
     "node": ">=22.6"
   },
+  "bin": {
+    "order-bot": "bot.mjs"
+  },
   "scripts": {
-    "bot": "node src/main.ts",
+    "bot": "node bot.mjs",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
