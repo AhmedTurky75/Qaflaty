@@ -466,7 +466,7 @@
       "removeImage": "Remove image",
       "content": "Content above products (English)",
       "contentPh": "<h2>Summer shoes</h2><p>Free delivery on orders over 500.</p>",
-      "contentHint": "HTML shown above the product grid when a shopper opens this category. Scripts are stripped when rendered.",
+      "contentHint": "HTML shown above the product grid when a shopper opens this category. Scripts are stripped when rendered; a <style> block is supported for custom CSS, but note its rules apply to the whole storefront page, not just this box — scope your selectors (e.g. under .qf-cat-content).",
       "contentAr": "Content above products (Arabic)",
       "contentArPh": "<h2>أحذية الصيف</h2>",
       "contentArHint": "Leave blank to reuse the English content.",
