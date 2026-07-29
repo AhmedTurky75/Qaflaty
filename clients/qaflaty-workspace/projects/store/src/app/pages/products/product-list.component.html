@@ -21,15 +21,12 @@
       </h1>
     </div>
 
-    <!-- Merchant-authored content for this category, above the products -->
-    @if (categoryContent() || categoryStyle()) {
-      @if (categoryStyle()) {
-        <style [textContent]="categoryStyle()"></style>
-      }
-      @if (categoryContent()) {
-        <div class="qf-cat-content mb-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 lg:p-6 text-gray-800 leading-relaxed"
-          [innerHTML]="categoryContent()"></div>
-      }
+    <!-- Merchant-authored content for this category, above the products. Any <style> block in it is
+         applied separately, straight to the DOM (see the component's applyCategoryStyleEffect) —
+         not through this template. -->
+    @if (categoryContent()) {
+      <div class="qf-cat-content mb-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 lg:p-6 text-gray-800 leading-relaxed"
+        [innerHTML]="categoryContent()"></div>
     }
 
     <!-- Mobile: Filter trigger bar -->
