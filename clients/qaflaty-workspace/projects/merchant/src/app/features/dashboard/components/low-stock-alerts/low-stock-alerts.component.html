@@ -18,6 +18,16 @@
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
       </svg>
     </div>
+  } @else if (failed()) {
+    <div class="py-6 text-center text-text-muted">
+      <span class="mx-auto mb-3 flex h-12 w-12 items-center justify-center text-danger"><app-icon name="alert-triangle" [size]="40" /></span>
+      <p class="text-sm">{{ 'dashboard.lowStockFailed' | transloco }}</p>
+      <button
+        type="button"
+        (click)="loadLowStockItems()"
+        class="mt-3 min-h-[44px] rounded-lg px-4 py-2 text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary/40"
+      >{{ 'dashboard.retry' | transloco }}</button>
+    </div>
   } @else if (items().length === 0) {
     <div class="py-6 text-center text-text-muted">
       <span class="mx-auto mb-3 flex h-12 w-12 items-center justify-center text-success"><app-icon name="check-circle" [size]="40" /></span>

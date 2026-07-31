@@ -2,15 +2,16 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { Money } from 'shared';
 
+// The dashboard endpoints send monetary figures as plain decimals in the store's own currency,
+// not as { amount, currency } objects — reading `.amount` off these is what produced "SAR NaN".
 export interface DashboardStats {
-  totalRevenue: Money;
+  totalRevenue: number;
   totalOrders: number;
   totalProducts: number;
   totalCustomers: number;
-  revenueTrend: number; // Percentage change
-  ordersTrend: number; // Percentage change
+  revenueTrend: number; // Percentage change over the last 30 days vs the 30 before
+  ordersTrend: number; // Percentage change over the last 30 days vs the 30 before
 }
 
 export interface SalesChartData {
@@ -23,7 +24,7 @@ export interface TopProduct {
   id: string;
   name: string;
   salesCount: number;
-  revenue: Money;
+  revenue: number;
   imageUrl?: string;
 }
 
@@ -32,7 +33,7 @@ export interface RecentOrderSummary {
   orderNumber: string;
   customerName: string;
   status: string;
-  total: Money;
+  total: number;
   createdAt: string;
 }
 

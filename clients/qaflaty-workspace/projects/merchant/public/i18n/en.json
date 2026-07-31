@@ -151,6 +151,8 @@
     "lowStock": "Low stock alerts",
     "lowStockItems": "{{count}} items",
     "wellStocked": "All products are well stocked!",
+    "lowStockFailed": "Could not load stock levels.",
+    "retry": "Retry",
     "inStock": "in stock",
     "viewAllLowStock": "View all low stock items",
     "sku": "SKU",

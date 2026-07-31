@@ -18,7 +18,7 @@
             </span>
             <span class="block truncate text-xs text-text-muted">{{ order.customerName }} • {{ formatDate(order.createdAt) }}</span>
           </span>
-          <span class="ms-4 text-end text-sm font-semibold text-text">{{ formatCurrency(order.total.amount) }}</span>
+          <span class="ms-4 text-end text-sm font-semibold text-text">{{ formatCurrency(order.total) }}</span>
         </a>
       }
     </div>

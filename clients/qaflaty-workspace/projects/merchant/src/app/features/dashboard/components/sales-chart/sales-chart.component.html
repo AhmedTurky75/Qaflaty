@@ -23,7 +23,7 @@
     <div class="relative" style="height: 300px;">
       <svg class="h-full w-full" [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" preserveAspectRatio="xMidYMid meet">
         <!-- Y-axis grid lines -->
-        @for (tick of yAxisTicks; track tick) {
+        @for (tick of yAxisTicks; track $index) {
           <line
             [attr.x1]="padding.left"
             [attr.y1]="getYPosition(tick)"

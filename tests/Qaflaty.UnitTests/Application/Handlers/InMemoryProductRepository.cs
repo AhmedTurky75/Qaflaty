@@ -47,6 +47,8 @@ internal sealed class InMemoryProductRepository : IProductRepository
         => throw new NotSupportedException();
     public Task<IReadOnlyList<Product>> GetByStoreIdWithPropertyValuesAsync(StoreId storeId, CancellationToken ct = default)
         => throw new NotSupportedException();
+    public Task<IReadOnlyList<Product>> GetByStoreIdWithVariantsAsync(StoreId storeId, CancellationToken ct = default)
+        => throw new NotSupportedException();
     public Task<bool> IsSlugAvailableAsync(StoreId storeId, ProductSlug slug, ProductId? excludeId = null, CancellationToken ct = default)
         => throw new NotSupportedException();
     public void Delete(Product product) => throw new NotSupportedException();

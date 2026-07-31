@@ -169,5 +169,11 @@ public record OrderStatsDto(
     int CancelledOrders,
     int BlockedOrders,
     decimal TotalRevenue,
-    decimal AverageOrderValue
+    decimal AverageOrderValue,
+    // Catalogue-wide counters the merchant dashboard shows alongside the order figures.
+    int TotalProducts,
+    int TotalCustomers,
+    // Percentage change of the last 30 days against the 30 days before that, e.g. 12.5 for +12.5%.
+    decimal RevenueTrend,
+    decimal OrdersTrend
 );

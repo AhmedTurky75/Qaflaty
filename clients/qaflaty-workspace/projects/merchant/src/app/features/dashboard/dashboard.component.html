@@ -46,7 +46,7 @@
         @if (stats()) {
           <app-stats-card
             [title]="'dashboard.totalRevenue' | transloco"
-            [value]="formatCurrency(stats()!.totalRevenue.amount)"
+            [value]="formatCurrency(stats()!.totalRevenue)"
             [trend]="stats()!.revenueTrend"
             icon="revenue"
             color="blue"

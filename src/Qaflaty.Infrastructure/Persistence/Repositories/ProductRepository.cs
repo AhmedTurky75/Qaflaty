@@ -35,6 +35,12 @@ public class ProductRepository : IProductRepository
             .Where(p => p.StoreId == storeId)
             .ToListAsync(ct);
 
+    public async Task<IReadOnlyList<Product>> GetByStoreIdWithVariantsAsync(StoreId storeId, CancellationToken ct = default)
+        => await _context.Products
+            .Include(p => p.Variants)
+            .Where(p => p.StoreId == storeId)
+            .ToListAsync(ct);
+
     public async Task<bool> IsSlugAvailableAsync(StoreId storeId, ProductSlug slug, ProductId? excludeId = null, CancellationToken ct = default)
     {
         var query = _context.Products.Where(p => p.StoreId == storeId && p.Slug.Value == slug.Value);

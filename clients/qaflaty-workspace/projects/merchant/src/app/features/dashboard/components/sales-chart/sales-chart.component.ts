@@ -31,6 +31,9 @@ export class SalesChartComponent implements OnChanges {
   yAxisTicks: number[] = [];
   hoveredBar: ChartBar | null = null;
 
+  /** Revenue value at the top of the Y axis. Never 0, so the axis always has a usable scale. */
+  private axisMax = 1;
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       this.updateChart();
@@ -55,14 +58,17 @@ export class SalesChartComponent implements OnChanges {
     const barWidth = Math.min(40, chartWidth / this.data.length - 10);
     const spacing = (chartWidth - (barWidth * this.data.length)) / (this.data.length + 1);
 
-    // Calculate Y-axis ticks
+    // Calculate Y-axis ticks. A period with no revenue yet is a real, common state (a new store, or
+    // orders that have not reached Delivered), and it still gets a labelled axis: without a floor
+    // the step would be 0 and every tick would collapse onto the same value.
     const tickCount = 5;
-    const tickStep = Math.ceil(maxRevenue / tickCount);
+    const tickStep = Math.max(1, Math.ceil(maxRevenue / tickCount));
+    this.axisMax = tickStep * tickCount;
     this.yAxisTicks = Array.from({ length: tickCount + 1 }, (_, i) => i * tickStep);
 
     // Create bars
     this.bars = this.data.map((item, index) => {
-      const height = maxRevenue > 0 ? (item.revenue / maxRevenue) * chartHeight : 0;
+      const height = (item.revenue / this.axisMax) * chartHeight;
       const x = this.padding.left + spacing + (index * (barWidth + spacing));
       const y = this.padding.top + (chartHeight - height);
 
@@ -78,10 +84,8 @@ export class SalesChartComponent implements OnChanges {
   }
 
   getYPosition(value: number): number {
-    const maxRevenue = Math.max(...this.data.map(d => d.revenue));
     const chartHeight = this.chartHeight - this.padding.top - this.padding.bottom;
-    if (maxRevenue === 0) return this.padding.top + chartHeight;
-    const ratio = value / maxRevenue;
+    const ratio = value / this.axisMax;
     return this.padding.top + (chartHeight - (ratio * chartHeight));
   }
 

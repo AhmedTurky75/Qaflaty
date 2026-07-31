@@ -18,6 +18,10 @@ export class LowStockAlertsComponent implements OnInit {
 
   loading = signal(true);
   items = signal<LowStockItem[]>([]);
+  // An empty list and a failed request look identical once loading stops, and the empty state here
+  // reads "all products are well stocked" — so a failure has to be tracked separately rather than
+  // reassuring the merchant about stock nobody managed to check.
+  failed = signal(false);
 
   ngOnInit(): void {
     this.loadLowStockItems();
@@ -30,6 +34,9 @@ export class LowStockAlertsComponent implements OnInit {
       return;
     }
 
+    this.loading.set(true);
+    this.failed.set(false);
+
     this.dashboardService.getLowStockItems(storeId).subscribe({
       next: (items) => {
         this.items.set(items);
@@ -37,6 +44,8 @@ export class LowStockAlertsComponent implements OnInit {
       },
       error: (err) => {
         console.error('Failed to load low stock items:', err);
+        this.items.set([]);
+        this.failed.set(true);
         this.loading.set(false);
       }
     });

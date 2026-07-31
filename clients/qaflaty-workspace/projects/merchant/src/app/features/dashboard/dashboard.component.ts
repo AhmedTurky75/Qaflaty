@@ -66,17 +66,15 @@ export class DashboardComponent {
     // Load all dashboard data in parallel
     forkJoin({
       stats: this.dashboardService.getDashboardStats(storeId),
-      //Question : Why we don't have api for salesData? should we add it?
-      //salesData: this.dashboardService.getSalesChartData(storeId, this.chartPeriod()),
+      salesData: this.dashboardService.getSalesChartData(storeId, this.chartPeriod()),
       recentOrders: this.dashboardService.getRecentOrders(storeId, 10),
-      //Questrion : Why we don't have api for topProducts? should we add it?
-      //topProducts: this.dashboardService.getTopProducts(storeId, 5)
+      topProducts: this.dashboardService.getTopProducts(storeId, 5)
     }).subscribe({
       next: (data) => {
         this.stats.set(data.stats);
-        //this.salesData.set(data.salesData);
+        this.salesData.set(data.salesData);
         this.recentOrders.set(data.recentOrders);
-        //this.topProducts.set(data.topProducts);
+        this.topProducts.set(data.topProducts);
         this.loading.set(false);
       },
       error: (err) => {
