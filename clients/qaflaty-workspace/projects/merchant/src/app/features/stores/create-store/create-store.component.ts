@@ -1,19 +1,21 @@
-import { Component, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { CurrencyOption } from 'shared';
 import { StoreService } from '../services/store.service';
 import { SlugInputComponent } from '../components/slug-input/slug-input.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-create-store',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, SlugInputComponent],
+  imports: [ReactiveFormsModule, RouterLink, TranslocoPipe, SlugInputComponent, IconComponent],
   templateUrl: './create-store.component.html',
   styleUrls: ['./create-store.component.scss']
 })
-export class CreateStoreComponent {
+export class CreateStoreComponent implements OnInit {
   private fb = inject(FormBuilder);
   private storeService = inject(StoreService);
   private storeContext = inject(StoreContextService);
@@ -23,12 +25,26 @@ export class CreateStoreComponent {
   loading = signal(false);
   error = signal<string | null>(null);
   slugValid = signal(false);
+  currencies = signal<CurrencyOption[]>([]);
 
   constructor() {
     this.createForm = this.fb.group({
       slug: ['', Validators.required],
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
-      description: ['', Validators.maxLength(500)]
+      description: ['', Validators.maxLength(500)],
+      // Chosen once, then locked — every price/fee/tax in the store uses this currency.
+      currency: ['EGP', Validators.required]
+    });
+  }
+
+  ngOnInit(): void {
+    this.storeService.getCurrencies().subscribe({
+      next: (currencies) => this.currencies.set(currencies),
+      error: () => this.currencies.set([
+        { code: 'EGP', symbol: 'ج.م', name: 'Egyptian Pound', decimalDigits: 2 },
+        { code: 'SAR', symbol: 'ر.س', name: 'Saudi Riyal', decimalDigits: 2 },
+        { code: 'USD', symbol: '$', name: 'US Dollar', decimalDigits: 2 }
+      ])
     });
   }
 

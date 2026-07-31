@@ -1,3 +1,21 @@
 :host {
   display: block;
 }
+
+/* Product tabs */
+.tab-btn {
+  padding: 1rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #6b7280;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.tab-btn:hover {
+  color: #1a1a1a;
+}
+.tab-btn--active {
+  color: #1a1a1a;
+  border-bottom-color: #1a1a1a;
+}

@@ -1,7 +1,10 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Ordering.Common;
 using Qaflaty.Application.Ordering.DTOs;
+using Qaflaty.Application.Storefront.Common;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
+using Qaflaty.Domain.Catalog.Aggregates.PromoCode;
 using Qaflaty.Domain.Catalog.Enums;
 using Qaflaty.Domain.Catalog.Repositories;
 using OrderingPaymentMethod = Qaflaty.Domain.Ordering.Enums.PaymentMethod;
@@ -31,6 +34,9 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
     private readonly IEmailService _emailService;
     private readonly IOtpSettings _otpSettings;
     private readonly IStoreConfigurationRepository _storeConfigRepository;
+    private readonly IPromoCodeRepository _promoCodeRepository;
+    private readonly ICartConversionService _cartConversionService;
+    private readonly IBlockedPhoneRepository _blockedPhoneRepository;
 
     public PlaceOrderCommandHandler(
         IOrderRepository orderRepository,
@@ -42,7 +48,10 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         IOrderOtpRepository otpRepository,
         IEmailService emailService,
         IOtpSettings otpSettings,
-        IStoreConfigurationRepository storeConfigRepository)
+        IStoreConfigurationRepository storeConfigRepository,
+        IPromoCodeRepository promoCodeRepository,
+        ICartConversionService cartConversionService,
+        IBlockedPhoneRepository blockedPhoneRepository)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
@@ -54,6 +63,9 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         _emailService = emailService;
         _otpSettings = otpSettings;
         _storeConfigRepository = storeConfigRepository;
+        _promoCodeRepository = promoCodeRepository;
+        _cartConversionService = cartConversionService;
+        _blockedPhoneRepository = blockedPhoneRepository;
     }
 
     public async Task<Result<OrderDto>> Handle(PlaceOrderCommand request, CancellationToken cancellationToken)
@@ -84,11 +96,18 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
 
         var contact = CustomerContact.Create(nameResult.Value, phoneResult.Value, emailResult.Value);
 
+        // Screen the number against the merchant's blocklist. A blocked order is still created and
+        // still walks the customer through the ordinary flow (including OTP) — it simply parks in
+        // Blocked instead of Confirmed at the end, for the merchant to release or reject.
+        var blockedPhone = await _blockedPhoneRepository.GetByPhoneAsync(storeId, phoneResult.Value, cancellationToken);
+        var isBlocked = blockedPhone != null;
+
         // Create address
         var addressResult = Address.Create(
             request.Street,
             request.City,
-            request.District);
+            request.District,
+            country: request.Country);
 
         if (addressResult.IsFailure)
             return Result.Failure<OrderDto>(addressResult.Error);
@@ -186,6 +205,11 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         // Create delivery info
         var deliveryInfo = DeliveryInfo.Create(addressResult.Value, request.DeliveryInstructions);
 
+        // Resolve the store's tax configuration (applied to the order pricing).
+        var taxSettings = storeConfigForPayment?.TaxSettings;
+        var taxRate = taxSettings?.EffectiveRate ?? 0m;
+        var pricesIncludeTax = taxSettings?.PricesIncludeTax ?? false;
+
         // Create order (stays in Pending until OTP is verified)
         var orderResult = Order.Create(
             storeId,
@@ -195,7 +219,9 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             paymentMethod,
             deliveryFee,
             request.CustomerNotes,
-            request.Source);
+            request.Source,
+            taxRate,
+            pricesIncludeTax);
 
         if (orderResult.IsFailure)
             return Result.Failure<OrderDto>(orderResult.Error);
@@ -232,6 +258,57 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
                 return Result.Failure<OrderDto>(addResult.Error);
         }
 
+        // Apply a promo code if one was supplied. Validation and discount calculation are owned by
+        // the PromoCode aggregate so the rules cannot be bypassed here.
+        if (!string.IsNullOrWhiteSpace(request.PromoCode))
+        {
+            var promo = await _promoCodeRepository.GetByCodeAsync(storeId, request.PromoCode, cancellationToken);
+            if (promo == null)
+                return Result.Failure<OrderDto>(new Error("PromoCode.NotFound", "Promo code not found"));
+
+            var customerRedemptions = await _promoCodeRepository.CountCustomerRedemptionsAsync(
+                promo.Id, customer.Id, cancellationToken);
+
+            var subtotal = order.Pricing.Subtotal.Amount;
+            var validation = promo.Validate(subtotal, DateTime.UtcNow, customerRedemptions);
+            if (validation.IsFailure)
+                return Result.Failure<OrderDto>(validation.Error);
+
+            var discountValue = promo.CalculateDiscount(subtotal, deliveryFee.Amount);
+            var discountResult = Money.Create(discountValue);
+            if (discountResult.IsFailure)
+                return Result.Failure<OrderDto>(discountResult.Error);
+
+            var applyResult = order.ApplyDiscount(promo.Code, discountResult.Value);
+            if (applyResult.IsFailure)
+                return Result.Failure<OrderDto>(applyResult.Error);
+
+            // The discount is reflected in the order's pricing either way, so the merchant reviews
+            // the real total. But a blocked order must not consume a redemption — otherwise anyone
+            // on the blocklist could drain a limited promo code by placing orders that never ship.
+            // The redemption is recorded when (and only if) the merchant releases the order.
+            if (!isBlocked)
+            {
+                promo.RecordRedemption();
+                _promoCodeRepository.Update(promo);
+
+                var redemption = PromoCodeRedemption.Create(
+                    promo.Id, storeId, order.Id, customer.Id, promo.Code, discountValue);
+                await _promoCodeRepository.AddRedemptionAsync(redemption, cancellationToken);
+            }
+        }
+
+        if (isBlocked)
+        {
+            var blockReason = string.IsNullOrWhiteSpace(blockedPhone!.Reason)
+                ? "Placed from a phone number on the store blocklist"
+                : $"Placed from a blocked phone number: {blockedPhone.Reason}";
+
+            var flagResult = order.FlagBlocked(blockReason);
+            if (flagResult.IsFailure)
+                return Result.Failure<OrderDto>(flagResult.Error);
+        }
+
         await _orderRepository.AddAsync(order, cancellationToken);
 
         // Re-use already-fetched config (or re-fetch if it was null above)
@@ -255,11 +332,20 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         }
         else
         {
-            // OTP not required — confirm the order immediately
-            order.Confirm();
+            // OTP not required — settle the order immediately. A flagged order parks in Blocked
+            // instead of confirming, which deliberately raises no domain events: stock stays
+            // unreserved and no Purchase is tracked until the merchant releases it.
+            if (isBlocked)
+                order.MarkBlocked("System");
+            else
+                order.Confirm("Customer");
+
+            // Best-effort: the cart that was checked out should stop showing as "active" to the
+            // merchant right away. Never let a lookup/notification hiccup fail the order itself.
+            await _cartConversionService.ConvertCartAsync(storeId, request.BuyerCustomerId, request.BuyerGuestId, cancellationToken);
         }
 
-        return Result.Success(MapToDto(order, customer));
+        return Result.Success(MapToDto(order, customer, store.Currency.Code));
     }
 
     private static OrderingPaymentMethod MapToOrderingPaymentMethod(string key) =>
@@ -304,12 +390,12 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         </html>
         """;
 
-    private static OrderDto MapToDto(Order order, Customer customer) => new(
+    private static OrderDto MapToDto(Order order, Customer customer, string currencyCode) => new(
         order.Id.Value,
         order.StoreId.Value,
         order.CustomerId.Value,
         order.OrderNumber.Value,
-        order.Status.ToString(),
+        CustomerFacingOrderStatus.Map(order.Status),
         new CustomerSnapshotDto(
             customer.Contact.FullName.FullName,
             customer.Contact.Phone.Value,
@@ -318,14 +404,16 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             i.Id.Value,
             i.ProductId.Value,
             i.ProductName,
-            new MoneyDto(i.UnitPrice.Amount, i.UnitPrice.Currency.ToString()),
+            new MoneyDto(i.UnitPrice.Amount, currencyCode),
             i.Quantity,
-            new MoneyDto(i.Total.Amount, i.Total.Currency.ToString())
+            new MoneyDto(i.Total.Amount, currencyCode)
         )).ToList(),
         new OrderPricingDto(
-            new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
-            new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
-            new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString())
+            new MoneyDto(order.Pricing.Subtotal.Amount, currencyCode),
+            new MoneyDto(order.Pricing.DeliveryFee.Amount, currencyCode),
+            new MoneyDto(order.Pricing.Total.Amount, currencyCode),
+            new MoneyDto(order.Pricing.DiscountAmount.Amount, currencyCode),
+            new MoneyDto(order.Pricing.TaxAmount.Amount, currencyCode)
         ),
         new PaymentInfoDto(
             order.Payment.Method.ToString(),
@@ -346,7 +434,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
             order.Delivery.Instructions
         ),
         new OrderNotesDto(order.Notes.CustomerNotes, order.Notes.MerchantNotes),
-        order.StatusHistory.Select(s => new OrderStatusChangeDto(
+        order.StatusHistory.Where(CustomerFacingOrderStatus.IsVisibleToCustomer).Select(s => new OrderStatusChangeDto(
             s.Id,
             s.FromStatus.ToString(),
             s.ToStatus.ToString(),
@@ -356,6 +444,7 @@ public class PlaceOrderCommandHandler : ICommandHandler<PlaceOrderCommand, Order
         )).ToList(),
         order.CreatedAt,
         order.UpdatedAt,
-        order.Source.ToString()
+        order.Source.ToString(),
+        order.AppliedPromoCode
     );
 }

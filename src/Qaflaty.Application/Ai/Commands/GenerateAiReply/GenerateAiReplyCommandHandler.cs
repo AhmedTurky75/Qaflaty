@@ -24,7 +24,7 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
     private readonly IStoreRepository _storeRepository;
     private readonly IAiEmbeddingService _embeddingService;
     private readonly IAiChatCompletionService _chatService;
-    private readonly IAiKnowledgeStore _knowledgeStore;
+    private readonly IVectorStore _vectorStore;
     private readonly IAiInteractionLogRepository _interactionLogRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<GenerateAiReplyCommandHandler> _logger;
@@ -35,7 +35,7 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         IStoreRepository storeRepository,
         IAiEmbeddingService embeddingService,
         IAiChatCompletionService chatService,
-        IAiKnowledgeStore knowledgeStore,
+        IVectorStore vectorStore,
         IAiInteractionLogRepository interactionLogRepository,
         IUnitOfWork unitOfWork,
         ILogger<GenerateAiReplyCommandHandler> logger)
@@ -45,7 +45,7 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         _storeRepository = storeRepository;
         _embeddingService = embeddingService;
         _chatService = chatService;
-        _knowledgeStore = knowledgeStore;
+        _vectorStore = vectorStore;
         _interactionLogRepository = interactionLogRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -92,12 +92,14 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         var storeName = store?.Name.Value ?? "our store";
 
         // Retrieve relevant store knowledge for the latest question.
-        IReadOnlyList<AiKnowledgeSearchResult> context = Array.Empty<AiKnowledgeSearchResult>();
+        IReadOnlyList<VectorSearchHit> context = Array.Empty<VectorSearchHit>();
         try
         {
             var query = Truncate(latestCustomerMessage.Content, 2000);
-            var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(query, cancellationToken);
-            context = _knowledgeStore.Search(conversation.StoreId.Value, queryEmbedding, topK: 5, minScore: 0.2);
+            var queryEmbedding = await _embeddingService.GenerateEmbeddingAsync(
+                query, AiEmbeddingInputType.Query, cancellationToken);
+            context = await _vectorStore.SearchAsync(
+                conversation.StoreId, queryEmbedding, topK: 5, minScore: 0.2, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -138,7 +140,13 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
 
         var botMessage = conversation.AddMessage(MessageSenderType.Bot, BotSenderId, Truncate(replyText, 2000));
 
-        var suggestedProducts = BuildSuggestedProducts(context);
+        // Only surface (and log) product suggestions when the assistant actually answered from
+        // store knowledge. When it falls back to the "no information" reply, the retrieved context
+        // is not a genuine recommendation, so showing cards / logging suggestions would be misleading.
+        var gaveRealReply = !string.Equals(replyText, AiPromptBuilder.NoInformationReply, StringComparison.Ordinal);
+        var suggestedProducts = gaveRealReply
+            ? BuildSuggestedProducts(context)
+            : Array.Empty<AiSuggestedProductDto>();
 
         // Record analytics: the reply (with retrieved-doc count for knowledge-gap tracking)
         // plus one record per recommended product.
@@ -168,20 +176,20 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
     }
 
     private static IReadOnlyList<AiSuggestedProductDto> BuildSuggestedProducts(
-        IReadOnlyList<AiKnowledgeSearchResult> context)
+        IReadOnlyList<VectorSearchHit> context)
     {
         return context
-            .Where(r => r.Document.Type == AiKnowledgeDocumentType.Product)
-            .Select(r => ToSuggestedProduct(r.Document))
+            .Where(r => r.DocType == AiKnowledgeDocumentType.Product)
+            .Select(ToSuggestedProduct)
             .OfType<AiSuggestedProductDto>()
             .Where(p => p.InStock)
             .Take(3)
             .ToList();
     }
 
-    private static AiSuggestedProductDto? ToSuggestedProduct(AiKnowledgeDocument doc)
+    private static AiSuggestedProductDto? ToSuggestedProduct(VectorSearchHit hit)
     {
-        var metadata = doc.Metadata;
+        var metadata = hit.Metadata;
         if (metadata is null ||
             !metadata.TryGetValue("productId", out var productIdRaw) ||
             !Guid.TryParse(productIdRaw, out var productId))
@@ -190,6 +198,7 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
         metadata.TryGetValue("slug", out var slug);
         metadata.TryGetValue("currency", out var currency);
         metadata.TryGetValue("imageUrl", out var imageUrl);
+        metadata.TryGetValue("nameAr", out var nameAr);
 
         decimal price = 0;
         if (metadata.TryGetValue("price", out var priceRaw))
@@ -201,7 +210,8 @@ public sealed class GenerateAiReplyCommandHandler : ICommandHandler<GenerateAiRe
 
         return new AiSuggestedProductDto(
             productId,
-            doc.Title,
+            hit.Title,
+            string.IsNullOrWhiteSpace(nameAr) ? hit.Title : nameAr,
             slug ?? string.Empty,
             price,
             currency ?? string.Empty,

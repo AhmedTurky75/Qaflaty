@@ -56,6 +56,11 @@ export const routes: Routes = [
         loadChildren: () => import('./features/orders/orders.routes').then(m => m.ORDER_ROUTES)
       },
       {
+        path: 'live',
+        canActivate: [storeGuard],
+        loadComponent: () => import('./features/live/live.component').then(m => m.LiveComponent)
+      },
+      {
         path: 'active-carts',
         canActivate: [storeGuard],
         loadComponent: () => import('./features/active-carts/active-carts.component').then(m => m.ActiveCartsComponent)
@@ -64,6 +69,26 @@ export const routes: Routes = [
         path: 'customers',
         canActivate: [storeGuard],
         loadChildren: () => import('./features/customers/customers.routes').then(m => m.CUSTOMER_ROUTES)
+      },
+      {
+        path: 'reviews',
+        canActivate: [storeGuard],
+        loadComponent: () => import('./features/reviews/reviews.component').then(m => m.ReviewsComponent)
+      },
+      {
+        path: 'blocked-phones',
+        canActivate: [storeGuard],
+        loadComponent: () => import('./features/blocked-phones/blocked-phones.component').then(m => m.BlockedPhonesComponent)
+      },
+      {
+        path: 'promo-codes',
+        canActivate: [storeGuard],
+        loadComponent: () => import('./features/promo-codes/promo-codes.component').then(m => m.PromoCodesComponent)
+      },
+      {
+        path: 'returns',
+        canActivate: [storeGuard],
+        loadComponent: () => import('./features/returns/returns.component').then(m => m.ReturnsComponent)
       },
       {
         path: 'chat',
@@ -83,6 +108,11 @@ export const routes: Routes = [
         path: 'store-builder',
         canActivate: [storeGuard],
         loadChildren: () => import('./features/store-builder/store-builder.routes').then(m => m.STORE_BUILDER_ROUTES)
+      },
+      {
+        path: 'ads',
+        canActivate: [storeGuard],
+        loadChildren: () => import('./features/ads/ads.routes').then(m => m.ADS_ROUTES)
       },
       {
         path: 'settings',

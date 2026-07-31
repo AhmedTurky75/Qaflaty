@@ -11,15 +11,17 @@ using Qaflaty.Domain.Identity.Enums;
 
 namespace Qaflaty.Api.Controllers;
 
+// Store ownership is enforced globally by StoreScopeAuthorizationFilter, which
+// verifies the caller's merchant_id matches the store's owner for every
+// api/stores/{storeId}/... route. Only the store owner reaches these actions.
 [Authorize(Policy = "MerchantPolicy")]
 [Route("api/stores/{storeId:guid}/team")]
 public class MerchantTeamController : ApiController
 {
     /// <summary>
-    /// Get all team members for a store. Requires Admin or Owner.
+    /// Get all team members for a store. Requires store ownership.
     /// </summary>
     [HttpGet]
-    [Authorize(Policy = "AdminOrAbove")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status403Forbidden)]
@@ -30,10 +32,9 @@ public class MerchantTeamController : ApiController
     }
 
     /// <summary>
-    /// Get a single team member by their merchant ID. Requires Admin or Owner.
+    /// Get a single team member by their merchant ID. Requires store ownership.
     /// </summary>
     [HttpGet("{memberId:guid}")]
-    [Authorize(Policy = "AdminOrAbove")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
@@ -45,10 +46,10 @@ public class MerchantTeamController : ApiController
     }
 
     /// <summary>
-    /// Invite (create) a new merchant account and assign them to the store. Requires Owner.
+    /// Invite (create) a new merchant account and assign them to the store. Requires store ownership.
+    /// The Owner role cannot be assigned (enforced by the command validator).
     /// </summary>
     [HttpPost("invite")]
-    [Authorize(Policy = "OwnerPolicy")]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
@@ -76,10 +77,9 @@ public class MerchantTeamController : ApiController
     }
 
     /// <summary>
-    /// Update a team member's role in the store. Requires Owner.
+    /// Update a team member's role in the store. Requires store ownership.
     /// </summary>
     [HttpPatch("{memberId:guid}/role")]
-    [Authorize(Policy = "OwnerPolicy")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -97,10 +97,9 @@ public class MerchantTeamController : ApiController
     }
 
     /// <summary>
-    /// Remove a team member's store assignment (deactivate). Requires Owner.
+    /// Remove a team member's store assignment (deactivate). Requires store ownership.
     /// </summary>
     [HttpDelete("{memberId:guid}")]
-    [Authorize(Policy = "OwnerPolicy")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -118,10 +117,9 @@ public class MerchantTeamController : ApiController
     }
 
     /// <summary>
-    /// Reset another team member's password. Requires Owner.
+    /// Reset another team member's password. Requires store ownership.
     /// </summary>
     [HttpPost("{memberId:guid}/reset-password")]
-    [Authorize(Policy = "OwnerPolicy")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

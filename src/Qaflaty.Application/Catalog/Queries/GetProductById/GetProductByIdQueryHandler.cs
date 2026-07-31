@@ -27,6 +27,7 @@ public class GetProductByIdQueryHandler : IQueryHandler<GetProductByIdQuery, Pro
             product.Id.Value,
             product.Slug.Value,
             product.Name.Value,
+            product.Name.Arabic,
             product.Description,
             product.Pricing.Price.Amount,
             product.Pricing.CompareAtPrice?.Amount,

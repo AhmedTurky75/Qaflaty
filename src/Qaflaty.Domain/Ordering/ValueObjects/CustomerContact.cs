@@ -6,9 +6,9 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class CustomerContact : ValueObject
 {
-    public PersonName FullName { get; private set; } = null!;
-    public PhoneNumber Phone { get; private set; } = null!;
-    public Email? Email { get; private set; }
+    public PersonName FullName { get; private set; } = null!; // Recipient's full name, e.g. "Ahmed Ali"
+    public PhoneNumber Phone { get; private set; } = null!; // Contact phone number (the primary customer identifier in Ordering)
+    public Email? Email { get; private set; } // Optional contact email (required when order OTP confirmation is enabled)
 
     private CustomerContact() { }
 

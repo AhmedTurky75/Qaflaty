@@ -1,0 +1,28 @@
+<nav
+  class="fixed inset-x-0 bottom-0 z-20 flex border-t border-border bg-surface pb-[env(safe-area-inset-bottom)] lg:hidden"
+  aria-label="Primary"
+>
+  @for (item of items; track item.route) {
+    <a
+      [routerLink]="item.route"
+      routerLinkActive="text-primary"
+      #rla="routerLinkActive"
+      class="flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+    >
+      <app-icon [name]="item.icon" [size]="22" />
+      <span class="text-[11px] font-medium" [class.font-semibold]="rla.isActive">{{ item.labelKey | transloco }}</span>
+    </a>
+  }
+
+  <button
+    type="button"
+    (click)="more.emit()"
+    class="relative flex min-h-[56px] flex-1 flex-col items-center justify-center gap-1 py-2 text-text-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+  >
+    <app-icon name="more" [size]="22" />
+    <span class="text-[11px] font-medium">{{ 'nav.more' | transloco }}</span>
+    @if (chatUnread() > 0) {
+      <span class="absolute end-[22%] top-1.5 inline-flex h-4 min-w-[16px] items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold text-white">{{ chatUnread() }}</span>
+    }
+  </button>
+</nav>

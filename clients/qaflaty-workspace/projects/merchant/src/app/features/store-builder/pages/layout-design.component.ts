@@ -1,121 +1,17 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 import { StoreContextService } from '../../../core/services/store-context.service';
-import { BuilderService } from '../services/builder.service';
+import { BuilderService, LayoutVariantDto } from '../services/builder.service';
 import { StoreConfigurationDto, UpdateStoreConfigurationRequest } from 'shared';
 
 @Component({
   selector: 'app-layout-design',
   standalone: true,
   imports: [RouterLink, FormsModule],
-  template: `
-    <div class="min-h-screen bg-gray-50">
-      <div class="bg-white border-b border-gray-200">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center gap-3">
-          <a [routerLink]="'/store-builder'" class="text-gray-400 hover:text-gray-600">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-            </svg>
-          </a>
-          <h1 class="text-lg font-semibold text-gray-900">Layout & Design</h1>
-        </div>
-      </div>
-
-      <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        @if (loading()) {
-          <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-12 text-center">
-            <p class="text-gray-500">Loading configuration...</p>
-          </div>
-        }
-
-        @if (loadErr()) {
-          <div class="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-            <p class="text-red-700">{{ loadErr() }}</p>
-          </div>
-        }
-
-        @if (!loading() && localConfig) {
-          <div class="space-y-6">
-            <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
-              <h2 class="text-base font-semibold text-gray-900 mb-5">Layout Variants</h2>
-              <div class="space-y-5">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Header Style</label>
-                  <select
-                    [(ngModel)]="localConfig!.headerVariant"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                  >
-                    <option value="Centered">Centered</option>
-                    <option value="LeftAligned">Left Aligned</option>
-                    <option value="MinimalCentered">Minimal</option>
-                    <option value="SplitNavigation">Split Navigation</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Footer Style</label>
-                  <select
-                    [(ngModel)]="localConfig!.footerVariant"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                  >
-                    <option value="FourColumn">Standard (Four Column)</option>
-                    <option value="ThreeColumn">Centered (Three Column)</option>
-                    <option value="Minimal">Minimal</option>
-                    <option value="Stacked">Stacked</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Product Card Style</label>
-                  <select
-                    [(ngModel)]="localConfig!.productCardVariant"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                  >
-                    <option value="Standard">Standard</option>
-                    <option value="Compact">Compact</option>
-                    <option value="Detailed">Detailed</option>
-                    <option value="WithHover">With Hover</option>
-                  </select>
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Product Grid Layout</label>
-                  <select
-                    [(ngModel)]="localConfig!.productGridVariant"
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white"
-                  >
-                    <option value="TwoColumn">Two Columns</option>
-                    <option value="ThreeColumn">Three Columns</option>
-                    <option value="FourColumn">Four Columns</option>
-                    <option value="Masonry">Masonry</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            @if (saved()) {
-              <div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center">
-                <p class="text-green-700 text-sm font-medium">Layout saved successfully.</p>
-              </div>
-            }
-            @if (saveErr()) {
-              <div class="bg-red-50 border border-red-200 rounded-xl p-4 text-center">
-                <p class="text-red-700 text-sm">{{ saveErr() }}</p>
-              </div>
-            }
-
-            <div class="flex justify-end">
-              <button
-                (click)="save()"
-                [disabled]="saving()"
-                class="px-5 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-              >
-                {{ saving() ? 'Saving...' : 'Save Changes' }}
-              </button>
-            </div>
-          </div>
-        }
-      </div>
-    </div>
-  `
+  templateUrl: './layout-design.component.html',
+  styleUrl: './layout-design.component.scss'
 })
 export class LayoutDesignComponent implements OnInit {
   private storeContext = inject(StoreContextService);
@@ -127,7 +23,34 @@ export class LayoutDesignComponent implements OnInit {
   loadErr = signal<string | null>(null);
   saveErr = signal<string | null>(null);
 
+  variants = signal<LayoutVariantDto[]>([]);
+  headerVariants = computed(() => this.variants().filter(v => v.type === 'Header'));
+  footerVariants = computed(() => this.variants().filter(v => v.type === 'Footer'));
+  cardVariants = computed(() => this.variants().filter(v => v.type === 'ProductCard'));
+  gridVariants = computed(() => this.variants().filter(v => v.type === 'ProductGrid'));
+
   localConfig: StoreConfigurationDto | null = null;
+
+  // Stored values from before the catalog existed used PascalCase ids that the storefront no
+  // longer matches. Normalise them to the canonical codes so the dropdown pre-selects correctly;
+  // saving then persists the canonical code and the drift is gone. Mirrors the storefront's
+  // feature.service legacy maps (one per slot — the PascalCase ids overlap between slots).
+  private readonly legacyHeader: Record<string, string> = {
+    Centered: 'header-centered', LeftAligned: 'header-full',
+    MinimalCentered: 'header-minimal', SplitNavigation: 'header-sidebar',
+  };
+  private readonly legacyFooter: Record<string, string> = {
+    FourColumn: 'footer-standard', ThreeColumn: 'footer-centered',
+    Minimal: 'footer-minimal', Stacked: 'footer-standard',
+  };
+  private readonly legacyCard: Record<string, string> = {
+    Standard: 'card-standard', Compact: 'card-minimal',
+    Detailed: 'card-detailed', WithHover: 'card-overlay',
+  };
+  private readonly legacyGrid: Record<string, string> = {
+    TwoColumn: 'grid-2', ThreeColumn: 'grid-3', FourColumn: 'grid-4',
+    Masonry: 'grid-masonry', 'grid-standard': 'grid-3',
+  };
 
   ngOnInit(): void {
     const storeId = this.storeContext.currentStoreId();
@@ -136,9 +59,18 @@ export class LayoutDesignComponent implements OnInit {
       this.loading.set(false);
       return;
     }
-    this.builderService.getConfiguration(storeId).subscribe({
-      next: (config) => {
-        this.localConfig = JSON.parse(JSON.stringify(config));
+    forkJoin({
+      config: this.builderService.getConfiguration(storeId),
+      variants: this.builderService.getLayoutVariants(),
+    }).subscribe({
+      next: ({ config, variants }) => {
+        this.variants.set(variants);
+        const cfg: StoreConfigurationDto = JSON.parse(JSON.stringify(config));
+        cfg.headerVariant = this.legacyHeader[cfg.headerVariant] ?? cfg.headerVariant;
+        cfg.footerVariant = this.legacyFooter[cfg.footerVariant] ?? cfg.footerVariant;
+        cfg.productCardVariant = this.legacyCard[cfg.productCardVariant] ?? cfg.productCardVariant;
+        cfg.productGridVariant = this.legacyGrid[cfg.productGridVariant] ?? cfg.productGridVariant;
+        this.localConfig = cfg;
         this.loading.set(false);
       },
       error: (err) => {

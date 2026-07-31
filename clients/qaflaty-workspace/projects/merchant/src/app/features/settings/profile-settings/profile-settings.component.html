@@ -1,94 +1,66 @@
-<div class="bg-white rounded-lg shadow">
-  <div class="px-6 py-4 border-b border-gray-200">
-    <h2 class="text-xl font-semibold text-gray-900">Profile Settings</h2>
-    <p class="mt-1 text-sm text-gray-600">Update your personal information and contact details.</p>
+<div>
+  <div class="mb-6 border-b border-border pb-4">
+    <h2 class="text-lg font-bold text-text">Profile settings</h2>
+    <p class="mt-1 text-sm text-text-muted">Update your personal information and contact details.</p>
   </div>
 
-  <div class="p-6">
-    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
-      <!-- Name Row -->
-      <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label for="firstName" class="block text-sm font-medium text-gray-700">
-            First Name <span class="text-red-500">*</span>
-          </label>
-          <input id="firstName" type="text" formControlName="firstName" autocomplete="given-name"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-            [class.border-red-300]="firstName?.invalid && firstName?.touched" />
-          @if (firstName?.invalid && firstName?.touched) {
-            <p class="mt-1 text-sm text-red-600">
-              @if (firstName?.errors?.['required']) { First name is required }
-              @else if (firstName?.errors?.['minlength']) { Minimum 2 characters }
-            </p>
-          }
-        </div>
-
-        <div>
-          <label for="lastName" class="block text-sm font-medium text-gray-700">
-            Last Name <span class="text-red-500">*</span>
-          </label>
-          <input id="lastName" type="text" formControlName="lastName" autocomplete="family-name"
-            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-            [class.border-red-300]="lastName?.invalid && lastName?.touched" />
-          @if (lastName?.invalid && lastName?.touched) {
-            <p class="mt-1 text-sm text-red-600">
-              @if (lastName?.errors?.['required']) { Last name is required }
-              @else if (lastName?.errors?.['minlength']) { Minimum 2 characters }
-            </p>
-          }
-        </div>
-      </div>
-
-      <!-- Username (read-only) -->
+  <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="space-y-6">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <div>
-        <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-        <input id="username" type="text" formControlName="username"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 cursor-not-allowed sm:text-sm" />
-        <p class="mt-1 text-xs text-gray-500">Username cannot be changed after registration.</p>
+        <label for="firstName" class="block text-sm font-medium text-text">First name <span class="text-danger">*</span></label>
+        <input id="firstName" type="text" formControlName="firstName" autocomplete="given-name"
+          class="mt-1 block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+          [class.border-danger]="firstName?.invalid && firstName?.touched" />
+        @if (firstName?.invalid && firstName?.touched) {
+          <p class="mt-1 text-sm text-danger">
+            @if (firstName?.errors?.['required']) { First name is required } @else if (firstName?.errors?.['minlength']) { Minimum 2 characters }
+          </p>
+        }
       </div>
-
-      <!-- Email (read-only) -->
       <div>
-        <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
-        <input id="email" type="email" formControlName="email"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-500 cursor-not-allowed sm:text-sm" />
+        <label for="lastName" class="block text-sm font-medium text-text">Last name <span class="text-danger">*</span></label>
+        <input id="lastName" type="text" formControlName="lastName" autocomplete="family-name"
+          class="mt-1 block min-h-[44px] w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+          [class.border-danger]="lastName?.invalid && lastName?.touched" />
+        @if (lastName?.invalid && lastName?.touched) {
+          <p class="mt-1 text-sm text-danger">
+            @if (lastName?.errors?.['required']) { Last name is required } @else if (lastName?.errors?.['minlength']) { Minimum 2 characters }
+          </p>
+        }
       </div>
+    </div>
 
-      <!-- Phone -->
-      <div>
-        <label class="block text-sm font-medium text-gray-700">Phone Number</label>
-        <div class="mt-1">
-          <lib-phone-input formControlName="phone"
-            (regionCodeChange)="profileForm.get('phoneCountryCode')?.setValue($event)">
-          </lib-phone-input>
-        </div>
+    <div>
+      <label for="username" class="block text-sm font-medium text-text">Username</label>
+      <input id="username" type="text" formControlName="username"
+        class="mt-1 block min-h-[44px] w-full cursor-not-allowed rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text-muted" />
+      <p class="mt-1 text-xs text-text-muted">Username cannot be changed after registration.</p>
+    </div>
+
+    <div>
+      <label for="email" class="block text-sm font-medium text-text">Email address</label>
+      <input id="email" type="email" formControlName="email"
+        class="mt-1 block min-h-[44px] w-full cursor-not-allowed rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text-muted" />
+    </div>
+
+    <div>
+      <label class="block text-sm font-medium text-text">Phone number</label>
+      <div class="mt-1">
+        <lib-phone-input formControlName="phone" (regionCodeChange)="profileForm.get('phoneCountryCode')?.setValue($event)"></lib-phone-input>
       </div>
+    </div>
 
-      @if (success()) {
-        <div class="rounded-md bg-green-50 p-4">
-          <p class="text-sm font-medium text-green-800">Profile updated successfully!</p>
-        </div>
-      }
-      @if (error()) {
-        <div class="rounded-md bg-red-50 p-4">
-          <p class="text-sm font-medium text-red-800">{{ error() }}</p>
-        </div>
-      }
+    @if (success()) { <div class="rounded-lg bg-success/10 p-4"><p class="text-sm font-medium text-success">Profile updated successfully!</p></div> }
+    @if (error()) { <div class="rounded-lg bg-danger/10 p-4"><p class="text-sm font-medium text-danger">{{ error() }}</p></div> }
 
-      <div class="flex justify-end">
-        <button type="submit" [disabled]="loading() || profileForm.invalid"
-          class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed">
-          @if (loading()) {
-            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            <span class="ml-2">Saving...</span>
-          } @else {
-            Save Changes
-          }
-        </button>
-      </div>
-    </form>
-  </div>
+    <div class="flex justify-end">
+      <button type="submit" [disabled]="loading() || profileForm.invalid"
+        class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[10px] bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+        @if (loading()) {
+          <svg class="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+          <span>Saving…</span>
+        } @else { Save changes }
+      </button>
+    </div>
+  </form>
 </div>

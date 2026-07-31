@@ -15,7 +15,7 @@ export const routes: Routes = [
   },
   {
     path: 'products/:slug',
-    loadComponent: () => import('./pages/products/product-detail.component').then(m => m.ProductDetailComponent)
+    loadComponent: () => import('./pages/products/product-page.component').then(m => m.ProductPageComponent)
   },
   {
     path: 'cart',
@@ -120,6 +120,11 @@ export const routes: Routes = [
   {
     path: 'offline',
     loadComponent: () => import('./pages/store-offline/store-offline.component').then(m => m.StoreOfflineComponent)
+  },
+  {
+    // Live WYSIWYG preview surface embedded by the merchant store-builder.
+    path: '__preview',
+    loadComponent: () => import('./pages/preview/preview.component').then(m => m.PreviewComponent)
   },
   {
     path: '**',

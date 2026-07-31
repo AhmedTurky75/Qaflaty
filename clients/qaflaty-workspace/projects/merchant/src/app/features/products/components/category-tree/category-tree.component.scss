@@ -5,3 +5,26 @@
     }
   }
 }
+
+// The CDK drag preview is a floating clone Angular detaches from this component's view (into the
+// overlay container), so component style encapsulation never reaches it — ::ng-deep is required
+// for these to have any effect.
+:host ::ng-deep {
+  .cdk-drag-preview {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-radius: 8px;
+    opacity: 0.95;
+  }
+
+  .cdk-drag-placeholder {
+    opacity: 0.3;
+  }
+
+  .cdk-drag-animating {
+    transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+  }
+
+  .cdk-drop-list-dragging [cdkDrag]:not(.cdk-drag-placeholder) {
+    transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+  }
+}

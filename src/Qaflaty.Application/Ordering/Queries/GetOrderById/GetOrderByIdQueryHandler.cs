@@ -36,7 +36,9 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
             return Result.Failure<OrderDto>(OrderingErrors.OrderNotFound);
 
         var store = await _storeRepository.GetByIdAsync(order.StoreId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<OrderDto>(Error.Unauthorized);
 
         var customer = await _customerRepository.GetByIdAsync(order.CustomerId, cancellationToken);
@@ -58,14 +60,16 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
                 i.Id.Value,
                 i.ProductId.Value,
                 i.ProductName,
-                new MoneyDto(i.UnitPrice.Amount, i.UnitPrice.Currency.ToString()),
+                new MoneyDto(i.UnitPrice.Amount, store.Currency.Code),
                 i.Quantity,
-                new MoneyDto(i.Total.Amount, i.Total.Currency.ToString())
+                new MoneyDto(i.Total.Amount, store.Currency.Code)
             )).ToList(),
             new OrderPricingDto(
-                new MoneyDto(order.Pricing.Subtotal.Amount, order.Pricing.Subtotal.Currency.ToString()),
-                new MoneyDto(order.Pricing.DeliveryFee.Amount, order.Pricing.DeliveryFee.Currency.ToString()),
-                new MoneyDto(order.Pricing.Total.Amount, order.Pricing.Total.Currency.ToString())
+                new MoneyDto(order.Pricing.Subtotal.Amount, store.Currency.Code),
+                new MoneyDto(order.Pricing.DeliveryFee.Amount, store.Currency.Code),
+                new MoneyDto(order.Pricing.Total.Amount, store.Currency.Code),
+                new MoneyDto(order.Pricing.DiscountAmount.Amount, store.Currency.Code),
+                new MoneyDto(order.Pricing.TaxAmount.Amount, store.Currency.Code)
             ),
             new PaymentInfoDto(
                 order.Payment.Method.ToString(),
@@ -96,7 +100,16 @@ public class GetOrderByIdQueryHandler : IQueryHandler<GetOrderByIdQuery, OrderDt
             )).ToList(),
             order.CreatedAt,
             order.UpdatedAt,
-            order.Source.ToString()
+            order.Source.ToString(),
+            order.AppliedPromoCode,
+            order.Shipment is null
+                ? null
+                : new ShipmentDto(
+                    order.Shipment.Carrier,
+                    order.Shipment.TrackingNumber,
+                    order.Shipment.TrackingUrl,
+                    order.Shipment.ShippedAt,
+                    order.Shipment.EstimatedDeliveryDate)
         ));
     }
 }

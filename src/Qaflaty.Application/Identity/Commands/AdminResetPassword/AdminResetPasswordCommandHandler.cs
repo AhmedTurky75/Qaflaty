@@ -52,6 +52,9 @@ public class AdminResetPasswordCommandHandler : ICommandHandler<AdminResetPasswo
         if (result.IsFailure)
             return result;
 
+        // Force the target's existing sessions to log out after an admin-initiated reset
+        targetMerchant.RevokeAllRefreshTokens();
+
         _merchantRepository.Update(targetMerchant);
 
         return Result.Success();

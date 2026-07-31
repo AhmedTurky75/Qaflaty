@@ -54,8 +54,14 @@ export class OtpVerificationComponent implements OnDestroy {
     this.errorMessage.set('');
 
     this.orderService.verifyOrderOtp(this.orderNumber(), this.currentCode()).subscribe({
-      next: () => {
-        this.router.navigate(['/order-confirmation', this.orderNumber()]);
+      next: (response) => {
+        this.router.navigate(['/order-confirmation', this.orderNumber()], {
+          queryParams: {
+            orderId: response.id,
+            value: response.pricing.total.amount,
+            currency: response.pricing.total.currency
+          }
+        });
       },
       error: (err) => {
         const msg = err.error?.message || 'Invalid verification code. Please try again.';

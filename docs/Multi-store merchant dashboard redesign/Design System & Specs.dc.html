@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#e9ebef;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#16181d;-webkit-font-smoothing:antialiased}
+  a{color:#4f46e5;text-decoration:none}
+  .doc{max-width:1180px;margin:0 auto;padding:52px 40px 100px;}
+  .sect{background:#fff;border:1px solid #e3e6eb;border-radius:18px;padding:34px 36px;margin-bottom:26px;box-shadow:0 10px 34px -22px rgba(20,24,40,.3);}
+  .kicker{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#4f46e5;margin-bottom:9px;}
+  h2.sh{font-size:26px;font-weight:700;letter-spacing:-.02em;margin-bottom:6px;}
+  .sub{font-size:14.5px;color:#5b6472;line-height:1.55;max-width:720px;}
+  pre{background:#12151c;color:#dfe4ee;border-radius:12px;padding:18px 20px;overflow-x:auto;font-family:'IBM Plex Mono',monospace;font-size:12.5px;line-height:1.65;}
+  pre .c{color:#7b849a;} pre .k{color:#c98af0;} pre .s{color:#8fd6a0;} pre .v{color:#8fb8ff;} pre .p{color:#e6b980;}
+  code.ic{font-family:'IBM Plex Mono',monospace;font-size:12px;background:#f1f2f5;padding:2px 6px;border-radius:5px;color:#3a3f4b;}
+</style>
+</helmet>
+
+<div class="doc">
+  <!-- HEADER -->
+  <div style="margin-bottom:30px;">
+    <div style="display:inline-flex;align-items:center;gap:11px;margin-bottom:14px;">
+      <div style="width:44px;height:44px;border-radius:12px;background:#4f46e5;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;">Q</div>
+      <div><div style="font-size:22px;font-weight:700;letter-spacing:-.01em;">Qaflaty Merchant — Design System</div><div style="font-size:13.5px;color:#5b6472;">Direction C · Confident Console · v1.0</div></div>
+    </div>
+    <p class="sub">Everything a developer needs to ship the redesign: the type &amp; spacing scales, all nine themeable palettes with their full token sets, component states, the navigation &amp; breadcrumb spec, and the Angular + Tailwind token layer. Bilingual (EN / AR-RTL) throughout.</p>
+  </div>
+
+  <div class="sect"><div dangerouslySetInnerHTML="{{ foundations }}"></div></div>
+  <div class="sect"><div dangerouslySetInnerHTML="{{ colorSystem }}"></div></div>
+  <div class="sect"><div dangerouslySetInnerHTML="{{ states }}"></div></div>
+  <div class="sect"><div dangerouslySetInnerHTML="{{ navSpec }}"></div></div>
+  <div class="sect"><div dangerouslySetInnerHTML="{{ codeLayer }}"></div></div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;1180&quot;,&quot;height&quot;:&quot;900&quot;}}">
+class Component extends DCLogic {
+  PALETTES = [
+    { id:'blue', name:'Blue', note:'Default — matches the current app',
+      surface:'#ffffff', elevated:'#f7f8fa', border:'#e3e6eb', text:'#16181d', muted:'#5b6472',
+      primary:'#2563eb', primaryH:'#1d4ed8', tint:'#e4edff', rail:'#16233d', canvas:'#f4f5f7',
+      success:'#0f9d63', warning:'#c77d18', danger:'#d64545' },
+    { id:'light', name:'Light / White', note:'Maximum clarity, indigo accent',
+      surface:'#ffffff', elevated:'#f7f8fa', border:'#e3e6eb', text:'#16181d', muted:'#5b6472',
+      primary:'#4f46e5', primaryH:'#4338ca', tint:'#eeeefe', rail:'#1e2536', canvas:'#f4f5f7',
+      success:'#0f9d63', warning:'#c77d18', danger:'#d64545' },
+    { id:'slate', name:'Slate / Dark', note:'Low-light comfort · dark mode', dark:true,
+      surface:'#1d212a', elevated:'#262b36', border:'#323947', text:'#eef1f6', muted:'#99a2b2',
+      primary:'#6366f1', primaryH:'#7c83f6', tint:'#23263a', rail:'#0f1218', canvas:'#14171d',
+      success:'#34d399', warning:'#e0a83e', danger:'#f27272' },
+    { id:'grey', name:'Grey', note:'Neutral, distraction-free',
+      surface:'#ffffff', elevated:'#f7f8f9', border:'#e2e4e8', text:'#1c1f24', muted:'#5c636e',
+      primary:'#4b5563', primaryH:'#374151', tint:'#eceef1', rail:'#24282f', canvas:'#f3f4f6',
+      success:'#0f9d63', warning:'#c77d18', danger:'#d64545' },
+    { id:'purple', name:'Purple', note:'Warm violet accent',
+      surface:'#ffffff', elevated:'#f7f6fb', border:'#e7e2f0', text:'#1e1a29', muted:'#61596f',
+      primary:'#7c3aed', primaryH:'#6d28d9', tint:'#f1eafe', rail:'#241a3c', canvas:'#f6f4fb',
+      success:'#0f9d63', warning:'#c77d18', danger:'#d64545' },
+    { id:'amber', name:'Yellow / Amber', note:'Amber-700 primary keeps AA on white',
+      surface:'#ffffff', elevated:'#faf8f3', border:'#eae2d3', text:'#241f16', muted:'#6b6151',
+      primary:'#b45309', primaryH:'#92400e', tint:'#fbeccd', rail:'#2a2010', canvas:'#faf7f1',
+      success:'#0f9d63', warning:'#c77d18', danger:'#d64545' },
+    { id:'emerald', name:'Green / Emerald', note:'Calm natural green',
+      surface:'#ffffff', elevated:'#f5faf7', border:'#dde8e2', text:'#16211c', muted:'#566860',
+      primary:'#059669', primaryH:'#047857', tint:'#d9f3e6', rail:'#0f241d', canvas:'#f2f7f4',
+      success:'#0f9d63', warning:'#c77d18', danger:'#d64545' },
+    { id:'teal', name:'Teal', note:'Cool, modern',
+      surface:'#ffffff', elevated:'#f4faf9', border:'#dbe7e5', text:'#142320', muted:'#4f6764',
+      primary:'#0d9488', primaryH:'#0f766e', tint:'#d3f1ec', rail:'#0c2320', canvas:'#f1f7f6',
+      success:'#0f9d63', warning:'#c77d18', danger:'#d64545' },
+    { id:'rose', name:'Rose / Red', note:'Rose-700 primary for AA safety',
+      surface:'#ffffff', elevated:'#faf5f6', border:'#ecdcdf', text:'#241318', muted:'#6e5259',
+      primary:'#be123c', primaryH:'#9f1239', tint:'#fbdbe3', rail:'#2a1018', canvas:'#faf3f4',
+      success:'#0f9d63', warning:'#c77d18', danger:'#d64545' }
+  ];
+
+  renderVals(){
+    return {
+      foundations:{__html:this.foundations()},
+      colorSystem:{__html:this.colorSystem()},
+      states:{__html:this.states()},
+      navSpec:{__html:this.navSpec()},
+      codeLayer:{__html:this.codeLayer()}
+    };
+  }
+
+  head(kicker,title,sub){ return `<div class="kicker">${kicker}</div><h2 class="sh">${title}</h2><p class="sub">${sub}</p>`; }
+
+  foundations(){
+    const type=[
+      ['Display','30 / 700','Page-level hero on onboarding','30px'],
+      ['H1 · Page title','23 / 700','Every screen header','23px'],
+      ['H2 · Section','16 / 700','Card & panel headings','16px'],
+      ['Body','14 / 400','Default reading size','14px'],
+      ['Body strong','14 / 600','Values, labels','14px'],
+      ['Small','12.5 / 500','Captions, meta','12.5px'],
+      ['Micro','11 / 700','Uppercase eyebrows','11px']
+    ];
+    const typeRows=type.map(([n,spec,use,px])=>`<div style="display:grid;grid-template-columns:200px 96px 1fr;gap:16px;align-items:baseline;padding:13px 0;border-top:1px solid #eef0f3;">
+      <div style="font-size:${px};font-weight:${spec.includes('700')?700:spec.includes('600')?600:400};letter-spacing:-.01em;${n.includes('Micro')||n.includes('eyebrow')?'text-transform:uppercase;letter-spacing:.1em;':''}">${n}</div>
+      <div style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5b6472;">${spec}</div>
+      <div style="font-size:13px;color:#5b6472;">${use}</div></div>`).join('');
+    const space=[['1','4px'],['2','8px'],['3','12px'],['4','16px'],['5','20px'],['6','24px'],['8','32px'],['10','40px']];
+    const spaceRows=space.map(([t,v])=>`<div style="display:flex;align-items:center;gap:14px;padding:7px 0;">
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#5b6472;width:26px;">${t}</span>
+      <div style="height:16px;width:${v};background:#4f46e5;border-radius:4px;"></div>
+      <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:#16181d;">${v}</span></div>`).join('');
+    return `${this.head('01 · Foundations','Type &amp; spacing','Type is set in IBM Plex Sans / IBM Plex Sans Arabic — one family covers Latin and Arabic so bilingual screens stay visually consistent. Sizes never drop below 12.5px in the product. Spacing is an 4px base scale.')}
+      <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:34px;margin-top:22px;">
+        <div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin-bottom:4px;">Type scale</div>${typeRows}</div>
+        <div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin-bottom:12px;">Spacing scale</div>${spaceRows}
+          <div style="margin-top:18px;padding:14px;background:#f7f8fa;border:1px solid #e3e6eb;border-radius:11px;font-size:12.5px;color:#5b6472;line-height:1.55;"><b style="color:#16181d;">Radius:</b> 8px controls · 10–11px inputs/buttons · 14px cards · 18px sheets. Corners stay tight (Direction C).</div>
+        </div>
+      </div>`;
+  }
+
+  swatch(hex,label,dark){ return `<div style="text-align:center;">
+    <div style="height:44px;border-radius:9px;background:${hex};border:1px solid ${dark?'rgba(255,255,255,.12)':'rgba(0,0,0,.08)'};"></div>
+    <div style="font-size:10.5px;font-weight:600;color:#16181d;margin-top:6px;">${label}</div>
+    <div style="font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:#8890a0;">${hex}</div></div>`; }
+
+  paletteCard(p){
+    const tokens=[
+      [p.surface,'surface'],[p.elevated,'elevated'],[p.border,'border'],[p.text,'text'],[p.muted,'muted'],
+      [p.primary,'primary'],[p.primaryH,'primary-hover'],[p.tint,'tint'],[p.success,'success'],[p.warning,'warning'],[p.danger,'danger'],[p.rail,'rail']
+    ];
+    const sw=tokens.map(([h,l])=>this.swatch(h,l,p.dark)).join('');
+    // live mini preview using this palette
+    const prev=`<div style="border-radius:11px;overflow:hidden;border:1px solid ${p.dark?'#323947':p.border};display:flex;height:104px;">
+      <div style="width:38%;background:${p.rail};padding:10px;display:flex;flex-direction:column;gap:6px;">
+        <div style="display:flex;align-items:center;gap:6px;"><div style="width:16px;height:16px;border-radius:5px;background:${p.primary};"></div><div style="height:7px;width:40px;background:rgba(255,255,255,.6);border-radius:3px;"></div></div>
+        <div style="height:22px;border-radius:6px;background:${p.primary};margin-top:4px;"></div>
+        <div style="height:8px;width:70%;border-radius:3px;background:rgba(255,255,255,.18);"></div>
+        <div style="height:8px;width:55%;border-radius:3px;background:rgba(255,255,255,.18);"></div>
+      </div>
+      <div style="flex:1;background:${p.canvas};padding:10px;">
+        <div style="height:9px;width:50%;background:${p.text};opacity:.85;border-radius:3px;"></div>
+        <div style="background:${p.surface};border:1px solid ${p.border};border-radius:8px;padding:8px;margin-top:8px;">
+          <div style="height:7px;width:60%;background:${p.muted};border-radius:3px;"></div>
+          <div style="display:flex;gap:5px;margin-top:8px;"><span style="font-size:8px;font-weight:700;padding:2px 7px;border-radius:20px;background:${p.tint};color:${p.primary};">New</span><span style="font-size:8px;font-weight:700;padding:2px 7px;border-radius:20px;background:${p.primary};color:#fff;">Save</span></div>
+        </div>
+      </div>
+    </div>`;
+    return `<div style="border:1px solid #e3e6eb;border-radius:14px;padding:16px;background:#fff;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div><div style="font-size:15px;font-weight:700;">${p.name}</div><div style="font-size:11.5px;color:#8890a0;">${p.note}</div></div>
+        <code class="ic">data-theme="${p.id}"</code>
+      </div>
+      ${prev}
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-top:14px;">${sw}</div>
+    </div>`;
+  }
+
+  colorSystem(){
+    const cards=this.PALETTES.map(p=>this.paletteCard(p)).join('');
+    return `${this.head('02 · Colour','Nine themeable palettes','Every palette carries the same ten-token contract plus a rail set, so components never hard-code a colour — they read tokens. Switching <code class="ic" style="background:#eceeffaa;">data-theme</code> on the app root repaints instantly with no rebuild. All text/interactive pairings meet WCAG AA; the Amber and Rose primaries are deliberately set to the 700 shade so white button text stays ≥ 4.5:1.')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;">${cards}</div>
+      <div style="margin-top:20px;padding:16px 18px;background:#f7f8fa;border:1px solid #e3e6eb;border-radius:12px;">
+        <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin-bottom:10px;">Token contract (per theme)</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px 24px;font-size:12.5px;color:#3a3f4b;">
+          ${['surface — card / panel background','surface-elevated — subtle fills, table heads','border — hairlines & dividers','text-primary — headings & values','text-muted — secondary copy','primary — main action & active nav','primary-hover — pressed / hover','tint — active nav bg, badges','success · warning · danger — status','+ rail set — sidebar bg/text/active'].map(t=>`<div>• ${t}</div>`).join('')}
+        </div>
+      </div>`;
+  }
+
+  states(){
+    const btn=(label,bg,fg,extra)=>`<button style="padding:11px 18px;border-radius:10px;font-weight:700;font-size:13.5px;background:${bg};color:${fg};border:none;${extra||''}">${label}</button>`;
+    const inputBox=(label,style,msg,msgc)=>`<div><div style="font-size:11px;font-weight:600;color:#8890a0;margin-bottom:6px;">${label}</div>
+      <div style="display:flex;align-items:center;gap:8px;border-radius:10px;padding:11px 12px;font-size:13px;color:#16181d;${style}">Cotton T-Shirt</div>
+      ${msg?`<div style="font-size:11.5px;color:${msgc};margin-top:5px;">${msg}</div>`:''}</div>`;
+    return `${this.head('03 · Components','Interactive states','Every control ships default, hover, focus, disabled and error states. Focus always shows a 3px token-coloured ring (never removed) for keyboard and low-vision users. Hit targets are ≥ 44px tall on touch.')}
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin:22px 0 12px;">Primary button</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+        <div style="text-align:center;"><div>${btn('Save product','#4f46e5','#fff')}</div><div style="font-size:11px;color:#8890a0;margin-top:7px;">Default</div></div>
+        <div style="text-align:center;"><div>${btn('Save product','#4338ca','#fff')}</div><div style="font-size:11px;color:#8890a0;margin-top:7px;">Hover</div></div>
+        <div style="text-align:center;"><div>${btn('Save product','#4f46e5','#fff','box-shadow:0 0 0 3px #fff,0 0 0 6px #a5b0ff;')}</div><div style="font-size:11px;color:#8890a0;margin-top:7px;">Focus</div></div>
+        <div style="text-align:center;"><div>${btn('Save product','#c7c9d4','#fff','cursor:not-allowed;')}</div><div style="font-size:11px;color:#8890a0;margin-top:7px;">Disabled</div></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin:26px 0 12px;">Secondary button</div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+        <div style="text-align:center;"><div>${btn('Cancel','#fff','#16181d','border:1px solid #e3e6eb;')}</div><div style="font-size:11px;color:#8890a0;margin-top:7px;">Default</div></div>
+        <div style="text-align:center;"><div>${btn('Cancel','#f7f8fa','#16181d','border:1px solid #d4d8e0;')}</div><div style="font-size:11px;color:#8890a0;margin-top:7px;">Hover</div></div>
+        <div style="text-align:center;"><div>${btn('Cancel','#fff','#16181d','border:1px solid #e3e6eb;box-shadow:0 0 0 3px #fff,0 0 0 6px #a5b0ff;')}</div><div style="font-size:11px;color:#8890a0;margin-top:7px;">Focus</div></div>
+        <div style="text-align:center;"><div>${btn('Delete','#fff','#d64545','border:1px solid #f2c9c9;')}</div><div style="font-size:11px;color:#8890a0;margin-top:7px;">Danger</div></div>
+      </div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin:26px 0 12px;">Text input</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;">
+        ${inputBox('Default','background:#f7f8fa;border:1px solid #e3e6eb;')}
+        ${inputBox('Focus','background:#fff;border:1px solid #4f46e5;box-shadow:0 0 0 3px #eeeefe;')}
+        ${inputBox('Error','background:#fff;border:1px solid #d64545;box-shadow:0 0 0 3px #fbe9e9;','Price is required','#d64545')}
+        ${inputBox('Disabled','background:#f1f2f5;border:1px solid #e3e6eb;color:#a6adba;')}
+      </div>
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin:26px 0 12px;">Status badges</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        ${[['New','#eeeefe','#4f46e5'],['Packing','#fbf0d9','#c77d18'],['Shipped','#e4f6ee','#0f9d63'],['Delivered','#e4f6ee','#0f9d63'],['Cancelled','#fbe9e9','#d64545'],['Draft','#f1f2f5','#5b6472'],['Low stock','#fbf0d9','#c77d18']].map(([l,b,f])=>`<span style="background:${b};color:${f};font-size:12px;font-weight:700;padding:5px 13px;border-radius:20px;">${l}</span>`).join('')}
+      </div>`;
+  }
+
+  navSpec(){
+    const before=['Dashboard','Stores','Team','Products','Orders','Returns','Active Carts','Customers','Reviews','Promo Codes','Live Chat','Store Builder','Settings'];
+    const after=[['Home',''],['Orders','was: Orders + Returns + Active Carts, unified with tabs'],['Products','was: Products + Reviews'],['Customers',''],['Stores','store list + create + Team folded into Store settings'],['Settings','Appearance, Store, Team, Promo Codes, Live Chat, Store Builder live here under “More”']];
+    const beforeList=before.map(x=>`<div style="padding:6px 11px;background:#fff;border:1px solid #e3e6eb;border-radius:8px;font-size:12.5px;color:#5b6472;">${x}</div>`).join('');
+    const afterList=after.map(([x,note])=>`<div style="padding:8px 12px;background:#eeeefe;border:1px solid #d9d9fb;border-radius:8px;"><div style="font-size:13px;font-weight:700;color:#4f46e5;">${x}</div>${note?`<div style="font-size:11px;color:#6b6f86;margin-top:2px;">${note}</div>`:''}</div>`).join('');
+
+    const crumbFull=['Home','Cairo Branch','Products','Cotton T-Shirt','Edit'];
+    const chip=(t,last)=>`<span style="font-size:12.5px;font-weight:${last?700:500};color:${last?'#16181d':'#4f46e5'};white-space:nowrap;">${t}</span>`;
+    const sep=`<svg viewBox="0 0 24 24" fill="none" stroke="#c2c7d0" stroke-width="2.4" style="width:11px;height:11px;"><path d="M9 6l6 6-6 6"/></svg>`;
+    const fullTrail=crumbFull.map((t,i)=>chip(t,i===crumbFull.length-1)).join(sep);
+    // collapsed (deep) trail: Home › … › Products › Edit
+    const deepTrail=[chip('Home',false),sep,`<span style="font-size:12.5px;color:#8890a0;cursor:pointer;">…</span>`,sep,chip('Cotton T-Shirt',false),sep,chip('Edit',true)].join('');
+    const mobileTrail=`<svg viewBox="0 0 24 24" fill="none" stroke="#8890a0" stroke-width="2.2" style="width:15px;height:15px;"><path d="M15 18l-6-6 6-6"/></svg><span style="font-size:12.5px;color:#8890a0;">…</span>${sep}${chip('Edit',true)}`;
+
+    return `${this.head('04 · Navigation','Navigation &amp; breadcrumb spec','The old sidebar had 13 items — overwhelming for a low-tech merchant. The redesign surfaces six core destinations and folds the rest into Settings ▸ More, without deleting any feature. Breadcrumbs appear on every screen so the merchant always knows where they are and can climb back one tap at a time.')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:22px;margin-top:22px;">
+        <div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin-bottom:10px;">Before — 13 items</div><div style="display:flex;flex-wrap:wrap;gap:7px;">${beforeList}</div></div>
+        <div><div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin-bottom:10px;">After — 6 core + More</div><div style="display:flex;flex-direction:column;gap:7px;">${afterList}</div></div>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#8890a0;margin:28px 0 12px;">Breadcrumb behaviour</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center;padding:13px 16px;background:#f7f8fa;border:1px solid #e3e6eb;border-radius:11px;">
+          <span style="font-size:12.5px;font-weight:600;color:#5b6472;">Normal depth</span>
+          <div style="display:flex;align-items:center;gap:7px;">${fullTrail}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center;padding:13px 16px;background:#f7f8fa;border:1px solid #e3e6eb;border-radius:11px;">
+          <span style="font-size:12.5px;font-weight:600;color:#5b6472;">Deep (&gt; 4 levels)</span>
+          <div><div style="display:flex;align-items:center;gap:7px;">${deepTrail}</div><div style="font-size:11.5px;color:#8890a0;margin-top:6px;">Middle levels collapse into a <b>…</b> that expands on tap. First (Home) and last two always stay visible.</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:150px 1fr;gap:16px;align-items:center;padding:13px 16px;background:#f7f8fa;border:1px solid #e3e6eb;border-radius:11px;">
+          <span style="font-size:12.5px;font-weight:600;color:#5b6472;">Mobile</span>
+          <div><div style="display:flex;align-items:center;gap:7px;">${mobileTrail}</div><div style="font-size:11.5px;color:#8890a0;margin-top:6px;">Collapses to a back chevron + current page. Tapping <b>…</b> opens the full path as a sheet.</div></div>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding:14px 16px;background:#eeeefe;border:1px solid #d9d9fb;border-radius:11px;font-size:12.5px;color:#3a3f4b;line-height:1.55;"><b>Store context rule:</b> the second crumb is always the active store name, and the same store shows in the sidebar switcher + top bar. Three redundant cues mean a merchant can never edit the wrong store by accident.</div>`;
+  }
+
+  codeLayer(){
+    const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const tw=`<span class="c">// tailwind.config.js — tokens map to CSS vars, so</span>
+<span class="c">// every utility (bg-surface, text-primary…) is themeable.</span>
+<span class="k">module</span>.exports = {
+  content: [<span class="s">'./projects/merchant/src/**/*.{html,ts}'</span>],
+  theme: {
+    extend: {
+      colors: {
+        canvas:   <span class="s">'rgb(var(--c-canvas) / &lt;alpha-value&gt;)'</span>,
+        surface:  <span class="s">'rgb(var(--c-surface) / &lt;alpha-value&gt;)'</span>,
+        elevated: <span class="s">'rgb(var(--c-elevated) / &lt;alpha-value&gt;)'</span>,
+        border:   <span class="s">'rgb(var(--c-border) / &lt;alpha-value&gt;)'</span>,
+        text:     { DEFAULT: <span class="s">'rgb(var(--c-text))'</span>, muted: <span class="s">'rgb(var(--c-muted))'</span> },
+        primary:  { DEFAULT: <span class="s">'rgb(var(--c-primary))'</span>, hover: <span class="s">'rgb(var(--c-primary-hover))'</span>, tint: <span class="s">'rgb(var(--c-tint))'</span> },
+        success:  <span class="s">'rgb(var(--c-success))'</span>,
+        warning:  <span class="s">'rgb(var(--c-warning))'</span>,
+        danger:   <span class="s">'rgb(var(--c-danger))'</span>,
+      },
+    },
+  },
+};`;
+    const css=`<span class="c">/* theme.css — one block per palette. Switching the</span>
+<span class="c">   data-theme attribute repaints the whole app instantly. */</span>
+<span class="p">:root</span>, <span class="p">[data-theme='blue']</span> {
+  <span class="v">--c-canvas</span>: 244 245 247;   <span class="v">--c-surface</span>: 255 255 255;
+  <span class="v">--c-elevated</span>: 247 248 250; <span class="v">--c-border</span>: 227 230 235;
+  <span class="v">--c-text</span>: 22 24 29;       <span class="v">--c-muted</span>: 91 100 114;
+  <span class="v">--c-primary</span>: 37 99 235;   <span class="v">--c-primary-hover</span>: 29 78 216;
+  <span class="v">--c-tint</span>: 228 237 255;
+  <span class="v">--c-success</span>: 15 157 99;   <span class="v">--c-warning</span>: 199 125 24;  <span class="v">--c-danger</span>: 214 69 69;
+  <span class="v">--rail-bg</span>: 22 35 61;       <span class="v">--rail-text</span>: 238 240 244;
+}
+<span class="p">[data-theme='slate']</span> {  <span class="c">/* dark mode */</span>
+  <span class="v">--c-canvas</span>: 20 23 29;      <span class="v">--c-surface</span>: 29 33 42;
+  <span class="v">--c-text</span>: 238 241 246;     <span class="v">--c-primary</span>: 99 102 241;  <span class="c">/* …etc */</span>
+}
+<span class="c">/* [data-theme='light'|'grey'|'purple'|'amber'|'emerald'|'teal'|'rose'] follow */</span>`;
+    const svc=`<span class="c">// theme.service.ts — persists choice, sets the attribute.</span>
+<span class="k">@Injectable</span>({ providedIn: <span class="s">'root'</span> })
+<span class="k">export class</span> ThemeService {
+  <span class="k">readonly</span> themes = [<span class="s">'blue'</span>,<span class="s">'light'</span>,<span class="s">'slate'</span>,<span class="s">'grey'</span>,<span class="s">'purple'</span>,<span class="s">'amber'</span>,<span class="s">'emerald'</span>,<span class="s">'teal'</span>,<span class="s">'rose'</span>] <span class="k">as const</span>;
+  <span class="k">readonly</span> current = signal(localStorage.getItem(<span class="s">'theme'</span>) ?? <span class="s">'blue'</span>);
+
+  set(theme: <span class="k">string</span>) {
+    <span class="k">this</span>.current.set(theme);
+    document.documentElement.setAttribute(<span class="s">'data-theme'</span>, theme);
+    localStorage.setItem(<span class="s">'theme'</span>, theme);
+  }
+  dir(rtl: <span class="k">boolean</span>) { document.documentElement.dir = rtl ? <span class="s">'rtl'</span> : <span class="s">'ltr'</span>; }
+}`;
+    const crumb=`<span class="c">&lt;!-- breadcrumb.component.html — collapses when deep --&gt;</span>
+<span class="k">&lt;nav</span> <span class="v">aria-label</span>=<span class="s">"Breadcrumb"</span> <span class="v">class</span>=<span class="s">"flex items-center gap-2 text-sm"</span><span class="k">&gt;</span>
+  <span class="k">@for</span> (c of visible(); track c.url) {
+    <span class="k">@if</span> (!\$first) { <span class="k">&lt;svg</span> <span class="v">class</span>=<span class="s">"w-3 h-3 text-text-muted rtl:rotate-180"</span> …<span class="k">/&gt;</span> }
+    <span class="k">@if</span> (c.ellipsis) {
+      <span class="k">&lt;button</span> (click)=<span class="s">"expand()"</span> <span class="v">class</span>=<span class="s">"text-text-muted"</span><span class="k">&gt;</span>…<span class="k">&lt;/button&gt;</span>
+    } <span class="k">@else</span> {
+      <span class="k">&lt;a</span> [routerLink]=<span class="s">"c.url"</span>
+         [class]=<span class="s">"c.last ? 'font-bold text-text' : 'font-medium text-primary'"</span><span class="k">&gt;</span>{{ c.label }}<span class="k">&lt;/a&gt;</span>
+    }
+  }
+<span class="k">&lt;/nav&gt;</span>`;
+    return `${this.head('05 · Code','Angular + Tailwind token layer','Components never name a colour — they use token utilities like <code class="ic" style="background:#eceeffaa;">bg-surface</code>, <code class="ic" style="background:#eceeffaa;">text-primary</code>, <code class="ic" style="background:#eceeffaa;">border-border</code>. Themes are pure CSS-variable swaps, so switching is instant and no component is rebuilt. RTL is handled by Tailwind’s <code class="ic" style="background:#eceeffaa;">rtl:</code> variant + the <code class="ic" style="background:#eceeffaa;">dir</code> attribute.')}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:22px;">
+        <div><div style="font-size:12px;font-weight:700;color:#8890a0;margin-bottom:8px;">tailwind.config.js</div><pre>${tw}</pre></div>
+        <div><div style="font-size:12px;font-weight:700;color:#8890a0;margin-bottom:8px;">theme.css</div><pre>${css}</pre></div>
+        <div><div style="font-size:12px;font-weight:700;color:#8890a0;margin-bottom:8px;">theme.service.ts</div><pre>${svc}</pre></div>
+        <div><div style="font-size:12px;font-weight:700;color:#8890a0;margin-bottom:8px;">breadcrumb.component.html</div><pre>${crumb}</pre></div>
+      </div>`;
+  }
+}
+
+</script>
+</body>
+</html>

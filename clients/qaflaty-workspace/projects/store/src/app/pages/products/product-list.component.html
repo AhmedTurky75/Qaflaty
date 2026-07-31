@@ -2,11 +2,32 @@
   <div class="container mx-auto px-4">
 
     <!-- Page Header -->
-    <div class="mb-6">
+    <div class="mb-6 flex items-center gap-4">
+      @if (currentCategory(); as category) {
+        @if (category.imageUrl) {
+          <img
+            [src]="category.imageUrl"
+            [alt]="i18n.nameFor(category.name, category.nameAr)"
+            class="w-14 h-14 lg:w-16 lg:h-16 rounded-xl object-cover border border-gray-200 shadow-sm"
+          />
+        } @else {
+          <span class="w-14 h-14 lg:w-16 lg:h-16 rounded-xl bg-white border border-gray-200 shadow-sm flex items-center justify-center text-[var(--primary-color)]">
+            <lib-category-icon [name]="category.iconName" [size]="28" />
+          </span>
+        }
+      }
       <h1 class="text-2xl lg:text-3xl font-bold text-gray-900">
-        {{ currentCategory() ? currentCategory()!.name : 'All Products' }}
+        {{ currentCategory() ? i18n.nameFor(currentCategory()!.name, currentCategory()!.nameAr) : 'All Products' }}
       </h1>
     </div>
+
+    <!-- Merchant-authored content for this category, above the products. Any <style> block in it is
+         applied separately, straight to the DOM (see the component's applyCategoryStyleEffect) —
+         not through this template. -->
+    @if (categoryContent()) {
+      <div class="qf-cat-content mb-6 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 lg:p-6 text-gray-800 leading-relaxed"
+        [innerHTML]="categoryContent()"></div>
+    }
 
     <!-- Mobile: Filter trigger bar -->
     <div class="lg:hidden mb-4">
@@ -135,7 +156,7 @@
                         ? 'bg-primary text-white border-primary'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300 hover:bg-gray-50'"
                     >
-                      {{ category.name }}
+                      {{ i18n.nameFor(category.name, category.nameAr) }}
                     </button>
                   }
                 </div>
@@ -289,7 +310,7 @@
 
           @if (selectedCategory() && currentCategory()) {
             <span class="inline-flex items-center gap-1.5 pl-3 pr-2 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium">
-              {{ currentCategory()!.name }}
+              {{ i18n.nameFor(currentCategory()!.name, currentCategory()!.nameAr) }}
               <button
                 (click)="filterByCategory(null)"
                 class="hover:bg-primary/20 rounded-full p-0.5 transition-colors"

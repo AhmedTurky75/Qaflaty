@@ -2,13 +2,15 @@ import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { StoreService } from '../../stores/services/store.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import { StoreDto } from 'shared';
 
 @Component({
   selector: 'app-store-settings',
   standalone: true,
-  imports: [CommonModule, RouterLink],
-  templateUrl: './store-settings.component.html'
+  imports: [CommonModule, RouterLink, IconComponent],
+  templateUrl: './store-settings.component.html',
+  styleUrl: './store-settings.component.scss'
 })
 export class StoreSettingsComponent implements OnInit {
   private storeService = inject(StoreService);

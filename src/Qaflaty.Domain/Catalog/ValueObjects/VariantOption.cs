@@ -8,8 +8,8 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 /// </summary>
 public sealed class VariantOption : ValueObject
 {
-    public string Name { get; private init; } = string.Empty;
-    public List<string> Values { get; private init; } = [];
+    public string Name { get; private init; } = string.Empty; // The variant dimension/axis name, e.g. "Color" or "Size"
+    public List<string> Values { get; private init; } = []; // Allowed values for that dimension (deduplicated, trimmed), e.g. ["Red", "Blue", "Green"]
 
     private VariantOption() { }
 

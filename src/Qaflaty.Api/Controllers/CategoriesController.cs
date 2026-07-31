@@ -43,9 +43,14 @@ public class CategoriesController : ApiController
         var command = new CreateCategoryCommand(
             storeId,
             request.Name,
+            request.NameAr,
             request.Slug,
             request.ParentId,
-            request.SortOrder);
+            request.SortOrder,
+            request.ImageUrl,
+            request.IconName,
+            request.ContentHtml,
+            request.ContentHtmlAr);
 
         var result = await Sender.Send(command, cancellationToken);
 
@@ -64,7 +69,17 @@ public class CategoriesController : ApiController
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> UpdateCategory(Guid storeId, Guid id, [FromBody] UpdateCategoryRequest request, CancellationToken cancellationToken)
     {
-        var command = new UpdateCategoryCommand(id, request.Name, request.ParentId);
+        var command = new UpdateCategoryCommand(
+            id,
+            request.Name,
+            request.NameAr,
+            request.ParentId,
+            request.SortOrder,
+            request.ImageUrl,
+            request.IconName,
+            request.ContentHtml,
+            request.ContentHtmlAr);
+
         var result = await Sender.Send(command, cancellationToken);
         return HandleResult(result);
     }
@@ -107,11 +122,28 @@ public class CategoriesController : ApiController
 
 public record CreateCategoryRequest(
     string Name,
+    string? NameAr,
     string Slug,
     Guid? ParentId,
-    int SortOrder = 0);
+    int SortOrder = 0,
+    string? ImageUrl = null,
+    string? IconName = null,
+    string? ContentHtml = null,
+    string? ContentHtmlAr = null);
 
-public record UpdateCategoryRequest(string Name, Guid? ParentId);
+/// <summary>
+/// Category edit payload. <c>SortOrder</c> is optional — omit it to keep the current rank, which is
+/// what the drag-and-drop reorder endpoint relies on.
+/// </summary>
+public record UpdateCategoryRequest(
+    string Name,
+    string? NameAr,
+    Guid? ParentId,
+    int? SortOrder = null,
+    string? ImageUrl = null,
+    string? IconName = null,
+    string? ContentHtml = null,
+    string? ContentHtmlAr = null);
 
 public record ReorderCategoriesRequest(List<CategoryOrderItemRequest> Items);
 

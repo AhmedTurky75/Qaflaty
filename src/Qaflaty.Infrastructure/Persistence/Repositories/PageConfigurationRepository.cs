@@ -30,6 +30,11 @@ public class PageConfigurationRepository : IPageConfigurationRepository
             .Include(pc => pc.Sections)
             .FirstOrDefaultAsync(pc => pc.StoreId == storeId && pc.Slug == slug, ct);
 
+    public async Task<PageConfiguration?> GetByProductIdAsync(ProductId productId, CancellationToken ct = default)
+        => await _context.PageConfigurations
+            .Include(pc => pc.Sections)
+            .FirstOrDefaultAsync(pc => pc.ProductId == productId, ct);
+
     public async Task<IReadOnlyList<PageConfiguration>> GetByStoreIdAsync(StoreId storeId, CancellationToken ct = default)
         => await _context.PageConfigurations
             .Include(pc => pc.Sections)

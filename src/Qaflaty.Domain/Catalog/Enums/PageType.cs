@@ -12,5 +12,6 @@ public enum PageType
     Privacy,
     ShippingReturns,
     Cart,
-    Custom
+    Custom,
+    ProductLanding
 }

@@ -32,10 +32,12 @@ public class CancelOrderCommandHandler : ICommandHandler<CancelOrderCommand>
             return Result.Failure(OrderingErrors.OrderNotFound);
 
         var store = await _storeRepository.GetByIdAsync(order.StoreId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure(new Error("Order.Unauthorized", "You don't have access to this order"));
 
-        var result = order.Cancel(request.Reason);
+        var result = order.Cancel(request.Reason, _currentUserService.Email ?? "System");
         if (result.IsFailure)
             return result;
 

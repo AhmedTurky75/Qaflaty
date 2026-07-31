@@ -36,6 +36,8 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
         if (store == null)
             return Result.Failure<CalculateOrderDto>(new Error("Order.StoreNotFound", "Store not found"));
 
+        var config = await _configRepository.GetByStoreIdAsync(storeId, cancellationToken);
+
         // Resolve delivery fee using the same hierarchical zone logic as PlaceOrderCommandHandler
         Money deliveryFee = store.DeliverySettings.DeliveryFee;
         bool isDeliveryAvailable = true;
@@ -82,9 +84,9 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
             }
         }
 
-        // Calculate subtotal from current catalog prices
-        var currency = deliveryFee.Currency;
-        var subtotal = Money.Zero(currency);
+        // Calculate subtotal from current catalog prices (store currency governs the whole order)
+        var currencyStr = store.Currency.Code;
+        var subtotal = Money.Zero();
 
         foreach (var item in request.Items)
         {
@@ -111,24 +113,39 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
         decimal paymentAdjustmentAmount = 0;
         string? paymentAdjustmentLabel = null;
 
-        if (!string.IsNullOrWhiteSpace(request.PaymentMethod))
+        if (!string.IsNullOrWhiteSpace(request.PaymentMethod) && config != null)
         {
-            var config = await _configRepository.GetByStoreIdAsync(storeId, cancellationToken);
-            if (config != null)
+            var adj = config.PaymentMethodAdjustments
+                .FirstOrDefault(a => a.PaymentMethodKey.Equals(request.PaymentMethod, StringComparison.OrdinalIgnoreCase));
+            if (adj != null)
             {
-                var adj = config.PaymentMethodAdjustments
-                    .FirstOrDefault(a => a.PaymentMethodKey.Equals(request.PaymentMethod, StringComparison.OrdinalIgnoreCase));
-                if (adj != null)
-                {
-                    paymentAdjustmentAmount = adj.CalculateAmount(subtotal.Amount);
-                    paymentAdjustmentLabel = adj.DisplayLabel;
-                }
+                paymentAdjustmentAmount = adj.CalculateAmount(subtotal.Amount);
+                paymentAdjustmentLabel = adj.DisplayLabel;
             }
         }
 
-        var effectiveDeliveryFee = isDeliveryAvailable ? deliveryFee : Money.Zero(currency);
-        var totalAmount = subtotal.Amount + effectiveDeliveryFee.Amount + paymentAdjustmentAmount;
-        var currencyStr = currency.ToString();
+        var effectiveDeliveryFee = isDeliveryAvailable ? deliveryFee : Money.Zero();
+
+        // Tax preview — mirrors OrderPricing: applied to (subtotal + delivery), excluding promo/payment adjustment.
+        var taxSettings = config?.TaxSettings;
+        var taxRate = (taxSettings?.EffectiveRate ?? 0m) / 100m;
+        var pricesIncludeTax = taxSettings?.PricesIncludeTax ?? false;
+        var taxableBase = subtotal.Amount + effectiveDeliveryFee.Amount;
+
+        decimal taxAmount = 0m;
+        decimal taxableTotalAddition = 0m;
+        if (taxRate > 0m)
+        {
+            if (pricesIncludeTax)
+                taxAmount = Math.Round(taxableBase - taxableBase / (1m + taxRate), 2);
+            else
+            {
+                taxAmount = Math.Round(taxableBase * taxRate, 2);
+                taxableTotalAddition = taxAmount;
+            }
+        }
+
+        var totalAmount = subtotal.Amount + effectiveDeliveryFee.Amount + paymentAdjustmentAmount + taxableTotalAddition;
 
         return Result.Success(new CalculateOrderDto(
             isDeliveryAvailable,
@@ -136,7 +153,10 @@ public class CalculateOrderQueryHandler : IQueryHandler<CalculateOrderQuery, Cal
             new MoneyDto(effectiveDeliveryFee.Amount, currencyStr),
             new MoneyDto(paymentAdjustmentAmount, currencyStr),
             paymentAdjustmentLabel,
-            new MoneyDto(totalAmount, currencyStr)
+            new MoneyDto(totalAmount, currencyStr),
+            new MoneyDto(taxAmount, currencyStr),
+            taxSettings?.Enabled == true ? taxSettings.Label : null,
+            pricesIncludeTax
         ));
     }
 }

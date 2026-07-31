@@ -1,0 +1,45 @@
+@if (open()) {
+  <!-- Backdrop -->
+  <div
+    class="fixed inset-0 z-40 bg-black/50"
+    (click)="close.emit()"
+    aria-hidden="true"
+  ></div>
+
+  <!-- Panel (slides in from the start side) -->
+  <div
+    class="drawer-panel fixed start-0 top-0 z-50 flex h-full w-80 max-w-[85vw] flex-col bg-surface shadow-2xl"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'nav.more' | transloco"
+  >
+    <div class="flex h-16 flex-shrink-0 items-center justify-between border-b border-border px-4">
+      <span class="text-base font-bold text-text">{{ 'nav.more' | transloco }}</span>
+      <button
+        type="button"
+        (click)="close.emit()"
+        class="flex h-10 w-10 items-center justify-center rounded-lg text-text-muted hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary"
+        [attr.aria-label]="'common.close' | transloco"
+      >
+        <app-icon name="close" [size]="20" />
+      </button>
+    </div>
+
+    <nav class="flex-1 space-y-0.5 overflow-y-auto p-3" aria-label="More">
+      @for (item of items(); track item.route) {
+        <a
+          [routerLink]="item.route"
+          routerLinkActive="bg-primary-tint text-primary"
+          (click)="close.emit()"
+          class="flex min-h-[48px] items-center gap-3 rounded-lg px-3 py-2.5 text-text transition-colors hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary"
+        >
+          <app-icon [name]="item.icon" [size]="20" />
+          <span class="flex-1 text-sm font-medium">{{ item.labelKey | transloco }}</span>
+          @if (item.badge === 'chat' && chatUnread() > 0) {
+            <span class="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{{ chatUnread() }}</span>
+          }
+        </a>
+      }
+    </nav>
+  </div>
+}

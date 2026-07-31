@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Qaflaty.Domain.Ads.Aggregates.ProviderIntegration;
+using Qaflaty.Domain.Ads.Aggregates.TrackingEvent;
 using Qaflaty.Domain.Catalog.Aggregates.Category;
 using Qaflaty.Domain.Catalog.Aggregates.City;
 using Qaflaty.Domain.Catalog.Aggregates.PaymentMethodDefinition;
@@ -6,21 +8,31 @@ using Qaflaty.Domain.Catalog.Aggregates.Country;
 using Qaflaty.Domain.Catalog.Aggregates.DeliveryZone;
 using Qaflaty.Domain.Catalog.Aggregates.District;
 using Qaflaty.Domain.Catalog.Aggregates.FaqItem;
+using Qaflaty.Domain.Catalog.Aggregates.LayoutVariant;
 using Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
+using Qaflaty.Domain.Catalog.Aggregates.PromoCode;
 using Qaflaty.Domain.Catalog.Aggregates.Store;
 using Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
 using Qaflaty.Domain.Communication.Aggregates.AiInteraction;
 using Qaflaty.Domain.Communication.Aggregates.ChatConversation;
+using Qaflaty.Domain.Communication.Aggregates.Knowledge;
 using Qaflaty.Domain.Communication.Entities;
+using Qaflaty.Infrastructure.Persistence.Records;
 using Qaflaty.Domain.Identity.Aggregates.AccessDeniedReport;
 using Qaflaty.Domain.Identity.Aggregates.LoginOtp;
 using Qaflaty.Domain.Identity.Aggregates.Merchant;
 using Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
+using Qaflaty.Domain.Ordering.Aggregates.BlockedPhone;
 using Qaflaty.Domain.Ordering.Aggregates.Customer;
 using Qaflaty.Domain.Ordering.Aggregates.Order;
+using Qaflaty.Domain.Ordering.Aggregates.Return;
 using Qaflaty.Domain.Storefront.Aggregates.Wishlist;
 using Qaflaty.Domain.Storefront.Aggregates.Cart;
+using Qaflaty.Domain.Storefront.Aggregates.Downsell;
+using Qaflaty.Domain.Storefront.Aggregates.ProductReview;
+using Qaflaty.Domain.Storefront.Aggregates.ProductView;
+using Qaflaty.Domain.Storefront.Aggregates.RelatedProduct;
 
 namespace Qaflaty.Infrastructure.Persistence;
 
@@ -53,23 +65,43 @@ public class QaflatyDbContext : DbContext
     public DbSet<District> Districts => Set<District>();
     public DbSet<DeliveryZone> DeliveryZones => Set<DeliveryZone>();
     public DbSet<ProductPropertyDefinition> ProductPropertyDefinitions => Set<ProductPropertyDefinition>();
+    public DbSet<PromoCode> PromoCodes => Set<PromoCode>();
+    public DbSet<PromoCodeRedemption> PromoCodeRedemptions => Set<PromoCodeRedemption>();
+    public DbSet<LayoutVariant> LayoutVariants => Set<LayoutVariant>();
 
     // Ordering
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
     public DbSet<OrderOtp> OrderOtps => Set<OrderOtp>();
     public DbSet<Customer> Customers => Set<Customer>();
+    public DbSet<BlockedPhone> BlockedPhones => Set<BlockedPhone>();
+    public DbSet<ReturnRequest> ReturnRequests => Set<ReturnRequest>();
+    public DbSet<ReturnRequestItem> ReturnRequestItems => Set<ReturnRequestItem>();
 
     // Storefront
     public DbSet<Wishlist> Wishlists => Set<Wishlist>();
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
+    public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
+    public DbSet<ProductReviewMedia> ProductReviewMedia => Set<ProductReviewMedia>();
+    public DbSet<ProductView> ProductViews => Set<ProductView>();
+    public DbSet<RelatedProductLink> RelatedProductLinks => Set<RelatedProductLink>();
+    public DbSet<DownsellTriggerRule> DownsellTriggerRules => Set<DownsellTriggerRule>();
+    public DbSet<DownsellOffer> DownsellOffers => Set<DownsellOffer>();
+    public DbSet<DownsellEvent> DownsellEvents => Set<DownsellEvent>();
 
     // Communication
     public DbSet<ChatConversation> ChatConversations => Set<ChatConversation>();
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<AiInteractionLog> AiInteractionLogs => Set<AiInteractionLog>();
+    public DbSet<KnowledgeDocument> KnowledgeDocuments => Set<KnowledgeDocument>();
+    public DbSet<KnowledgeChunkRecord> KnowledgeChunks => Set<KnowledgeChunkRecord>();
+
+    // Ads
+    public DbSet<ProviderIntegration> ProviderIntegrations => Set<ProviderIntegration>();
+    public DbSet<TrackingEvent> TrackingEvents => Set<TrackingEvent>();
+    public DbSet<TrackingDispatchLog> TrackingDispatchLogs => Set<TrackingDispatchLog>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

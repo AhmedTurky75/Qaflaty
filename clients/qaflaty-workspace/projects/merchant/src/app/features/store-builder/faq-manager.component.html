@@ -1,0 +1,249 @@
+<div class="space-y-6">
+  <!-- Header with Add Button -->
+  <div class="flex items-center justify-between">
+    <h3 class="text-lg font-semibold text-text">FAQ Management</h3>
+    <button
+      (click)="onAddFaq()"
+      class="min-h-[44px] rounded-md bg-primary px-4 py-2 text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40"
+    >
+      Add FAQ Item
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="rounded-lg border border-border bg-surface p-8 text-center shadow-sm">
+      <p class="text-text-muted">Loading FAQ items...</p>
+    </div>
+  }
+
+  <!-- FAQ List -->
+  @if (!loading()) {
+    <div class="space-y-3">
+      @for (faq of faqItems(); track faq.id; let idx = $index) {
+        <div class="rounded-lg border border-border bg-surface p-4 shadow-sm">
+          @if (editingId() === faq.id) {
+            <!-- Edit Mode -->
+            <div class="space-y-4">
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-text">English Question</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="editForm.question.english"
+                    class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-text">Arabic Question</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="editForm.question.arabic"
+                    class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-text">English Answer</label>
+                  <textarea
+                    [(ngModel)]="editForm.answer.english"
+                    rows="3"
+                    class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  ></textarea>
+                </div>
+                <div>
+                  <label class="mb-2 block text-sm font-medium text-text">Arabic Answer</label>
+                  <textarea
+                    [(ngModel)]="editForm.answer.arabic"
+                    rows="3"
+                    class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  ></textarea>
+                </div>
+              </div>
+              <div class="flex items-center">
+                <input
+                  type="checkbox"
+                  [(ngModel)]="editForm.isPublished"
+                  id="edit-published-{{ faq.id }}"
+                  class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40"
+                />
+                <label [for]="'edit-published-' + faq.id" class="ms-2 text-sm font-medium text-text">
+                  Published
+                </label>
+              </div>
+              <div class="flex justify-end gap-3">
+                <button
+                  (click)="cancelEdit()"
+                  class="rounded-md bg-surface-elevated px-4 py-2 text-text hover:bg-border/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                >
+                  Cancel
+                </button>
+                <button
+                  (click)="saveEdit(faq.id)"
+                  [disabled]="saving()"
+                  class="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+                >
+                  {{ saving() ? 'Saving...' : 'Save' }}
+                </button>
+              </div>
+            </div>
+          } @else {
+            <!-- View Mode -->
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="mb-2 flex items-center gap-3">
+                  <h4 class="text-base font-medium text-text">
+                    {{ faq.question.english }}
+                  </h4>
+                  @if (faq.isPublished) {
+                    <span class="rounded-full bg-success/10 px-2 py-1 text-xs text-success">
+                      Published
+                    </span>
+                  } @else {
+                    <span class="rounded-full bg-surface-elevated px-2 py-1 text-xs text-text-muted">
+                      Draft
+                    </span>
+                  }
+                  <span class="text-xs text-text-muted">
+                    Order: {{ faq.sortOrder }}
+                  </span>
+                </div>
+                @if (faq.question.arabic) {
+                  <p class="mb-2 text-sm text-text-muted">{{ faq.question.arabic }}</p>
+                }
+                <p class="mt-2 text-sm text-text">{{ faq.answer.english }}</p>
+                @if (faq.answer.arabic) {
+                  <p class="mt-1 text-sm text-text-muted">{{ faq.answer.arabic }}</p>
+                }
+              </div>
+
+              <div class="ms-4 flex items-center gap-2">
+                <!-- Move Up/Down -->
+                <button
+                  (click)="moveUp(idx)"
+                  [disabled]="idx === 0"
+                  [class.opacity-50]="idx === 0"
+                  class="p-1 text-text-muted hover:text-text"
+                  aria-label="Move up"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path>
+                  </svg>
+                </button>
+                <button
+                  (click)="moveDown(idx)"
+                  [disabled]="idx === faqItems().length - 1"
+                  [class.opacity-50]="idx === faqItems().length - 1"
+                  class="p-1 text-text-muted hover:text-text"
+                  aria-label="Move down"
+                >
+                  <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </button>
+
+                <!-- Edit Button -->
+                <button
+                  (click)="startEdit(faq)"
+                  class="rounded-md bg-surface-elevated px-3 py-1 text-text hover:bg-border/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                >
+                  Edit
+                </button>
+
+                <!-- Delete Button -->
+                <button
+                  (click)="deleteFaq(faq)"
+                  class="rounded-md bg-danger/10 px-3 py-1 text-danger hover:bg-danger/20 focus:outline-none focus:ring-2 focus:ring-danger/40"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          }
+        </div>
+      } @empty {
+        <div class="rounded-lg bg-surface-elevated p-8 text-center">
+          <p class="text-text-muted">No FAQ items yet. Click "Add FAQ Item" to create one.</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Add New FAQ Modal -->
+  @if (showAddModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div class="mx-4 w-full max-w-2xl rounded-lg border border-border bg-surface p-6">
+        <h3 class="mb-4 text-lg font-semibold text-text">Add FAQ Item</h3>
+        <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text">English Question *</label>
+              <input
+                type="text"
+                [(ngModel)]="newFaq.question.english"
+                placeholder="How do I track my order?"
+                class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text">Arabic Question</label>
+              <input
+                type="text"
+                [(ngModel)]="newFaq.question.arabic"
+                placeholder="كيف يمكنني تتبع طلبي؟"
+                class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text">English Answer *</label>
+              <textarea
+                [(ngModel)]="newFaq.answer.english"
+                rows="4"
+                placeholder="You can track your order using..."
+                class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+              ></textarea>
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-medium text-text">Arabic Answer</label>
+              <textarea
+                [(ngModel)]="newFaq.answer.arabic"
+                rows="4"
+                placeholder="يمكنك تتبع طلبك باستخدام..."
+                class="w-full rounded-md border border-border bg-surface px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+              ></textarea>
+            </div>
+          </div>
+          <div class="flex items-center">
+            <input
+              type="checkbox"
+              [(ngModel)]="newFaq.isPublished"
+              id="new-published"
+              class="h-5 w-5 rounded text-primary focus:ring-2 focus:ring-primary/40"
+            />
+            <label for="new-published" class="ms-2 text-sm font-medium text-text">
+              Published
+            </label>
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button
+            (click)="closeAddModal()"
+            class="rounded-md bg-surface-elevated px-4 py-2 text-text hover:bg-border/40 focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="confirmAddFaq()"
+            [disabled]="saving()"
+            class="rounded-md bg-primary px-4 py-2 text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+          >
+            {{ saving() ? 'Creating...' : 'Create FAQ' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

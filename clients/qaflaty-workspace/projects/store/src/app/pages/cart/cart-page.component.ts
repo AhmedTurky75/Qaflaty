@@ -1,14 +1,21 @@
-import { Component, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CartService } from '../../services/cart.service';
 import { CartItem, getCartItemKey } from '../../models/cart.model';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 import { DecimalPipe } from '@angular/common';
+import { ProductRowComponent } from '../../components/recommendations/product-row.component';
+import { DownsellService } from '../../services/downsell.service';
+
+/** How often the cart-inactivity downsell trigger checks in, and how long it keeps checking. */
+const INACTIVITY_CHECK_INTERVAL_MS = 10000;
+const INACTIVITY_MAX_CHECKS = 6; // stops asking after 60s of inactivity
+const ACTIVITY_EVENTS = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'] as const;
 
 @Component({
   selector: 'app-cart-page',
   standalone: true,
-  imports: [RouterLink, DecimalPipe],
+  imports: [RouterLink, DecimalPipe, ProductRowComponent],
   template: `
     <div class="min-h-screen bg-gray-50 py-8">
       <div class="max-w-7xl mx-auto px-4">
@@ -122,14 +129,70 @@ import { DecimalPipe } from '@angular/common';
               </div>
             </div>
           </div>
+
+          <app-product-row title="Complete Your Order" [products]="cart.crossSellProducts()" />
+          <app-product-row title="Upgrade Your Choice" [products]="cart.upSellProducts()" />
         }
       </div>
     </div>
   `
 })
-export class CartPageComponent {
+export class CartPageComponent implements OnInit, OnDestroy {
   cart = inject(CartService);
   i18n = inject(I18nService);
+  private downsell = inject(DownsellService);
+
+  private inactivityTimer?: ReturnType<typeof setInterval>;
+  private inactivityElapsedSeconds = 0;
+  private inactivityChecks = 0;
+  private readonly activityHandler = () => this.resetInactivityClock();
+
+  ngOnInit(): void {
+    // The backend resolves the cart server-side from the auth/guest-id context, so this
+    // doesn't need to wait on the client-side cart signal — an empty cart just returns [].
+    this.cart.loadCrossSell(4);
+    this.cart.loadUpSell(4);
+
+    this.startInactivityTimer();
+    for (const evt of ACTIVITY_EVENTS) {
+      document.addEventListener(evt, this.activityHandler);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.stopInactivityTimer();
+    for (const evt of ACTIVITY_EVENTS) {
+      document.removeEventListener(evt, this.activityHandler);
+    }
+  }
+
+  private resetInactivityClock(): void {
+    this.inactivityElapsedSeconds = 0;
+    this.inactivityChecks = 0;
+  }
+
+  private startInactivityTimer(): void {
+    this.inactivityTimer = setInterval(() => {
+      this.inactivityElapsedSeconds += INACTIVITY_CHECK_INTERVAL_MS / 1000;
+      this.inactivityChecks++;
+
+      const items = this.cart.cart().items;
+      if (items.length === 0 || this.inactivityChecks >= INACTIVITY_MAX_CHECKS) {
+        this.stopInactivityTimer();
+        return;
+      }
+
+      // Downsell is evaluated relative to one reference product — use the first cart line.
+      this.downsell.evaluate('Cart', 'CartInactivity', items[0].productId, this.inactivityElapsedSeconds);
+    }, INACTIVITY_CHECK_INTERVAL_MS);
+  }
+
+  private stopInactivityTimer(): void {
+    if (this.inactivityTimer) {
+      clearInterval(this.inactivityTimer);
+      this.inactivityTimer = undefined;
+    }
+  }
 
   t(key: string): string {
     const lang = this.i18n.currentLanguage();
@@ -159,5 +222,6 @@ export class CartPageComponent {
 
   removeItem(item: CartItem): void {
     this.cart.removeItem(item.productId, item.variantId);
+    this.downsell.evaluate('Cart', 'CartItemRemoved', item.productId);
   }
 }

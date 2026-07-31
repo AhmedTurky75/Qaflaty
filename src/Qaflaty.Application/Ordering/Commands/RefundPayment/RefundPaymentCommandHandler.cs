@@ -37,7 +37,9 @@ public class RefundPaymentCommandHandler : ICommandHandler<RefundPaymentCommand,
             return Result.Failure<PaymentResultDto>(OrderingErrors.OrderNotFound);
 
         var store = await _storeRepository.GetByIdAsync(order.StoreId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<PaymentResultDto>(new Error("Order.Unauthorized", "You don't have access to this order"));
 
         if (order.Payment.TransactionId == null)

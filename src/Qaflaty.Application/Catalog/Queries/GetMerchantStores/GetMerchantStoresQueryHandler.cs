@@ -24,7 +24,7 @@ public class GetMerchantStoresQueryHandler : IQueryHandler<GetMerchantStoresQuer
         if (_currentUserService.MerchantId == null)
             return Result.Failure<List<StoreDto>>(Error.Unauthorized);
 
-        var stores = await _storeRepository.GetByMerchantIdAsync(_currentUserService.MerchantId.Value, cancellationToken);
+        var stores = await _storeRepository.GetAccessibleByMerchantIdAsync(_currentUserService.MerchantId.Value, cancellationToken);
 
         return Result.Success(stores.Select(s => new StoreDto(
             s.Id.Value,
@@ -45,7 +45,9 @@ public class GetMerchantStoresQueryHandler : IQueryHandler<GetMerchantStoresQuer
                     : null),
             s.CustomDomain,
             s.CreatedAt,
-            s.UpdatedAt
+            s.UpdatedAt,
+            s.Currency.Code,
+            s.Currency.Symbol
         )).ToList());
     }
 }

@@ -6,5 +6,7 @@ namespace Qaflaty.Application.Ordering.Commands.VerifyOrderOtp;
 public record VerifyOrderOtpCommand(
     Guid StoreId,
     string OrderNumber,
-    string OtpCode
+    string OtpCode,
+    Guid? BuyerCustomerId = null,
+    string? BuyerGuestId = null
 ) : ICommand<OrderDto>;

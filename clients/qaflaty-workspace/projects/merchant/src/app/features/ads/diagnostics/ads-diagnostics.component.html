@@ -1,0 +1,28 @@
+@if (loading()) {
+  <div class="py-12 text-center text-text-muted">Running diagnostics...</div>
+} @else {
+  <div class="space-y-3">
+    @for (finding of findings(); track finding.checkCode + (finding.provider || '')) {
+      <div class="rounded-lg border p-4" [ngClass]="severityClass(finding.severity)">
+        <div class="flex items-start gap-3">
+          <span class="text-lg">{{ severityIcon(finding.severity) }}</span>
+          <div class="flex-1">
+            <p class="font-semibold text-text">
+              {{ finding.problem }}
+              @if (finding.provider) { <span class="text-xs font-normal text-text-muted">({{ finding.provider }})</span> }
+            </p>
+            <p class="mt-1 text-sm text-text-muted">{{ finding.reason }}</p>
+            <p class="mt-2 text-sm text-text"><span class="font-medium">Fix:</span> {{ finding.recommendedFix }}</p>
+          </div>
+          @if (finding.hasFix) {
+            <a routerLink="/ads/integrations" class="whitespace-nowrap rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-text hover:bg-surface-elevated">
+              Go Fix
+            </a>
+          }
+        </div>
+      </div>
+    } @empty {
+      <div class="py-12 text-center text-text-muted">No diagnostics available yet.</div>
+    }
+  </div>
+}

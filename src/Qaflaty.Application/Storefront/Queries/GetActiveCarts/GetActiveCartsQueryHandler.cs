@@ -36,7 +36,9 @@ public class GetActiveCartsQueryHandler : IQueryHandler<GetActiveCartsQuery, Lis
         var storeId = new StoreId(request.StoreId);
 
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<List<ActiveCartDto>>(Error.Unauthorized);
 
         var carts = await _cartRepository.GetActiveCartsByStoreAsync(storeId, cancellationToken);
@@ -66,7 +68,15 @@ public class GetActiveCartsQueryHandler : IQueryHandler<GetActiveCartsQuery, Lis
             {
                 productLookup.TryGetValue(item.ProductId.Value, out var product);
                 var imageUrl = product?.Images.FirstOrDefault()?.Url;
+
+                // Honor the variant price override when one is selected — otherwise the
+                // "revenue at risk" total silently undercounts carts with priced variants.
                 var unitPrice = product?.Pricing.Price.Amount ?? 0;
+                if (product != null && item.VariantId.HasValue)
+                {
+                    var variant = product.GetVariant(item.VariantId.Value);
+                    unitPrice = variant?.PriceOverride?.Amount ?? unitPrice;
+                }
 
                 return new ActiveCartItemDto(
                     item.ProductId.Value,

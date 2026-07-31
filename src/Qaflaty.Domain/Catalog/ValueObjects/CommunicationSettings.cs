@@ -4,12 +4,12 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class CommunicationSettings : ValueObject
 {
-    public bool WhatsAppEnabled { get; private set; }
-    public string? WhatsAppNumber { get; private set; }
-    public string? WhatsAppDefaultMessage { get; private set; }
-    public bool LiveChatEnabled { get; private set; }
-    public bool AiChatbotEnabled { get; private set; }
-    public string? AiChatbotName { get; private set; }
+    public bool WhatsAppEnabled { get; private set; } // Whether the WhatsApp contact button is shown on the storefront
+    public string? WhatsAppNumber { get; private set; } // WhatsApp business number used for the chat link, e.g. "+966500000000"
+    public string? WhatsAppDefaultMessage { get; private set; } // Pre-filled message text when a customer opens WhatsApp chat, e.g. "Hi, I have a question about..."
+    public bool LiveChatEnabled { get; private set; } // Whether the built-in live chat widget (SignalR) is enabled for the store
+    public bool AiChatbotEnabled { get; private set; } // Whether the AI chatbot assistant is enabled in live chat
+    public string? AiChatbotName { get; private set; } // Display name shown for the AI assistant, e.g. "Qaflaty Assistant"
 
     private CommunicationSettings() { }
 

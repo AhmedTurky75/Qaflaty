@@ -3,44 +3,39 @@ using Qaflaty.Domain.Common.Primitives;
 
 namespace Qaflaty.Domain.Common.ValueObjects;
 
+/// <summary>
+/// A monetary amount. Currency is NOT stored here — a store has exactly one currency
+/// (see <see cref="Qaflaty.Domain.Catalog.Aggregates.Store.Store.Currency"/>), so every
+/// amount within a store is implicitly in that currency. This keeps a single source of
+/// truth and removes redundant per-amount currency columns.
+/// </summary>
 public sealed class Money : ValueObject
 {
-    public decimal Amount { get; private init; }
-    public Currency Currency { get; private init; }
+    public decimal Amount { get; private init; } // Monetary amount, always non-negative (validated in Create), e.g. 199.99
 
-    private Money(decimal amount, Currency currency)
+    private Money(decimal amount)
     {
         Amount = amount;
-        Currency = currency;
     }
 
-    public static Result<Money> Create(decimal amount, Currency currency = Currency.SAR)
+    public static Result<Money> Create(decimal amount)
     {
         if (amount < 0)
             return Result.Failure<Money>(new Error("Money.NegativeAmount", "Amount cannot be negative"));
 
-        return Result.Success(new Money(amount, currency));
+        return Result.Success(new Money(amount));
     }
 
-    public static Money Zero(Currency currency = Currency.SAR) => new(0, currency);
+    public static Money Zero() => new(0);
 
-    public Money Add(Money other)
-    {
-        if (Currency != other.Currency)
-            throw new InvalidOperationException("Cannot add money with different currencies");
-
-        return new Money(Amount + other.Amount, Currency);
-    }
+    public Money Add(Money other) => new(Amount + other.Amount);
 
     public Money Subtract(Money other)
     {
-        if (Currency != other.Currency)
-            throw new InvalidOperationException("Cannot subtract money with different currencies");
-
         if (Amount < other.Amount)
             throw new InvalidOperationException("Subtraction result would be negative");
 
-        return new Money(Amount - other.Amount, Currency);
+        return new Money(Amount - other.Amount);
     }
 
     public Money Multiply(decimal factor)
@@ -48,7 +43,7 @@ public sealed class Money : ValueObject
         if (factor < 0)
             throw new ArgumentException("Factor cannot be negative", nameof(factor));
 
-        return new Money(Amount * factor, Currency);
+        return new Money(Amount * factor);
     }
 
     public static Money operator +(Money left, Money right) => left.Add(right);
@@ -59,8 +54,7 @@ public sealed class Money : ValueObject
     protected override IEnumerable<object?> GetEqualityComponents()
     {
         yield return Amount;
-        yield return Currency;
     }
 
-    public override string ToString() => $"{Amount:N2} {Currency}";
+    public override string ToString() => $"{Amount:N2}";
 }

@@ -1,12 +1,14 @@
 import { Component, Input, signal, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { OrderService, OrderStats } from '../../services/order.service';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 import { OrderStatus } from 'shared';
 
 @Component({
   selector: 'app-order-statistics',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslocoPipe, IconComponent],
   templateUrl: './order-statistics.component.html',
   styleUrls: ['./order-statistics.component.scss']
 })
@@ -54,22 +56,26 @@ export class OrderStatisticsComponent implements OnInit {
     }).format(amount);
   }
 
+  statusKey(status: OrderStatus): string {
+    return `orders.status.${status}`;
+  }
+
   getStatusColor(status: OrderStatus): string {
     switch (status) {
       case OrderStatus.Pending:
-        return 'text-yellow-600 bg-yellow-50';
+        return 'text-warning bg-warning/10';
       case OrderStatus.Confirmed:
-        return 'text-blue-600 bg-blue-50';
       case OrderStatus.Processing:
-        return 'text-purple-600 bg-purple-50';
       case OrderStatus.Shipped:
-        return 'text-indigo-600 bg-indigo-50';
+        return 'text-primary bg-primary-tint';
       case OrderStatus.Delivered:
-        return 'text-green-600 bg-green-50';
+        return 'text-success bg-success/10';
       case OrderStatus.Cancelled:
-        return 'text-red-600 bg-red-50';
+        return 'text-danger bg-danger/10';
+      case OrderStatus.Blocked:
+        return 'text-warning bg-warning/20';
       default:
-        return 'text-gray-600 bg-gray-50';
+        return 'text-text-muted bg-surface-elevated';
     }
   }
 }

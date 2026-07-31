@@ -1,0 +1,88 @@
+<div>
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-text">Live chat</h1>
+    <p class="mt-1 text-sm text-text-muted">Manage customer conversations and support requests</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="mb-6 grid grid-cols-1 gap-6 md:grid-cols-3">
+    <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+      <div class="flex items-center gap-4">
+        <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-primary-tint text-primary"><app-icon name="chat" [size]="24" /></span>
+        <div><p class="truncate text-sm font-medium text-text-muted">Total conversations</p><p class="text-2xl font-bold text-text">{{ chatService.conversations().length }}</p></div>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+      <div class="flex items-center gap-4">
+        <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-success/10 text-success"><app-icon name="check-circle" [size]="24" /></span>
+        <div><p class="truncate text-sm font-medium text-text-muted">Active</p><p class="text-2xl font-bold text-text">{{ activeCount() }}</p></div>
+      </div>
+    </div>
+    <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+      <div class="flex items-center gap-4">
+        <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-danger/10 text-danger"><app-icon name="bell" [size]="24" /></span>
+        <div><p class="truncate text-sm font-medium text-text-muted">Unread</p><p class="text-2xl font-bold text-text">{{ chatService.totalUnreadCount() }}</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- List -->
+  <div class="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+    <div class="border-b border-border px-6 py-4"><h2 class="text-base font-bold text-text">Conversations</h2></div>
+
+    @if (isLoading()) {
+      <div class="p-12 text-center">
+        <div class="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-primary"></div>
+        <p class="mt-2 text-sm text-text-muted">Loading conversations…</p>
+      </div>
+    } @else if (chatService.error()) {
+      <div class="p-12 text-center">
+        <span class="mx-auto mb-2 flex h-12 w-12 items-center justify-center text-danger"><app-icon name="alert-triangle" [size]="40" /></span>
+        <p class="text-sm text-danger">{{ chatService.error() }}</p>
+      </div>
+    } @else if (chatService.conversations().length === 0) {
+      <div class="p-12 text-center">
+        <span class="mx-auto mb-2 flex h-12 w-12 items-center justify-center text-text-muted/50"><app-icon name="chat" [size]="40" /></span>
+        <h3 class="text-sm font-medium text-text">No conversations yet</h3>
+        <p class="mt-1 text-sm text-text-muted">Customer conversations will appear here when they start chatting with you.</p>
+      </div>
+    } @else {
+      <ul class="divide-y divide-border">
+        @for (conversation of chatService.conversations(); track conversation.id) {
+          <li>
+            <button type="button" (click)="openConversation(conversation.id)" class="w-full text-start transition-colors hover:bg-surface-elevated focus:bg-surface-elevated focus:outline-none">
+              <div class="px-6 py-4">
+                <div class="flex items-center justify-between gap-4">
+                  <div class="flex min-w-0 flex-1 items-center gap-4">
+                    <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-primary font-medium text-white">{{ getInitials(conversation) }}</span>
+                    <div class="min-w-0 flex-1">
+                      <div class="flex items-center justify-between gap-2">
+                        <p class="truncate text-sm font-medium text-text">{{ conversation.customerName || conversation.customerEmail || 'Guest' }}</p>
+                        <p class="flex-shrink-0 text-xs text-text-muted">{{ formatTime(conversation.lastMessageAt || conversation.startedAt) }}</p>
+                      </div>
+                      @if (conversation.lastMessageContent) {
+                        <p class="mt-1 truncate text-sm text-text-muted">
+                          @if (conversation.lastMessageSenderType === 'Merchant') { <span class="font-medium">You:</span> }
+                          {{ conversation.lastMessageContent }}
+                        </p>
+                      }
+                      <div class="mt-1">
+                        <span class="inline-flex items-center rounded px-2 py-0.5 text-xs font-medium"
+                          [class]="conversation.status === 'Active' ? 'bg-success/10 text-success' : 'bg-surface-elevated text-text-muted'">
+                          {{ conversation.status }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  @if (conversation.unreadMerchantMessages > 0) {
+                    <span class="inline-flex flex-shrink-0 items-center justify-center rounded-full bg-danger px-2 py-1 text-xs font-bold leading-none text-white">{{ conversation.unreadMerchantMessages }}</span>
+                  }
+                </div>
+              </div>
+            </button>
+          </li>
+        }
+      </ul>
+    }
+  </div>
+</div>

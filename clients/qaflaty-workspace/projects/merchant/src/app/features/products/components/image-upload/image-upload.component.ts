@@ -1,7 +1,8 @@
 import { Component, Input, Output, EventEmitter, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { MediaService } from '../../services/media.service';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 export interface ImageItem {
   id?: string;
@@ -13,7 +14,7 @@ export interface ImageItem {
 @Component({
   selector: 'app-image-upload',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule, TranslocoPipe, IconComponent],
   templateUrl: './image-upload.component.html',
   styleUrls: ['./image-upload.component.scss']
 })

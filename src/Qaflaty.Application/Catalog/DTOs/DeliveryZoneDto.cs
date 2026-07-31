@@ -6,8 +6,7 @@ public record DeliveryZoneDto(
     string Level,
     int ReferenceId,
     bool IsDeliveryEnabled,
-    decimal? CustomDeliveryFee,
-    string? FeeCurrency);
+    decimal? CustomDeliveryFee);
 
 public record ResolvedDeliveryFeeDto(
     bool IsDeliveryAvailable,

@@ -29,7 +29,9 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Paginated
         // Verify store ownership
         var storeId = new StoreId(request.StoreId);
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<PaginatedList<ProductListDto>>(Error.Unauthorized);
 
         var products = await _productRepository.GetByStoreIdAsync(storeId, cancellationToken);
@@ -53,12 +55,20 @@ public class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, Paginated
             query = query.Where(p => p.Status.ToString().Equals(request.Status, StringComparison.OrdinalIgnoreCase));
         }
 
+        if (request.InStock.HasValue)
+        {
+            query = query.Where(p => p.Inventory.InStock == request.InStock.Value);
+        }
+
         var dtos = query.Select(p => new ProductListDto(
             p.Id.Value,
             p.Slug.Value,
             p.Name.Value,
+            p.Name.Arabic,
             p.Pricing.Price.Amount,
             p.Inventory.Quantity,
+            p.Inventory.TrackInventory,
+            p.Inventory.InStock,
             p.Status.ToString(),
             p.Images.FirstOrDefault()?.Url
         ));

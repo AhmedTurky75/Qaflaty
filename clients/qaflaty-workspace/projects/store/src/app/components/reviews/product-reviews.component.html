@@ -1,0 +1,162 @@
+@if (features.isReviewsEnabled()) {
+<section class="reviews" id="reviews">
+  <h2 class="reviews__heading">Ratings &amp; Reviews</h2>
+
+  <!-- Summary -->
+  <div class="reviews__summary">
+    <div class="summary__score">
+      <div class="summary__avg">{{ (summary()?.averageRating ?? 0) | number:'1.1-1' }}</div>
+      <div class="summary__stars" aria-hidden="true">
+        @for (filled of starArray(summary()?.averageRating ?? 0); track $index) {
+          <span class="star" [class.star--on]="filled">&#9733;</span>
+        }
+      </div>
+      <div class="summary__count">
+        {{ summary()?.totalReviews ?? 0 }} {{ (summary()?.totalReviews ?? 0) === 1 ? 'review' : 'reviews' }}
+      </div>
+      @if ((summary()?.totalVerified ?? 0) > 0) {
+        <div class="summary__verified">{{ summary()?.totalVerified }} verified purchase{{ (summary()?.totalVerified ?? 0) === 1 ? '' : 's' }}</div>
+      }
+    </div>
+
+    <div class="summary__dist">
+      @for (s of stars; track s) {
+        <button type="button" class="dist__row"
+                [class.dist__row--active]="filterStars() === s"
+                (click)="toggleStarFilter(s)">
+          <span class="dist__label">{{ s }} ★</span>
+          <span class="dist__bar"><span class="dist__fill" [style.width.%]="summary()?.distributionPercentages?.[s] ?? 0"></span></span>
+          <span class="dist__pct">{{ summary()?.distributionPercentages?.[s] ?? 0 }}%</span>
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- Write / your review -->
+  <div class="reviews__write">
+    @if (!auth.isAuthenticated()) {
+      <p class="write__signin">
+        <a [routerLink]="['/account/login']">Sign in</a> to write a review.
+      </p>
+    } @else if (!showForm()) {
+      @if (myReview()) {
+        <div class="write__has-review">
+          <span>You reviewed this product.</span>
+          <button class="btn btn--ghost" (click)="openForm()">Edit</button>
+          <button class="btn btn--danger" (click)="deleteMyReview()" [disabled]="submitting()">Delete</button>
+        </div>
+      } @else {
+        <button class="btn btn--primary" (click)="openForm()">Write a review</button>
+      }
+    }
+
+    @if (showForm()) {
+      <div class="review-form">
+        <div class="form__rating">
+          <span class="form__label">Your rating</span>
+          <div class="star-picker">
+            @for (n of [1,2,3,4,5]; track n) {
+              <button type="button" class="star-picker__star"
+                      [class.star-picker__star--on]="n <= (formHoverRating() || formRating())"
+                      (mouseenter)="formHoverRating.set(n)" (mouseleave)="formHoverRating.set(0)"
+                      (click)="setRating(n)">&#9733;</button>
+            }
+          </div>
+        </div>
+        <input class="form__input" type="text" maxlength="200"
+               placeholder="Add a title (optional)"
+               [ngModel]="formTitle()" (ngModelChange)="formTitle.set($event)" />
+        <textarea class="form__textarea" rows="4" maxlength="4000"
+                  placeholder="Share your experience with this product…"
+                  [ngModel]="formComment()" (ngModelChange)="formComment.set($event)"></textarea>
+
+        @if (errorMessage()) { <p class="form__error">{{ errorMessage() }}</p> }
+
+        <div class="form__actions">
+          <button class="btn btn--primary" (click)="submit()" [disabled]="submitting()">
+            {{ submitting() ? 'Saving…' : (myReview() ? 'Update review' : 'Submit review') }}
+          </button>
+          <button class="btn btn--ghost" (click)="cancelForm()" [disabled]="submitting()">Cancel</button>
+        </div>
+      </div>
+    }
+  </div>
+
+  <!-- Controls -->
+  <div class="reviews__controls">
+    <label class="sort">
+      Sort by
+      <select [ngModel]="sortBy()" (ngModelChange)="changeSort($event)">
+        <option value="recent">Most recent</option>
+        <option value="helpful">Most helpful</option>
+        <option value="highest">Highest rated</option>
+        <option value="lowest">Lowest rated</option>
+      </select>
+    </label>
+    @if (filterStars()) {
+      <button class="chip" (click)="toggleStarFilter(filterStars()!)">{{ filterStars() }} ★ ✕</button>
+    }
+  </div>
+
+  <!-- List -->
+  @if (loading() && reviews().length === 0) {
+    <p class="reviews__loading">Loading reviews…</p>
+  } @else if (reviews().length === 0) {
+    <p class="reviews__empty">No reviews yet. Be the first to share your thoughts!</p>
+  } @else {
+    <ul class="review-list">
+      @for (r of reviews(); track r.id) {
+        <li class="review" [class.review--pinned]="r.isPinned">
+          <div class="review__head">
+            <div class="review__author">
+              <span class="review__avatar">{{ r.customerName.charAt(0).toUpperCase() }}</span>
+              <div>
+                <div class="review__name">
+                  {{ r.customerName }}
+                  @if (r.isVerifiedPurchase) {
+                    <span class="badge badge--verified" title="Verified purchase">✓ Verified Purchase</span>
+                  }
+                  @if (r.isPinned) { <span class="badge badge--pinned">Pinned</span> }
+                </div>
+                <div class="review__date">{{ r.createdAt | date:'mediumDate' }}</div>
+              </div>
+            </div>
+            <div class="review__stars" aria-hidden="true">
+              @for (filled of starArray(r.rating); track $index) {
+                <span class="star" [class.star--on]="filled">&#9733;</span>
+              }
+            </div>
+          </div>
+
+          @if (r.title) { <h3 class="review__title">{{ r.title }}</h3> }
+          @if (r.comment) { <p class="review__comment">{{ r.comment }}</p> }
+
+          @if (r.media.length > 0) {
+            <div class="review__media">
+              @for (m of r.media; track m.url) {
+                @if (m.type === 'Video') {
+                  <video class="review__media-item" [src]="m.url" controls></video>
+                } @else {
+                  <img class="review__media-item" [src]="m.url" alt="Customer photo" loading="lazy" />
+                }
+              }
+            </div>
+          }
+
+          <div class="review__footer">
+            <button class="helpful" (click)="voteHelpful(r)">
+              👍 Helpful @if (r.helpfulCount > 0) { <span>({{ r.helpfulCount }})</span> }
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (hasMore()) {
+      <button class="btn btn--ghost reviews__more" (click)="loadMore()" [disabled]="loading()">
+        {{ loading() ? 'Loading…' : 'Show more reviews' }}
+      </button>
+    }
+  }
+</section>
+}

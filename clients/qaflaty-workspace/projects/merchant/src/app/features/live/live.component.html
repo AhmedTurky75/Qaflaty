@@ -1,0 +1,53 @@
+<div class="mx-auto max-w-7xl space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="flex items-center gap-2 text-2xl font-bold text-text">
+        Live activity
+        <span class="relative flex h-3 w-3">
+          @if (analytics.isConnected()) { <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/70"></span> }
+          <span class="relative inline-flex h-3 w-3 rounded-full" [class.bg-success]="analytics.isConnected()" [class.bg-border]="!analytics.isConnected()"></span>
+        </span>
+      </h1>
+      <p class="mt-1 text-sm text-text-muted">{{ analytics.isConnected() ? 'Real-time — updating live' : 'Connecting…' }}</p>
+    </div>
+  </div>
+
+  @if (!storeContext.currentStoreId()) {
+    <div class="rounded-xl border border-warning/30 bg-warning/10 p-6">
+      <p class="text-text">Please select a store to view live activity.</p>
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+      <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+        <p class="mb-1 text-sm font-medium text-text-muted">Active users now</p>
+        <p class="text-3xl font-bold text-text">{{ analytics.activeUsers() }}</p>
+        <p class="mt-1 text-xs text-text-muted">Interacted with your store in the last 10 minutes</p>
+      </div>
+      <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+        <p class="mb-1 text-sm font-medium text-text-muted">Active carts now</p>
+        <p class="text-3xl font-bold text-text">{{ analytics.activeCartCount() }}</p>
+        <a routerLink="/active-carts" class="mt-1 inline-block text-xs text-primary hover:underline">View cart details →</a>
+      </div>
+    </div>
+
+    <div class="rounded-2xl border border-border bg-surface p-6 shadow-sm">
+      <h3 class="mb-4 flex items-center gap-2 text-base font-bold text-text"><app-icon name="eye" [size]="20" /> Who's viewing what</h3>
+      @if (analytics.productViewers().length === 0) {
+        <p class="text-sm text-text-muted">No one is currently viewing a product page.</p>
+      } @else {
+        <ul class="divide-y divide-border">
+          @for (p of analytics.productViewers(); track p.productId) {
+            <li class="flex items-center gap-3 py-2.5">
+              <span class="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-elevated">
+                @if (p.imageUrl) { <img [src]="p.imageUrl" [alt]="p.productName" class="h-full w-full object-cover" /> }
+                @else { <span class="text-text-muted/50"><app-icon name="products" [size]="20" /></span> }
+              </span>
+              <span class="min-w-0 flex-1 truncate text-sm font-medium text-text">{{ p.productName }}</span>
+              <span class="inline-flex items-center gap-1 rounded-full bg-success/10 px-2.5 py-0.5 text-sm font-semibold text-success">{{ p.viewerCount }} watching</span>
+            </li>
+          }
+        </ul>
+      }
+    </div>
+  }
+</div>

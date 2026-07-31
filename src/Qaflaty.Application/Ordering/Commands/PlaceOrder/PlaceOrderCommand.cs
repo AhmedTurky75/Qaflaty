@@ -19,6 +19,7 @@ public record PlaceOrderCommand(
     string Street,
     string City,
     string? District,
+    string? Country,
     string? DeliveryInstructions,
     string? CustomerNotes,
     string PaymentMethod,
@@ -26,5 +27,11 @@ public record PlaceOrderCommand(
     int CountryCode = 0,
     int? CityId = null,
     int? DistrictId = null,
-    OrderSource Source = OrderSource.Storefront
+    OrderSource Source = OrderSource.Storefront,
+    string? PromoCode = null,
+    // Storefront buyer identity (authenticated customer id, or guest session id) — used only to
+    // locate and clear the cart that was checked out; unrelated to the phone-derived Ordering
+    // Customer created above. Null for merchant-entered manual orders.
+    Guid? BuyerCustomerId = null,
+    string? BuyerGuestId = null
 ) : ICommand<OrderDto>;

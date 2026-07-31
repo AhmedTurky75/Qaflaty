@@ -1,22 +1,47 @@
-import { Address, OrderDto } from './order.models';
+import { OrderDto } from './order.models';
 
+// These mirror the API's CustomerDto / CustomerListDto exactly. The shapes are FLAT — the API does
+// not nest contact or address. HttpClient's generic is an unchecked cast, so any drift here fails
+// at runtime in the template, not at compile time. Keep them in step with
+// src/Qaflaty.Application/Ordering/DTOs/CustomerDto.cs.
+
+/** Full customer record — returned by GET /api/customers/{id}. */
 export interface CustomerDto {
   id: string;
   storeId: string;
-  contact: CustomerContactInfo;
-  address: Address;
+  fullName: string;
+  phone: string;
+  email?: string;
+  street: string;
+  city: string;
+  district?: string;
+  postalCode?: string;
+  country: string;
   notes?: string;
-  totalOrders: number;
+  orderCount: number;
   totalSpent: number;
   firstOrderDate?: string;
   lastOrderDate?: string;
   createdAt: string;
+  /** Non-null exactly when this customer's phone is on the store blocklist; pass it back to unblock. */
+  blockedPhoneId?: string | null;
+  blockReason?: string | null;
+  blockedAt?: string | null;
 }
 
-export interface CustomerContactInfo {
+/** Trimmed row shape — returned by GET /api/customers. Has no address beyond `city`. */
+export interface CustomerListDto {
+  id: string;
   fullName: string;
   phone: string;
   email?: string;
+  city: string;
+  orderCount: number;
+  totalSpent: number;
+  lastOrderDate?: string;
+  createdAt: string;
+  /** Non-null exactly when this customer's phone is on the store blocklist. */
+  blockedPhoneId?: string | null;
 }
 
 export interface CustomerDetailDto extends CustomerDto {
@@ -42,10 +67,12 @@ export enum CustomerSortBy {
   LastOrderDate = 'lastOrderDate'
 }
 
+/** Mirrors the API's PaginatedList<T>. Field names must match the wire format exactly. */
 export interface PaginatedCustomers {
-  customers: CustomerDto[];
-  total: number;
-  page: number;
-  limit: number;
+  items: CustomerListDto[];
+  pageNumber: number;
   totalPages: number;
+  totalCount: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
 }

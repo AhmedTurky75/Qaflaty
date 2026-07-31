@@ -7,8 +7,8 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class DeliverySettings : ValueObject
 {
-    public Money DeliveryFee { get; private set; } = null!;
-    public Money? FreeDeliveryThreshold { get; private set; }
+    public Money DeliveryFee { get; private set; } = null!; // Flat shipping fee charged per order, e.g. 15.00 SAR
+    public Money? FreeDeliveryThreshold { get; private set; } // Order subtotal at/above which delivery becomes free; null disables free shipping, e.g. 200.00 SAR
 
     // EF Core requires parameterless constructor for types with owned navigations
     private DeliverySettings() { }

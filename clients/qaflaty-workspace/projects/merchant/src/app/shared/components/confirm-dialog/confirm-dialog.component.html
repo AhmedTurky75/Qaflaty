@@ -1,0 +1,65 @@
+<div class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center" role="dialog" aria-modal="true">
+  <div class="fixed inset-0 bg-black/50" (click)="onCancel()"></div>
+  <div class="relative w-full max-w-lg overflow-hidden rounded-2xl border border-border bg-surface shadow-xl">
+    <div class="p-6">
+      <div class="flex items-start gap-4">
+        <span
+          [class]="config().variant === 'primary'
+            ? 'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-primary-tint text-primary'
+            : 'flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-danger/10 text-danger'"
+        ><app-icon [name]="config().icon || 'alert-triangle'" [size]="22" /></span>
+
+        <div class="w-full min-w-0">
+          <h3 class="text-base font-bold text-text">{{ config().title }}</h3>
+
+          @if (config().message) {
+            <p class="mt-2 text-sm text-text-muted">{{ config().message }}</p>
+          }
+
+          @if (config().reason; as reason) {
+            <div class="mt-4">
+              <label for="confirmDialogReason" class="mb-2 block text-sm font-medium text-text">{{ reason.label }}</label>
+              <textarea
+                id="confirmDialogReason"
+                [ngModel]="reasonText()"
+                (ngModelChange)="reasonText.set($event)"
+                rows="3"
+                [placeholder]="reason.placeholder || ''"
+                class="w-full rounded-[10px] border border-border bg-surface-elevated px-3 py-2.5 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30"
+              ></textarea>
+            </div>
+          }
+
+          @if (config().checkbox; as checkbox) {
+            <label class="mt-4 flex cursor-pointer items-start gap-3 text-sm text-text">
+              <input
+                type="checkbox"
+                [ngModel]="checkboxChecked()"
+                (ngModelChange)="checkboxChecked.set($event)"
+                class="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-border text-primary focus:ring-2 focus:ring-primary/40"
+              />
+              <span>{{ checkbox.label }}</span>
+            </label>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-row-reverse gap-3 border-t border-border bg-surface-elevated px-6 py-3">
+      <button
+        type="button"
+        (click)="onConfirm()"
+        [disabled]="confirmDisabled"
+        [class]="config().variant === 'primary'
+          ? 'min-h-[44px] rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50'
+          : 'min-h-[44px] rounded-[10px] bg-danger px-4 py-2 text-sm font-semibold text-white hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-danger/40 disabled:opacity-50'"
+      >{{ config().confirmLabel }}</button>
+      <button
+        type="button"
+        (click)="onCancel()"
+        [disabled]="pending()"
+        class="min-h-[44px] rounded-[10px] border border-border bg-surface px-4 py-2 text-sm font-medium text-text hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+      >{{ config().cancelLabel }}</button>
+    </div>
+  </div>
+</div>

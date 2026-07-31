@@ -12,14 +12,14 @@ public sealed class LoginOtp
     public const int MaxAttempts = 5;
     public const int ResendCooldownSeconds = 60;
 
-    public Guid Id { get; private set; }
-    public string Email { get; private set; } = null!;
-    public string Code { get; private set; } = null!;
-    public LoginOtpPurpose Purpose { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime ExpiresAt { get; private set; }
-    public bool IsUsed { get; private set; }
-    public int AttemptCount { get; private set; }
+    public Guid Id { get; private set; } // Primary key of the OTP record
+    public string Email { get; private set; } = null!; // Email the login code was sent to
+    public string Code { get; private set; } = null!; // The 6-digit one-time login code, e.g. "048213"
+    public LoginOtpPurpose Purpose { get; private set; } // Whether the code is for MerchantLogin or CustomerLogin
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the code was generated
+    public DateTime ExpiresAt { get; private set; } // UTC expiry (CreatedAt + 10 minutes)
+    public bool IsUsed { get; private set; } // True once the code has been verified or invalidated
+    public int AttemptCount { get; private set; } // Number of verification attempts (max 5 before lockout)
 
     private LoginOtp() { }
 

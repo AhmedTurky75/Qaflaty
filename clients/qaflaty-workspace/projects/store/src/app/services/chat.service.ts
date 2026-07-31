@@ -34,6 +34,7 @@ export interface ChatConversation {
 export interface AiSuggestedProduct {
   productId: string;
   name: string;
+  nameAr: string;
   slug: string;
   price: number;
   currency: string;

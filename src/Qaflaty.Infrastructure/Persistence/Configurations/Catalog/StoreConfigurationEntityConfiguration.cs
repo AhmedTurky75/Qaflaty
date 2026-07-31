@@ -131,6 +131,34 @@ public class StoreConfigurationEntityConfiguration : IEntityTypeConfiguration<St
                 .HasColumnType("jsonb");
         });
 
+        // Tax / VAT settings - owned value object
+        builder.OwnsOne(sc => sc.TaxSettings, tax =>
+        {
+            tax.Property(t => t.Enabled).HasColumnName("tax_enabled");
+            tax.Property(t => t.Rate).HasColumnName("tax_rate").HasColumnType("decimal(5,2)");
+            tax.Property(t => t.PricesIncludeTax).HasColumnName("tax_prices_include");
+            tax.Property(t => t.Label).HasColumnName("tax_label").HasMaxLength(30);
+        });
+        builder.Navigation(sc => sc.TaxSettings).IsRequired();
+
+        // Reviews & ratings policy
+        builder.Property(sc => sc.ReviewsRequirePurchase).HasColumnName("reviews_require_purchase");
+        builder.Property(sc => sc.ReviewsAutoApprove).HasColumnName("reviews_auto_approve");
+        builder.Property(sc => sc.ReviewsAllowEditing).HasColumnName("reviews_allow_editing");
+
+        // Recommendations
+        builder.Property(sc => sc.RelatedProductsManual).HasColumnName("related_products_manual");
+        builder.Property(sc => sc.CrossSellEnabled).HasColumnName("cross_sell_enabled");
+        builder.Property(sc => sc.CrossSellLimit).HasColumnName("cross_sell_limit");
+        builder.Property(sc => sc.CrossSellExcludeOutOfStock).HasColumnName("cross_sell_exclude_out_of_stock");
+        builder.Property(sc => sc.UpSellEnabled).HasColumnName("up_sell_enabled");
+        builder.Property(sc => sc.UpSellLimit).HasColumnName("up_sell_limit");
+        builder.Property(sc => sc.UpSellExcludeOutOfStock).HasColumnName("up_sell_exclude_out_of_stock");
+        builder.Property(sc => sc.DownsellEnabled).HasColumnName("downsell_enabled");
+        builder.Property(sc => sc.DownsellMaxShowsPerSession).HasColumnName("downsell_max_shows_per_session");
+        builder.Property(sc => sc.DownsellMinIntervalSeconds).HasColumnName("downsell_min_interval_seconds");
+        builder.Property(sc => sc.DownsellExcludeOutOfStock).HasColumnName("downsell_exclude_out_of_stock");
+
         builder.Property(sc => sc.CreatedAt).HasColumnName("created_at");
         builder.Property(sc => sc.UpdatedAt).HasColumnName("updated_at");
 

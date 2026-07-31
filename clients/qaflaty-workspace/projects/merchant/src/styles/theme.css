@@ -1,0 +1,223 @@
+/* ============================================================================
+   theme.css — Qaflaty Merchant · Direction C "Confident Console"
+   One block per palette. Tokens are space-separated RGB channels so Tailwind
+   can apply alpha via `rgb(var(--token) / <alpha-value>)`. Switching the
+   `data-theme` attribute on <html> repaints the whole app instantly — no rebuild.
+
+   Token contract (per theme):
+     --c-canvas --c-surface --c-elevated --c-border --c-text --c-muted
+     --c-primary --c-primary-hover --c-tint --c-success --c-warning --c-danger
+   Rail set (coloured sidebar):
+     --rail-bg --rail-text --rail-muted --rail-active --rail-active-text --rail-border
+
+   Hex values copied verbatim from "Design System & Specs" §02 Colour.
+   Amber & Rose primaries use the 700 shade so white button text stays AA.
+   ========================================================================== */
+
+/* ---- Blue (default) — matches the current app -------------------------- */
+:root,
+[data-theme='blue'] {
+  --c-canvas: 244 245 247;
+  --c-surface: 255 255 255;
+  --c-elevated: 247 248 250;
+  --c-border: 227 230 235;
+  --c-text: 22 24 29;
+  --c-muted: 91 100 114;
+  --c-primary: 37 99 235;
+  --c-primary-hover: 29 78 216;
+  --c-tint: 228 237 255;
+  --c-success: 15 157 99;
+  --c-warning: 199 125 24;
+  --c-danger: 214 69 69;
+
+  --rail-bg: 22 35 61;
+  --rail-text: 238 240 244;
+  --rail-muted: 148 156 173;
+  --rail-active: 37 99 235;
+  --rail-active-text: 255 255 255;
+  --rail-border: 255 255 255;
+}
+
+/* ---- Light / White — maximum clarity, indigo accent ------------------- */
+[data-theme='light'] {
+  --c-canvas: 244 245 247;
+  --c-surface: 255 255 255;
+  --c-elevated: 247 248 250;
+  --c-border: 227 230 235;
+  --c-text: 22 24 29;
+  --c-muted: 91 100 114;
+  --c-primary: 79 70 229;
+  --c-primary-hover: 67 56 202;
+  --c-tint: 238 238 254;
+  --c-success: 15 157 99;
+  --c-warning: 199 125 24;
+  --c-danger: 214 69 69;
+
+  --rail-bg: 30 37 54;
+  --rail-text: 238 240 244;
+  --rail-muted: 148 156 173;
+  --rail-active: 79 70 229;
+  --rail-active-text: 255 255 255;
+  --rail-border: 255 255 255;
+}
+
+/* ---- Slate / Dark — low-light comfort · dark mode --------------------- */
+[data-theme='slate'] {
+  --c-canvas: 20 23 29;
+  --c-surface: 29 33 42;
+  --c-elevated: 38 43 54;
+  --c-border: 50 57 71;
+  --c-text: 238 241 246;
+  --c-muted: 153 162 178;
+  --c-primary: 99 102 241;
+  --c-primary-hover: 124 131 246;
+  --c-tint: 35 38 58;
+  --c-success: 52 211 153;
+  --c-warning: 224 168 62;
+  --c-danger: 242 114 114;
+
+  --rail-bg: 15 18 24;
+  --rail-text: 238 241 246;
+  --rail-muted: 153 162 178;
+  --rail-active: 99 102 241;
+  --rail-active-text: 255 255 255;
+  --rail-border: 255 255 255;
+}
+
+/* ---- Grey — neutral, distraction-free --------------------------------- */
+[data-theme='grey'] {
+  --c-canvas: 243 244 246;
+  --c-surface: 255 255 255;
+  --c-elevated: 247 248 249;
+  --c-border: 226 228 232;
+  --c-text: 28 31 36;
+  --c-muted: 92 99 110;
+  --c-primary: 75 85 99;
+  --c-primary-hover: 55 65 81;
+  --c-tint: 236 238 241;
+  --c-success: 15 157 99;
+  --c-warning: 199 125 24;
+  --c-danger: 214 69 69;
+
+  --rail-bg: 36 40 47;
+  --rail-text: 238 240 244;
+  --rail-muted: 148 156 173;
+  --rail-active: 75 85 99;
+  --rail-active-text: 255 255 255;
+  --rail-border: 255 255 255;
+}
+
+/* ---- Purple — warm violet accent -------------------------------------- */
+[data-theme='purple'] {
+  --c-canvas: 246 244 251;
+  --c-surface: 255 255 255;
+  --c-elevated: 247 246 251;
+  --c-border: 231 226 240;
+  --c-text: 30 26 41;
+  --c-muted: 97 89 111;
+  --c-primary: 124 58 237;
+  --c-primary-hover: 109 40 217;
+  --c-tint: 241 234 254;
+  --c-success: 15 157 99;
+  --c-warning: 199 125 24;
+  --c-danger: 214 69 69;
+
+  --rail-bg: 36 26 60;
+  --rail-text: 238 240 244;
+  --rail-muted: 148 156 173;
+  --rail-active: 124 58 237;
+  --rail-active-text: 255 255 255;
+  --rail-border: 255 255 255;
+}
+
+/* ---- Yellow / Amber — Amber-700 primary keeps AA on white ------------- */
+[data-theme='amber'] {
+  --c-canvas: 250 247 241;
+  --c-surface: 255 255 255;
+  --c-elevated: 250 248 243;
+  --c-border: 234 226 211;
+  --c-text: 36 31 22;
+  --c-muted: 107 97 81;
+  --c-primary: 180 83 9;
+  --c-primary-hover: 146 64 14;
+  --c-tint: 251 236 205;
+  --c-success: 15 157 99;
+  --c-warning: 199 125 24;
+  --c-danger: 214 69 69;
+
+  --rail-bg: 42 32 16;
+  --rail-text: 238 240 244;
+  --rail-muted: 148 156 173;
+  --rail-active: 180 83 9;
+  --rail-active-text: 255 255 255;
+  --rail-border: 255 255 255;
+}
+
+/* ---- Green / Emerald — calm natural green ----------------------------- */
+[data-theme='emerald'] {
+  --c-canvas: 242 247 244;
+  --c-surface: 255 255 255;
+  --c-elevated: 245 250 247;
+  --c-border: 221 232 226;
+  --c-text: 22 33 28;
+  --c-muted: 86 104 96;
+  --c-primary: 5 150 105;
+  --c-primary-hover: 4 120 87;
+  --c-tint: 217 243 230;
+  --c-success: 15 157 99;
+  --c-warning: 199 125 24;
+  --c-danger: 214 69 69;
+
+  --rail-bg: 15 36 29;
+  --rail-text: 238 240 244;
+  --rail-muted: 148 156 173;
+  --rail-active: 5 150 105;
+  --rail-active-text: 255 255 255;
+  --rail-border: 255 255 255;
+}
+
+/* ---- Teal — cool, modern ---------------------------------------------- */
+[data-theme='teal'] {
+  --c-canvas: 241 247 246;
+  --c-surface: 255 255 255;
+  --c-elevated: 244 250 249;
+  --c-border: 219 231 229;
+  --c-text: 20 35 32;
+  --c-muted: 79 103 100;
+  --c-primary: 13 148 136;
+  --c-primary-hover: 15 118 110;
+  --c-tint: 211 241 236;
+  --c-success: 15 157 99;
+  --c-warning: 199 125 24;
+  --c-danger: 214 69 69;
+
+  --rail-bg: 12 35 32;
+  --rail-text: 238 240 244;
+  --rail-muted: 148 156 173;
+  --rail-active: 13 148 136;
+  --rail-active-text: 255 255 255;
+  --rail-border: 255 255 255;
+}
+
+/* ---- Rose / Red — Rose-700 primary for AA safety ---------------------- */
+[data-theme='rose'] {
+  --c-canvas: 250 243 244;
+  --c-surface: 255 255 255;
+  --c-elevated: 250 245 246;
+  --c-border: 236 220 223;
+  --c-text: 36 19 24;
+  --c-muted: 110 82 89;
+  --c-primary: 190 18 60;
+  --c-primary-hover: 159 18 57;
+  --c-tint: 251 219 227;
+  --c-success: 15 157 99;
+  --c-warning: 199 125 24;
+  --c-danger: 214 69 69;
+
+  --rail-bg: 42 16 24;
+  --rail-text: 238 240 244;
+  --rail-muted: 148 156 173;
+  --rail-active: 190 18 60;
+  --rail-active-text: 255 255 255;
+  --rail-border: 255 255 255;
+}

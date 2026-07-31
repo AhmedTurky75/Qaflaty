@@ -1,3 +1,4 @@
+using Qaflaty.Application.Analytics.Abstractions;
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
 using Qaflaty.Application.Storefront.Common;
@@ -11,11 +12,19 @@ public class RemoveCartItemCommandHandler : ICommandHandler<RemoveCartItemComman
 {
     private readonly ICartRepository _cartRepository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ITenantContext _tenantContext;
+    private readonly IRealtimeNotifier _realtimeNotifier;
 
-    public RemoveCartItemCommandHandler(ICartRepository cartRepository, IUnitOfWork unitOfWork)
+    public RemoveCartItemCommandHandler(
+        ICartRepository cartRepository,
+        IUnitOfWork unitOfWork,
+        ITenantContext tenantContext,
+        IRealtimeNotifier realtimeNotifier)
     {
         _cartRepository = cartRepository;
         _unitOfWork = unitOfWork;
+        _tenantContext = tenantContext;
+        _realtimeNotifier = realtimeNotifier;
     }
 
     public async Task<Result> Handle(RemoveCartItemCommand request, CancellationToken cancellationToken)
@@ -29,6 +38,10 @@ public class RemoveCartItemCommandHandler : ICommandHandler<RemoveCartItemComman
 
         _cartRepository.Update(cart);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        if (_tenantContext.CurrentStoreId.HasValue)
+            await _realtimeNotifier.NotifyActiveCartsChangedAsync(_tenantContext.CurrentStoreId.Value, cancellationToken);
+
         return Result.Success();
     }
 }

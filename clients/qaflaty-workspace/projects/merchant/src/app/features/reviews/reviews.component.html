@@ -1,0 +1,188 @@
+<div class="reviews-page">
+  <header class="page-head" style="display:flex; align-items:flex-start; justify-content:space-between; gap:1rem;">
+    <div>
+      <h1>Ratings &amp; Reviews</h1>
+      <p class="subtitle">Moderate customer reviews and configure review policy for your store.</p>
+    </div>
+    <button type="button" (click)="openAddModal()"
+      class="whitespace-nowrap rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover">
+      + Add Review
+    </button>
+  </header>
+
+  <!-- Settings -->
+  @if (settings(); as s) {
+    <section class="card settings">
+      <h2>Review settings</h2>
+      <div class="settings-grid">
+        <label class="toggle">
+          <input type="checkbox" [ngModel]="s.reviewsEnabled"
+                 (ngModelChange)="updateSetting('reviewsEnabled', $event)" />
+          <span><strong>Enable reviews &amp; ratings</strong><small>Show reviews on the storefront and allow customers to submit them.</small></span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" [ngModel]="s.requirePurchase"
+                 (ngModelChange)="updateSetting('requirePurchase', $event)" />
+          <span><strong>Require purchase</strong><small>Only customers with a delivered order can review.</small></span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" [ngModel]="s.autoApprove"
+                 (ngModelChange)="updateSetting('autoApprove', $event)" />
+          <span><strong>Auto-approve</strong><small>Publish new reviews immediately without moderation.</small></span>
+        </label>
+        <label class="toggle">
+          <input type="checkbox" [ngModel]="s.allowEditing"
+                 (ngModelChange)="updateSetting('allowEditing', $event)" />
+          <span><strong>Allow editing</strong><small>Let customers edit their submitted reviews.</small></span>
+        </label>
+      </div>
+      <div class="settings-actions">
+        <button class="btn btn-primary" (click)="saveSettings()" [disabled]="savingSettings()">
+          {{ savingSettings() ? 'Saving…' : 'Save settings' }}
+        </button>
+        @if (settingsSaved()) { <span class="saved">✓ Saved</span> }
+      </div>
+    </section>
+  }
+
+  <!-- Status tabs -->
+  <div class="tabs">
+    @for (st of statuses; track st) {
+      <button class="tab" [class.tab--active]="activeStatus() === st" (click)="selectStatus(st)">
+        {{ st }}
+        @if (st === 'Pending' && pendingCount() > 0) { <span class="badge">{{ pendingCount() }}</span> }
+      </button>
+    }
+  </div>
+
+  <!-- List -->
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (reviews().length === 0) {
+    <p class="muted">No {{ activeStatus().toLowerCase() }} reviews.</p>
+  } @else {
+    <div class="review-cards">
+      @for (r of reviews(); track r.id) {
+        <article class="card review-card">
+          <!-- What the review is about -->
+          <div class="rc-product">
+            @if (r.productImageUrl) {
+              <img class="rc-product__img" [src]="r.productImageUrl" [alt]="productLabel(r)" loading="lazy" />
+            } @else {
+              <span class="rc-product__img rc-product__img--empty" aria-hidden="true">🖼️</span>
+            }
+            <div class="rc-product__text">
+              <span class="rc-product__name">{{ productLabel(r) || 'Unknown product' }}</span>
+              @if (r.productSlug) {
+                <span class="rc-product__slug">/{{ r.productSlug }}</span>
+              }
+            </div>
+          </div>
+
+          <div class="rc-head">
+            <div>
+              <span class="rc-name">{{ r.customerName }}</span>
+              @if (r.isVerifiedPurchase) { <span class="chip chip--verified">✓ Verified</span> }
+              @if (r.isPinned) { <span class="chip chip--pinned">Pinned</span> }
+              <span class="chip chip--status">{{ r.status }}</span>
+            </div>
+            <div class="rc-stars">
+              @for (on of starArray(r.rating); track $index) {
+                <span class="star" [class.on]="on">★</span>
+              }
+            </div>
+          </div>
+          @if (r.title) { <h3 class="rc-title">{{ r.title }}</h3> }
+          @if (r.comment) { <p class="rc-comment">{{ r.comment }}</p> }
+          @if (r.media.length) {
+            <div class="rc-media">
+              @for (m of r.media; track m.url) {
+                <img [src]="m.url" alt="" />
+              }
+            </div>
+          }
+          <div class="rc-meta">{{ r.createdAt | date:'medium' }} · 👍 {{ r.helpfulCount }}</div>
+
+          <div class="rc-actions">
+            @if (r.status !== 'Approved') { <button class="btn btn-success" (click)="approve(r)">Approve</button> }
+            @if (r.status !== 'Rejected') { <button class="btn btn-danger" (click)="reject(r)">Reject</button> }
+            @if (r.status === 'Approved') { <button class="btn btn-ghost" (click)="hide(r)">Hide</button> }
+            @if (r.isPinned) {
+              <button class="btn btn-ghost" (click)="unpin(r)">Unpin</button>
+            } @else {
+              <button class="btn btn-ghost" (click)="pin(r)">Pin</button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>
+
+<!-- Add manual review modal -->
+@if (showAddModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+    <div class="w-full max-w-lg rounded-xl border border-border bg-surface p-6 shadow-xl">
+      <div class="mb-4 flex items-center justify-between">
+        <h3 class="text-lg font-semibold text-text">Add a review</h3>
+        <button type="button" (click)="showAddModal.set(false)" class="text-text-muted hover:text-text" aria-label="Close">✕</button>
+      </div>
+      <p class="mb-4 text-xs text-text-muted">Manually add a review to a product. It is published immediately and shown on the storefront like any other review.</p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text">Product</label>
+          <select [ngModel]="addForm().productId" (ngModelChange)="updateAddField('productId', $event)"
+            class="w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-text">
+            <option value="">Select a product…</option>
+            @for (p of products(); track p.id) {
+              <option [value]="p.id">{{ p.name }}</option>
+            }
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="mb-1 block text-xs font-medium text-text">Author name</label>
+            <input type="text" [ngModel]="addForm().authorName" (ngModelChange)="updateAddField('authorName', $event)"
+              placeholder="e.g. Ahmed M." class="w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-text" />
+          </div>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-text">Rating</label>
+            <select [ngModel]="addForm().rating" (ngModelChange)="updateAddField('rating', +$event)"
+              class="w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-text">
+              @for (n of [5,4,3,2,1]; track n) {
+                <option [value]="n">{{ n }} star{{ n > 1 ? 's' : '' }}</option>
+              }
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text">Title (optional)</label>
+          <input type="text" [ngModel]="addForm().title" (ngModelChange)="updateAddField('title', $event)"
+            placeholder="Great product!" class="w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-text" />
+        </div>
+
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text">Comment (optional)</label>
+          <textarea rows="3" [ngModel]="addForm().comment" (ngModelChange)="updateAddField('comment', $event)"
+            placeholder="Write the review text…" class="w-full resize-none rounded-md border border-border bg-surface px-2 py-2 text-sm text-text"></textarea>
+        </div>
+
+        @if (addError()) {
+          <p class="text-xs text-danger">{{ addError() }}</p>
+        }
+      </div>
+
+      <div class="mt-5 flex justify-end gap-2">
+        <button type="button" (click)="showAddModal.set(false)"
+          class="rounded-md bg-surface-elevated px-4 py-2 text-sm text-text hover:bg-border/40">Cancel</button>
+        <button type="button" (click)="submitManualReview()" [disabled]="submitting()"
+          class="rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary-hover disabled:opacity-50">
+          {{ submitting() ? 'Adding…' : 'Add Review' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}

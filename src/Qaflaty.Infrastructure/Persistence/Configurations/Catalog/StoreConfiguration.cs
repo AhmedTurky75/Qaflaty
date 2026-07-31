@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Qaflaty.Domain.Catalog.Aggregates.Store;
 using Qaflaty.Domain.Common.Identifiers;
+using Qaflaty.Infrastructure.Persistence.Converters;
 
 namespace Qaflaty.Infrastructure.Persistence.Configurations.Catalog;
 
@@ -89,18 +90,22 @@ public class StoreConfiguration : IEntityTypeConfiguration<Store>
             .HasColumnName("status")
             .HasConversion<string>();
 
+        builder.Property(s => s.Currency)
+            .HasColumnName("currency")
+            .HasConversion(new CurrencyConverter())
+            .HasMaxLength(3)
+            .IsRequired();
+
         builder.OwnsOne(s => s.DeliverySettings, ds =>
         {
             ds.OwnsOne(d => d.DeliveryFee, fee =>
             {
                 fee.Property(f => f.Amount).HasColumnName("delivery_fee").HasColumnType("decimal(18,2)");
-                fee.Property(f => f.Currency).HasColumnName("delivery_fee_currency").HasConversion<string>();
             });
 
             ds.OwnsOne(d => d.FreeDeliveryThreshold, threshold =>
             {
                 threshold.Property(t => t.Amount).HasColumnName("free_delivery_threshold").HasColumnType("decimal(18,2)");
-                threshold.Property(t => t.Currency).HasColumnName("free_delivery_threshold_currency").HasConversion<string>();
             });
         });
 

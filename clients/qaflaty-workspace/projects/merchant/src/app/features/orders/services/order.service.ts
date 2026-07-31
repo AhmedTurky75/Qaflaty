@@ -10,6 +10,13 @@ import {
   AddOrderNoteRequest
 } from 'shared';
 
+export interface ShipOrderRequest {
+  carrier?: string | null;
+  trackingNumber?: string | null;
+  trackingUrl?: string | null;
+  estimatedDeliveryDate?: string | null;
+}
+
 export interface OrderFilters {
   search?: string;
   status?: OrderStatus;
@@ -82,8 +89,8 @@ export class OrderService {
     return this.http.patch<OrderDto>(`${this.API_URL}/${id}/process`, {});
   }
 
-  shipOrder(id: string): Observable<OrderDto> {
-    return this.http.patch<OrderDto>(`${this.API_URL}/${id}/ship`, {});
+  shipOrder(id: string, shipment?: ShipOrderRequest): Observable<OrderDto> {
+    return this.http.patch<OrderDto>(`${this.API_URL}/${id}/ship`, shipment ?? {});
   }
 
   deliverOrder(id: string): Observable<OrderDto> {
@@ -101,5 +108,24 @@ export class OrderService {
   getOrderStats(storeId: string): Observable<OrderStats> {
     const params = new HttpParams().set('storeId', storeId);
     return this.http.get<OrderStats>(`${this.API_URL}/stats`, { params });
+  }
+
+  /**
+   * Approves an order held against the phone blocklist. This is the point at which stock is
+   * reserved and the purchase is tracked — none of that happened when the order was placed.
+   */
+  releaseBlockedOrder(storeId: string, orderId: string, alsoUnblockPhone: boolean): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/stores/${storeId}/orders/${orderId}/release`,
+      { alsoUnblockPhone }
+    );
+  }
+
+  /** Rejects a held order, cancelling it without restoring stock it never reserved. */
+  rejectBlockedOrder(storeId: string, orderId: string, reason?: string | null): Observable<void> {
+    return this.http.post<void>(
+      `${environment.apiUrl}/stores/${storeId}/orders/${orderId}/reject`,
+      { reason }
+    );
   }
 }

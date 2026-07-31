@@ -5,13 +5,13 @@ namespace Qaflaty.Domain.Identity.Aggregates.Merchant;
 
 public sealed class MerchantStoreAssignment
 {
-    public Guid Id { get; private set; }
-    public MerchantId MerchantId { get; private set; }
-    public StoreId StoreId { get; private set; }
-    public MerchantRole Role { get; private set; }
-    public bool IsActive { get; private set; }
-    public MerchantId? InvitedBy { get; private set; }
-    public DateTime CreatedAt { get; private set; }
+    public Guid Id { get; private set; } // Primary key of the assignment record
+    public MerchantId MerchantId { get; private set; } // Merchant (staff/owner) being granted access
+    public StoreId StoreId { get; private set; } // Store the merchant is assigned to
+    public MerchantRole Role { get; private set; } // Role granting permission scope in this store, e.g. Owner, Manager, Staff
+    public bool IsActive { get; private set; } // Whether the assignment is currently active (deactivated on removal)
+    public MerchantId? InvitedBy { get; private set; } // The merchant who invited this one, if applicable
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the assignment was created
 
     private MerchantStoreAssignment() { }
 

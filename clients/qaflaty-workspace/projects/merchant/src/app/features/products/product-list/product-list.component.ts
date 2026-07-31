@@ -2,16 +2,18 @@ import { Component, inject, signal, OnInit, computed, effect } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ProductService, ProductFilters } from '../services/product.service';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { ProductService, ProductFilters, ImportProductsResult } from '../services/product.service';
 import { CategoryService } from '../services/category.service';
 import { ProductCardComponent } from '../components/product-card/product-card.component';
 import { StoreContextService } from '../../../core/services/store-context.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 import {  CategoryDto, ProductDto, ProductStatus } from 'shared';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ProductCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TranslocoPipe, ProductCardComponent, IconComponent],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.scss']
 })
@@ -29,6 +31,7 @@ export class ProductListComponent implements OnInit {
   // Filters
   searchQuery = signal('');
   selectedStatus = signal<ProductStatus | ''>('');
+  selectedStock = signal<'' | 'true' | 'false'>('');
   selectedCategory = signal('');
 
   // Pagination
@@ -45,9 +48,19 @@ export class ProductListComponent implements OnInit {
     { value: ProductStatus.Inactive, label: 'Inactive' },
     { value: ProductStatus.Draft, label: 'Draft' }
   ];
+  stockOptions = [
+    { value: '', label: 'All Stock' },
+    { value: 'true', label: 'In Stock' },
+    { value: 'false', label: 'Out of Stock' }
+  ];
 
   // View mode
   viewMode = signal<'grid' | 'list'>('grid');
+
+  // Bulk CSV import
+  importing = signal(false);
+  importResult = signal<ImportProductsResult | null>(null);
+  showImportResult = signal(false);
 
   constructor() {
     effect(() => {
@@ -98,6 +111,9 @@ export class ProductListComponent implements OnInit {
     }
     if (this.selectedStatus()) {
       filters.status = this.selectedStatus() as ProductStatus;
+    }
+    if (this.selectedStock()) {
+      filters.inStock = this.selectedStock() === 'true';
     }
     if (this.selectedCategory()) {
       filters.categoryId = this.selectedCategory();
@@ -170,6 +186,59 @@ export class ProductListComponent implements OnInit {
 
   navigateToCreateProduct(): void {
     this.router.navigate(['/products/new']);
+  }
+
+  /** Handle a selected CSV file: upload, refresh lists, and surface the results. */
+  onImportFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const storeId = this.storeContext.currentStoreId();
+    if (!storeId) {
+      alert('Please select a store first');
+      input.value = '';
+      return;
+    }
+
+    this.importing.set(true);
+    this.importResult.set(null);
+
+    this.productService.importProducts(storeId, file).subscribe({
+      next: (result) => {
+        this.importing.set(false);
+        this.importResult.set(result);
+        this.showImportResult.set(true);
+        input.value = '';
+        this.currentPage.set(1);
+        this.loadCategories();
+        this.loadProducts();
+      },
+      error: (err) => {
+        this.importing.set(false);
+        input.value = '';
+        alert(err?.error?.message || 'Import failed. Please check the file format.');
+      }
+    });
+  }
+
+  dismissImportResult(): void {
+    this.showImportResult.set(false);
+    this.importResult.set(null);
+  }
+
+  /** Download a ready-to-fill CSV template (UTF-8 BOM so Excel renders Arabic correctly). */
+  downloadImportTemplate(): void {
+    const header = 'name_en,name_ar,category_en,category_ar,price,compare_at,sku,quantity,status';
+    const sample = 'Blue Shirt,قميص أزرق,Shirts,قمصان,120,150,SH-01,25,Active';
+    const csv = '﻿' + header + '\n' + sample + '\n';
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'products-import-template.csv';
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   toggleViewMode(): void {

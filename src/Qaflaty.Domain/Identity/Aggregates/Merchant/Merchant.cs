@@ -12,22 +12,22 @@ namespace Qaflaty.Domain.Identity.Aggregates.Merchant;
 public sealed class Merchant : AggregateRoot<MerchantId>
 {
     // Properties
-    public Email Email { get; private set; } = null!;
-    public HashedPassword PasswordHash { get; private set; } = null!;
-    public PersonName FullName { get; private set; } = null!;
-    public string Username { get; private set; } = null!;
-    public PhoneNumber? Phone { get; private set; }
-    public bool IsVerified { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public Email Email { get; private set; } = null!; // Merchant's login email (unique), e.g. "owner@shop.com"
+    public HashedPassword PasswordHash { get; private set; } = null!; // Bcrypt hash of the merchant's password (never the plaintext)
+    public PersonName FullName { get; private set; } = null!; // Merchant's first + last name
+    public string Username { get; private set; } = null!; // Unique login username/handle for the merchant
+    public PhoneNumber? Phone { get; private set; } // Optional contact phone number
+    public bool IsVerified { get; private set; } // Whether the merchant account has completed verification
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the merchant registered
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last profile change
 
     // Navigation - Refresh Tokens
-    private readonly List<RefreshToken> _refreshTokens = [];
-    public IReadOnlyList<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+    private readonly List<RefreshToken> _refreshTokens = []; // Backing list of issued refresh tokens
+    public IReadOnlyList<RefreshToken> RefreshTokens => _refreshTokens.AsReadOnly(); // Active/revoked JWT refresh tokens for this merchant's sessions
 
     // Navigation - Store Assignments
-    private readonly List<MerchantStoreAssignment> _storeAssignments = [];
-    public IReadOnlyList<MerchantStoreAssignment> StoreAssignments => _storeAssignments.AsReadOnly();
+    private readonly List<MerchantStoreAssignment> _storeAssignments = []; // Backing list of store memberships
+    public IReadOnlyList<MerchantStoreAssignment> StoreAssignments => _storeAssignments.AsReadOnly(); // Which stores this merchant can access and with what role (multi-store / staff support)
 
     // Private constructor for EF Core
     private Merchant() : base(MerchantId.Empty) { }

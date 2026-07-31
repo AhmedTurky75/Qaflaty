@@ -1,44 +1,38 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="mx-auto max-w-7xl">
   <!-- Header -->
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-    <p class="text-gray-600">Welcome back! Here's what's happening with your store today.</p>
+  <div class="mb-6">
+    <h1 class="mb-1 text-2xl font-bold text-text">{{ 'dashboard.title' | transloco }}</h1>
+    <p class="text-sm text-text-muted">{{ 'dashboard.welcome' | transloco }}</p>
   </div>
 
   @if (loading()) {
     <!-- Loading State -->
-    <div class="flex items-center justify-center h-64">
+    <div class="flex h-64 items-center justify-center">
       <div class="text-center">
-        <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <p class="mt-4 text-gray-600">Loading dashboard...</p>
+        <div class="inline-block h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
+        <p class="mt-4 text-text-muted">{{ 'dashboard.loading' | transloco }}</p>
       </div>
     </div>
   } @else if (error()) {
     <!-- Error State -->
-    <div class="bg-red-50 border border-red-200 rounded-lg p-6">
-      <div class="flex items-center">
-        <svg class="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p class="text-red-800">{{ error() }}</p>
+    <div class="rounded-xl border border-danger/30 bg-danger/10 p-6">
+      <div class="flex items-center gap-2 text-danger">
+        <app-icon name="alert-triangle" [size]="20" />
+        <p>{{ error() }}</p>
       </div>
     </div>
   } @else if (!selectedStore()) {
     <!-- No Store Selected -->
-    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center">
-          <svg class="h-5 w-5 text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <p class="text-yellow-800">Please select a store to view dashboard</p>
+    <div class="rounded-xl border border-warning/30 bg-warning/10 p-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-2 text-text">
+          <span class="text-warning"><app-icon name="alert-triangle" [size]="20" /></span>
+          <p>{{ 'dashboard.selectStorePrompt' | transloco }}</p>
         </div>
         <a
           routerLink="/stores"
-          class="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
-        >
-          Go to Stores
-        </a>
+          class="min-h-[44px] rounded-lg bg-primary px-4 py-2.5 font-medium text-white transition-colors hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40"
+        >{{ 'dashboard.goToStores' | transloco }}</a>
       </div>
     </div>
   } @else {
@@ -48,30 +42,30 @@
       <app-setup-guide />
 
       <!-- Statistics Cards -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div class="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
         @if (stats()) {
           <app-stats-card
-            title="Total Revenue"
+            [title]="'dashboard.totalRevenue' | transloco"
             [value]="formatCurrency(stats()!.totalRevenue.amount)"
             [trend]="stats()!.revenueTrend"
             icon="revenue"
             color="blue"
           />
           <app-stats-card
-            title="Total Orders"
+            [title]="'dashboard.totalOrders' | transloco"
             [value]="stats()!.totalOrders"
             [trend]="stats()!.ordersTrend"
             icon="orders"
             color="green"
           />
           <app-stats-card
-            title="Total Products"
+            [title]="'dashboard.totalProducts' | transloco"
             [value]="stats()!.totalProducts"
             icon="products"
             color="purple"
           />
           <app-stats-card
-            title="Total Customers"
+            [title]="'dashboard.totalCustomers' | transloco"
             [value]="stats()!.totalCustomers"
             icon="customers"
             color="orange"
@@ -89,13 +83,16 @@
       </div>
 
       <!-- Recent Orders and Top Products -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <app-recent-orders [orders]="recentOrders()" />
         <app-top-products [products]="topProducts()" />
       </div>
 
-      <!-- Low Stock Alerts -->
-      <app-low-stock-alerts />
+      <!-- Wishlist Insights and Low Stock -->
+      <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <app-most-wishlisted />
+        <app-low-stock-alerts />
+      </div>
 
       <!-- Quick Actions -->
       <app-quick-actions [storeId]="selectedStore()!" />

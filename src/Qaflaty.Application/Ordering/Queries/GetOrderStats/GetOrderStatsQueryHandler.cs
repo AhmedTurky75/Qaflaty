@@ -30,12 +30,19 @@ public class GetOrderStatsQueryHandler : IQueryHandler<GetOrderStatsQuery, Order
         var storeId = new StoreId(request.StoreId);
 
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<OrderStatsDto>(Error.Unauthorized);
 
         var orders = await _orderRepository.GetByStoreIdAsync(storeId, cancellationToken);
 
-        var totalOrders = orders.Count;
+        var blockedOrders = orders.Count(o => o.Status == OrderStatus.Blocked);
+
+        // Orders held against the phone blocklist are not real orders yet — the merchant has not
+        // accepted them — so they are surfaced as their own figure rather than folded into the total.
+        var totalOrders = orders.Count - blockedOrders;
+
         var pendingOrders = orders.Count(o => o.Status == OrderStatus.Pending);
         var confirmedOrders = orders.Count(o => o.Status == OrderStatus.Confirmed);
         var processingOrders = orders.Count(o => o.Status == OrderStatus.Processing);
@@ -57,6 +64,7 @@ public class GetOrderStatsQueryHandler : IQueryHandler<GetOrderStatsQuery, Order
             shippedOrders,
             deliveredOrders,
             cancelledOrders,
+            blockedOrders,
             totalRevenue,
             averageOrderValue
         ));

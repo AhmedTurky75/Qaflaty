@@ -1,7 +1,9 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { tap, catchError, of } from 'rxjs';
+import { Product, ProductVariant } from '../models/product.model';
+import { CustomerAuthService } from './customer-auth.service';
 
 export interface WishlistItem {
   id: string;
@@ -11,103 +13,148 @@ export interface WishlistItem {
   variantId?: string;
   variantAttributes?: { [key: string]: string };
   price: number;
+  compareAtPrice?: number | null;
+  imageUrl?: string | null;
   inStock: boolean;
   addedAt: string;
 }
 
-export interface Wishlist {
-  id: string;
-  customerId: string;
-  items: WishlistItem[];
-  createdAt: string;
-  updatedAt: string;
-}
+const GUEST_KEY = 'guest_wishlist';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class WishlistService {
   private readonly http = inject(HttpClient);
+  private readonly auth = inject(CustomerAuthService);
   private readonly apiUrl = `${environment.apiUrl}/storefront/wishlist`;
 
-  // State signals
-  private readonly _wishlist = signal<Wishlist | null>(null);
+  private readonly _items = signal<WishlistItem[]>([]);
+  private readonly _count = signal<number>(0);
 
-  // Public readonly signals
-  readonly wishlist = this._wishlist.asReadonly();
-  readonly wishlistItems = computed(() => this._wishlist()?.items ?? []);
-  readonly wishlistCount = computed(() => this.wishlistItems().length);
-  readonly hasItems = computed(() => this.wishlistCount() > 0);
+  readonly items = this._items.asReadonly();
+  readonly count = this._count.asReadonly();
+  readonly hasItems = computed(() => this._count() > 0);
 
-  loadWishlist() {
-    return this.http.get<Wishlist>(this.apiUrl).pipe(
-      tap(wishlist => this._wishlist.set(wishlist)),
-      catchError(error => {
-        console.error('Failed to load wishlist', error);
-        this._wishlist.set(null);
-        throw error;
-      })
-    );
+  private get isAuth(): boolean {
+    return this.auth.isAuthenticated();
   }
 
-  addToWishlist(productId: string, variantId?: string) {
-    const request = {
-      productId,
-      variantId: variantId || null
-    };
-
-    return this.http.post(this.apiUrl, request).pipe(
-      tap(() => {
-        // Reload wishlist to get updated state
-        this.loadWishlist().subscribe();
-      }),
-      catchError(error => {
-        console.error('Failed to add to wishlist', error);
-        throw error;
-      })
-    );
-  }
-
-  removeFromWishlist(productId: string, variantId?: string) {
-    const request = {
-      productId,
-      variantId: variantId || null
-    };
-
-    return this.http.request('delete', this.apiUrl, { body: request }).pipe(
-      tap(() => {
-        // Update local state by filtering out the removed item
-        const current = this._wishlist();
-        if (current) {
-          const updatedItems = current.items.filter(item =>
-            !(item.productId === productId && item.variantId === variantId)
-          );
-          this._wishlist.set({ ...current, items: updatedItems });
-        }
-      }),
-      catchError(error => {
-        console.error('Failed to remove from wishlist', error);
-        throw error;
-      })
-    );
-  }
-
-  isInWishlist(productId: string, variantId?: string): boolean {
-    const items = this.wishlistItems();
-    return items.some(item =>
-      item.productId === productId && item.variantId === variantId
-    );
-  }
-
-  toggleWishlist(productId: string, variantId?: string) {
-    if (this.isInWishlist(productId, variantId)) {
-      return this.removeFromWishlist(productId, variantId);
+  /** Load the full wishlist (and merge any guest items after login). */
+  load(): void {
+    if (this.isAuth) {
+      this.mergeGuestThenLoad();
     } else {
-      return this.addToWishlist(productId, variantId);
+      const items = this.readGuest();
+      this._items.set(items);
+      this._count.set(items.length);
     }
   }
 
-  clearWishlist(): void {
-    this._wishlist.set(null);
+  private mergeGuestThenLoad(): void {
+    const guestItems = this.readGuest();
+    if (guestItems.length > 0) {
+      const calls = guestItems.map(i =>
+        this.http.post(this.apiUrl, { productId: i.productId, variantId: i.variantId || null })
+      );
+      forkJoin(calls).subscribe({
+        next: () => { this.clearGuest(); this.fetchServer(); },
+        error: () => { this.clearGuest(); this.fetchServer(); }
+      });
+    } else {
+      this.fetchServer();
+    }
+  }
+
+  private fetchServer(): void {
+    this.http.get<{ items: WishlistItem[] }>(this.apiUrl).subscribe({
+      next: (res) => {
+        // Normalize variantId (server sends null; the app matches on undefined).
+        const items = (res?.items ?? []).map(i => ({ ...i, variantId: i.variantId ?? undefined }));
+        this._items.set(items);
+        this._count.set(items.length);
+      },
+      error: () => { this._items.set([]); this._count.set(0); }
+    });
+  }
+
+  isInWishlist(productId: string, variantId?: string): boolean {
+    return this._items().some(i => i.productId === productId && i.variantId === (variantId ?? undefined));
+  }
+
+  toggle(product: Product, variant?: ProductVariant): void {
+    if (this.isInWishlist(product.id, variant?.id)) {
+      this.remove(product.id, variant?.id);
+    } else {
+      this.add(product, variant);
+    }
+  }
+
+  add(product: Product, variant?: ProductVariant): void {
+    if (this.isInWishlist(product.id, variant?.id)) return;
+
+    const item: WishlistItem = {
+      id: crypto.randomUUID(),
+      productId: product.id,
+      productName: product.name,
+      productSlug: product.slug,
+      variantId: variant?.id,
+      variantAttributes: variant?.attributes,
+      price: variant?.priceOverride?.amount ?? product.price,
+      compareAtPrice: product.compareAtPrice ?? null,
+      imageUrl: product.images?.[0]?.url ?? null,
+      inStock: variant ? variant.inStock : product.inStock,
+      addedAt: new Date().toISOString()
+    };
+
+    // Optimistic local update.
+    this._items.update(list => [...list, item]);
+    this._count.update(c => c + 1);
+
+    if (this.isAuth) {
+      this.http.post(this.apiUrl, { productId: product.id, variantId: variant?.id || null }).subscribe({
+        error: () => this.removeLocal(product.id, variant?.id)
+      });
+    } else {
+      this.writeGuest(this._items());
+    }
+  }
+
+  remove(productId: string, variantId?: string): void {
+    this.removeLocal(productId, variantId);
+
+    if (this.isAuth) {
+      this.http.request('delete', this.apiUrl, {
+        body: { productId, variantId: variantId || null }
+      }).subscribe({ error: () => this.load() });
+    } else {
+      this.writeGuest(this._items());
+    }
+  }
+
+  private removeLocal(productId: string, variantId?: string): void {
+    this._items.update(list =>
+      list.filter(i => !(i.productId === productId && i.variantId === (variantId ?? undefined)))
+    );
+    this._count.set(this._items().length);
+  }
+
+  /** Called on logout to drop the in-memory authenticated wishlist. */
+  clear(): void {
+    this._items.set([]);
+    this._count.set(0);
+  }
+
+  private readGuest(): WishlistItem[] {
+    try {
+      const raw = localStorage.getItem(GUEST_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+
+  private writeGuest(items: WishlistItem[]): void {
+    localStorage.setItem(GUEST_KEY, JSON.stringify(items));
+  }
+
+  private clearGuest(): void {
+    localStorage.removeItem(GUEST_KEY);
   }
 }

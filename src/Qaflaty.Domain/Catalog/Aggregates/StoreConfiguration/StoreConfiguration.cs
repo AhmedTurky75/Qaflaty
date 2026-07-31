@@ -9,24 +9,50 @@ namespace Qaflaty.Domain.Catalog.Aggregates.StoreConfiguration;
 
 public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
 {
-    public StoreId StoreId { get; private set; }
-    public PageToggles PageToggles { get; private set; } = null!;
-    public FeatureToggles FeatureToggles { get; private set; } = null!;
-    public CustomerAuthSettings CustomerAuthSettings { get; private set; } = null!;
-    public CommunicationSettings CommunicationSettings { get; private set; } = null!;
-    public AiAssistantSettings AiAssistantSettings { get; private set; } = null!;
-    public LocalizationSettings LocalizationSettings { get; private set; } = null!;
-    public SocialLinks SocialLinks { get; private set; } = null!;
-    public string HeaderVariant { get; private set; } = null!;
-    public string FooterVariant { get; private set; } = null!;
-    public string ProductCardVariant { get; private set; } = null!;
-    public string ProductGridVariant { get; private set; } = null!;
-    public SearchSettings SearchSettings { get; private set; } = null!;
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // The store this configuration belongs to (one config per store)
+    public PageToggles PageToggles { get; private set; } = null!; // Which static storefront pages (About, Contact, FAQ, etc.) are enabled
+    public FeatureToggles FeatureToggles { get; private set; } = null!; // Which storefront features (wishlist, reviews, promo codes, etc.) are enabled
+    public CustomerAuthSettings CustomerAuthSettings { get; private set; } = null!; // Customer login/registration policy (auth mode, OTP on order, etc.)
+    public CommunicationSettings CommunicationSettings { get; private set; } = null!; // WhatsApp / live-chat / AI chatbot communication options
+    public AiAssistantSettings AiAssistantSettings { get; private set; } = null!; // Configuration for the AI shopping assistant (model, persona, limits)
+    public LocalizationSettings LocalizationSettings { get; private set; } = null!; // Default language, bilingual toggle, and text direction
+    public SocialLinks SocialLinks { get; private set; } = null!; // Social media profile URLs shown in the storefront
+    public string HeaderVariant { get; private set; } = null!; // Selected header layout theme id, e.g. "header-minimal"
+    public string FooterVariant { get; private set; } = null!; // Selected footer layout theme id, e.g. "footer-standard"
+    public string ProductCardVariant { get; private set; } = null!; // Selected product card style id, e.g. "card-standard"
+    public string ProductGridVariant { get; private set; } = null!; // Selected product grid layout id, e.g. "grid-standard"
+    public SearchSettings SearchSettings { get; private set; } = null!; // Storefront search behaviour configuration
+    public TaxSettings TaxSettings { get; private set; } = null!; // Tax/VAT configuration (rate, whether prices include tax)
 
-    private readonly List<PaymentMethodAdjustment> _paymentMethodAdjustments = [];
-    public IReadOnlyList<PaymentMethodAdjustment> PaymentMethodAdjustments => _paymentMethodAdjustments.AsReadOnly();
+    // Reviews & ratings policy (master on/off lives in FeatureToggles.Reviews)
+    public bool ReviewsRequirePurchase { get; private set; } // When true, only customers who bought the product may review it
+    public bool ReviewsAutoApprove { get; private set; } // When true, reviews are published immediately without merchant moderation
+    public bool ReviewsAllowEditing { get; private set; } // When true, customers may edit their submitted reviews
+
+    // Recommendations: when true, related products use the merchant's manual selection.
+    public bool RelatedProductsManual { get; private set; } // True = merchant hand-picks related products; false = auto-generated recommendations
+
+    // Cross-sell ("Frequently Bought Together" / "You May Also Like") settings.
+    public bool CrossSellEnabled { get; private set; } // Master on/off for cross-sell sections on PDP and cart
+    public int CrossSellLimit { get; private set; } // Max cross-sell products shown at once, e.g. 4
+    public bool CrossSellExcludeOutOfStock { get; private set; } // When true, never recommend an out-of-stock product
+
+    // Upsell ("Upgrade Your Choice" / "Premium Alternatives") settings.
+    public bool UpSellEnabled { get; private set; } // Master on/off for upsell sections on PDP and cart
+    public int UpSellLimit { get; private set; } // Max upsell products shown at once, e.g. 4
+    public bool UpSellExcludeOutOfStock { get; private set; } // When true, never recommend an out-of-stock product
+
+    // Downsell (retention offers shown on likely-abandonment signals) settings.
+    public bool DownsellEnabled { get; private set; } // Master on/off; defaults to false (opt-in, unlike cross/upsell)
+    public int DownsellMaxShowsPerSession { get; private set; } // Frequency cap: max times a downsell offer is shown per visitor session
+    public int DownsellMinIntervalSeconds { get; private set; } // Frequency cap: minimum cooldown between two downsell shows in the same session
+    public bool DownsellExcludeOutOfStock { get; private set; } // When true, never recommend an out-of-stock alternative
+
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the configuration was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last configuration change
+
+    private readonly List<PaymentMethodAdjustment> _paymentMethodAdjustments = []; // Backing list of per-method fee/enable adjustments
+    public IReadOnlyList<PaymentMethodAdjustment> PaymentMethodAdjustments => _paymentMethodAdjustments.AsReadOnly(); // Per-payment-method settings: enabled flag + optional surcharge, e.g. COD enabled with +5 SAR fee
 
     private StoreConfiguration() : base(StoreConfigurationId.Empty) { }
 
@@ -46,8 +72,23 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
             HeaderVariant = "header-minimal",
             FooterVariant = "footer-standard",
             ProductCardVariant = "card-standard",
-            ProductGridVariant = "grid-standard",
+            ProductGridVariant = "grid-3",
             SearchSettings = SearchSettings.CreateDefault(),
+            TaxSettings = TaxSettings.CreateDefault(),
+            ReviewsRequirePurchase = true,
+            ReviewsAutoApprove = false,
+            ReviewsAllowEditing = true,
+            RelatedProductsManual = false,
+            CrossSellEnabled = true,
+            CrossSellLimit = 4,
+            CrossSellExcludeOutOfStock = true,
+            UpSellEnabled = true,
+            UpSellLimit = 4,
+            UpSellExcludeOutOfStock = true,
+            DownsellEnabled = false,
+            DownsellMaxShowsPerSession = 2,
+            DownsellMinIntervalSeconds = 300,
+            DownsellExcludeOutOfStock = true,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };
@@ -67,6 +108,74 @@ public sealed class StoreConfiguration : AggregateRoot<StoreConfigurationId>
     public Result UpdateFeatureToggles(FeatureToggles featureToggles)
     {
         FeatureToggles = featureToggles;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateReviewSettings(bool requirePurchase, bool autoApprove, bool allowEditing)
+    {
+        ReviewsRequirePurchase = requirePurchase;
+        ReviewsAutoApprove = autoApprove;
+        ReviewsAllowEditing = allowEditing;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateTaxSettings(TaxSettings taxSettings)
+    {
+        TaxSettings = taxSettings;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateRelatedProductsMode(bool manual)
+    {
+        RelatedProductsManual = manual;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateCrossSellSettings(bool enabled, int limit, bool excludeOutOfStock)
+    {
+        if (limit <= 0)
+            return Result.Failure(new Error(
+                "StoreConfiguration.InvalidCrossSellLimit", "Cross-sell limit must be greater than zero"));
+
+        CrossSellEnabled = enabled;
+        CrossSellLimit = limit;
+        CrossSellExcludeOutOfStock = excludeOutOfStock;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateUpSellSettings(bool enabled, int limit, bool excludeOutOfStock)
+    {
+        if (limit <= 0)
+            return Result.Failure(new Error(
+                "StoreConfiguration.InvalidUpSellLimit", "Upsell limit must be greater than zero"));
+
+        UpSellEnabled = enabled;
+        UpSellLimit = limit;
+        UpSellExcludeOutOfStock = excludeOutOfStock;
+        UpdatedAt = DateTime.UtcNow;
+        return Result.Success();
+    }
+
+    public Result UpdateDownsellSettings(
+        bool enabled, int maxShowsPerSession, int minIntervalSeconds, bool excludeOutOfStock)
+    {
+        if (maxShowsPerSession <= 0)
+            return Result.Failure(new Error(
+                "StoreConfiguration.InvalidDownsellMaxShows", "Max shows per session must be greater than zero"));
+
+        if (minIntervalSeconds < 0)
+            return Result.Failure(new Error(
+                "StoreConfiguration.InvalidDownsellInterval", "Minimum interval cannot be negative"));
+
+        DownsellEnabled = enabled;
+        DownsellMaxShowsPerSession = maxShowsPerSession;
+        DownsellMinIntervalSeconds = minIntervalSeconds;
+        DownsellExcludeOutOfStock = excludeOutOfStock;
         UpdatedAt = DateTime.UtcNow;
         return Result.Success();
     }

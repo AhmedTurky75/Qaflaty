@@ -35,123 +35,8 @@ type TabType = 'general' | 'layout' | 'pages' | 'faq' | 'delivery-zones' | 'prod
     DeliveryZonesPanelComponent,
     ProductPropertiesPanelComponent
   ],
-  template: `
-    <div class="min-h-screen bg-gray-50">
-      <!-- Header -->
-      <div class="bg-white border-b border-gray-200">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 class="text-2xl font-bold text-gray-900">Store Builder</h1>
-          <p class="mt-1 text-sm text-gray-500">
-            Configure your storefront appearance and functionality
-          </p>
-        </div>
-      </div>
-
-      <!-- Loading State -->
-      @if (loading()) {
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div class="bg-white rounded-lg shadow p-12 text-center">
-            <p class="text-gray-500">Loading store configuration...</p>
-          </div>
-        </div>
-      }
-
-      <!-- Main Content -->
-      @if (!loading() && config()) {
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div class="flex gap-6">
-            <!-- Sidebar Navigation -->
-            <div class="w-64 flex-shrink-0">
-              <nav class="bg-white rounded-lg shadow divide-y divide-gray-100">
-                @for (tab of tabs; track tab.id) {
-                  <button
-                    (click)="setActiveTab(tab.id)"
-                    [class.bg-blue-50]="activeTab() === tab.id"
-                    [class.text-blue-700]="activeTab() === tab.id"
-                    [class.border-l-4]="activeTab() === tab.id"
-                    [class.border-blue-700]="activeTab() === tab.id"
-                    class="w-full px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none"
-                  >
-                    <div class="flex items-center">
-                      <span class="w-5 h-5 mr-3 text-gray-400" [innerHTML]="tab.icon"></span>
-                      {{ tab.label }}
-                    </div>
-                  </button>
-                }
-              </nav>
-
-              <!-- Save Button for config tabs -->
-              @if (hasUnsavedChanges() && activeTab() !== 'pages' && activeTab() !== 'faq' && activeTab() !== 'delivery-zones' && activeTab() !== 'product-properties') {
-                <button
-                  (click)="saveConfiguration()"
-                  [disabled]="saving()"
-                  class="w-full mt-4 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  {{ saving() ? 'Saving...' : 'Save Changes' }}
-                </button>
-              }
-            </div>
-
-            <!-- Content Area -->
-            <div class="flex-1">
-              @if (activeTab() === 'general') {
-                <app-configuration-panel
-                  [config]="config()!"
-                  (configChange)="onConfigChange($event)"
-                />
-              }
-
-              @if (activeTab() === 'layout') {
-                <app-layout-design-panel
-                  [config]="config()!"
-                  (configChange)="onConfigChange($event)"
-                />
-              }
-
-              @if (activeTab() === 'pages') {
-                @if (editingPage()) {
-                  <app-section-editor
-                    [page]="editingPage()"
-                    (save)="onSaveSections($event)"
-                    (close)="closePageEditor()"
-                  />
-                } @else {
-                  <app-page-editor
-                    [pages]="pages()"
-                    (editPage)="onEditPage($event)"
-                    (togglePage)="onTogglePage($event)"
-                    (deletePage)="onDeletePage($event)"
-                    (createPage)="onCreatePage($event)"
-                  />
-                }
-              }
-
-              @if (activeTab() === 'faq') {
-                <app-faq-manager />
-              }
-
-              @if (activeTab() === 'delivery-zones') {
-                <app-delivery-zones-panel />
-              }
-
-              @if (activeTab() === 'product-properties') {
-                <app-product-properties-panel />
-              }
-            </div>
-          </div>
-        </div>
-      }
-
-      <!-- Error State -->
-      @if (error()) {
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div class="bg-red-50 rounded-lg p-8 text-center">
-            <p class="text-red-700">{{ error() }}</p>
-          </div>
-        </div>
-      }
-    </div>
-  `
+  templateUrl: './builder-layout.component.html',
+  styleUrl: './builder-layout.component.scss'
 })
 export class BuilderLayoutComponent implements OnInit {
   private storeContext = inject(StoreContextService);
@@ -248,7 +133,8 @@ export class BuilderLayoutComponent implements OnInit {
       headerVariant: currentConfig.headerVariant,
       footerVariant: currentConfig.footerVariant,
       productCardVariant: currentConfig.productCardVariant,
-      productGridVariant: currentConfig.productGridVariant
+      productGridVariant: currentConfig.productGridVariant,
+      taxSettings: currentConfig.taxSettings
     };
 
     this.saving.set(true);

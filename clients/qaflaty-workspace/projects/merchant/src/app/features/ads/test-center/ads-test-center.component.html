@@ -1,0 +1,49 @@
+<div class="mb-6 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+  <h3 class="mb-3 font-semibold text-text">Send a test event</h3>
+  <p class="mb-4 text-sm text-text-muted">
+    Fires a synthetic event through the real dispatch pipeline so you can confirm it lands
+    (e.g. in Meta's Test Events tab) before trusting live tracking.
+  </p>
+  <div class="flex flex-wrap gap-3">
+    @for (evt of testEvents; track evt.type) {
+      <button
+        type="button" (click)="send(evt.type)" [disabled]="sending() === evt.type"
+        class="min-h-[44px] rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
+      >
+        {{ sending() === evt.type ? 'Sending...' : evt.label }}
+      </button>
+    }
+  </div>
+  @if (error()) {
+    <p class="mt-3 text-sm text-warning">{{ error() }}</p>
+  }
+</div>
+
+@if (results().length > 0) {
+  <div class="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-surface-elevated text-start text-text-muted">
+          <tr>
+            <th class="px-4 py-2 text-start">Provider</th>
+            <th class="px-4 py-2 text-start">Status</th>
+            <th class="px-4 py-2 text-start">Duration</th>
+            <th class="px-4 py-2 text-start">Response</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-border">
+          @for (row of results(); track row.dispatchLogId) {
+            <tr>
+              <td class="px-4 py-2 font-medium text-text">{{ row.provider }}</td>
+              <td class="px-4 py-2 font-medium" [ngClass]="statusColor(row.status)">{{ row.status }}</td>
+              <td class="px-4 py-2 text-text-muted">{{ row.durationMs ?? '—' }}ms</td>
+              <td class="max-w-xs truncate px-4 py-2 text-text-muted" [title]="row.responseBody || row.errorMessage || ''">
+                {{ row.errorMessage || row.responseBody || '—' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+}

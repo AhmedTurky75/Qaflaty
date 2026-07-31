@@ -32,7 +32,7 @@ public class UpsertDeliveryZoneCommandHandler : ICommandHandler<UpsertDeliveryZo
 
         if (existing != null)
         {
-            var updateResult = existing.Update(request.IsDeliveryEnabled, request.CustomDeliveryFee, request.FeeCurrency);
+            var updateResult = existing.Update(request.IsDeliveryEnabled, request.CustomDeliveryFee);
             if (updateResult.IsFailure)
                 return Result.Failure<DeliveryZoneDto>(updateResult.Error);
 
@@ -43,7 +43,7 @@ public class UpsertDeliveryZoneCommandHandler : ICommandHandler<UpsertDeliveryZo
         {
             var createResult = DeliveryZone.Create(
                 storeId, level, request.ReferenceId,
-                request.IsDeliveryEnabled, request.CustomDeliveryFee, request.FeeCurrency);
+                request.IsDeliveryEnabled, request.CustomDeliveryFee);
 
             if (createResult.IsFailure)
                 return Result.Failure<DeliveryZoneDto>(createResult.Error);
@@ -57,5 +57,5 @@ public class UpsertDeliveryZoneCommandHandler : ICommandHandler<UpsertDeliveryZo
 
     private static DeliveryZoneDto MapToDto(DeliveryZone z) =>
         new(z.Id.Value, z.StoreId.Value, z.Level.ToString(), z.ReferenceId,
-            z.IsDeliveryEnabled, z.CustomDeliveryFee, z.FeeCurrency);
+            z.IsDeliveryEnabled, z.CustomDeliveryFee);
 }

@@ -13,17 +13,20 @@ public class GetStoreOrdersQueryHandler : IQueryHandler<GetStoreOrdersQuery, Pag
 {
     private readonly IOrderRepository _orderRepository;
     private readonly ICustomerRepository _customerRepository;
+    private readonly IBlockedPhoneRepository _blockedPhoneRepository;
     private readonly IStoreRepository _storeRepository;
     private readonly ICurrentUserService _currentUserService;
 
     public GetStoreOrdersQueryHandler(
         IOrderRepository orderRepository,
         ICustomerRepository customerRepository,
+        IBlockedPhoneRepository blockedPhoneRepository,
         IStoreRepository storeRepository,
         ICurrentUserService currentUserService)
     {
         _orderRepository = orderRepository;
         _customerRepository = customerRepository;
+        _blockedPhoneRepository = blockedPhoneRepository;
         _storeRepository = storeRepository;
         _currentUserService = currentUserService;
     }
@@ -33,12 +36,19 @@ public class GetStoreOrdersQueryHandler : IQueryHandler<GetStoreOrdersQuery, Pag
         var storeId = new StoreId(request.StoreId);
 
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<PaginatedList<OrderListDto>>(Error.Unauthorized);
 
         var orders = await _orderRepository.GetByStoreIdAsync(storeId, cancellationToken);
         var customers = await _customerRepository.GetByStoreIdAsync(storeId, cancellationToken);
         var customerLookup = customers.ToDictionary(c => c.Id.Value);
+
+        // One lookup for the store, keyed by E.164, so each row knows whether its number is
+        // already blocked without a per-row query.
+        var blockedPhones = await _blockedPhoneRepository.GetByStoreIdAsync(storeId, cancellationToken);
+        var blockedIdByPhone = blockedPhones.ToDictionary(b => b.Phone.Value, b => b.Id.Value);
 
         var query = orders.AsEnumerable();
 
@@ -72,7 +82,10 @@ public class GetStoreOrdersQueryHandler : IQueryHandler<GetStoreOrdersQuery, Pag
                 o.Payment.Method.ToString(),
                 o.Payment.Status.ToString(),
                 o.CreatedAt,
-                o.Source.ToString()
+                o.Source.ToString(),
+                customer != null && blockedIdByPhone.TryGetValue(customer.Contact.Phone.Value, out var blockedId)
+                    ? blockedId
+                    : null
             );
         });
 

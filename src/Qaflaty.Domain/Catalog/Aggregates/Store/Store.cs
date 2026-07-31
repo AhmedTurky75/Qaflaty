@@ -4,21 +4,23 @@ using Qaflaty.Domain.Catalog.ValueObjects;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Common.Primitives;
+using Qaflaty.Domain.Common.ValueObjects;
 
 namespace Qaflaty.Domain.Catalog.Aggregates.Store;
 
 public sealed class Store : AggregateRoot<StoreId>
 {
-    public MerchantId MerchantId { get; private set; }
-    public StoreSlug Slug { get; private set; } = null!;
-    public string? CustomDomain { get; private set; }
-    public StoreName Name { get; private set; } = null!;
-    public string? Description { get; private set; }
-    public StoreBranding Branding { get; private set; } = null!;
-    public StoreStatus Status { get; private set; }
-    public DeliverySettings DeliverySettings { get; private set; } = null!;
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public MerchantId MerchantId { get; private set; } // Owner merchant of this store (the seller account that created it)
+    public StoreSlug Slug { get; private set; } = null!; // Unique URL slug used to resolve the tenant via X-Store-Slug header, e.g. "my-shop" → my-shop.qaflaty.com
+    public string? CustomDomain { get; private set; } // Optional custom domain mapped to the store, resolved via X-Custom-Domain header, e.g. "www.brand.com"
+    public StoreName Name { get; private set; } = null!; // Display name of the store shown to customers, e.g. "Qaflaty Boutique"
+    public string? Description { get; private set; } // Optional short description / tagline of the store
+    public StoreBranding Branding { get; private set; } = null!; // Visual identity value object: logo URL, primary/secondary colors, theme settings
+    public StoreStatus Status { get; private set; } // Store lifecycle state: Active / Inactive / Maintenance — controls storefront availability
+    public Currency Currency { get; private set; } = null!; // Single currency used for ALL monetary values in this store (prices, delivery, tax, orders). Chosen once at creation and locked — a store never mixes currencies.
+    public DeliverySettings DeliverySettings { get; private set; } = null!; // Default delivery configuration: flat fee, free-shipping threshold, estimated days
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the store was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last store modification
 
     private Store() : base(StoreId.Empty) { }
 
@@ -27,7 +29,8 @@ public sealed class Store : AggregateRoot<StoreId>
         StoreSlug slug,
         StoreName name,
         StoreBranding branding,
-        DeliverySettings deliverySettings)
+        DeliverySettings deliverySettings,
+        Currency currency)
     {
         var store = new Store
         {
@@ -38,6 +41,7 @@ public sealed class Store : AggregateRoot<StoreId>
             Branding = branding,
             Status = StoreStatus.Active,
             DeliverySettings = deliverySettings,
+            Currency = currency,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         };

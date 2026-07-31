@@ -1,0 +1,99 @@
+<div class="space-y-4">
+  <p class="text-sm text-text-muted">
+    Connect a provider, click Verify Connection, and tracking runs automatically — no code snippets required.
+  </p>
+
+  @for (provider of providers; track provider.id) {
+    <div class="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
+      <button
+        type="button"
+        class="flex min-h-[44px] w-full items-center justify-between px-5 py-4 text-start focus:outline-none focus:ring-2 focus:ring-primary/40"
+        (click)="toggleExpand(provider.id)"
+      >
+        <div>
+          <h3 class="font-semibold text-text">{{ provider.name }}</h3>
+          @if (isConnected(provider.id); as c) {
+            <p class="mt-1 text-xs">
+              <span class="font-medium" [ngClass]="c.status === 'Verified' ? 'text-success' : 'text-warning'">
+                {{ c.status === 'Verified' ? '✓ Verified' : c.status }}
+              </span>
+              @if (c.lastVerifiedAt) {
+                <span class="text-text-muted"> · verified {{ c.lastVerifiedAt | date:'short' }}</span>
+              }
+            </p>
+          } @else if (!provider.available) {
+            <p class="mt-1 text-xs text-text-muted">Coming soon</p>
+          } @else {
+            <p class="mt-1 text-xs text-text-muted">Not connected</p>
+          }
+        </div>
+        <span class="text-text-muted">{{ expanded() === provider.id ? '▲' : '▼' }}</span>
+      </button>
+
+      @if (expanded() === provider.id) {
+        <div class="border-t border-border px-5 pb-5 pt-4">
+          @if (!provider.available) {
+            <p class="text-sm text-text-muted">This integration is coming soon.</p>
+          } @else {
+            <div class="max-w-md space-y-3">
+              @for (field of provider.fields; track field.key) {
+                <div>
+                  <label class="mb-1 block text-xs font-medium text-text-muted">
+                    {{ field.label }} @if (field.optional) { <span class="text-text-muted">(optional)</span> }
+                  </label>
+                  <input
+                    [type]="field.secret ? 'password' : 'text'"
+                    [ngModel]="formValues()[field.key] || ''"
+                    (ngModelChange)="updateField(field.key, $event)"
+                    class="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:ring-2 focus:ring-primary/40"
+                  />
+                  @if (field.hint) {
+                    <p class="mt-1 text-xs text-text-muted">{{ field.hint }}</p>
+                  }
+                </div>
+              }
+
+              <div class="flex items-center gap-6 pt-1">
+                <label class="flex items-center gap-2 text-sm text-text">
+                  <input type="checkbox" [ngModel]="browserEnabled()" (ngModelChange)="browserEnabled.set($event)" />
+                  Enable Browser Tracking
+                </label>
+                <label class="flex items-center gap-2 text-sm text-text">
+                  <input type="checkbox" [ngModel]="serverEnabled()" (ngModelChange)="serverEnabled.set($event)" />
+                  Enable Server Tracking
+                </label>
+              </div>
+
+              @if (message(); as msg) {
+                <p class="text-sm" [ngClass]="msg.ok ? 'text-success' : 'text-danger'">{{ msg.text }}</p>
+              }
+
+              <div class="flex gap-2 pt-2">
+                <button
+                  type="button" (click)="save(provider)" [disabled]="saving()"
+                  class="min-h-[44px] rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
+                >
+                  {{ isConnected(provider.id) ? 'Save Changes' : 'Connect' }}
+                </button>
+                @if (isConnected(provider.id)) {
+                  <button
+                    type="button" (click)="verify(provider.id)" [disabled]="saving()"
+                    class="min-h-[44px] rounded-md bg-surface-elevated px-4 py-2 text-sm font-medium text-text hover:bg-border/40 disabled:opacity-50"
+                  >
+                    Verify Connection
+                  </button>
+                  <button
+                    type="button" (click)="disconnect(provider.id)" [disabled]="saving()"
+                    class="ms-auto min-h-[44px] rounded-md bg-danger/10 px-4 py-2 text-sm font-medium text-danger hover:bg-danger/20 disabled:opacity-50"
+                  >
+                    Disconnect
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  }
+</div>

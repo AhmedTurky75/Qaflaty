@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 import { WhatsAppButtonComponent } from '../../components/shared/whatsapp-button.component';
 import { WhatsAppService } from '../../services/whatsapp.service';
+import { TrackingService } from '../../services/tracking.service';
 
 @Component({
   selector: 'app-contact',
@@ -33,7 +34,7 @@ import { WhatsAppService } from '../../services/whatsapp.service';
       <!-- Contact Form -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">{{ formTitle() }}</h2>
-        <form class="space-y-4">
+        <form class="space-y-4" (submit)="onSubmit($event)">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">{{ nameLabel() }}</label>
             <input type="text" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary-color)] focus:border-transparent" />
@@ -56,9 +57,15 @@ import { WhatsAppService } from '../../services/whatsapp.service';
 })
 export class ContactComponent {
   private i18n = inject(I18nService);
+  private tracking = inject(TrackingService);
   whatsAppService = inject(WhatsAppService);
 
   t(key: string): string { return TRANSLATIONS[this.i18n.currentLanguage()]?.[key] ?? key; }
+
+  onSubmit(event: Event): void {
+    event.preventDefault();
+    this.tracking.track('Contact');
+  }
 
   whatsAppTitle(): string {
     return this.i18n.currentLanguage() === 'ar' ? 'تواصل سريع عبر واتساب' : 'Quick Contact via WhatsApp';

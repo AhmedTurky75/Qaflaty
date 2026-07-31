@@ -34,7 +34,8 @@ export class CustomerService {
       params = params.set('page', filters.page.toString());
     }
     if (filters?.limit) {
-      params = params.set('limit', filters.limit.toString());
+      // The API binds this as `pageSize`; sending `limit` silently left it at the server default.
+      params = params.set('pageSize', filters.limit.toString());
     }
 
     return this.http.get<PaginatedCustomers>(this.API_URL, { params });

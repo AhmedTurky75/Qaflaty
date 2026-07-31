@@ -1,0 +1,95 @@
+<div class="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+  <div class="mb-6 flex items-center justify-between">
+    <h3 class="text-base font-bold text-text">{{ 'dashboard.salesOverview' | transloco }}</h3>
+    <div class="flex gap-2">
+      <button
+        type="button"
+        (click)="onPeriodChange(7)"
+        [class]="period === 7
+          ? 'rounded-md bg-primary-tint px-3 py-1 text-sm font-medium text-primary'
+          : 'rounded-md px-3 py-1 text-sm font-medium text-text-muted hover:bg-surface-elevated'"
+      >{{ 'dashboard.days7' | transloco }}</button>
+      <button
+        type="button"
+        (click)="onPeriodChange(30)"
+        [class]="period === 30
+          ? 'rounded-md bg-primary-tint px-3 py-1 text-sm font-medium text-primary'
+          : 'rounded-md px-3 py-1 text-sm font-medium text-text-muted hover:bg-surface-elevated'"
+      >{{ 'dashboard.days30' | transloco }}</button>
+    </div>
+  </div>
+
+  @if (data && data.length > 0) {
+    <div class="relative" style="height: 300px;">
+      <svg class="h-full w-full" [attr.viewBox]="'0 0 ' + chartWidth + ' ' + chartHeight" preserveAspectRatio="xMidYMid meet">
+        <!-- Y-axis grid lines -->
+        @for (tick of yAxisTicks; track tick) {
+          <line
+            [attr.x1]="padding.left"
+            [attr.y1]="getYPosition(tick)"
+            [attr.x2]="chartWidth - padding.right"
+            [attr.y2]="getYPosition(tick)"
+            class="stroke-border"
+            stroke-width="1"
+          />
+          <text
+            [attr.x]="padding.left - 10"
+            [attr.y]="getYPosition(tick) + 4"
+            class="fill-text-muted text-xs"
+            text-anchor="end"
+          >{{ formatCurrency(tick) }}</text>
+        }
+
+        <!-- Bars -->
+        @for (bar of bars; track bar.label) {
+          <g>
+            <rect
+              [attr.x]="bar.x"
+              [attr.y]="bar.y"
+              [attr.width]="bar.width"
+              [attr.height]="bar.height"
+              class="cursor-pointer fill-primary transition-colors hover:fill-primary-hover"
+              [attr.rx]="4"
+              (mouseenter)="hoveredBar = bar"
+              (mouseleave)="hoveredBar = null"
+            />
+            <text
+              [attr.x]="bar.x + bar.width / 2"
+              [attr.y]="chartHeight - padding.bottom + 20"
+              class="fill-text-muted text-xs"
+              text-anchor="middle"
+            >{{ bar.label }}</text>
+          </g>
+        }
+
+        <!-- Hover tooltip -->
+        @if (hoveredBar) {
+          <g>
+            <rect
+              [attr.x]="hoveredBar.x + hoveredBar.width / 2 - 40"
+              [attr.y]="hoveredBar.y - 35"
+              width="80"
+              height="30"
+              class="fill-text"
+              rx="4"
+              opacity="0.92"
+            />
+            <text
+              [attr.x]="hoveredBar.x + hoveredBar.width / 2"
+              [attr.y]="hoveredBar.y - 15"
+              class="fill-surface text-xs font-medium"
+              text-anchor="middle"
+            >{{ formatCurrency(hoveredBar.value) }}</text>
+          </g>
+        }
+      </svg>
+    </div>
+  } @else {
+    <div class="flex h-64 items-center justify-center text-text-muted">
+      <div class="text-center">
+        <span class="mx-auto mb-2 flex h-12 w-12 items-center justify-center text-text-muted/50"><app-icon name="chart-bar" [size]="40" /></span>
+        <p class="text-sm">{{ 'dashboard.noSalesData' | transloco }}</p>
+      </div>
+    </div>
+  }
+</div>

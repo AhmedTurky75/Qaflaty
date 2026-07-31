@@ -5,11 +5,11 @@ namespace Qaflaty.Domain.Ordering.Aggregates.Order;
 
 public sealed class OrderStatusChange : Entity<Guid>
 {
-    public OrderStatus FromStatus { get; private set; }
-    public OrderStatus ToStatus { get; private set; }
-    public DateTime ChangedAt { get; private set; }
-    public string? ChangedBy { get; private set; }  // MerchantId or "System"
-    public string? Notes { get; private set; }
+    public OrderStatus FromStatus { get; private set; } // Status the order was in before this transition
+    public OrderStatus ToStatus { get; private set; } // Status the order moved to
+    public DateTime ChangedAt { get; private set; } // UTC timestamp of the transition
+    public string? ChangedBy { get; private set; }  // Who triggered the change — a MerchantId or "System" for automatic transitions
+    public string? Notes { get; private set; } // Optional note/reason for the change, e.g. cancellation reason
 
     private OrderStatusChange() : base(Guid.Empty) { }
 

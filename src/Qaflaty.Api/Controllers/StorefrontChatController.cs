@@ -209,6 +209,7 @@ public class StorefrontChatController : ControllerBase
             Street: request.DeliveryAddress.Street,
             City: request.DeliveryAddress.City,
             District: request.DeliveryAddress.District,
+            Country: request.DeliveryAddress.Country,
             DeliveryInstructions: request.DeliveryAddress.AdditionalInstructions,
             CustomerNotes: request.Notes,
             PaymentMethod: request.PaymentMethod,

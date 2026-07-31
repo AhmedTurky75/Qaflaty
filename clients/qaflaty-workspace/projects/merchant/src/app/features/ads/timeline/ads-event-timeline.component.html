@@ -1,0 +1,58 @@
+<div class="mb-6 rounded-2xl border border-border bg-surface p-5 shadow-sm">
+  <label class="mb-2 block text-sm font-medium text-text">Order ID</label>
+  <div class="flex max-w-lg gap-2">
+    <input
+      type="text" [ngModel]="orderIdInput()" (ngModelChange)="orderIdInput.set($event)"
+      placeholder="Paste an order ID to see its tracking timeline"
+      class="flex-1 rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus:border-primary focus:ring-2 focus:ring-primary/40"
+      (keydown.enter)="search()"
+    />
+    <button
+      type="button" (click)="search()" [disabled]="loading()"
+      class="min-h-[44px] rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50"
+    >
+      Search
+    </button>
+  </div>
+  @if (error()) {
+    <p class="mt-2 text-sm text-danger">{{ error() }}</p>
+  }
+</div>
+
+@if (timeline(); as tl) {
+  <div class="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+    @if (tl.deduplicated) {
+      <div class="mb-4 rounded-md bg-success/10 px-3 py-2 text-sm font-medium text-success">
+        ✓ Deduplicated — browser and server events merged by the provider
+      </div>
+    }
+
+    <ol class="relative ms-3 space-y-6 border-s-2 border-border">
+      @for (entry of tl.entries; track entry.eventKey + entry.channel) {
+        <li class="ms-6">
+          <span class="absolute -start-[9px] flex h-4 w-4 rounded-full bg-primary"></span>
+          <p class="font-semibold text-text">
+            {{ entry.eventType }}
+            <span class="text-xs font-normal text-text-muted">({{ entry.channel }} · {{ entry.timestamp | date:'medium' }})</span>
+          </p>
+          @if (entry.dispatches.length > 0) {
+            <ul class="mt-1 space-y-1">
+              @for (dispatch of entry.dispatches; track dispatch.provider) {
+                <li class="text-sm text-text-muted">
+                  → {{ dispatch.provider }}:
+                  <span class="font-medium" [ngClass]="statusColor(dispatch.status)">{{ dispatch.status }}</span>
+                  @if (dispatch.responseStatus) { <span class="text-text-muted">(HTTP {{ dispatch.responseStatus }})</span> }
+                  @if (dispatch.errorMessage) { <span class="text-danger"> — {{ dispatch.errorMessage }}</span> }
+                </li>
+              }
+            </ul>
+          } @else {
+            <p class="mt-1 text-sm text-text-muted">Browser pixel fired — nothing dispatched server-side for this row.</p>
+          }
+        </li>
+      } @empty {
+        <p class="text-text-muted">No events recorded for this order.</p>
+      }
+    </ol>
+  </div>
+}

@@ -52,6 +52,15 @@ public static class CatalogErrors
     public static readonly Error NameTooLong =
         new("Catalog.NameTooLong", "Name is too long");
 
+    public static readonly Error CategoryContentTooLong =
+        new("Catalog.CategoryContentTooLong", "Category content is too long");
+
+    public static readonly Error CategoryImageUrlTooLong =
+        new("Catalog.CategoryImageUrlTooLong", "Category image URL is too long");
+
+    public static readonly Error CategoryIconNameTooLong =
+        new("Catalog.CategoryIconNameTooLong", "Category icon name is too long");
+
     public static readonly Error StoreConfigurationNotFound =
         new("Catalog.StoreConfigurationNotFound", "Store configuration not found");
 
@@ -69,4 +78,10 @@ public static class CatalogErrors
 
     public static readonly Error DeliveryZoneNotFound =
         new("Catalog.DeliveryZoneNotFound", "Delivery zone not found");
+
+    public static readonly Error LandingPageAlreadyExists =
+        new("Catalog.LandingPageAlreadyExists", "This product already has a landing page");
+
+    public static readonly Error LandingPageNotFound =
+        new("Catalog.LandingPageNotFound", "Landing page not found");
 }

@@ -1,0 +1,30 @@
+<p class="mb-4 text-sm text-text-muted">Rolling 7-day health per provider.</p>
+
+<div class="overflow-x-auto rounded-2xl border border-border bg-surface shadow-sm">
+  <table class="w-full text-sm">
+    <thead class="bg-surface-elevated text-start text-text-muted">
+      <tr>
+        <th class="px-4 py-2 text-start">Provider</th>
+        <th class="px-4 py-2 text-start">Uptime</th>
+        <th class="px-4 py-2 text-start">Avg Latency</th>
+        <th class="px-4 py-2 text-start">Success Rate</th>
+        <th class="px-4 py-2 text-start">Failure Rate</th>
+        <th class="px-4 py-2 text-start">Retries</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-border">
+      @for (p of providers(); track p.provider) {
+        <tr>
+          <td class="px-4 py-2 font-medium text-text">{{ p.provider }}</td>
+          <td class="px-4 py-2 font-medium" [ngClass]="rateColor(p.uptimePercent)">{{ p.uptimePercent }}%</td>
+          <td class="px-4 py-2 text-text-muted">{{ p.avgLatencyMs }}ms</td>
+          <td class="px-4 py-2 font-medium" [ngClass]="rateColor(p.successRatePercent)">{{ p.successRatePercent }}%</td>
+          <td class="px-4 py-2 text-danger">{{ p.failureRatePercent }}%</td>
+          <td class="px-4 py-2 text-text-muted">{{ p.retryCount }}</td>
+        </tr>
+      } @empty {
+        <tr><td colspan="6" class="px-4 py-8 text-center text-text-muted">No monitoring data yet.</td></tr>
+      }
+    </tbody>
+  </table>
+</div>

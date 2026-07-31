@@ -1,18 +1,22 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { RouterLink, RouterOutlet, RouterLinkActive } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-settings-layout',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet, RouterLinkActive],
-  templateUrl: './settings-layout.component.html'
+  imports: [RouterLink, RouterOutlet, RouterLinkActive, TranslocoPipe, IconComponent],
+  templateUrl: './settings-layout.component.html',
+  styleUrl: './settings-layout.component.scss',
 })
 export class SettingsLayoutComponent {
   settingsNavigation = [
-    { name: 'Profile', path: '/settings/profile', icon: 'user' },
-    { name: 'Password', path: '/settings/password', icon: 'lock' },
-    { name: 'Stores', path: '/settings/stores', icon: 'store' },
-    { name: 'Notifications', path: '/settings/notifications', icon: 'bell' }
+    { labelKey: 'settings.profile', path: '/settings/profile', icon: 'user' },
+    { labelKey: 'settings.appearance', path: '/settings/appearance', icon: 'palette' },
+    { labelKey: 'settings.password', path: '/settings/password', icon: 'lock' },
+    { labelKey: 'settings.stores', path: '/settings/stores', icon: 'stores' },
+    { labelKey: 'settings.notifications', path: '/settings/notifications', icon: 'bell' },
+    { labelKey: 'nav.more', path: '/settings/more', icon: 'more' },
   ];
 }

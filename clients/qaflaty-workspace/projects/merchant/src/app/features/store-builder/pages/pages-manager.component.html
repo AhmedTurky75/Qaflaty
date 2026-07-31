@@ -1,0 +1,144 @@
+<div class="min-h-screen bg-canvas">
+  <div class="border-b border-border bg-surface">
+    <div class="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+      <div class="flex items-center gap-3">
+        <a [routerLink]="'/store-builder'" class="text-text-muted hover:text-text" aria-label="Back to store builder">
+          <svg class="h-5 w-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+          </svg>
+        </a>
+        <h1 class="text-lg font-semibold text-text">Pages</h1>
+      </div>
+      <button
+        (click)="openCreateModal()"
+        class="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover"
+      >
+        Create Custom Page
+      </button>
+    </div>
+  </div>
+
+  <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    @if (loading()) {
+      <div class="rounded-xl border border-border bg-surface p-12 text-center shadow-sm">
+        <p class="text-text-muted">Loading pages...</p>
+      </div>
+    }
+
+    @if (loadErr()) {
+      <div class="rounded-xl border border-danger/30 bg-danger/10 p-6 text-center">
+        <p class="text-danger">{{ loadErr() }}</p>
+      </div>
+    }
+
+    @if (!loading() && !loadErr()) {
+      <div class="space-y-3">
+        @for (page of pages(); track page.id) {
+          <div class="rounded-xl border border-border bg-surface p-4 shadow-sm">
+            <div class="flex items-center gap-4">
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-semibold text-text">
+                  {{ page.title.english }}
+                  @if (page.title.arabic) {
+                    <span class="font-normal text-text-muted"> ({{ page.title.arabic }})</span>
+                  }
+                </p>
+                <p class="mt-0.5 text-xs text-text-muted">{{ page.pageType }} &middot; /{{ page.slug }}</p>
+              </div>
+
+              <div class="flex flex-shrink-0 items-center gap-3">
+                <label class="relative inline-flex cursor-pointer items-center">
+                  <input
+                    type="checkbox"
+                    class="peer sr-only"
+                    [checked]="page.isEnabled"
+                    (change)="togglePage(page)"
+                  />
+                  <div class="h-6 w-10 rounded-full bg-border transition-colors peer-checked:bg-primary peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/40"></div>
+                  <div class="absolute start-1 top-1 h-4 w-4 rounded-full bg-surface shadow transition-transform peer-checked:translate-x-4"></div>
+                </label>
+
+                <a
+                  [routerLink]="['/store-builder/pages', page.id]"
+                  class="rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-medium text-text transition-colors hover:bg-surface-elevated"
+                >
+                  Edit Sections
+                </a>
+
+                @if (page.pageType === 'Custom') {
+                  <button
+                    (click)="deletePage(page)"
+                    class="rounded-lg border border-danger/30 bg-danger/10 px-3 py-1.5 text-xs font-medium text-danger transition-colors hover:bg-danger/20"
+                  >
+                    Delete
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        } @empty {
+          <div class="rounded-xl border border-border bg-surface p-12 text-center shadow-sm">
+            <p class="text-text-muted">No pages found. Create a custom page to get started.</p>
+          </div>
+        }
+      </div>
+    }
+  </div>
+
+  @if (showCreateModal()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div class="mx-4 w-full max-w-md rounded-xl border border-border bg-surface p-6 shadow-xl">
+        <h2 class="mb-4 text-base font-semibold text-text">Create Custom Page</h2>
+        <div class="space-y-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-text">English Title</label>
+            <input
+              type="text"
+              [(ngModel)]="newTitle"
+              placeholder="About Us"
+              class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-text">Arabic Title</label>
+            <input
+              type="text"
+              [(ngModel)]="newTitleAr"
+              placeholder="من نحن"
+              dir="rtl"
+              class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+            />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-text">Slug</label>
+            <input
+              type="text"
+              [(ngModel)]="newSlug"
+              placeholder="about-us"
+              class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text outline-none focus:border-primary focus:ring-2 focus:ring-primary/40"
+            />
+            <p class="mt-1 text-xs text-text-muted">URL-friendly identifier (e.g., about-us)</p>
+          </div>
+          @if (createErr()) {
+            <p class="text-sm text-danger">{{ createErr() }}</p>
+          }
+        </div>
+        <div class="mt-5 flex justify-end gap-3">
+          <button
+            (click)="closeCreateModal()"
+            class="rounded-lg border border-border bg-surface px-4 py-2 text-sm font-medium text-text transition-colors hover:bg-surface-elevated"
+          >
+            Cancel
+          </button>
+          <button
+            (click)="confirmCreate()"
+            [disabled]="creating()"
+            class="rounded-lg bg-primary px-5 py-2 text-sm font-medium text-white transition-colors hover:bg-primary-hover disabled:opacity-50"
+          >
+            {{ creating() ? 'Creating...' : 'Create Page' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

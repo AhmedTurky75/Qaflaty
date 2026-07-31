@@ -109,7 +109,14 @@ public class GetStorefrontConfigQueryHandler : IQueryHandler<GetStorefrontConfig
                 config.SearchSettings.FilterablePropertyDefinitionIds,
                 config.SearchSettings.AllowedSortOptions.Select(s => s.ToString()).ToList()),
             BuildPaymentDtos(config.PaymentMethodAdjustments, defMap),
-            filterablePropertyDefs);
+            filterablePropertyDefs,
+            new TaxSettingsDto(
+                config.TaxSettings.Enabled,
+                config.TaxSettings.Rate,
+                config.TaxSettings.PricesIncludeTax,
+                config.TaxSettings.Label),
+            store.Currency.Code,
+            store.Currency.Symbol);
 
         return Result.Success(dto);
     }

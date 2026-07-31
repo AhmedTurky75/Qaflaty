@@ -87,3 +87,5 @@ docker-compose.override.yml
 .docker/
 
 nul
+# ASP.NET Core Data Protection key ring (secret material — never commit)
+src/Qaflaty.Api/keys/

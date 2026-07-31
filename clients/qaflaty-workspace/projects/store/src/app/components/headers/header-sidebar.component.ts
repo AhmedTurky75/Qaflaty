@@ -119,6 +119,12 @@ import { CustomerAuthService } from '../../services/customer-auth.service';
               {{ t('shipping') }}
             </a>
           }
+          @for (page of features.customPages(); track page.slug) {
+            <a [routerLink]="['/pages', page.slug]" (click)="sidebarOpen.set(false)" routerLinkActive="bg-gray-100 text-[var(--primary-color)]"
+              class="block px-4 py-3 rounded-lg text-gray-700 hover:bg-gray-50 hover:text-[var(--primary-color)] transition-colors">
+              {{ page.title }}
+            </a>
+          }
         </nav>
 
         <!-- Sidebar Footer -->

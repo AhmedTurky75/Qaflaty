@@ -30,11 +30,13 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
         // Verify store ownership
         var storeId = new StoreId(request.StoreId);
         var store = await _storeRepository.GetByIdAsync(storeId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<CategoryDto>(new Error("Category.Unauthorized", "You don't have access to this store"));
 
         // Create category name
-        var nameResult = CategoryName.Create(request.Name);
+        var nameResult = CategoryName.Create(request.Name, request.NameAr);
         if (nameResult.IsFailure)
             return Result.Failure<CategoryDto>(nameResult.Error);
 
@@ -50,13 +52,21 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
 
         CategoryId? parentId = request.ParentId.HasValue ? new CategoryId(request.ParentId.Value) : null;
 
+        // Optional storefront HTML block shown above this category's products
+        var contentResult = CategoryContent.Create(request.ContentHtml, request.ContentHtmlAr);
+        if (contentResult.IsFailure)
+            return Result.Failure<CategoryDto>(contentResult.Error);
+
         // Create category
         var categoryResult = Category.Create(
             storeId,
             nameResult.Value,
             slugResult.Value,
             parentId,
-            request.SortOrder);
+            request.SortOrder,
+            contentResult.Value,
+            request.ImageUrl,
+            request.IconName);
 
         if (categoryResult.IsFailure)
             return Result.Failure<CategoryDto>(categoryResult.Error);
@@ -68,10 +78,15 @@ public class CreateCategoryCommandHandler : ICommandHandler<CreateCategoryComman
         var dto = new CategoryDto(
             category.Id.Value,
             category.Name.Value,
+            category.Name.Arabic,
             category.Slug.Value,
             category.ParentId?.Value,
             category.SortOrder,
-            0); // Product count will be calculated by query
+            0, // Product count will be calculated by query
+            category.ImageUrl,
+            category.IconName,
+            category.Content?.English,
+            category.Content?.Arabic);
 
         return Result.Success(dto);
     }

@@ -69,6 +69,7 @@ public class StorefrontOrdersController : ApiController
             Street: request.DeliveryAddress.Street,
             City: request.DeliveryAddress.City,
             District: request.DeliveryAddress.District,
+            Country: request.DeliveryAddress.Country,
             DeliveryInstructions: request.DeliveryAddress.AdditionalInstructions,
             CustomerNotes: request.Notes,
             PaymentMethod: request.PaymentMethod,
@@ -76,7 +77,10 @@ public class StorefrontOrdersController : ApiController
                 item.ProductId, item.Quantity, item.VariantId)).ToList(),
             CountryCode: request.DeliveryAddress.CountryCode,
             CityId: request.DeliveryAddress.CityId,
-            DistrictId: request.DeliveryAddress.DistrictId);
+            DistrictId: request.DeliveryAddress.DistrictId,
+            PromoCode: request.PromoCode,
+            BuyerCustomerId: CurrentUserService.CustomerId?.Value,
+            BuyerGuestId: Request.Headers["X-Guest-Id"].FirstOrDefault());
 
         var result = await Sender.Send(command, ct);
 
@@ -99,7 +103,9 @@ public class StorefrontOrdersController : ApiController
         var command = new VerifyOrderOtpCommand(
             StoreId: _tenantContext.CurrentStoreId.Value.Value,
             OrderNumber: orderNumber,
-            OtpCode: request.OtpCode);
+            OtpCode: request.OtpCode,
+            BuyerCustomerId: CurrentUserService.CustomerId?.Value,
+            BuyerGuestId: Request.Headers["X-Guest-Id"].FirstOrDefault());
 
         var result = await Sender.Send(command, ct);
         return HandleResult(result);
@@ -123,13 +129,14 @@ public class StorefrontOrdersController : ApiController
     }
 
     [HttpGet("track/{orderNumber}")]
-    public async Task<IActionResult> TrackOrder(string orderNumber, CancellationToken ct)
+    public async Task<IActionResult> TrackOrder(
+        string orderNumber, [FromQuery] string? contact, CancellationToken ct)
     {
         if (!_tenantContext.IsResolved || _tenantContext.CurrentStoreId == null)
             return NotFound(new { error = "Store.NotResolved", message = "Store context not resolved" });
 
         var result = await Sender.Send(
-            new TrackOrderQuery(_tenantContext.CurrentStoreId.Value.Value, orderNumber), ct);
+            new TrackOrderQuery(_tenantContext.CurrentStoreId.Value.Value, orderNumber, contact), ct);
         return HandleResult(result);
     }
 }

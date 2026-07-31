@@ -6,20 +6,20 @@ namespace Qaflaty.Domain.Identity.Aggregates.AccessDeniedReport;
 /// </summary>
 public sealed class AccessDeniedReport
 {
-    public Guid Id { get; private set; }
+    public Guid Id { get; private set; } // Primary key of the incident record
 
     /// <summary>Merchant or customer ID as a string. Null if the user could not be identified.</summary>
-    public string? UserId { get; private set; }
+    public string? UserId { get; private set; } // Identifier of the denied user, or null when unknown
 
     /// <summary>"merchant" or "customer"</summary>
-    public string UserType { get; private set; } = null!;
+    public string UserType { get; private set; } = null!; // Which kind of user was denied: "merchant" or "customer"
 
     /// <summary>The API endpoint URL that was denied.</summary>
-    public string Endpoint { get; private set; } = null!;
+    public string Endpoint { get; private set; } = null!; // The request path that returned access-denied, e.g. "/api/orders"
 
-    public DateTime ReportedAt { get; private set; }
+    public DateTime ReportedAt { get; private set; } // UTC timestamp when the incident was logged
 
-    public bool IsReviewed { get; private set; }
+    public bool IsReviewed { get; private set; } // Whether an admin has reviewed this incident
 
     private AccessDeniedReport() { }
 

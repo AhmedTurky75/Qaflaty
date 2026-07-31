@@ -1,5 +1,6 @@
 using Qaflaty.Application.Common.CQRS;
 using Qaflaty.Application.Common.Interfaces;
+using Qaflaty.Application.Ordering.Common;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Ordering.Repositories;
 
@@ -46,7 +47,7 @@ public class GetMyOrdersQueryHandler : IQueryHandler<GetMyOrdersQuery, List<MyOr
                 o.Id.Value,
                 o.OrderNumber.Value,
                 o.CreatedAt.ToString("O"),
-                o.Status.ToString(),
+                CustomerFacingOrderStatus.Map(o.Status),
                 o.Pricing.Total.Amount,
                 o.Items.Count
             )).ToList());

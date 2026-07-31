@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Qaflaty.Domain.Catalog.Aggregates.Product;
 using Qaflaty.Domain.Common.Identifiers;
 using Qaflaty.Domain.Common.ValueObjects;
+using Qaflaty.Infrastructure.Persistence.Converters;
 
 namespace Qaflaty.Infrastructure.Persistence.Configurations.Catalog;
 
@@ -38,10 +39,6 @@ public class ProductVariantConfiguration : IEntityTypeConfiguration<ProductVaria
             money.Property(m => m.Amount)
                 .HasColumnName("price_override")
                 .HasColumnType("decimal(18,2)");
-
-            money.Property(m => m.Currency)
-                .HasColumnName("price_override_currency")
-                .HasConversion<string>();
         });
 
         builder.Property(v => v.Quantity)

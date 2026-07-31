@@ -24,6 +24,7 @@ public class UpdateProductPricingCommandHandler : ICommandHandler<UpdateProductP
         if (product is null)
             return Result.Failure(CatalogErrors.ProductNotFound);
 
+        // Amounts are implicitly in the store's single currency.
         var priceResult = Money.Create(request.Price);
         if (priceResult.IsFailure)
             return Result.Failure(priceResult.Error);

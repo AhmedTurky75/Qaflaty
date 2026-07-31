@@ -1,0 +1,149 @@
+<div class="promo-page">
+  <header class="page-header">
+    <div>
+      <h1>Promo Codes</h1>
+      <p class="subtitle">Create discount codes shoppers can apply at checkout.</p>
+    </div>
+    <button class="btn-primary" (click)="startCreate()">+ New promo code</button>
+  </header>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else if (codes().length === 0) {
+    <div class="empty">
+      <p>No promo codes yet.</p>
+      <button class="btn-primary" (click)="startCreate()">Create your first code</button>
+    </div>
+  } @else {
+    <table class="promo-table">
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Discount</th>
+          <th>Min. order</th>
+          <th>Used</th>
+          <th>Expires</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of codes(); track c.id) {
+          <tr [class.inactive]="!c.isActive">
+            <td class="code">{{ c.code }}</td>
+            <td>{{ describeDiscount(c) }}</td>
+            <td>{{ c.minimumOrderAmount ?? '—' }}</td>
+            <td>{{ c.timesUsed }}{{ c.usageLimit ? ' / ' + c.usageLimit : '' }}</td>
+            <td>{{ c.expiresAt ? (c.expiresAt | date:'mediumDate') : '—' }}</td>
+            <td>
+              <span class="badge" [class.on]="c.isActive">{{ c.isActive ? 'Active' : 'Inactive' }}</span>
+            </td>
+            <td class="actions">
+              <button class="link" (click)="startEdit(c)">Edit</button>
+              <button class="link" (click)="toggle(c)">{{ c.isActive ? 'Disable' : 'Enable' }}</button>
+              <button class="link danger" (click)="remove(c)">Delete</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+
+  @if (showForm()) {
+    <div class="modal-backdrop" (click)="cancel()">
+      <div class="modal" (click)="$event.stopPropagation()">
+        <h2>{{ editingId() ? 'Edit promo code' : 'New promo code' }}</h2>
+
+        @if (error()) { <p class="form-error">{{ error() }}</p> }
+
+        <div class="field">
+          <label>Code</label>
+          <input type="text" [disabled]="!!editingId()"
+                 [ngModel]="form().code"
+                 (ngModelChange)="updateForm('code', $event)"
+                 placeholder="SUMMER25" />
+        </div>
+
+        <div class="field">
+          <label>Description</label>
+          <input type="text"
+                 [ngModel]="form().description"
+                 (ngModelChange)="updateForm('description', $event)"
+                 placeholder="Optional note shown internally" />
+        </div>
+
+        <div class="field">
+          <label>Discount type</label>
+          <select [ngModel]="form().discountType" (ngModelChange)="updateForm('discountType', $event)">
+            @for (t of discountTypes; track t) { <option [value]="t">{{ t }}</option> }
+          </select>
+        </div>
+
+        @if (form().discountType !== 'FreeShipping') {
+          <div class="field">
+            <label>{{ form().discountType === 'Percentage' ? 'Percentage (1–100)' : 'Amount off' }}</label>
+            <input type="number" min="0"
+                   [ngModel]="form().value"
+                   (ngModelChange)="updateForm('value', $event)" />
+          </div>
+        }
+
+        @if (form().discountType === 'Percentage') {
+          <div class="field">
+            <label>Max discount amount (optional cap)</label>
+            <input type="number" min="0"
+                   [ngModel]="form().maxDiscountAmount"
+                   (ngModelChange)="updateForm('maxDiscountAmount', $event)" />
+          </div>
+        }
+
+        <div class="field">
+          <label>Minimum order amount (optional)</label>
+          <input type="number" min="0"
+                 [ngModel]="form().minimumOrderAmount"
+                 (ngModelChange)="updateForm('minimumOrderAmount', $event)" />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Starts</label>
+            <input type="date" [ngModel]="form().startsAt" (ngModelChange)="updateForm('startsAt', $event)" />
+          </div>
+          <div class="field">
+            <label>Expires</label>
+            <input type="date" [ngModel]="form().expiresAt" (ngModelChange)="updateForm('expiresAt', $event)" />
+          </div>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label>Total usage limit (optional)</label>
+            <input type="number" min="1"
+                   [ngModel]="form().usageLimit"
+                   (ngModelChange)="updateForm('usageLimit', $event)" />
+          </div>
+          <div class="field">
+            <label>Uses per customer</label>
+            <input type="number" min="1"
+                   [ngModel]="form().usageLimitPerCustomer"
+                   [disabled]="form().unlimitedPerCustomer"
+                   (ngModelChange)="updateForm('usageLimitPerCustomer', $event)" />
+            <label class="checkbox">
+              <input type="checkbox"
+                     [ngModel]="form().unlimitedPerCustomer"
+                     (ngModelChange)="updateForm('unlimitedPerCustomer', $event)" />
+              No limit per customer
+            </label>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn-secondary" (click)="cancel()">Cancel</button>
+          <button class="btn-primary" [disabled]="saving()" (click)="save()">
+            {{ saving() ? 'Saving…' : 'Save' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

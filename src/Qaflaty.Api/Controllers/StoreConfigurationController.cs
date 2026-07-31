@@ -9,6 +9,8 @@ using Qaflaty.Application.Catalog.Commands.ReorderFaqItems;
 using Qaflaty.Application.Catalog.Commands.UpdateFaqItem;
 using Qaflaty.Application.Catalog.Commands.UpdatePageConfiguration;
 using Qaflaty.Application.Catalog.Commands.UpdateSectionConfiguration;
+using Qaflaty.Application.Catalog.Commands.UpdatePageVariants;
+using Qaflaty.Application.Catalog.Queries.GetPageVariants;
 using Qaflaty.Application.Catalog.Commands.SetPaymentMethodAdjustments;
 using Qaflaty.Application.Catalog.Commands.UpdateSearchSettings;
 using Qaflaty.Application.Catalog.Commands.UpdateStoreConfiguration;
@@ -128,6 +130,23 @@ public class StoreConfigurationController : ApiController
         return HandleResult(result);
     }
 
+    // A/B Test Variants
+    [HttpGet("pages/{pageId:guid}/variants")]
+    public async Task<IActionResult> GetPageVariants(Guid storeId, Guid pageId, CancellationToken ct)
+    {
+        var result = await Sender.Send(new GetPageVariantsQuery(pageId), ct);
+        return HandleResult(result);
+    }
+
+    [HttpPut("pages/{pageId:guid}/variants")]
+    public async Task<IActionResult> UpdatePageVariants(
+        Guid storeId, Guid pageId, [FromBody] UpdatePageVariantsRequest request, CancellationToken ct)
+    {
+        var command = new UpdatePageVariantsCommand(pageId, request.Variants);
+        var result = await Sender.Send(command, ct);
+        return HandleResult(result);
+    }
+
     // FAQ Items
     [HttpGet("faq")]
     public async Task<IActionResult> GetFaqItems(Guid storeId, CancellationToken ct)
@@ -202,6 +221,8 @@ public record CreateCustomPageRequest(
     string? ContentJson);
 
 public record UpdateSectionsRequest(List<SectionConfigurationDto> Sections);
+
+public record UpdatePageVariantsRequest(List<PageVariantDto> Variants);
 
 public record CreateFaqItemRequest(
     BilingualTextDto Question,

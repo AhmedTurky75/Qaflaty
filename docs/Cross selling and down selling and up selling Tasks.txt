@@ -1,0 +1,403 @@
+Business Requirements – Cross-Selling Feature
+Feature Name
+
+Cross-Selling Product Recommendations
+
+Objective
+
+Increase the Average Order Value (AOV) by recommending complementary products that are relevant to the product the customer is currently viewing.
+
+Scope
+
+The cross-selling feature should be available only on the Product Details page and the Shopping Cart page.
+
+Do not display cross-selling recommendations:
+
+During Checkout.
+After Order Completion (Post Purchase).
+Business Requirements
+1. Product Details Page
+
+When a customer opens a product page, display a section titled:
+
+Frequently Bought Together
+
+or
+
+You May Also Like
+
+The section should display complementary products related to the current product.
+
+Example:
+
+Current Product:
+
+iPhone 16
+
+Recommended Products:
+
+MagSafe Charger
+Phone Case
+Screen Protector
+AirPods
+2. Shopping Cart Page
+
+When the customer has one or more products in the cart, display a section containing complementary products based on all products currently in the cart.
+
+The recommendation engine should:
+
+Avoid duplicate recommendations.
+Prioritize products that complement multiple cart items.
+Exclude products already added to the cart.
+Limit the displayed recommendations to a configurable number (default: 4).
+Merchant Management
+
+Merchants must be able to manage cross-selling products from the Admin Dashboard.
+
+For each product, the merchant should be able to:
+
+Add one or more cross-selling products.
+Remove cross-selling products.
+Reorder recommendations (optional but recommended).
+Enable/Disable individual recommendations.
+Recommendation Rules
+
+The recommendation engine should:
+
+Never recommend the current product itself.
+Never recommend inactive or unpublished products.
+Never recommend out-of-stock products (configurable).
+Only recommend products from the same tenant.
+Respect product visibility rules.
+Remove duplicate recommendations.
+Multi-Tenant Requirements
+
+The system is multi-tenant.
+
+Recommendations must:
+
+Never reference products belonging to another tenant.
+Only return products owned by the current tenant.
+API Requirements
+
+The system should expose APIs to:
+
+Get cross-selling products for a product.
+Get cross-selling recommendations for the current shopping cart.
+Create cross-selling relationships.
+Update cross-selling relationships.
+Delete cross-selling relationships.
+Database Requirements
+
+A product can have multiple cross-selling products.
+
+A product can also be a cross-selling product for multiple other products.
+
+This represents a many-to-many self-referencing relationship.
+
+The design should support future expansion without requiring schema changes.
+
+Non-Functional Requirements
+Optimized queries with minimal database calls.
+Fast response time suitable for high-traffic stores.
+Pagination or configurable limits for recommendations.
+Proper indexing on relationship tables.
+Caching should be considered for frequently requested recommendations.
+Future Extensibility
+
+The architecture should be designed so future recommendation strategies can be added without major refactoring, such as:
+
+AI-powered recommendations.
+Frequently Bought Together based on order history.
+Category-based recommendations.
+Brand-based recommendations.
+Personalized recommendations based on customer behavior.
+Best-selling complementary products.
+Rule-based recommendation engine.
+
+The implementation should follow clean architecture principles and keep the recommendation engine extensible through interfaces or strategy patterns so additional recommendation providers can be integrated later.
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Business Requirements – Downsell Feature
+Feature Name
+
+Downsell Offers
+
+Objective
+
+Reduce lost sales by presenting lower-priced alternatives or promotional offers when the system detects that a customer may abandon the purchase.
+
+The system should use configurable behavioral rules to identify potential purchase abandonment. These rules indicate a higher probability that the customer may leave without completing a purchase; they do not guarantee that the customer will abandon the purchase.
+
+Scope
+
+The feature should be available on:
+
+Product Details page
+Shopping Cart page
+
+The feature should not appear:
+
+During Checkout
+After Order Completion (Post Purchase)
+Business Requirements
+1. Product-Level Downsell
+
+For each product, merchants should be able to configure one or more downsell alternatives.
+
+Example:
+
+Original Product:
+
+iPhone 16 Pro Max
+
+Downsell Products:
+
+iPhone 16 Pro
+iPhone 16
+iPhone 15
+
+The alternative products should generally:
+
+Belong to the same category.
+Be lower-priced than the original product (recommended validation).
+Be available for purchase.
+2. Coupon-Based Downsell
+
+Instead of (or in addition to) recommending cheaper products, merchants should be able to display a promotional offer.
+
+Examples:
+
+10% Discount
+Free Shipping
+Fixed Amount Discount
+Buy One Get One (future support)
+
+The system should support selecting an existing coupon or promotion.
+
+Trigger Rules
+
+The downsell offer should only appear when one or more configured trigger conditions are met.
+
+The system should support configurable trigger rules such as:
+
+Customer attempts to leave the Product Details page (Exit Intent on desktop).
+Customer stays on the Product Details page for a configurable period without adding the product to the cart.
+Customer removes a product from the shopping cart.
+Customer remains inactive on the shopping cart page for a configurable duration.
+Customer visits the same product multiple times without purchasing (future enhancement).
+
+Multiple trigger rules may be enabled simultaneously.
+
+Merchant Management
+
+Merchants should be able to:
+
+Enable or disable the Downsell feature.
+Configure downsell products for each product.
+Select promotional offers or coupons.
+Configure trigger conditions.
+Configure delay durations and thresholds.
+Set display priority when multiple downsell offers are available.
+Limit how many times a downsell offer is shown during a customer session.
+Display Rules
+
+The system should:
+
+Display the downsell offer only once per configured interval.
+Never recommend inactive or unpublished products.
+Never recommend out-of-stock products (configurable).
+Never recommend the original product.
+Only display products belonging to the current tenant.
+Prevent duplicate recommendations.
+Respect product visibility and customer access rules.
+Multi-Tenant Requirements
+
+The platform is multi-tenant.
+
+The system must:
+
+Never mix products between tenants.
+Never expose another tenant's promotions or coupons.
+Only use products, coupons, and configurations belonging to the current tenant.
+Analytics
+
+The system should record:
+
+Number of downsell offers displayed.
+Trigger rule that caused the offer.
+Customer acceptance rate.
+Product selected after the downsell.
+Coupon redemption rate.
+Conversion rate after downsell.
+Revenue generated from downsell offers.
+
+These metrics should be available for future reporting and dashboard integration.
+
+API Requirements
+
+The system should provide APIs to:
+
+Get downsell offers for a product.
+Evaluate whether a downsell should be displayed.
+Retrieve configured trigger rules.
+Create, update, and delete downsell configurations.
+Retrieve downsell analytics.
+Database Requirements
+
+The design should support:
+
+Multiple downsell products per product.
+Optional coupon or promotion per downsell configuration.
+Configurable trigger rules.
+Configurable display conditions.
+Future expansion without schema redesign.
+Non-Functional Requirements
+Minimal impact on page performance.
+Trigger evaluation should be lightweight.
+Merchant-configurable settings should be cached where appropriate.
+Support high-traffic stores.
+Proper indexing for configuration and analytics tables.
+Future Extensibility
+
+The architecture should be extensible to support future recommendation strategies, including:
+
+AI-powered downsell recommendations.
+Personalized offers based on customer behavior.
+Dynamic discount calculation.
+Inventory-aware recommendations.
+Customer segmentation.
+Loyalty-based offers.
+Real-time behavioral scoring.
+
+The implementation should follow Clean Architecture principles and use extensible services (e.g., Strategy Pattern or Rule Engine) so additional trigger mechanisms and recommendation strategies can be added without major refactoring.
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Business Requirements – Upselling Feature
+Feature Name
+
+Upselling Recommendations
+
+Objective
+
+Increase the Average Order Value (AOV) by recommending higher-value versions or premium alternatives of the product the customer is currently considering.
+
+The objective is to encourage customers to upgrade to products that provide additional value while maintaining a smooth shopping experience.
+
+Scope
+
+The feature should be available on:
+
+Product Details page
+Shopping Cart page
+
+The feature should not appear:
+
+During Checkout
+After Order Completion (Post Purchase)
+Business Requirements
+1. Product-Level Upselling
+
+For each product, merchants should be able to configure one or more upsell products.
+
+Example:
+
+Current Product:
+
+iPhone 16
+
+Upsell Products:
+
+iPhone 16 (256GB)
+iPhone 16 Pro
+iPhone 16 Pro Max
+
+The recommended products should generally:
+
+Belong to the same category.
+Be higher-priced than the original product (recommended validation).
+Be available for purchase.
+2. Display Logic
+
+The upsell section should appear on the Product Details page with a title such as:
+
+Upgrade Your Choice
+Premium Alternatives
+Recommended Upgrade
+
+On the Shopping Cart page, recommendations should be generated based on the products currently in the cart.
+
+The system should:
+
+Exclude products already in the cart.
+Avoid duplicate recommendations.
+Display a configurable maximum number of recommendations (default: 3 or 4).
+Merchant Management
+
+Merchants should be able to:
+
+Add one or more upsell products for each product.
+Remove upsell relationships.
+Enable or disable individual upsell recommendations.
+Reorder recommendation priority.
+Configure the maximum number of displayed recommendations.
+Recommendation Rules
+
+The system should:
+
+Never recommend the current product itself.
+Never recommend inactive or unpublished products.
+Never recommend out-of-stock products (configurable).
+Only recommend products belonging to the current tenant.
+Respect visibility and customer access rules.
+Remove duplicate recommendations.
+Multi-Tenant Requirements
+
+The platform is multi-tenant.
+
+The system must:
+
+Never reference products from another tenant.
+Only return upsell products owned by the current tenant.
+API Requirements
+
+The system should provide APIs to:
+
+Get upsell products for a product.
+Get upsell recommendations for the shopping cart.
+Create, update, and delete upsell relationships.
+Database Requirements
+
+The design should support:
+
+Multiple upsell products per product.
+Many-to-many self-referencing relationships.
+Future expansion without schema redesign.
+Non-Functional Requirements
+Fast response times.
+Optimized database queries.
+Proper indexing.
+Configurable recommendation limits.
+Support caching for frequently accessed recommendations.
+Future Extensibility
+
+The architecture should support future recommendation strategies, including:
+
+AI-powered upsell recommendations.
+Dynamic upgrades based on customer behavior.
+Inventory-aware upselling.
+Personalized recommendations.
+Best-selling premium alternatives.
+Margin-based recommendation strategies.
+
+The implementation should follow Clean Architecture principles and use an extensible recommendation engine (e.g., Strategy Pattern) so additional upsell providers and recommendation algorithms can be introduced with minimal changes to the existing codebase.
+
+
+
+
+
+
+
+

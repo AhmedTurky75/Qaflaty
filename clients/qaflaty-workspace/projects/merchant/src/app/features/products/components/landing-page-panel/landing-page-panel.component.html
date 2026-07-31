@@ -1,0 +1,29 @@
+<div class="space-y-4 rounded-2xl border border-border bg-surface p-6 shadow-sm">
+  <div>
+    <h3 class="text-base font-bold text-text">{{ 'products.landing.title' | transloco }}</h3>
+    <p class="mt-1 text-sm text-text-muted">{{ 'products.landing.desc' | transloco }}</p>
+  </div>
+
+  @if (loading()) {
+    <p class="text-sm text-text-muted">{{ 'common.loading' | transloco }}</p>
+  } @else if (page()) {
+    <div class="flex flex-wrap items-center gap-3">
+      <label class="flex cursor-pointer items-center gap-2">
+        <input type="checkbox" [checked]="page()!.isEnabled" (change)="toggleEnabled()" class="h-5 w-5 rounded border-border text-primary focus:ring-2 focus:ring-primary/40" />
+        <span class="text-sm font-medium text-text">{{ (page()!.isEnabled ? 'products.landing.enabled' : 'products.landing.disabled') | transloco }}</span>
+      </label>
+
+      <a [routerLink]="['/store-builder/pages', page()!.id]" class="rounded-lg bg-surface-elevated px-3 py-1.5 text-sm font-medium text-text hover:bg-border/40 focus:outline-none focus:ring-2 focus:ring-primary/40">{{ 'products.landing.editSections' | transloco }}</a>
+
+      <button type="button" (click)="delete()" class="rounded-lg border border-danger/30 bg-danger/10 px-3 py-1.5 text-sm font-medium text-danger hover:bg-danger/20 focus:outline-none focus:ring-2 focus:ring-danger/40">{{ 'products.landing.delete' | transloco }}</button>
+    </div>
+    @if (error()) { <p class="text-sm text-danger">{{ error() }}</p> }
+  } @else {
+    <div>
+      <button type="button" (click)="create()" [disabled]="creating()" class="min-h-[44px] rounded-[10px] bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+        {{ (creating() ? 'products.landing.creating' : 'products.landing.create') | transloco }}
+      </button>
+      @if (error()) { <p class="mt-2 text-sm text-danger">{{ error() }}</p> }
+    </div>
+  }
+</div>

@@ -9,18 +9,21 @@ namespace Qaflaty.Domain.Catalog.Aggregates.PageConfiguration;
 public sealed class PageConfiguration : AggregateRoot<PageConfigurationId>
 {
     private readonly List<SectionConfiguration> _sections = [];
+    private readonly List<PageVariant> _variants = [];
 
-    public StoreId StoreId { get; private set; }
-    public PageType PageType { get; private set; }
-    public string Slug { get; private set; } = null!;
-    public BilingualText Title { get; private set; } = null!;
-    public bool IsEnabled { get; private set; }
-    public PageSeoSettings SeoSettings { get; private set; } = null!;
-    public string? ContentJson { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public StoreId StoreId { get; private set; } // Store this page belongs to
+    public PageType PageType { get; private set; } // Which storefront page this configures (Home, About, Contact, custom, etc.)
+    public ProductId? ProductId { get; private set; } // Set only for PageType.ProductLanding — the single product this landing page belongs to
+    public string Slug { get; private set; } = null!; // URL slug of the page, e.g. "about-us"
+    public BilingualText Title { get; private set; } = null!; // Page title in Arabic + English
+    public bool IsEnabled { get; private set; } // Whether the page is published/visible; GetStorefrontPages returns only enabled pages
+    public PageSeoSettings SeoSettings { get; private set; } = null!; // Per-page SEO meta (title, description, og:image, robots flags)
+    public string? ContentJson { get; private set; } // Optional serialized free-form page content (for pages not built from sections)
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the page config was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last page change
 
-    public IReadOnlyList<SectionConfiguration> Sections => _sections.AsReadOnly();
+    public IReadOnlyList<SectionConfiguration> Sections => _sections.AsReadOnly(); // Ordered builder sections that compose the page (hero, product grid, banner, etc.)
+    public IReadOnlyList<PageVariant> Variants => _variants.AsReadOnly(); // A/B test variants; the page's own Sections are the control
 
     private PageConfiguration() : base(PageConfigurationId.Empty) { }
 
@@ -39,6 +42,29 @@ public sealed class PageConfiguration : AggregateRoot<PageConfigurationId>
             Slug = slug,
             Title = title,
             IsEnabled = isEnabled,
+            SeoSettings = PageSeoSettings.CreateDefault(),
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        return Result.Success(page);
+    }
+
+    public static Result<PageConfiguration> CreateForProduct(
+        StoreId storeId,
+        ProductId productId,
+        BilingualText title,
+        string slug)
+    {
+        var page = new PageConfiguration
+        {
+            Id = PageConfigurationId.New(),
+            StoreId = storeId,
+            ProductId = productId,
+            PageType = PageType.ProductLanding,
+            Slug = slug,
+            Title = title,
+            IsEnabled = true,
             SeoSettings = PageSeoSettings.CreateDefault(),
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
@@ -114,4 +140,40 @@ public sealed class PageConfiguration : AggregateRoot<PageConfigurationId>
         _sections.Clear();
         UpdatedAt = DateTime.UtcNow;
     }
+
+    // ── A/B test variants ──
+
+    public PageVariant AddVariant(string name, int weight, bool isActive, string? sectionsJson)
+    {
+        var variant = PageVariant.Create(Id, name, weight, isActive, sectionsJson);
+        _variants.Add(variant);
+        UpdatedAt = DateTime.UtcNow;
+        return variant;
+    }
+
+    public void UpdateVariant(PageVariantId variantId, string name, int weight, bool isActive, string? sectionsJson)
+    {
+        var variant = _variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant != null)
+        {
+            variant.Update(name, weight, isActive, sectionsJson);
+            UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public void RemoveVariant(PageVariantId variantId)
+    {
+        var variant = _variants.FirstOrDefault(v => v.Id == variantId);
+        if (variant != null)
+        {
+            _variants.Remove(variant);
+            UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public void RecordVariantImpression(PageVariantId variantId)
+        => _variants.FirstOrDefault(v => v.Id == variantId)?.RecordImpression();
+
+    public void RecordVariantConversion(PageVariantId variantId)
+        => _variants.FirstOrDefault(v => v.Id == variantId)?.RecordConversion();
 }

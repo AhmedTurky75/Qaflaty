@@ -27,7 +27,9 @@ public record OrderStatusChangeDto(
 public record OrderPricingDto(
     MoneyDto Subtotal,
     MoneyDto DeliveryFee,
-    MoneyDto Total
+    MoneyDto Total,
+    MoneyDto? DiscountAmount = null,
+    MoneyDto? TaxAmount = null
 );
 
 public record PaymentInfoDto(
@@ -80,7 +82,9 @@ public record OrderDto(
     List<OrderStatusChangeDto> StatusHistory,
     DateTime CreatedAt,
     DateTime UpdatedAt,
-    string Source
+    string Source,
+    string? AppliedPromoCode = null,
+    ShipmentDto? Shipment = null
 );
 
 // --- Order list item (compact, for list views) ---
@@ -95,11 +99,15 @@ public record OrderListDto(
     string PaymentMethod,
     string PaymentStatus,
     DateTime CreatedAt,
-    string Source
+    string Source,
+    // Non-null when this order's phone is on the store blocklist, so the row can offer Unblock
+    // instead of a Block action that would only fail with "already blocked".
+    Guid? BlockedPhoneId
 );
 
 // --- Track order (public, no auth) ---
 public record TrackOrderItemDto(
+    Guid ProductId,
     string ProductName,
     MoneyDto UnitPrice,
     int Quantity,
@@ -116,6 +124,14 @@ public record TrackOrderPaymentDto(
     string Status
 );
 
+public record ShipmentDto(
+    string? Carrier,
+    string? TrackingNumber,
+    string? TrackingUrl,
+    DateTime ShippedAt,
+    DateTime? EstimatedDeliveryDate
+);
+
 public record OrderTrackingDto(
     string OrderNumber,
     string Status,
@@ -125,7 +141,8 @@ public record OrderTrackingDto(
     TrackOrderPaymentDto Payment,
     List<OrderStatusChangeDto> StatusHistory,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    ShipmentDto? Shipment = null
 );
 
 // --- Order calculation (pre-placement preview) ---
@@ -135,7 +152,10 @@ public record CalculateOrderDto(
     MoneyDto DeliveryFee,
     MoneyDto PaymentAdjustment,
     string? PaymentAdjustmentLabel,
-    MoneyDto Total
+    MoneyDto Total,
+    MoneyDto? Tax = null,
+    string? TaxLabel = null,
+    bool PricesIncludeTax = false
 );
 
 // --- Stats ---
@@ -147,6 +167,7 @@ public record OrderStatsDto(
     int ShippedOrders,
     int DeliveredOrders,
     int CancelledOrders,
+    int BlockedOrders,
     decimal TotalRevenue,
     decimal AverageOrderValue
 );

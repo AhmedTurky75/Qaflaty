@@ -1,33 +1,37 @@
 import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { OrderStatusChange, OrderStatus } from 'shared';
 
 @Component({
   selector: 'app-order-timeline',
   standalone: true,
-  imports: [CommonModule],
+  imports: [TranslocoPipe],
   templateUrl: './order-timeline.component.html',
   styleUrls: ['./order-timeline.component.scss']
 })
 export class OrderTimelineComponent {
   @Input({ required: true }) statusHistory: OrderStatusChange[] = [];
 
+  /** i18n key for a status label. */
+  statusKey(status: OrderStatus): string {
+    return `orders.status.${status}`;
+  }
+
+  /** Token-based dot colour for a status. */
   getStatusColor(status: OrderStatus): string {
     switch (status) {
       case OrderStatus.Pending:
-        return 'bg-yellow-500';
+        return 'bg-warning';
       case OrderStatus.Confirmed:
-        return 'bg-blue-500';
       case OrderStatus.Processing:
-        return 'bg-purple-500';
       case OrderStatus.Shipped:
-        return 'bg-indigo-500';
+        return 'bg-primary';
       case OrderStatus.Delivered:
-        return 'bg-green-500';
+        return 'bg-success';
       case OrderStatus.Cancelled:
-        return 'bg-red-500';
+        return 'bg-danger';
       default:
-        return 'bg-gray-500';
+        return 'bg-text-muted';
     }
   }
 

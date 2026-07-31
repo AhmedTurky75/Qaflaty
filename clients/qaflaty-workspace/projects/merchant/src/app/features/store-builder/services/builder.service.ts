@@ -9,6 +9,8 @@ import {
   UpdatePageConfigurationRequest,
   CreateCustomPageRequest,
   UpdateSectionsRequest,
+  PageVariantDto,
+  UpdatePageVariantsRequest,
   FaqItemDto,
   CreateFaqItemRequest,
   UpdateFaqItemRequest,
@@ -25,6 +27,16 @@ import {
   AiKnowledgeRefreshResultDto,
   AiAnalyticsDto,
 } from 'shared';
+
+/** A selectable storefront layout option served by GET /api/layout-variants. */
+export interface LayoutVariantDto {
+  id: string;
+  type: 'Header' | 'Footer' | 'ProductCard' | 'ProductGrid';
+  code: string;
+  nameEn: string;
+  nameAr: string;
+  sortOrder: number;
+}
 
 @Injectable({
   providedIn: 'root'
@@ -76,6 +88,15 @@ export class BuilderService {
     return this.http.put<void>(`${this.apiUrl}/stores/${storeId}/pages/${pageId}/sections`, req);
   }
 
+  // ── A/B Test Variants ────────────────────────────────────────────────────
+  getPageVariants(storeId: string, pageId: string): Observable<PageVariantDto[]> {
+    return this.http.get<PageVariantDto[]>(`${this.apiUrl}/stores/${storeId}/pages/${pageId}/variants`);
+  }
+
+  updatePageVariants(storeId: string, pageId: string, req: UpdatePageVariantsRequest): Observable<PageVariantDto[]> {
+    return this.http.put<PageVariantDto[]>(`${this.apiUrl}/stores/${storeId}/pages/${pageId}/variants`, req);
+  }
+
   // ── FAQ ──────────────────────────────────────────────────────────────────
   getFaqItems(storeId: string): Observable<FaqItemDto[]> {
     return this.http.get<FaqItemDto[]>(`${this.apiUrl}/stores/${storeId}/faq`);
@@ -96,6 +117,11 @@ export class BuilderService {
   // ── Payment Method Options (catalog) ────────────────────────────────────
   getPaymentMethodOptions(): Observable<PaymentMethodOptionDto[]> {
     return this.http.get<PaymentMethodOptionDto[]>(`${this.apiUrl}/payment-methods/options`);
+  }
+
+  // ── Layout Variants (catalog) ────────────────────────────────────────────
+  getLayoutVariants(): Observable<LayoutVariantDto[]> {
+    return this.http.get<LayoutVariantDto[]>(`${this.apiUrl}/layout-variants`);
   }
 
   // ── Payment Method Adjustments ───────────────────────────────────────────

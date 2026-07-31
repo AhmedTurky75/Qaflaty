@@ -13,13 +13,28 @@ import {
   UpdateProductVariantRequest,
   ProductVariantDto,
   AdjustInventoryRequest,
-  InventoryMovementDto
+  InventoryMovementDto,
+  PageConfigurationDto
 } from 'shared';
+
+export interface ImportRowError {
+  row: number;
+  message: string;
+}
+
+export interface ImportProductsResult {
+  totalRows: number;
+  created: number;
+  failed: number;
+  categoriesCreated: number;
+  errors: ImportRowError[];
+}
 
 export interface ProductFilters {
   search?: string;
   categoryId?: string;
   status?: ProductStatus;
+  inStock?: boolean;
   page?: number;
   limit?: number;
 }
@@ -47,7 +62,7 @@ export class ProductService {
     let params = new HttpParams();
 
     if (filters?.search) {
-      params = params.set('search', filters.search);
+      params = params.set('searchTerm', filters.search);
     }
     if (filters?.categoryId) {
       params = params.set('categoryId', filters.categoryId);
@@ -55,11 +70,14 @@ export class ProductService {
     if (filters?.status) {
       params = params.set('status', filters.status);
     }
+    if (filters?.inStock !== undefined) {
+      params = params.set('inStock', filters.inStock.toString());
+    }
     if (filters?.page) {
-      params = params.set('page', filters.page.toString());
+      params = params.set('pageNumber', filters.page.toString());
     }
     if (filters?.limit) {
-      params = params.set('limit', filters.limit.toString());
+      params = params.set('pageSize', filters.limit.toString());
     }
 
     return this.http.get<PaginatedProducts>(this.storeUrl(storeId), { params });
@@ -87,6 +105,13 @@ export class ProductService {
 
   deleteProduct(storeId: string, id: string): Observable<void> {
     return this.http.delete<void>(`${this.storeUrl(storeId)}/${id}`);
+  }
+
+  /** Bulk-import products from a CSV file (categories are auto-created; no images). */
+  importProducts(storeId: string, file: File): Observable<ImportProductsResult> {
+    const form = new FormData();
+    form.append('file', file);
+    return this.http.post<ImportProductsResult>(`${this.storeUrl(storeId)}/import`, form);
   }
 
   // ============ Product Properties ============
@@ -159,5 +184,19 @@ export class ProductService {
     return this.http.get<InventoryMovementDto[]>(
       `${this.storeUrl(storeId)}/${productId}/inventory-history`
     );
+  }
+
+  // ============ Landing Page ============
+
+  getLandingPage(storeId: string, productId: string): Observable<PageConfigurationDto> {
+    return this.http.get<PageConfigurationDto>(`${this.storeUrl(storeId)}/${productId}/landing-page`);
+  }
+
+  createLandingPage(storeId: string, productId: string): Observable<PageConfigurationDto> {
+    return this.http.post<PageConfigurationDto>(`${this.storeUrl(storeId)}/${productId}/landing-page`, {});
+  }
+
+  deleteLandingPage(storeId: string, productId: string): Observable<void> {
+    return this.http.delete<void>(`${this.storeUrl(storeId)}/${productId}/landing-page`);
   }
 }

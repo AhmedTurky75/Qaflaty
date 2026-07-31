@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { SalesChartData } from '../../services/dashboard.service';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 interface ChartBar {
   x: number;
@@ -14,111 +15,9 @@ interface ChartBar {
 @Component({
   selector: 'app-sales-chart',
   standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div class="flex items-center justify-between mb-6">
-        <h3 class="text-lg font-semibold text-gray-900">Sales Overview</h3>
-        <div class="flex space-x-2">
-          <button
-            (click)="onPeriodChange(7)"
-            [class]="period === 7 ? 'px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-md' : 'px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md'"
-          >
-            7 Days
-          </button>
-          <button
-            (click)="onPeriodChange(30)"
-            [class]="period === 30 ? 'px-3 py-1 text-sm font-medium text-blue-600 bg-blue-50 rounded-md' : 'px-3 py-1 text-sm font-medium text-gray-600 hover:bg-gray-50 rounded-md'"
-          >
-            30 Days
-          </button>
-        </div>
-      </div>
-
-      @if (data && data.length > 0) {
-        <div class="relative" style="height: 300px;">
-          <svg class="w-full h-full">
-            <!-- Y-axis grid lines -->
-            @for (tick of yAxisTicks; track tick) {
-              <line
-                [attr.x1]="padding.left"
-                [attr.y1]="getYPosition(tick)"
-                [attr.x2]="chartWidth - padding.right"
-                [attr.y2]="getYPosition(tick)"
-                class="stroke-gray-200"
-                stroke-width="1"
-              />
-              <text
-                [attr.x]="padding.left - 10"
-                [attr.y]="getYPosition(tick) + 4"
-                class="text-xs fill-gray-500"
-                text-anchor="end"
-              >
-                {{ formatCurrency(tick) }}
-              </text>
-            }
-
-            <!-- Bars -->
-            @for (bar of bars; track bar.label) {
-              <g>
-                <rect
-                  [attr.x]="bar.x"
-                  [attr.y]="bar.y"
-                  [attr.width]="bar.width"
-                  [attr.height]="bar.height"
-                  class="fill-blue-500 hover:fill-blue-600 transition-colors cursor-pointer"
-                  [attr.rx]="4"
-                  (mouseenter)="hoveredBar = bar"
-                  (mouseleave)="hoveredBar = null"
-                />
-                <!-- X-axis labels -->
-                <text
-                  [attr.x]="bar.x + bar.width / 2"
-                  [attr.y]="chartHeight - padding.bottom + 20"
-                  class="text-xs fill-gray-600"
-                  text-anchor="middle"
-                >
-                  {{ bar.label }}
-                </text>
-              </g>
-            }
-
-            <!-- Hover tooltip -->
-            @if (hoveredBar) {
-              <g>
-                <rect
-                  [attr.x]="hoveredBar.x + hoveredBar.width / 2 - 40"
-                  [attr.y]="hoveredBar.y - 35"
-                  width="80"
-                  height="30"
-                  class="fill-gray-900"
-                  rx="4"
-                  opacity="0.9"
-                />
-                <text
-                  [attr.x]="hoveredBar.x + hoveredBar.width / 2"
-                  [attr.y]="hoveredBar.y - 15"
-                  class="text-xs fill-white font-medium"
-                  text-anchor="middle"
-                >
-                  {{ formatCurrency(hoveredBar.value) }}
-                </text>
-              </g>
-            }
-          </svg>
-        </div>
-      } @else {
-        <div class="flex items-center justify-center h-64 text-gray-500">
-          <div class="text-center">
-            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-            <p class="mt-2 text-sm">No sales data available</p>
-          </div>
-        </div>
-      }
-    </div>
-  `
+  imports: [TranslocoPipe, IconComponent],
+  templateUrl: './sales-chart.component.html',
+  styleUrl: './sales-chart.component.scss',
 })
 export class SalesChartComponent implements OnChanges {
   @Input() data: SalesChartData[] = [];

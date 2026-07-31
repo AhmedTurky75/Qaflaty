@@ -2,10 +2,10 @@ namespace Qaflaty.Domain.Catalog.Aggregates.City;
 
 public sealed class City
 {
-    public int Id { get; private set; }
-    public int CountryId { get; private set; }
-    public string Name { get; private set; } = null!;
-    public bool IsActive { get; private set; }
+    public int Id { get; private set; } // Numeric primary key of the city (seeded reference data)
+    public int CountryId { get; private set; } // Country this city belongs to (FK to Country.Id)
+    public string Name { get; private set; } = null!; // City display name, e.g. "Riyadh"
+    public bool IsActive { get; private set; } // Whether the city is selectable for addresses/delivery
 
     private City() { }
 

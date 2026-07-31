@@ -1,12 +1,13 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { OrderSummaryDto } from 'shared';
 import { StatusBadgeComponent } from '../status-badge/status-badge.component';
+import { IconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-order-card',
   standalone: true,
-  imports: [CommonModule, StatusBadgeComponent],
+  imports: [TranslocoPipe, StatusBadgeComponent, IconComponent],
   templateUrl: './order-card.component.html',
   styleUrls: ['./order-card.component.scss']
 })

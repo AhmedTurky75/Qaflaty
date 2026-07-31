@@ -5,10 +5,10 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class SearchSettings : ValueObject
 {
-    public bool EnableTextSearch { get; private set; }
-    public bool EnableCategoryFilter { get; private set; }
-    public bool EnablePriceFilter { get; private set; }
-    public bool EnablePropertyFilters { get; private set; }
+    public bool EnableTextSearch { get; private set; } // Whether the keyword search box is available on the storefront
+    public bool EnableCategoryFilter { get; private set; } // Whether customers can filter products by category
+    public bool EnablePriceFilter { get; private set; } // Whether customers can filter products by price range
+    public bool EnablePropertyFilters { get; private set; } // Whether custom property filters (e.g. material, brand) are shown
 
     /// <summary>
     /// IDs of ProductPropertyDefinitions that should appear as filters in the storefront.

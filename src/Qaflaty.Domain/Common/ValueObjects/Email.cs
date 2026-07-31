@@ -9,7 +9,7 @@ public sealed partial class Email : ValueObject
     private const int MaxLength = 255;
     private static readonly Regex EmailRegex = GetEmailRegex();
 
-    public string Value { get; private init; } = string.Empty;
+    public string Value { get; private init; } = string.Empty; // Normalized (trimmed, lower-cased) and format-validated email address, e.g. "user@example.com"
 
     private Email(string value)
     {

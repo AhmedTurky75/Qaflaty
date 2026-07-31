@@ -3,14 +3,16 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { OtpDigitsInputComponent } from 'shared';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { AuthService } from '../../../core/services/auth.service';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
 
 type LoginStep = 'credentials' | 'otp';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, OtpDigitsInputComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, OtpDigitsInputComponent, TranslocoPipe, IconComponent],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })

@@ -2,25 +2,107 @@ import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { debounceTime, Subject } from 'rxjs';
+import { debounceTime, Observable, Subject } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { CustomerService } from '../services/customer.service';
-import { CustomerDto, CustomerFilters, CustomerSortBy } from 'shared';
+import { IconComponent } from '../../../shared/components/icon/icon.component';
+import {
+  ConfirmDialogComponent,
+  ConfirmDialogConfig,
+  ConfirmDialogResult
+} from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { BlockedPhoneService } from '../../orders/services/blocked-phone.service';
+import { CustomerListDto, CustomerFilters, CustomerSortBy } from 'shared';
 
 @Component({
   selector: 'app-customer-list',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslocoPipe, IconComponent, ConfirmDialogComponent],
   templateUrl: './customer-list.component.html',
   styleUrls: ['./customer-list.component.scss']
 })
 export class CustomerListComponent implements OnInit {
   private customerService = inject(CustomerService);
+  private blockedPhoneService = inject(BlockedPhoneService);
+  private transloco = inject(TranslocoService);
   private router = inject(Router);
   private searchSubject = new Subject<string>();
 
-  customers = signal<CustomerDto[]>([]);
+  customers = signal<CustomerListDto[]>([]);
   loading = signal(true);
   error = signal<string | null>(null);
+
+  blockPending = signal(false);
+  dialog = signal<ConfirmDialogConfig | null>(null);
+  private pendingBlockCustomer = signal<CustomerListDto | null>(null);
+
+  onToggleBlock(event: Event, customer: CustomerListDto): void {
+    // The row navigates to the customer; keep that from firing when using the action.
+    event.stopPropagation();
+
+    this.pendingBlockCustomer.set(customer);
+
+    this.dialog.set(customer.blockedPhoneId
+      ? {
+          title: this.transloco.translate('customers.unblockPhone'),
+          message: this.transloco.translate('customers.unblockPhoneConfirm', { phone: customer.phone }),
+          confirmLabel: this.transloco.translate('customers.unblockPhone'),
+          cancelLabel: this.transloco.translate('common.cancel'),
+          variant: 'primary',
+          icon: 'check-circle'
+        }
+      : {
+          title: this.transloco.translate('customers.blockPhone'),
+          message: this.transloco.translate('customers.blockPhoneConfirm', { phone: customer.phone }),
+          confirmLabel: this.transloco.translate('customers.blockPhone'),
+          cancelLabel: this.transloco.translate('common.cancel'),
+          variant: 'danger',
+          icon: 'phone-off',
+          reason: {
+            label: this.transloco.translate('customers.blockPhoneReasonLabel'),
+            placeholder: this.transloco.translate('customers.blockPhoneReasonPlaceholder')
+          }
+        });
+  }
+
+  onDialogCancelled(): void {
+    this.dialog.set(null);
+    this.pendingBlockCustomer.set(null);
+  }
+
+  onDialogConfirmed(result: ConfirmDialogResult): void {
+    const customer = this.pendingBlockCustomer();
+    const storeId = localStorage.getItem('currentStoreId') || '';
+    if (!customer || !storeId) return;
+
+    const isUnblocking = !!customer.blockedPhoneId;
+
+    this.blockPending.set(true);
+    this.error.set(null);
+
+    // Typed as unknown so the block/unblock response types unify into one subscribe call.
+    const request$: Observable<unknown> = isUnblocking
+      ? this.blockedPhoneService.unblockPhone(storeId, customer.blockedPhoneId!)
+      : this.blockedPhoneService.blockPhoneFromCustomer(storeId, customer.id, result.reason);
+
+    request$.subscribe({
+      next: () => {
+        this.blockPending.set(false);
+        this.dialog.set(null);
+        this.pendingBlockCustomer.set(null);
+        this.loadCustomers();
+      },
+      error: (err) => {
+        this.blockPending.set(false);
+        this.dialog.set(null);
+        this.pendingBlockCustomer.set(null);
+        this.error.set(
+          err?.error?.message ||
+          this.transloco.translate(isUnblocking ? 'customers.unblockPhoneFailed' : 'customers.blockPhoneFailed')
+        );
+      }
+    });
+  }
 
   // Filters
   searchQuery = signal('');
@@ -85,8 +167,8 @@ export class CustomerListComponent implements OnInit {
 
     this.customerService.getCustomers(storeId, filters).subscribe({
       next: (response) => {
-        this.customers.set(response.customers);
-        this.totalCustomers.set(response.total);
+        this.customers.set(response.items ?? []);
+        this.totalCustomers.set(response.totalCount ?? 0);
         this.loading.set(false);
       },
       error: (err) => {

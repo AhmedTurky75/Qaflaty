@@ -1,0 +1,197 @@
+<div class="grid md:grid-cols-2 gap-8 lg:gap-12">
+  <!-- Gallery -->
+  <div>
+    <app-product-gallery
+      [images]="product().images"
+      [productName]="displayName()"
+      [discountPercent]="discountPercent()"
+    />
+  </div>
+
+  <!-- Product Info -->
+  <div class="space-y-5">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 mb-3">{{ displayName() }}</h1>
+
+      <!-- Rating summary + social proof. Hidden entirely when the merchant disables reviews. -->
+      @if (reviewsEnabled()) {
+      <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mb-1">
+        @if (totalReviews() > 0) {
+          <button class="flex items-center gap-1.5 group" (click)="onReviewsClick()">
+            <span class="flex text-lg leading-none">
+              @for (filled of ratingStars(); track $index) {
+                <span [class.text-amber-400]="filled" [class.text-gray-300]="!filled">★</span>
+              }
+            </span>
+            <span class="font-semibold text-gray-900">{{ averageRating() | number:'1.1-1' }}</span>
+            <span class="text-sm text-gray-500 group-hover:text-primary underline-offset-2 group-hover:underline">
+              ({{ totalReviews() }} {{ totalReviews() === 1 ? 'review' : 'reviews' }})
+            </span>
+          </button>
+          @if (totalVerified() > 0) {
+            <span class="inline-flex items-center gap-1 text-sm text-green-700 font-medium">
+              ✓ {{ totalVerified() }} verified {{ totalVerified() === 1 ? 'purchase' : 'purchases' }}
+            </span>
+          }
+        } @else {
+          <button class="text-sm text-gray-500 hover:text-primary" (click)="onReviewsClick()">
+            ☆☆☆☆☆ Be the first to review
+          </button>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Price -->
+    <div class="border-t pt-5">
+      <div class="flex items-baseline gap-3">
+        @if (effectivePrice()) {
+          <span class="text-4xl font-bold text-gray-900">
+            {{ effectivePrice()!.amount | storePrice }}
+          </span>
+        }
+        @if (product().compareAtPrice != null && product().compareAtPrice! > product().price && !selectedVariant()?.priceOverride) {
+          <span class="text-xl text-gray-400 line-through">{{ product().compareAtPrice! | storePrice }}</span>
+          <span class="bg-red-100 text-red-700 text-sm font-bold px-2 py-0.5 rounded">-{{ discountPercent() }}%</span>
+        }
+      </div>
+      @if (product().compareAtPrice != null && product().compareAtPrice! > product().price && !selectedVariant()?.priceOverride) {
+        <p class="text-green-600 font-medium text-sm mt-1">
+          You save {{ (product().compareAtPrice! - product().price) | storePrice }}
+        </p>
+      }
+    </div>
+
+    <!-- Variants -->
+    @if (product().hasVariants && product().variantOptions?.length) {
+      <div class="border-t pt-5">
+        <app-variant-selector
+          [options]="product().variantOptions!"
+          [variants]="product().variants!"
+          [basePrice]="{ amount: product().price, currency: currency() }"
+          (variantSelected)="onVariantSelected($event)"
+        />
+      </div>
+    }
+
+    <!-- Stock + SKU -->
+    <div class="flex items-center gap-4 text-sm">
+      @if (!(product().hasVariants)) {
+        @if (product().inStock) {
+          <span class="inline-flex items-center gap-1.5 text-green-600 font-medium">
+            <span class="w-2 h-2 rounded-full bg-green-500"></span> In Stock
+          </span>
+        } @else {
+          <span class="inline-flex items-center gap-1.5 text-red-600 font-medium">
+            <span class="w-2 h-2 rounded-full bg-red-500"></span> Out of Stock
+          </span>
+        }
+      }
+      @if (selectedVariant()?.sku) {
+        <span class="text-gray-500">SKU: {{ selectedVariant()!.sku }}</span>
+      }
+    </div>
+
+    <!-- Add to Cart -->
+    @if (canAddToCart() || requiresVariantSelection()) {
+      <div class="space-y-4">
+        @if (canAddToCart()) {
+          <div class="flex items-center gap-4">
+            <label class="font-medium text-sm">Quantity</label>
+            <div class="flex items-center border rounded-lg">
+              <button (click)="decreaseQuantity()" [disabled]="quantity() <= 1"
+                      class="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 transition-colors">−</button>
+              <input type="number" [(ngModel)]="quantity" [min]="1" [max]="effectiveStock()"
+                     class="w-16 text-center border-x py-2 focus:outline-none">
+              <button (click)="increaseQuantity()" [disabled]="quantity() >= effectiveStock()"
+                      class="px-4 py-2 hover:bg-gray-100 disabled:opacity-50 transition-colors">+</button>
+            </div>
+          </div>
+        }
+
+        <button (click)="addToCart()" [disabled]="addingToCart() || !canAddToCart()"
+                class="w-full px-8 py-4 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold text-lg disabled:opacity-50 flex items-center justify-center gap-2">
+          @if (addingToCart()) { Adding… }
+          @else if (requiresVariantSelection()) { Select Options }
+          @else { Add to Cart }
+        </button>
+
+        @if (showAddedMessage()) {
+          <div class="p-3 bg-green-50 border border-green-200 rounded-lg text-green-800 font-medium text-sm">
+            ✓ Added to cart successfully!
+          </div>
+        }
+      </div>
+    } @else if (!isInStock()) {
+      <button disabled class="w-full px-8 py-4 bg-gray-300 text-gray-500 rounded-lg font-semibold text-lg cursor-not-allowed">
+        Out of Stock
+      </button>
+    }
+
+    <!-- Wishlist -->
+    <button
+      (click)="toggleWishlist()"
+      class="w-full px-6 py-3 rounded-lg border font-medium transition-colors flex items-center justify-center gap-2"
+      [class.bg-red-50]="isInWishlist()"
+      [class.border-red-200]="isInWishlist()"
+      [class.text-red-600]="isInWishlist()"
+      [class.border-gray-300]="!isInWishlist()"
+      [class.text-gray-700]="!isInWishlist()"
+    >
+      <svg class="w-5 h-5" [attr.fill]="isInWishlist() ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+      </svg>
+      {{ isInWishlist() ? 'Saved to Wishlist' : 'Add to Wishlist' }}
+    </button>
+
+    <!-- Trust badges -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 border-t pt-5">
+      <div class="flex flex-col items-center text-center gap-1">
+        <span class="text-2xl">🔒</span><span class="text-xs text-gray-600 font-medium">Secure Checkout</span>
+      </div>
+      <div class="flex flex-col items-center text-center gap-1">
+        <span class="text-2xl">🚚</span><span class="text-xs text-gray-600 font-medium">Fast Shipping</span>
+      </div>
+      <div class="flex flex-col items-center text-center gap-1">
+        <span class="text-2xl">↩️</span><span class="text-xs text-gray-600 font-medium">Easy Returns</span>
+      </div>
+      <div class="flex flex-col items-center text-center gap-1">
+        <span class="text-2xl">🛡️</span><span class="text-xs text-gray-600 font-medium">Warranty</span>
+      </div>
+    </div>
+
+    <!-- WhatsApp inquiry -->
+    @if (whatsAppService.isEnabled()) {
+      <div class="border-t pt-5">
+        <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center justify-between gap-4">
+          <div>
+            <p class="font-semibold text-gray-900 text-sm">Have questions about this product?</p>
+            <p class="text-xs text-gray-600">Chat with us on WhatsApp</p>
+          </div>
+          <app-whatsapp-button variant="inline" [productName]="displayName()" [productUrl]="productUrl()" text="Ask Us" />
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Sticky purchase bar -->
+@if (showStickyBar()) {
+  <div class="sticky-bar-anim fixed bottom-0 inset-x-0 z-40 bg-white border-t shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+    <div class="container mx-auto px-4 py-3 flex items-center gap-4">
+      @if (product().images.length) {
+        <img [src]="product().images[0].url" [alt]="displayName()" class="w-12 h-12 object-contain rounded border hidden sm:block" />
+      }
+      <div class="flex-1 min-w-0">
+        <p class="font-medium text-gray-900 truncate">{{ displayName() }}</p>
+        @if (effectivePrice()) {
+          <p class="text-primary font-bold">{{ effectivePrice()!.amount | storePrice }}</p>
+        }
+      </div>
+      <button (click)="addToCart()" [disabled]="addingToCart() || !canAddToCart()"
+              class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors font-semibold disabled:opacity-50 whitespace-nowrap">
+        @if (requiresVariantSelection()) { Select Options } @else { Add to Cart }
+      </button>
+    </div>
+  </div>
+}

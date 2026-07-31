@@ -4,9 +4,9 @@ namespace Qaflaty.Domain.Catalog.ValueObjects;
 
 public sealed class LocalizationSettings : ValueObject
 {
-    public string DefaultLanguage { get; private set; } = null!;
-    public bool EnableBilingual { get; private set; }
-    public string DefaultDirection { get; private set; } = null!;
+    public string DefaultLanguage { get; private set; } = null!; // Default storefront language code, e.g. "ar" or "en"
+    public bool EnableBilingual { get; private set; } // Whether customers can switch between Arabic and English
+    public string DefaultDirection { get; private set; } = null!; // Default text direction, "rtl" (Arabic) or "ltr" (English)
 
     private LocalizationSettings() { }
 

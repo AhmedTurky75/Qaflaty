@@ -1,29 +1,13 @@
 namespace Qaflaty.Application.Common.Interfaces.Ai;
 
+/// <summary>
+/// Chunk <c>DocType</c> discriminators, persisted on every chunk and used by the reply handler to
+/// tell product chunks (which carry suggestion metadata) from store/FAQ/uploaded knowledge.
+/// </summary>
 public static class AiKnowledgeDocumentType
 {
     public const string Store = "store";
     public const string Faq = "faq";
     public const string Product = "product";
+    public const string Upload = "upload";
 }
-
-/// <summary>
-/// A single embedded chunk of store knowledge held in the in-memory vector store.
-/// </summary>
-public sealed record AiKnowledgeDocument(
-    string Id,
-    Guid StoreId,
-    string Type,
-    string Title,
-    string Content,
-    float[] Embedding,
-    IReadOnlyDictionary<string, string>? Metadata = null);
-
-public sealed record AiKnowledgeSearchResult(AiKnowledgeDocument Document, double Score);
-
-public sealed record AiKnowledgeStoreStats(
-    int ProductCount,
-    int FaqCount,
-    int StorePageCount,
-    int TotalDocuments,
-    DateTime LastRefreshedAtUtc);

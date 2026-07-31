@@ -1,16 +1,19 @@
 import { Component, inject, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { LayoutRendererComponent } from './components/layout/layout-renderer.component';
 import { CartSidebarComponent } from './components/shared/cart-sidebar.component';
 import { WhatsAppButtonComponent } from './components/shared/whatsapp-button.component';
 import { ChatWidgetComponent } from './components/chat/chat-widget.component';
+import { DownsellModalComponent } from './components/downsell/downsell-modal.component';
 import { StoreOfflineComponent } from './pages/store-offline/store-offline.component';
 import { StoreService } from './services/store.service';
 import { ConfigService } from './services/config.service';
 import { ThemeService } from './services/theme.service';
 import { CartService } from './services/cart.service';
 import { I18nService } from './services/i18n.service';
-import { switchMap } from 'rxjs';
+import { TrackingService } from './services/tracking.service';
+import { PresenceService } from './services/presence.service';
+import { filter, switchMap } from 'rxjs';
 
 @Component({
   selector: 'app-root',
@@ -20,6 +23,7 @@ import { switchMap } from 'rxjs';
     CartSidebarComponent,
     WhatsAppButtonComponent,
     ChatWidgetComponent,
+    DownsellModalComponent,
     StoreOfflineComponent
   ],
   template: `
@@ -33,6 +37,7 @@ import { switchMap } from 'rxjs';
         <app-cart-sidebar />
         <app-whatsapp-button variant="floating" position="bottom-right" />
         <app-chat-widget />
+        <app-downsell-modal />
       }
     } @else if (storeService.isInactive()) {
       <app-store-offline [maintenance]="true" />
@@ -72,6 +77,9 @@ export class App implements OnInit {
   private themeService = inject(ThemeService);
   private cartService = inject(CartService);
   private i18nService = inject(I18nService);
+  private trackingService = inject(TrackingService);
+  private presenceService = inject(PresenceService);
+  private router = inject(Router);
 
   ngOnInit() {
     this.storeService.detectAndLoadStore().pipe(
@@ -85,7 +93,26 @@ export class App implements OnInit {
         return this.configService.loadConfig();
       })
     ).subscribe({
-      next: () => this.storeService.isLoading.set(false),
+      next: () => {
+        this.storeService.isLoading.set(false);
+        // Load merchant-created pages so custom pages appear in the header nav.
+        this.configService.loadPages(this.storeService.currentStore()?.id ?? '')
+          .subscribe({ next: () => {}, error: () => {} });
+
+        this.trackingService.init();
+        this.presenceService.start();
+        // NavigationEnd fires for the initial route too, so this alone covers both the
+        // first page load and every subsequent navigation — an extra explicit call here
+        // would double-track the first PageView.
+        this.router.events.pipe(
+          filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+        ).subscribe(() => {
+          this.trackingService.track('PageView');
+          // Clears any product-page presence context; product-detail pages re-set it once the
+          // product finishes loading (see TrackingService's ViewContent hook).
+          this.presenceService.onPageView();
+        });
+      },
       error: (error) => {
         console.error('Failed to load store:', error);
         if (!this.storeService.isInactive()) {

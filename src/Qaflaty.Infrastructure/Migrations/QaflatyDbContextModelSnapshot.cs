@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Pgvector;
 using Qaflaty.Infrastructure.Persistence;
 
 #nullable disable
@@ -23,6 +24,204 @@ namespace Qaflaty.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.ProviderIntegration.ProviderIntegration", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("BrowserTrackingEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("browser_enabled");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("HealthScore")
+                        .HasColumnType("integer")
+                        .HasColumnName("health_score");
+
+                    b.Property<string>("LastErrorCode")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("last_error_code");
+
+                    b.Property<string>("LastErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("last_error_message");
+
+                    b.Property<DateTime?>("LastEventAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_event_at");
+
+                    b.Property<DateTime?>("LastVerifiedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_verified_at");
+
+                    b.Property<string>("ProtectedCredentialsJson")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("credentials_protected");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider");
+
+                    b.Property<bool>("ServerTrackingEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("server_enabled");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "Provider")
+                        .IsUnique();
+
+                    b.ToTable("provider_integrations", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingDispatchLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("AttemptCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("attempt_count");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<int?>("DurationMs")
+                        .HasColumnType("integer")
+                        .HasColumnName("duration_ms");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("error_message");
+
+                    b.Property<DateTime?>("LastAttemptAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("last_attempt_at");
+
+                    b.Property<DateTime?>("NextRetryAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("next_retry_at");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("ResponseBody")
+                        .HasColumnType("text")
+                        .HasColumnName("response_body");
+
+                    b.Property<int?>("ResponseStatus")
+                        .HasColumnType("integer")
+                        .HasColumnName("response_status");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("TrackingEventId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("tracking_event_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NextRetryAt");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TrackingEventId");
+
+                    b.ToTable("tracking_dispatch_logs", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Channel")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("channel");
+
+                    b.Property<Guid>("CorrelationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("correlation_id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("CustomerRef")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("customer_ref");
+
+                    b.Property<Guid>("EventKey")
+                        .HasColumnType("uuid")
+                        .HasColumnName("event_key");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("event_type");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload_json");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CorrelationId");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("StoreId", "EventKey", "Channel");
+
+                    b.ToTable("tracking_events", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Category.Category", b =>
                 {
                     b.Property<Guid>("Id")
@@ -32,6 +231,16 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("IconName")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("icon_name");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("image_url");
 
                     b.Property<Guid?>("ParentId")
                         .HasColumnType("uuid")
@@ -48,6 +257,8 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("StoreId");
+
+                    b.HasIndex("StoreId", "SortOrder");
 
                     b.ToTable("categories", (string)null);
                 });
@@ -313,11 +524,6 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("decimal(10,2)")
                         .HasColumnName("custom_delivery_fee");
 
-                    b.Property<string>("FeeCurrency")
-                        .HasMaxLength(3)
-                        .HasColumnType("character varying(3)")
-                        .HasColumnName("fee_currency");
-
                     b.Property<bool>("IsDeliveryEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
@@ -419,6 +625,50 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("faq_items", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.LayoutVariant.LayoutVariant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("code");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("NameAr")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_ar");
+
+                    b.Property<string>("NameEn")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name_en");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Type", "Code")
+                        .IsUnique();
+
+                    b.ToTable("layout_variants", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
                 {
                     b.Property<Guid>("Id")
@@ -442,6 +692,10 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("page_type");
 
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
                     b.Property<string>("Slug")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -458,10 +712,64 @@ namespace Qaflaty.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProductId")
+                        .IsUnique();
+
                     b.HasIndex("StoreId", "Slug")
                         .IsUnique();
 
                     b.ToTable("page_configurations", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageVariant", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<long>("Conversions")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("conversions");
+
+                    b.Property<long>("Impressions")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasDefaultValue(0L)
+                        .HasColumnName("impressions");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("name");
+
+                    b.Property<Guid>("PageConfigurationId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("page_configuration_id");
+
+                    b.Property<string>("SectionsJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("sections_json");
+
+                    b.Property<int>("Weight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("weight");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PageConfigurationId");
+
+                    b.ToTable("page_variants", (string)null);
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.SectionConfiguration", b =>
@@ -801,6 +1109,128 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("product_variants", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PromoCode.PromoCode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("code");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("description");
+
+                    b.Property<int>("DiscountType")
+                        .HasColumnType("integer")
+                        .HasColumnName("discount_type");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
+
+                    b.Property<decimal?>("MaxDiscountAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("max_discount_amount");
+
+                    b.Property<decimal?>("MinimumOrderAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("minimum_order_amount");
+
+                    b.Property<DateTime?>("StartsAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("starts_at");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<int>("TimesUsed")
+                        .HasColumnType("integer")
+                        .HasColumnName("times_used");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UsageLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("usage_limit");
+
+                    b.Property<int?>("UsageLimitPerCustomer")
+                        .HasColumnType("integer")
+                        .HasColumnName("usage_limit_per_customer");
+
+                    b.Property<decimal>("Value")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("value");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "Code")
+                        .IsUnique();
+
+                    b.ToTable("promo_codes", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PromoCode.PromoCodeRedemption", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("code");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasColumnType("decimal(18,2)")
+                        .HasColumnName("discount_amount");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<Guid>("PromoCodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("promo_code_id");
+
+                    b.Property<DateTime>("RedeemedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("redeemed_at");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("PromoCodeId", "CustomerId");
+
+                    b.ToTable("promo_code_redemptions", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Store.Store", b =>
                 {
                     b.Property<Guid>("Id")
@@ -810,6 +1240,12 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("character varying(3)")
+                        .HasColumnName("currency");
 
                     b.Property<string>("CustomDomain")
                         .HasMaxLength(255)
@@ -853,6 +1289,34 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<bool>("CrossSellEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cross_sell_enabled");
+
+                    b.Property<bool>("CrossSellExcludeOutOfStock")
+                        .HasColumnType("boolean")
+                        .HasColumnName("cross_sell_exclude_out_of_stock");
+
+                    b.Property<int>("CrossSellLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("cross_sell_limit");
+
+                    b.Property<bool>("DownsellEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("downsell_enabled");
+
+                    b.Property<bool>("DownsellExcludeOutOfStock")
+                        .HasColumnType("boolean")
+                        .HasColumnName("downsell_exclude_out_of_stock");
+
+                    b.Property<int>("DownsellMaxShowsPerSession")
+                        .HasColumnType("integer")
+                        .HasColumnName("downsell_max_shows_per_session");
+
+                    b.Property<int>("DownsellMinIntervalSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("downsell_min_interval_seconds");
+
                     b.Property<string>("FooterVariant")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -877,9 +1341,37 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("character varying(50)")
                         .HasColumnName("product_grid_variant");
 
+                    b.Property<bool>("RelatedProductsManual")
+                        .HasColumnType("boolean")
+                        .HasColumnName("related_products_manual");
+
+                    b.Property<bool>("ReviewsAllowEditing")
+                        .HasColumnType("boolean")
+                        .HasColumnName("reviews_allow_editing");
+
+                    b.Property<bool>("ReviewsAutoApprove")
+                        .HasColumnType("boolean")
+                        .HasColumnName("reviews_auto_approve");
+
+                    b.Property<bool>("ReviewsRequirePurchase")
+                        .HasColumnType("boolean")
+                        .HasColumnName("reviews_require_purchase");
+
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid")
                         .HasColumnName("store_id");
+
+                    b.Property<bool>("UpSellEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("up_sell_enabled");
+
+                    b.Property<bool>("UpSellExcludeOutOfStock")
+                        .HasColumnType("boolean")
+                        .HasColumnName("up_sell_exclude_out_of_stock");
+
+                    b.Property<int>("UpSellLimit")
+                        .HasColumnType("integer")
+                        .HasColumnName("up_sell_limit");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -997,6 +1489,79 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasDatabaseName("ix_chat_conversations_store_status_lastmessage");
 
                     b.ToTable("chat_conversations", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Communication.Aggregates.Knowledge.KnowledgeDocument", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ChunkCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("chunk_count");
+
+                    b.Property<string>("ContentType")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)")
+                        .HasColumnName("error_message");
+
+                    b.Property<string>("OriginalFileName")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("original_file_name");
+
+                    b.Property<string>("SourceKey")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("source_key");
+
+                    b.Property<int>("SourceType")
+                        .HasColumnType("integer")
+                        .HasColumnName("source_type");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<string>("StoragePath")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("storage_path");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "SourceKey")
+                        .IsUnique()
+                        .HasDatabaseName("ux_knowledge_documents_store_source_key");
+
+                    b.HasIndex("StoreId", "Status")
+                        .HasDatabaseName("ix_knowledge_documents_store_status");
+
+                    b.ToTable("knowledge_documents", (string)null);
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Communication.Entities.ChatMessage", b =>
@@ -1321,6 +1886,46 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("store_customers", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.BlockedPhone.BlockedPhone", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("BlockedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("blocked_at");
+
+                    b.Property<string>("BlockedBy")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("blocked_by");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("reason");
+
+                    b.Property<Guid?>("SourceOrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("source_order_id");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("blocked_phones", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Customer.Customer", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1353,6 +1958,16 @@ namespace Qaflaty.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("AppliedPromoCode")
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("applied_promo_code");
+
+                    b.Property<string>("BlockReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("block_reason");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -1360,6 +1975,10 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid")
                         .HasColumnName("customer_id");
+
+                    b.Property<bool>("PricesIncludeTax")
+                        .HasColumnType("boolean")
+                        .HasColumnName("prices_include_tax");
 
                     b.Property<string>("Source")
                         .IsRequired()
@@ -1375,6 +1994,10 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Property<Guid>("StoreId")
                         .HasColumnType("uuid")
                         .HasColumnName("store_id");
+
+                    b.Property<decimal>("TaxRate")
+                        .HasColumnType("decimal(5,2)")
+                        .HasColumnName("tax_rate");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -1508,6 +2131,103 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("order_status_changes", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("MerchantNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("merchant_note");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<string>("OrderNumber")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)")
+                        .HasColumnName("order_number");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("RefundTransactionId")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("refund_transaction_id");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("resolved_at");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OrderId");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("return_requests", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequestItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("ProductName")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)")
+                        .HasColumnName("product_name");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.Property<Guid>("ReturnRequestId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("return_request_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReturnRequestId");
+
+                    b.ToTable("return_request_items", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Cart.Cart", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1587,6 +2307,313 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("cart_items", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Downsell.DownsellEvent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("EventType")
+                        .HasColumnType("integer")
+                        .HasColumnName("event_type");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<Guid?>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("SessionKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("session_key");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<int?>("TriggerType")
+                        .HasColumnType("integer")
+                        .HasColumnName("trigger_type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "OccurredAt");
+
+                    b.ToTable("downsell_events", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Downsell.DownsellOffer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_enabled");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<Guid?>("PromoCodeId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("promo_code_id");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId")
+                        .IsUnique();
+
+                    b.ToTable("downsell_offers", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Downsell.DownsellTriggerRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_enabled");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer")
+                        .HasColumnName("priority");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<int>("Surface")
+                        .HasColumnType("integer")
+                        .HasColumnName("surface");
+
+                    b.Property<int?>("ThresholdSeconds")
+                        .HasColumnType("integer")
+                        .HasColumnName("threshold_seconds");
+
+                    b.Property<int>("TriggerType")
+                        .HasColumnType("integer")
+                        .HasColumnName("trigger_type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId", "TriggerType", "Surface")
+                        .IsUnique();
+
+                    b.ToTable("downsell_trigger_rules", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("approved_at");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("comment");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("customer_name");
+
+                    b.Property<int>("HelpfulCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("helpful_count");
+
+                    b.Property<bool>("IsPinned")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_pinned");
+
+                    b.Property<bool>("IsVerifiedPurchase")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_verified_purchase");
+
+                    b.Property<Guid?>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<int>("Rating")
+                        .HasColumnType("integer")
+                        .HasColumnName("rating");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<string>("Title")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("title");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreId");
+
+                    b.HasIndex("CustomerId", "ProductId")
+                        .IsUnique();
+
+                    b.HasIndex("ProductId", "Status");
+
+                    b.ToTable("product_reviews", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReviewMedia", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("review_id");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer")
+                        .HasColumnName("type");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("url");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId");
+
+                    b.ToTable("product_review_media", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductView.ProductView", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("CustomerId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("customer_id");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("SessionId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("session_id");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<DateTime>("ViewedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("viewed_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("ProductId", "ViewedAt");
+
+                    b.HasIndex("StoreId", "ViewedAt");
+
+                    b.ToTable("product_views", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.RelatedProduct.RelatedProductLink", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("IsEnabled")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_enabled");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<Guid>("RelatedProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("related_product_id");
+
+                    b.Property<int>("RelationType")
+                        .HasColumnType("integer")
+                        .HasColumnName("relation_type");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId", "RelationType");
+
+                    b.HasIndex("ProductId", "RelationType", "RelatedProductId")
+                        .IsUnique();
+
+                    b.ToTable("related_product_links", (string)null);
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1644,14 +2671,117 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.ToTable("wishlist_items", (string)null);
                 });
 
+            modelBuilder.Entity("Qaflaty.Infrastructure.Persistence.Records.KnowledgeChunkRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<int>("ChunkIndex")
+                        .HasColumnType("integer")
+                        .HasColumnName("chunk_index");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("DocType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("doc_type");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("document_id");
+
+                    b.Property<Vector>("Embedding")
+                        .IsRequired()
+                        .HasColumnType("vector(768)")
+                        .HasColumnName("embedding");
+
+                    b.Property<string>("MetadataJson")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("metadata");
+
+                    b.Property<Vector>("NameEmbedding")
+                        .HasColumnType("vector(768)")
+                        .HasColumnName("name_embedding");
+
+                    b.Property<Guid>("StoreId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("store_id");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("title");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId")
+                        .HasDatabaseName("ix_knowledge_chunks_document");
+
+                    b.HasIndex("StoreId")
+                        .HasDatabaseName("ix_knowledge_chunks_store");
+
+                    b.ToTable("knowledge_chunks", (string)null);
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingDispatchLog", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingEvent", null)
+                        .WithMany("DispatchLogs")
+                        .HasForeignKey("TrackingEventId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Category.Category", b =>
                 {
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.CategoryContent", "Content", b1 =>
+                        {
+                            b1.Property<Guid>("CategoryId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(20000)
+                                .HasColumnType("character varying(20000)")
+                                .HasColumnName("content_html_ar");
+
+                            b1.Property<string>("English")
+                                .IsRequired()
+                                .HasMaxLength(20000)
+                                .HasColumnType("character varying(20000)")
+                                .HasColumnName("content_html");
+
+                            b1.HasKey("CategoryId");
+
+                            b1.ToTable("categories");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CategoryId");
+                        });
+
                     b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.CategoryName", "Name", b1 =>
                         {
                             b1.Property<Guid>("CategoryId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Value")
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("name_ar");
+
+                            b1.Property<string>("English")
                                 .IsRequired()
                                 .HasMaxLength(100)
                                 .HasColumnType("character varying(100)")
@@ -1683,6 +2813,8 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.WithOwner()
                                 .HasForeignKey("CategoryId");
                         });
+
+                    b.Navigation("Content");
 
                     b.Navigation("Name")
                         .IsRequired();
@@ -1870,6 +3002,15 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageVariant", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", null)
+                        .WithMany("Variants")
+                        .HasForeignKey("PageConfigurationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.SectionConfiguration", b =>
                 {
                     b.HasOne("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", null)
@@ -1949,7 +3090,13 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<Guid>("ProductId")
                                 .HasColumnType("uuid");
 
-                            b1.Property<string>("Value")
+                            b1.Property<string>("Arabic")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("name_ar");
+
+                            b1.Property<string>("English")
                                 .IsRequired()
                                 .HasMaxLength(200)
                                 .HasColumnType("character varying(200)")
@@ -1984,11 +3131,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("compare_at_price");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("compare_at_price_currency");
-
                                     b2.HasKey("ProductPricingProductId");
 
                                     b2.ToTable("products");
@@ -2005,11 +3147,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                     b2.Property<decimal>("Amount")
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("price");
-
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("price_currency");
 
                                     b2.HasKey("ProductPricingProductId");
 
@@ -2113,11 +3250,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasColumnType("decimal(18,2)")
                                 .HasColumnName("price_override");
 
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("price_override_currency");
-
                             b1.HasKey("ProductVariantId");
 
                             b1.ToTable("product_variants");
@@ -2152,11 +3284,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("delivery_fee");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("delivery_fee_currency");
-
                                     b2.HasKey("DeliverySettingsStoreId");
 
                                     b2.ToTable("stores");
@@ -2173,11 +3300,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                     b2.Property<decimal>("Amount")
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("free_delivery_threshold");
-
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("free_delivery_threshold_currency");
 
                                     b2.HasKey("DeliverySettingsStoreId");
 
@@ -2618,6 +3740,37 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasForeignKey("StoreConfigurationId");
                         });
 
+                    b.OwnsOne("Qaflaty.Domain.Catalog.ValueObjects.TaxSettings", "TaxSettings", b1 =>
+                        {
+                            b1.Property<Guid>("StoreConfigurationId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<bool>("Enabled")
+                                .HasColumnType("boolean")
+                                .HasColumnName("tax_enabled");
+
+                            b1.Property<string>("Label")
+                                .IsRequired()
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)")
+                                .HasColumnName("tax_label");
+
+                            b1.Property<bool>("PricesIncludeTax")
+                                .HasColumnType("boolean")
+                                .HasColumnName("tax_prices_include");
+
+                            b1.Property<decimal>("Rate")
+                                .HasColumnType("decimal(5,2)")
+                                .HasColumnName("tax_rate");
+
+                            b1.HasKey("StoreConfigurationId");
+
+                            b1.ToTable("store_configurations");
+
+                            b1.WithOwner()
+                                .HasForeignKey("StoreConfigurationId");
+                        });
+
                     b.OwnsMany("Qaflaty.Domain.Catalog.ValueObjects.PaymentMethodAdjustment", "PaymentMethodAdjustments", b1 =>
                         {
                             b1.Property<Guid>("Id")
@@ -2686,6 +3839,9 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("SocialLinks")
+                        .IsRequired();
+
+                    b.Navigation("TaxSettings")
                         .IsRequired();
                 });
 
@@ -3043,6 +4199,38 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Navigation("SecondaryPhone");
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.BlockedPhone.BlockedPhone", b =>
+                {
+                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.PhoneNumber", "Phone", b1 =>
+                        {
+                            b1.Property<Guid>("BlockedPhoneId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("CountryCode")
+                                .HasMaxLength(2)
+                                .HasColumnType("character varying(2)")
+                                .HasColumnName("phone_country_code");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(20)
+                                .HasColumnType("character varying(20)")
+                                .HasColumnName("phone");
+
+                            b1.HasKey("BlockedPhoneId");
+
+                            b1.HasIndex("Value");
+
+                            b1.ToTable("blocked_phones");
+
+                            b1.WithOwner()
+                                .HasForeignKey("BlockedPhoneId");
+                        });
+
+                    b.Navigation("Phone")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Customer.Customer", b =>
                 {
                     b.OwnsOne("Qaflaty.Domain.Ordering.ValueObjects.Address", "Address", b1 =>
@@ -3319,10 +4507,22 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("delivery_fee");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("delivery_fee_currency");
+                                    b2.HasKey("OrderPricingOrderId");
+
+                                    b2.ToTable("orders");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("OrderPricingOrderId");
+                                });
+
+                            b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "DiscountAmount", b2 =>
+                                {
+                                    b2.Property<Guid>("OrderPricingOrderId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasColumnType("decimal(18,2)")
+                                        .HasColumnName("discount_amount");
 
                                     b2.HasKey("OrderPricingOrderId");
 
@@ -3341,10 +4541,22 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("subtotal");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("subtotal_currency");
+                                    b2.HasKey("OrderPricingOrderId");
+
+                                    b2.ToTable("orders");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("OrderPricingOrderId");
+                                });
+
+                            b1.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "TaxAmount", b2 =>
+                                {
+                                    b2.Property<Guid>("OrderPricingOrderId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<decimal>("Amount")
+                                        .HasColumnType("decimal(18,2)")
+                                        .HasColumnName("tax_amount");
 
                                     b2.HasKey("OrderPricingOrderId");
 
@@ -3363,11 +4575,6 @@ namespace Qaflaty.Infrastructure.Migrations
                                         .HasColumnType("decimal(18,2)")
                                         .HasColumnName("total");
 
-                                    b2.Property<string>("Currency")
-                                        .IsRequired()
-                                        .HasColumnType("text")
-                                        .HasColumnName("total_currency");
-
                                     b2.HasKey("OrderPricingOrderId");
 
                                     b2.ToTable("orders");
@@ -3379,7 +4586,13 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Navigation("DeliveryFee")
                                 .IsRequired();
 
+                            b1.Navigation("DiscountAmount")
+                                .IsRequired();
+
                             b1.Navigation("Subtotal")
+                                .IsRequired();
+
+                            b1.Navigation("TaxAmount")
                                 .IsRequired();
 
                             b1.Navigation("Total")
@@ -3423,6 +4636,42 @@ namespace Qaflaty.Infrastructure.Migrations
                                 .HasForeignKey("OrderId");
                         });
 
+                    b.OwnsOne("Qaflaty.Domain.Ordering.ValueObjects.ShipmentInfo", "Shipment", b1 =>
+                        {
+                            b1.Property<Guid>("OrderId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("Carrier")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("shipment_carrier");
+
+                            b1.Property<DateTime?>("EstimatedDeliveryDate")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("shipment_estimated_delivery");
+
+                            b1.Property<DateTime>("ShippedAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("shipment_shipped_at");
+
+                            b1.Property<string>("TrackingNumber")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("shipment_tracking_number");
+
+                            b1.Property<string>("TrackingUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)")
+                                .HasColumnName("shipment_tracking_url");
+
+                            b1.HasKey("OrderId");
+
+                            b1.ToTable("orders");
+
+                            b1.WithOwner()
+                                .HasForeignKey("OrderId");
+                        });
+
                     b.Navigation("Delivery")
                         .IsRequired();
 
@@ -3437,6 +4686,8 @@ namespace Qaflaty.Infrastructure.Migrations
 
                     b.Navigation("Pricing")
                         .IsRequired();
+
+                    b.Navigation("Shipment");
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Order.OrderItem", b =>
@@ -3455,11 +4706,6 @@ namespace Qaflaty.Infrastructure.Migrations
                             b1.Property<decimal>("Amount")
                                 .HasColumnType("decimal(18,2)")
                                 .HasColumnName("unit_price");
-
-                            b1.Property<string>("Currency")
-                                .IsRequired()
-                                .HasColumnType("text")
-                                .HasColumnName("unit_price_currency");
 
                             b1.HasKey("OrderItemId");
 
@@ -3482,11 +4728,72 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequest", b =>
+                {
+                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "RefundAmount", b1 =>
+                        {
+                            b1.Property<Guid>("ReturnRequestId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("refund_amount");
+
+                            b1.HasKey("ReturnRequestId");
+
+                            b1.ToTable("return_requests");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ReturnRequestId");
+                        });
+
+                    b.Navigation("RefundAmount")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequestItem", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequest", null)
+                        .WithMany("Items")
+                        .HasForeignKey("ReturnRequestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Qaflaty.Domain.Common.ValueObjects.Money", "UnitPrice", b1 =>
+                        {
+                            b1.Property<Guid>("ReturnRequestItemId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<decimal>("Amount")
+                                .HasColumnType("decimal(18,2)")
+                                .HasColumnName("unit_price");
+
+                            b1.HasKey("ReturnRequestItemId");
+
+                            b1.ToTable("return_request_items");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ReturnRequestItemId");
+                        });
+
+                    b.Navigation("UnitPrice")
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Cart.CartItem", b =>
                 {
                     b.HasOne("Qaflaty.Domain.Storefront.Aggregates.Cart.Cart", null)
                         .WithMany("Items")
                         .HasForeignKey("CartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReviewMedia", b =>
+                {
+                    b.HasOne("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", null)
+                        .WithMany("Media")
+                        .HasForeignKey("ReviewId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
@@ -3500,9 +4807,16 @@ namespace Qaflaty.Infrastructure.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ads.Aggregates.TrackingEvent.TrackingEvent", b =>
+                {
+                    b.Navigation("DispatchLogs");
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.PageConfiguration.PageConfiguration", b =>
                 {
                     b.Navigation("Sections");
+
+                    b.Navigation("Variants");
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Catalog.Aggregates.Product.Product", b =>
@@ -3533,9 +4847,19 @@ namespace Qaflaty.Infrastructure.Migrations
                     b.Navigation("StatusHistory");
                 });
 
+            modelBuilder.Entity("Qaflaty.Domain.Ordering.Aggregates.Return.ReturnRequest", b =>
+                {
+                    b.Navigation("Items");
+                });
+
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Cart.Cart", b =>
                 {
                     b.Navigation("Items");
+                });
+
+            modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.ProductReview.ProductReview", b =>
+                {
+                    b.Navigation("Media");
                 });
 
             modelBuilder.Entity("Qaflaty.Domain.Storefront.Aggregates.Wishlist.Wishlist", b =>

@@ -1,0 +1,51 @@
+<nav aria-label="Breadcrumb" class="min-w-0">
+  <!-- Mobile: back-chevron + current page -->
+  <div class="flex items-center gap-1.5 sm:hidden">
+    @if (parent(); as p) {
+      <a
+        [routerLink]="p.url"
+        class="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md text-text-muted hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary rtl:rotate-180"
+        [attr.aria-label]="'common.back' | transloco"
+      >
+        <app-icon name="chevron-left" [size]="18" />
+      </a>
+    }
+    @if (current(); as c) {
+      <span class="truncate text-sm font-bold text-text">
+        @if (c.key) { {{ c.key | transloco }} } @else { {{ c.text }} }
+      </span>
+    }
+  </div>
+
+  <!-- Desktop / tablet: full (or collapsed) trail -->
+  <ol class="hidden items-center gap-2 sm:flex">
+    @for (c of visible(); track $index) {
+      @if (!$first) {
+        <li aria-hidden="true" class="text-text-muted">
+          <app-icon name="chevron-right" [size]="12" class="rtl:rotate-180" />
+        </li>
+      }
+      <li class="min-w-0">
+        @if (c.ellipsis) {
+          <button
+            type="button"
+            (click)="expand()"
+            class="rounded px-1 text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-primary"
+            [attr.aria-label]="'common.showFullPath' | transloco"
+          >…</button>
+        } @else if (c.last || !c.url) {
+          <span class="truncate text-sm font-bold text-text" aria-current="page">
+            @if (c.key) { {{ c.key | transloco }} } @else { {{ c.text }} }
+          </span>
+        } @else {
+          <a
+            [routerLink]="c.url"
+            class="truncate rounded text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            @if (c.key) { {{ c.key | transloco }} } @else { {{ c.text }} }
+          </a>
+        }
+      </li>
+    }
+  </ol>
+</nav>

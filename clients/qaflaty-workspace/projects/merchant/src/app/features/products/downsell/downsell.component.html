@@ -1,0 +1,110 @@
+<div class="related-page">
+  <div class="head">
+    <a class="back" [routerLink]="['/products', productId()]">&larr; Back to product</a>
+    <h1>Downsell Offer</h1>
+    <p class="subtitle">Configure a retention offer — cheaper alternatives and/or a coupon — shown when a customer looks likely to abandon this product.</p>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else {
+    <div class="card mode-card">
+      <label class="toggle">
+        <input type="checkbox" [ngModel]="settingsEnabled()" (ngModelChange)="settingsEnabled.set($event)" />
+        <span>
+          <strong>Enable downsell offers (store-wide)</strong>
+          <small>When off, no downsell offer is ever shown, regardless of per-product configuration below.</small>
+        </span>
+      </label>
+
+      <div class="settings-row">
+        <label class="field">
+          <span>Max shows per session</span>
+          <input type="number" min="1" max="10" [ngModel]="settingsMaxShows()" (ngModelChange)="settingsMaxShows.set($event)" />
+        </label>
+        <label class="field">
+          <span>Min seconds between shows</span>
+          <input type="number" min="0" [ngModel]="settingsMinInterval()" (ngModelChange)="settingsMinInterval.set($event)" />
+        </label>
+        <label class="toggle inline">
+          <input type="checkbox" [ngModel]="settingsExcludeOutOfStock()" (ngModelChange)="settingsExcludeOutOfStock.set($event)" />
+          <span>Never recommend out-of-stock alternatives</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Trigger rules (store-wide)</h2>
+      <p class="hint" style="margin-bottom: .75rem;">Multiple triggers can be enabled at once. Thresholds are in seconds.</p>
+
+      @for (t of triggerTypes; track t) {
+        <div class="rule-row">
+          <label class="toggle inline">
+            <input type="checkbox" [ngModel]="ruleFor(t).isEnabled" (ngModelChange)="updateRule(t, { isEnabled: $event })" />
+            <span>{{ triggerLabel(t) }}</span>
+          </label>
+          @if (ruleFor(t).thresholdSeconds !== null) {
+            <input type="number" min="1" class="threshold-input"
+                   [ngModel]="ruleFor(t).thresholdSeconds" (ngModelChange)="updateRule(t, { thresholdSeconds: $event })" />
+          }
+        </div>
+      }
+    </div>
+
+    <div class="card">
+      <h2>This product's offer</h2>
+      <label class="toggle" style="margin-bottom: 1rem;">
+        <input type="checkbox" [ngModel]="offerEnabled()" (ngModelChange)="offerEnabled.set($event)" />
+        <span>
+          <strong>Enable downsell offer for this product</strong>
+          <small>Cheaper alternatives and/or the coupon below will only show when this is on.</small>
+        </span>
+      </label>
+
+      <label class="field" style="margin-bottom: 1rem;">
+        <span>Coupon to advertise (optional)</span>
+        <select [ngModel]="selectedPromoCodeId()" (ngModelChange)="selectedPromoCodeId.set($event)">
+          <option value="">— No coupon —</option>
+          @for (p of promoCodes(); track p.id) {
+            <option [value]="p.id">{{ p.code }} ({{ p.discountType }})</option>
+          }
+        </select>
+      </label>
+
+      <div class="picker-head">
+        <h2 style="margin:0;">Cheaper alternatives ({{ selectedCount() }})</h2>
+        <input class="search" type="text" placeholder="Search products…"
+               [ngModel]="search()" (ngModelChange)="search.set($event)" />
+      </div>
+
+      <p class="hint">Only products priced lower than this one ({{ sourcePrice() | currency:'EGP':'symbol':'1.2-2' }}) will actually appear — pricier picks are saved but automatically hidden on the storefront.</p>
+
+      <div class="product-grid">
+        @for (p of filtered(); track p.id) {
+          <button type="button" class="product"
+                  [class.product--selected]="isSelected(p.id)"
+                  [class.product--not-downgrade]="isNotAGenuineDowngrade(p)"
+                  (click)="toggle(p.id)">
+            <div class="product__img">
+              @if (imageUrl(p)) { <img [src]="imageUrl(p)" [alt]="p.name" /> }
+              @else { <div class="ph">📦</div> }
+              @if (isSelected(p.id)) { <span class="check">✓</span> }
+              @if (isNotAGenuineDowngrade(p)) { <span class="warn" title="Not priced lower than the source product">⚠</span> }
+            </div>
+            <div class="product__name">{{ p.name }}</div>
+            <div class="product__price">{{ p.price | currency:'EGP':'symbol':'1.2-2' }}</div>
+          </button>
+        }
+      </div>
+
+      @if (filtered().length === 0) { <p class="muted">No products found.</p> }
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Save' }}
+      </button>
+      @if (saved()) { <span class="saved">✓ Saved</span> }
+    </div>
+  }
+</div>

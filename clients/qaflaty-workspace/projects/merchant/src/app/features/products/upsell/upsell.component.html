@@ -1,0 +1,69 @@
+<div class="related-page">
+  <div class="head">
+    <a class="back" [routerLink]="['/products', productId()]">&larr; Back to product</a>
+    <h1>Upsell Products</h1>
+    <p class="subtitle">Choose higher-value alternatives to show as "Upgrade Your Choice" on this product's page and in the cart.</p>
+  </div>
+
+  @if (loading()) {
+    <p class="muted">Loading…</p>
+  } @else {
+    <div class="card mode-card">
+      <label class="toggle">
+        <input type="checkbox" [ngModel]="settingsEnabled()" (ngModelChange)="settingsEnabled.set($event)" />
+        <span>
+          <strong>Enable upsell recommendations (store-wide)</strong>
+          <small>When off, no upsell section is shown anywhere in the store.</small>
+        </span>
+      </label>
+
+      <div class="settings-row">
+        <label class="field">
+          <span>Max recommendations shown</span>
+          <input type="number" min="1" max="12" [ngModel]="settingsLimit()" (ngModelChange)="settingsLimit.set($event)" />
+        </label>
+        <label class="toggle inline">
+          <input type="checkbox" [ngModel]="settingsExcludeOutOfStock()" (ngModelChange)="settingsExcludeOutOfStock.set($event)" />
+          <span>Never recommend out-of-stock products</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="card" [class.disabled]="!settingsEnabled()">
+      <div class="picker-head">
+        <h2>Selected ({{ selectedCount() }})</h2>
+        <input class="search" type="text" placeholder="Search products…"
+               [ngModel]="search()" (ngModelChange)="search.set($event)" />
+      </div>
+
+      <p class="hint">Only products priced higher than this one ({{ sourcePrice() | currency:'EGP':'symbol':'1.2-2' }}) will actually appear as an upsell — cheaper picks are saved but automatically hidden on the storefront.</p>
+
+      <div class="product-grid">
+        @for (p of filtered(); track p.id) {
+          <button type="button" class="product"
+                  [class.product--selected]="isSelected(p.id)"
+                  [class.product--not-upgrade]="isNotAGenuineUpgrade(p)"
+                  (click)="toggle(p.id)">
+            <div class="product__img">
+              @if (imageUrl(p)) { <img [src]="imageUrl(p)" [alt]="p.name" /> }
+              @else { <div class="ph">📦</div> }
+              @if (isSelected(p.id)) { <span class="check">✓</span> }
+              @if (isNotAGenuineUpgrade(p)) { <span class="warn" title="Not priced higher than the source product">⚠</span> }
+            </div>
+            <div class="product__name">{{ p.name }}</div>
+            <div class="product__price">{{ p.price | currency:'EGP':'symbol':'1.2-2' }}</div>
+          </button>
+        }
+      </div>
+
+      @if (filtered().length === 0) { <p class="muted">No products found.</p> }
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" (click)="save()" [disabled]="saving()">
+        {{ saving() ? 'Saving…' : 'Save' }}
+      </button>
+      @if (saved()) { <span class="saved">✓ Saved</span> }
+    </div>
+  }
+</div>

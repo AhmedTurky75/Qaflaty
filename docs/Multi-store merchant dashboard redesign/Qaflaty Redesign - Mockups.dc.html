@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  doc-page:not(:defined){visibility:hidden}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',system-ui,sans-serif;color:#16181d;}
+  .pg{display:flex;flex-direction:column;height:100%;padding:46px 52px;}
+  .pg-top{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid #e3e6eb;}
+  .num{width:40px;height:40px;border-radius:11px;background:#16233d;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;}
+  .pg-top h3{font-size:21px;font-weight:700;letter-spacing:-.01em;}
+  .pg-top .meta{font-size:12.5px;color:#5b6472;margin-top:2px;font-weight:500;}
+  .pg-top .brand{margin-inline-start:auto;display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:#16233d;}
+  .pg-top .brand span{width:26px;height:26px;border-radius:7px;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;}
+  .shot{flex:1;display:flex;align-items:center;justify-content:center;padding:26px 0;min-height:0;}
+  .shot img{max-width:100%;max-height:100%;object-fit:contain;border:1px solid #e3e6eb;border-radius:12px;box-shadow:0 16px 44px -26px rgba(20,24,40,.5);}
+  .cap{font-size:13px;color:#5b6472;line-height:1.55;padding-top:14px;border-top:1px solid #e3e6eb;}
+  .cap b{color:#16181d;}
+  .two{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:center;padding:24px 0;min-height:0;}
+  .two.trio{grid-template-columns:1.3fr 1fr 1fr;}
+  .cell{display:flex;flex-direction:column;align-items:center;gap:10px;height:100%;justify-content:center;}
+  .cell img{max-width:100%;max-height:100%;object-fit:contain;border:1px solid #e3e6eb;border-radius:11px;box-shadow:0 12px 32px -22px rgba(20,24,40,.5);}
+  .cell .lbl{font-size:12px;font-weight:600;color:#5b6472;}
+</style>
+<script src="./doc-page.js"></script>
+</helmet>
+
+<doc-page>
+  <!-- COVER -->
+  <section class="page">
+    <div class="pg" style="justify-content:center;background:linear-gradient(160deg,#16233d,#2563eb);color:#fff;padding:0;">
+      <div style="padding:64px;">
+        <div style="display:flex;align-items:center;gap:13px;margin-bottom:40px;">
+          <div style="width:52px;height:52px;border-radius:14px;background:#fff;color:#2563eb;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:26px;">Q</div>
+          <span style="font-size:24px;font-weight:700;">Qaflaty</span>
+        </div>
+        <div style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.16em;color:#9fc0ff;margin-bottom:14px;">Merchant Dashboard · Redesign</div>
+        <h1 style="font-size:46px;font-weight:700;letter-spacing:-.02em;line-height:1.08;max-width:80%;">High-fidelity mockups &amp; theme system</h1>
+        <p style="font-size:16px;color:#cddcff;margin-top:20px;max-width:70%;line-height:1.55;">Direction C — “Confident Console.” Six-screen redesign built for low-tech-literacy merchants: unmistakable store context, breadcrumbs everywhere, a nine-palette theme system, and full desktop / tablet / mobile responsiveness with Arabic RTL.</p>
+        <div style="display:flex;gap:10px;margin-top:36px;flex-wrap:wrap;">
+          <span style="padding:9px 15px;border-radius:30px;background:rgba(255,255,255,.14);font-size:13px;font-weight:600;">Login &amp; onboarding</span>
+          <span style="padding:9px 15px;border-radius:30px;background:rgba(255,255,255,.14);font-size:13px;font-weight:600;">Stores</span>
+          <span style="padding:9px 15px;border-radius:30px;background:rgba(255,255,255,.14);font-size:13px;font-weight:600;">Dashboard</span>
+          <span style="padding:9px 15px;border-radius:30px;background:rgba(255,255,255,.14);font-size:13px;font-weight:600;">Products</span>
+          <span style="padding:9px 15px;border-radius:30px;background:rgba(255,255,255,.14);font-size:13px;font-weight:600;">Orders</span>
+          <span style="padding:9px 15px;border-radius:30px;background:rgba(255,255,255,.14);font-size:13px;font-weight:600;">Settings &amp; theming</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">01</div><div><h3>Login</h3><div class="meta">Desktop · Home ▸ Sign in</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/09-login.png" alt="Login"></div>
+    <p class="cap"><b>One obvious task per screen.</b> Big labelled fields, a single primary action, and a clear route to register. OTP verification follows as step two.</p>
+  </div></section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">02</div><div><h3>Onboarding — first store</h3><div class="meta">Desktop · guided setup wizard</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/10-onboarding.png" alt="Onboarding"></div>
+    <p class="cap"><b>First-run wizard.</b> A 3-step path (create store → add product → start selling) with a visible progress tracker. The locked-currency warning is surfaced up front, in plain language.</p>
+  </div></section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">03</div><div><h3>Store dashboard</h3><div class="meta">Desktop · Home ▸ Cairo Branch ▸ Overview</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/01-dashboard.png" alt="Dashboard"></div>
+    <p class="cap"><b>Store context is unmistakable.</b> The active store shows in the coloured rail switcher, the breadcrumb, and the top bar — three cues at once. Stat tiles, latest orders, and quick actions sit above the fold.</p>
+  </div></section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">04</div><div><h3>Orders</h3><div class="meta">Desktop · Home ▸ Cairo Branch ▸ Orders</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/02-orders.png" alt="Orders list"></div>
+    <p class="cap"><b>A real table for a priority screen.</b> Status chips filter in one tap; search, date and status are always visible. Rows are full-height tap targets that open the order.</p>
+  </div></section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">05</div><div><h3>Order detail</h3><div class="meta">Desktop · Orders ▸ Order #1042</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/03-order-detail.png" alt="Order detail"></div>
+    <p class="cap"><b>Everything to fulfil an order on one screen:</b> items and totals, shipping details, and a plain-language status timeline. A single prominent “Update status” action.</p>
+  </div></section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">06</div><div><h3>Products</h3><div class="meta">Desktop · Home ▸ Cairo Branch ▸ Products</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/04-products.png" alt="Products list"></div>
+    <p class="cap"><b>Visual catalogue.</b> Photo-first cards with clear stock and status badges (Active, Low stock, Out of stock, Draft). Search and filters up top; card taps open the editor.</p>
+  </div></section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">07</div><div><h3>Add / edit product</h3><div class="meta">Desktop · Products ▸ Edit product</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/05-product-form.png" alt="Product form"></div>
+    <p class="cap"><b>Grouped, not sprawling.</b> Basic details and images on the left; organization, status and variants on the right. Sticky save/cancel actions at the foot.</p>
+  </div></section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">08</div><div><h3>My stores</h3><div class="meta">Desktop · Home ▸ Stores</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/06-stores.png" alt="Stores list"></div>
+    <p class="cap"><b>One merchant, many stores.</b> Each store keeps its own brand colour (carried into the switcher), address, and at-a-glance product/order counts. An explicit “Add store” card is always present.</p>
+  </div></section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">09</div><div><h3>Create store</h3><div class="meta">Desktop · Stores ▸ New store</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/07-create-store.png" alt="Create store"></div>
+    <p class="cap"><b>Minimal to start.</b> Name, address and currency only — with the irreversible currency choice clearly flagged. Everything else has sensible defaults the merchant can refine later.</p>
+  </div></section>
+
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">10</div><div><h3>Settings — theme picker</h3><div class="meta">Desktop · Settings ▸ Appearance</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="shot"><img src="screenshots/desktop/08-settings-theme-picker.png" alt="Settings theme picker"></div>
+    <p class="cap"><b>Themes a non-technical merchant understands.</b> Named palettes shown as live mini-previews with a tick on the active one — no hex codes, no sliders. Language and text-size controls sit alongside.</p>
+  </div></section>
+
+  <!-- RESPONSIVE -->
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">11</div><div><h3>Responsive — tablet &amp; mobile</h3><div class="meta">Same screens, every breakpoint</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="two trio">
+      <div class="cell"><img src="screenshots/tablet/01-dashboard.png" alt="Tablet dashboard"><span class="lbl">Tablet · Dashboard</span></div>
+      <div class="cell"><img src="screenshots/mobile/01-dashboard.png" alt="Mobile dashboard"><span class="lbl">Mobile · Dashboard</span></div>
+      <div class="cell"><img src="screenshots/mobile/02-orders.png" alt="Mobile orders"><span class="lbl">Mobile · Orders</span></div>
+    </div>
+    <p class="cap"><b>All three are primary.</b> Tablet keeps the rail but reflows content to a single column; mobile swaps the rail for a bottom tab bar + hamburger drawer, and the breadcrumb collapses to a back-chevron. Nothing is mobile-as-an-afterthought.</p>
+  </div></section>
+
+  <!-- SHOWCASE -->
+  <section class="page"><div class="pg">
+    <div class="pg-top"><div class="num">12</div><div><h3>Theming &amp; Arabic RTL</h3><div class="meta">Instant palette switching · full RTL</div></div><div class="brand"><span>Q</span>Qaflaty</div></div>
+    <div class="two">
+      <div class="cell"><img src="screenshots/showcase/01-slate-dark-dashboard.png" alt="Slate dark"><span class="lbl">Slate / Dark theme</span></div>
+      <div class="cell"><img src="screenshots/showcase/02-emerald-rtl-orders.png" alt="Emerald RTL"><span class="lbl">Emerald theme · Arabic (RTL)</span></div>
+    </div>
+    <p class="cap"><b>One token layer, nine palettes, two directions.</b> Themes are pure CSS-variable swaps applied on the app root, so switching is instant and no component is rebuilt. Layout, icons and breadcrumbs mirror correctly in Arabic. Full palettes and the Angular + Tailwind code are in the Design System sheet.</p>
+  </div></section>
+</doc-page>
+
+</x-dc>
+</body>
+</html>

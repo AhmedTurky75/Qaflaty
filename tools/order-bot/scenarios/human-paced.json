@@ -1,0 +1,33 @@
+{
+  "name": "human-paced",
+  "baseUrl": "http://localhost:5001/api",
+  "storeSlug": "turky4",
+
+  "orders": 10,
+  "concurrency": 3,
+  "rampUpSeconds": 6,
+  "pacing": "human",
+
+  "products": [],
+  "itemsPerOrder": { "min": 1, "max": 3 },
+
+  "identity": {
+    "phoneRegion": "SA",
+    "emailDomain": "qaflaty-bot.test",
+    "namePrefix": "Bot"
+  },
+
+  "location": {
+    "countryCode": 682,
+    "cityId": 6821,
+    "districtId": null
+  },
+
+  "paymentMethod": "auto",
+  "promoCode": null,
+  "notes": null,
+
+  "otp": { "mode": "mock", "code": "000000" },
+
+  "seed": null
+}

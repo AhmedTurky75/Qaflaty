@@ -17,8 +17,15 @@ public record StoreConfigurationDto(
     SearchSettingsDto SearchSettings,
     List<PaymentMethodAdjustmentDto> PaymentMethodAdjustments,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    TaxSettingsDto? TaxSettings = null
 );
+
+public record TaxSettingsDto(
+    bool Enabled,
+    decimal Rate,
+    bool PricesIncludeTax,
+    string Label);
 
 public record PageTogglesDto(
     bool AboutPage, bool ContactPage, bool FaqPage,
@@ -104,5 +111,8 @@ public record StorefrontConfigDto(
     bool IsUnderMaintenance,
     SearchSettingsDto SearchSettings,
     List<PaymentMethodAdjustmentDto> PaymentMethodAdjustments,
-    List<FilterablePropertyDefinitionDto> FilterablePropertyDefinitions
+    List<FilterablePropertyDefinitionDto> FilterablePropertyDefinitions,
+    TaxSettingsDto? TaxSettings = null,
+    string Currency = "EGP",
+    string CurrencySymbol = "ج.م"
 );

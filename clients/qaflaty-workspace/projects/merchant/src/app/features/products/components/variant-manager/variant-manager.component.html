@@ -1,0 +1,206 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <h3 class="text-base font-bold text-text">{{ 'products.variants.title' | transloco }}</h3>
+    @if (!hasVariants()) {
+      <button type="button" (click)="enableVariants()"
+        class="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary/40">
+        {{ 'products.variants.add' | transloco }}
+      </button>
+    }
+  </div>
+
+  @if (!hasVariants() && !showVariantSetup()) {
+    <p class="text-sm text-text-muted">{{ 'products.variants.empty' | transloco }}</p>
+  }
+
+  <!-- Setup -->
+  @if (showVariantSetup()) {
+    <div class="space-y-4 rounded-xl bg-surface-elevated p-4">
+      <h4 class="font-medium text-text">{{ 'products.variants.defineOptions' | transloco }}</h4>
+
+      @for (option of variantOptions(); track option.name) {
+        <div class="flex items-start gap-4 rounded-lg border border-border bg-surface p-4">
+          <div class="flex-1">
+            <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.optionName' | transloco }}</label>
+            <input type="text" [value]="option.name" disabled class="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2 text-text-muted" />
+          </div>
+          <div class="flex-[2]">
+            <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.values' | transloco }}</label>
+            <input type="text" [value]="option.values.join(', ')" disabled class="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2 text-text-muted" />
+          </div>
+        </div>
+      }
+
+      <form [formGroup]="newOptionForm" (ngSubmit)="addVariantOption()" class="flex items-end gap-4 rounded-lg border border-dashed border-border bg-surface p-4">
+        <div class="flex-1">
+          <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.optionName' | transloco }}</label>
+          <input type="text" formControlName="name" [placeholder]="'products.variants.optionNamePh' | transloco"
+            class="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        </div>
+        <div class="flex-[2]">
+          <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.values' | transloco }}</label>
+          <input type="text" formControlName="values" [placeholder]="'products.variants.valuesPh' | transloco"
+            class="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+        </div>
+        <button type="submit" [disabled]="newOptionForm.invalid || savingOption()"
+          class="min-h-[44px] rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+          {{ (savingOption() ? 'products.variants.adding' : 'products.variants.addOption') | transloco }}
+        </button>
+      </form>
+
+      @if (optionError()) { <p class="text-sm text-danger">{{ optionError() }}</p> }
+    </div>
+  }
+
+  <!-- Variants table -->
+  @if (hasVariants() || variants().length > 0) {
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h4 class="font-medium text-text">{{ 'products.variants.combinations' | transloco }}</h4>
+        @if (canGenerateVariants()) {
+          <button type="button" (click)="generateAllVariants()" [disabled]="generatingVariants()"
+            class="rounded-lg border border-primary px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+            {{ (generatingVariants() ? 'products.variants.generating' : 'products.variants.generateAll') | transloco }}
+          </button>
+        }
+      </div>
+
+      @if (variants().length > 0) {
+        <div class="overflow-x-auto rounded-xl border border-border">
+          <table class="w-full text-sm">
+            <thead class="bg-surface-elevated text-text-muted">
+              <tr>
+                @for (option of variantOptions(); track option.name) {
+                  <th class="px-4 py-3 text-start font-medium">{{ option.name }}</th>
+                }
+                <th class="px-4 py-3 text-start font-medium">{{ 'products.variants.sku' | transloco }}</th>
+                <th class="px-4 py-3 text-start font-medium">{{ 'products.variants.priceOverride' | transloco }}</th>
+                <th class="px-4 py-3 text-start font-medium">{{ 'products.variants.stock' | transloco }}</th>
+                <th class="px-4 py-3 text-start font-medium">{{ 'products.variants.actions' | transloco }}</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-border">
+              @for (variant of variants(); track variant.id) {
+                <tr class="hover:bg-surface-elevated">
+                  @for (option of variantOptions(); track option.name) {
+                    <td class="px-4 py-3">
+                      <span class="inline-flex items-center rounded-full bg-surface-elevated px-2.5 py-0.5 text-xs font-medium text-text">{{ variant.attributes[option.name] }}</span>
+                    </td>
+                  }
+                  <td class="px-4 py-3">
+                    @if (editingVariantId() === variant.id) {
+                      <input type="text" [(ngModel)]="editForm.sku" class="w-24 rounded border border-border bg-surface-elevated px-2 py-1 text-sm text-text" />
+                    } @else { {{ variant.sku }} }
+                  </td>
+                  <td class="px-4 py-3">
+                    @if (editingVariantId() === variant.id) {
+                      <input type="number" [(ngModel)]="editForm.priceOverride" step="0.01" class="w-24 rounded border border-border bg-surface-elevated px-2 py-1 text-sm text-text" />
+                    } @else {
+                      @if (variant.priceOverride) { {{ variant.priceOverride }} {{ variant.priceOverrideCurrency }} } @else { <span class="text-text-muted">—</span> }
+                    }
+                  </td>
+                  <td class="px-4 py-3">
+                    @if (editingVariantId() === variant.id) {
+                      <input type="number" [(ngModel)]="editForm.quantity" min="0" class="w-20 rounded border border-border bg-surface-elevated px-2 py-1 text-sm text-text" />
+                    } @else {
+                      <span [class.text-danger]="variant.quantity <= 0" [class.text-warning]="variant.quantity > 0 && variant.quantity <= 5">{{ variant.quantity }}</span>
+                    }
+                  </td>
+                  <td class="px-4 py-3">
+                    @if (editingVariantId() === variant.id) {
+                      <div class="flex items-center gap-2">
+                        <button type="button" (click)="saveVariant(variant)" [disabled]="savingVariant()" class="text-success hover:opacity-80" [attr.aria-label]="'products.variants.save' | transloco"><app-icon name="check" [size]="18" /></button>
+                        <button type="button" (click)="cancelEdit()" class="text-text-muted hover:text-text" [attr.aria-label]="'common.cancel' | transloco"><app-icon name="close" [size]="18" /></button>
+                      </div>
+                    } @else {
+                      <div class="flex items-center gap-2">
+                        <button type="button" (click)="editVariant(variant)" class="text-primary hover:opacity-80" [attr.aria-label]="'common.edit' | transloco"><app-icon name="edit" [size]="18" /></button>
+                        <button type="button" (click)="showAdjustStock(variant)" class="text-primary hover:opacity-80" [attr.aria-label]="'products.variants.adjustStock' | transloco"><app-icon name="trend-up" [size]="18" /></button>
+                      </div>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      } @else {
+        <p class="py-4 text-center text-sm text-text-muted">{{ 'products.variants.noneYet' | transloco }}</p>
+      }
+    </div>
+  }
+
+  <!-- Stock adjustment modal -->
+  @if (adjustingStockVariant()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div class="w-full max-w-md rounded-2xl border border-border bg-surface p-6 shadow-xl">
+        <h3 class="mb-4 text-base font-bold text-text">{{ 'products.variants.adjustStock' | transloco }}</h3>
+        <div class="space-y-4">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.qtyChange' | transloco }}</label>
+            <input type="number" [(ngModel)]="stockAdjustment.quantity" [placeholder]="'products.variants.qtyChangePh' | transloco"
+              class="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.reason' | transloco }}</label>
+            <select [(ngModel)]="stockAdjustment.type" class="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30">
+              <option value="Adjustment">{{ 'products.variants.typeAdjustment' | transloco }}</option>
+              <option value="Restock">{{ 'products.variants.typeRestock' | transloco }}</option>
+              <option value="Damaged">{{ 'products.variants.typeDamaged' | transloco }}</option>
+              <option value="Return">{{ 'products.variants.typeReturn' | transloco }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.notes' | transloco }}</label>
+            <input type="text" [(ngModel)]="stockAdjustment.reason" [placeholder]="'products.variants.notesPh' | transloco"
+              class="w-full rounded-lg border border-border bg-surface-elevated px-3 py-2 text-text focus:border-primary focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          </div>
+        </div>
+        <div class="mt-6 flex justify-end gap-3">
+          <button type="button" (click)="cancelStockAdjustment()" class="px-4 py-2 text-sm font-medium text-text-muted hover:text-text">{{ 'common.cancel' | transloco }}</button>
+          <button type="button" (click)="submitStockAdjustment()" [disabled]="savingStock()" class="min-h-[44px] rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+            {{ (savingStock() ? 'products.variants.saving' : 'products.variants.save') | transloco }}
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- Add new variant -->
+  @if (hasVariants() && variantOptions().length > 0) {
+    <div class="rounded-xl bg-surface-elevated p-4">
+      <h4 class="mb-4 font-medium text-text">{{ 'products.variants.addNew' | transloco }}</h4>
+      <form [formGroup]="newVariantForm" (ngSubmit)="addNewVariant()" class="space-y-4">
+        <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
+          @for (option of variantOptions(); track option.name) {
+            <div>
+              <label class="mb-1 block text-sm font-medium text-text">{{ option.name }}</label>
+              <select [formControlName]="'attr_' + option.name" class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30">
+                <option value="">{{ 'products.select' | transloco }}</option>
+                @for (value of option.values; track value) { <option [value]="value">{{ value }}</option> }
+              </select>
+            </div>
+          }
+          <div>
+            <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.sku' | transloco }}</label>
+            <input type="text" formControlName="sku" class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.priceOverride' | transloco }}</label>
+            <input type="number" formControlName="priceOverride" step="0.01" class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          </div>
+          <div>
+            <label class="mb-1 block text-sm font-medium text-text">{{ 'products.variants.stock' | transloco }}</label>
+            <input type="number" formControlName="quantity" min="0" class="w-full rounded-lg border border-border bg-surface px-3 py-2 text-text focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30" />
+          </div>
+        </div>
+        <div class="flex justify-end">
+          <button type="submit" [disabled]="newVariantForm.invalid || addingVariant()" class="min-h-[44px] rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50">
+            {{ (addingVariant() ? 'products.variants.adding' : 'products.variants.addVariant') | transloco }}
+          </button>
+        </div>
+      </form>
+    </div>
+  }
+</div>

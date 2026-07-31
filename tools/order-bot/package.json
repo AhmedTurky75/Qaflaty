@@ -1,0 +1,21 @@
+{
+  "name": "qaflaty-order-bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Places N storefront orders with configurable products and quantities, for volume testing.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.6"
+  },
+  "bin": {
+    "order-bot": "bot.mjs"
+  },
+  "scripts": {
+    "bot": "node bot.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.0"
+  }
+}

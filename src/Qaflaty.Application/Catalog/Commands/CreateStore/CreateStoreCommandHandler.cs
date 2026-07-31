@@ -48,7 +48,12 @@ public class CreateStoreCommandHandler : ICommandHandler<CreateStoreCommand, Sto
         if (brandingResult.IsFailure)
             return Result.Failure<StoreDto>(brandingResult.Error);
 
-        // Create delivery settings
+        // Resolve the store currency (set once, then locked). Reject unknown ISO codes.
+        if (!Currency.IsValidCode(request.Currency))
+            return Result.Failure<StoreDto>(new Error("Store.InvalidCurrency", $"'{request.Currency}' is not a valid ISO 4217 currency code"));
+        var currency = Currency.FromCode(request.Currency);
+
+        // Create delivery settings (always in the store currency)
         var deliveryFeeResult = Money.Create(request.DeliveryFee);
         if (deliveryFeeResult.IsFailure)
             return Result.Failure<StoreDto>(deliveryFeeResult.Error);
@@ -72,7 +77,8 @@ public class CreateStoreCommandHandler : ICommandHandler<CreateStoreCommand, Sto
             slugResult.Value,
             nameResult.Value,
             brandingResult.Value,
-            deliverySettingsResult.Value);
+            deliverySettingsResult.Value,
+            currency);
 
         if (storeResult.IsFailure)
             return Result.Failure<StoreDto>(storeResult.Error);
@@ -102,7 +108,9 @@ public class CreateStoreCommandHandler : ICommandHandler<CreateStoreCommand, Sto
                     : null),
             store.CustomDomain,
             store.CreatedAt,
-            store.UpdatedAt);
+            store.UpdatedAt,
+            store.Currency.Code,
+            store.Currency.Symbol);
 
         return Result.Success(dto);
     }

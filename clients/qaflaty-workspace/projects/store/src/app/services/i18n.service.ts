@@ -37,6 +37,18 @@ export class I18nService {
     return this.currentLanguage() === 'ar' ? text.arabic : text.english;
   }
 
+  /**
+   * Picks the language-appropriate name for entities that carry an English `name`
+   * plus an optional Arabic `nameAr` (products, categories). Falls back to English
+   * when Arabic is missing so the storefront never shows a blank name.
+   */
+  nameFor(name: string | undefined | null, nameAr?: string | null): string {
+    if (this.currentLanguage() === 'ar' && nameAr && nameAr.trim().length > 0) {
+      return nameAr;
+    }
+    return name ?? '';
+  }
+
   isRtl(): boolean {
     return this.currentLanguage() === 'ar';
   }

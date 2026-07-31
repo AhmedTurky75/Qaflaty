@@ -1,0 +1,56 @@
+@if (loading()) {
+  <div class="py-12 text-center text-text-muted">Loading dashboard…</div>
+} @else if (error()) {
+  <div class="rounded-xl border border-danger/30 bg-danger/10 p-4 text-danger">{{ error() }}</div>
+} @else if (dashboard(); as dash) {
+  <!-- Stats row -->
+  <div class="mb-6 grid grid-cols-2 gap-4 md:grid-cols-5">
+    <div class="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+      <p class="mb-1 text-xs text-text-muted">Events today</p>
+      <p class="text-2xl font-bold text-text">{{ dash.stats.eventsToday }}</p>
+    </div>
+    <div class="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+      <p class="mb-1 text-xs text-text-muted">Purchase events</p>
+      <p class="text-2xl font-bold text-text">{{ dash.stats.purchaseEventsToday }}</p>
+    </div>
+    <div class="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+      <p class="mb-1 text-xs text-text-muted">Failed events</p>
+      <p class="text-2xl font-bold text-danger">{{ dash.stats.failedEventsToday }}</p>
+    </div>
+    <div class="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+      <p class="mb-1 text-xs text-text-muted">Pending retries</p>
+      <p class="text-2xl font-bold text-warning">{{ dash.stats.pendingRetries }}</p>
+    </div>
+    <div class="rounded-2xl border border-border bg-surface p-4 shadow-sm">
+      <p class="mb-1 text-xs text-text-muted">Avg delivery time</p>
+      <p class="text-2xl font-bold text-text">{{ dash.stats.averageDeliveryTimeMs }}ms</p>
+    </div>
+  </div>
+
+  <!-- Provider cards -->
+  <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+    @for (card of dash.providers; track card.id) {
+      <div class="rounded-2xl border border-border bg-surface p-5 shadow-sm">
+        <div class="mb-3 flex items-center justify-between">
+          <h3 class="font-semibold text-text">{{ card.provider }}</h3>
+          <span class="rounded-full px-2 py-0.5 text-xs font-medium" [ngClass]="statusBadgeClass(card.status)">{{ card.status === 'Verified' ? '✓ Connected' : card.status }}</span>
+        </div>
+        <div class="space-y-1 text-sm text-text-muted">
+          <p>Health score: <span class="font-semibold" [ngClass]="healthColor(card.healthScore)">{{ card.healthScore }}/100</span></p>
+          <p>Events today: <span class="font-medium text-text">{{ card.eventsToday }}</span></p>
+          <p>Last event: {{ card.lastEventAt ? (card.lastEventAt | date:'short') : 'Never' }}</p>
+          @if (card.lastErrorMessage) { <p class="truncate text-danger" [title]="card.lastErrorMessage">Error: {{ card.lastErrorMessage }}</p> }
+        </div>
+        <div class="mt-4 flex gap-2">
+          <a routerLink="/ads/integrations" class="rounded-md bg-primary-tint px-3 py-1.5 text-sm text-primary hover:opacity-90">Manage</a>
+          <a routerLink="/ads/test-center" class="rounded-md bg-surface-elevated px-3 py-1.5 text-sm text-text hover:bg-border/40">Test</a>
+        </div>
+      </div>
+    } @empty {
+      <div class="col-span-full rounded-2xl border border-border bg-surface p-8 text-center shadow-sm">
+        <p class="mb-3 text-text-muted">No providers connected yet.</p>
+        <a routerLink="/ads/integrations" class="font-medium text-primary hover:underline">Connect your first provider →</a>
+      </div>
+    }
+  </div>
+}

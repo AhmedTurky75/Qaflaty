@@ -13,17 +13,20 @@ public class GetCustomerOrdersQueryHandler : IQueryHandler<GetCustomerOrdersQuer
 {
     private readonly ICustomerRepository _customerRepository;
     private readonly IOrderRepository _orderRepository;
+    private readonly IBlockedPhoneRepository _blockedPhoneRepository;
     private readonly IStoreRepository _storeRepository;
     private readonly ICurrentUserService _currentUserService;
 
     public GetCustomerOrdersQueryHandler(
         ICustomerRepository customerRepository,
         IOrderRepository orderRepository,
+        IBlockedPhoneRepository blockedPhoneRepository,
         IStoreRepository storeRepository,
         ICurrentUserService currentUserService)
     {
         _customerRepository = customerRepository;
         _orderRepository = orderRepository;
+        _blockedPhoneRepository = blockedPhoneRepository;
         _storeRepository = storeRepository;
         _currentUserService = currentUserService;
     }
@@ -36,10 +39,16 @@ public class GetCustomerOrdersQueryHandler : IQueryHandler<GetCustomerOrdersQuer
             return Result.Failure<List<OrderListDto>>(OrderingErrors.CustomerNotFound);
 
         var store = await _storeRepository.GetByIdAsync(customer.StoreId, cancellationToken);
-        if (store == null || store.MerchantId.Value != _currentUserService.MerchantId?.Value)
+        if (store == null ||
+            !await _storeRepository.CanMerchantAccessStoreAsync(
+                _currentUserService.MerchantId ?? default, store.Id, cancellationToken))
             return Result.Failure<List<OrderListDto>>(Error.Unauthorized);
 
         var orders = await _orderRepository.GetByCustomerIdAsync(customerId, cancellationToken);
+
+        // Every order here belongs to one customer, so a single blocklist lookup covers them all.
+        var blockedPhone = await _blockedPhoneRepository.GetByPhoneAsync(
+            customer.StoreId, customer.Contact.Phone, cancellationToken);
 
         return Result.Success(orders
             .OrderByDescending(o => o.CreatedAt)
@@ -54,7 +63,8 @@ public class GetCustomerOrdersQueryHandler : IQueryHandler<GetCustomerOrdersQuer
                 o.Payment.Method.ToString(),
                 o.Payment.Status.ToString(),
                 o.CreatedAt,
-                o.Source.ToString()
+                o.Source.ToString(),
+                blockedPhone?.Id.Value
             )).ToList());
     }
 }

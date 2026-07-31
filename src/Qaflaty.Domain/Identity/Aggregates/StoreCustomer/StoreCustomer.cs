@@ -11,24 +11,24 @@ namespace Qaflaty.Domain.Identity.Aggregates.StoreCustomer;
 public sealed class StoreCustomer : AggregateRoot<StoreCustomerId>
 {
     // Properties
-    public Email Email { get; private set; } = null!;
-    public HashedPassword PasswordHash { get; private set; } = null!;
-    public PersonName FullName { get; private set; } = null!;
-    public string Username { get; private set; } = null!;
-    public PhoneNumber? Phone { get; private set; }
-    public PhoneNumber? SecondaryPhone { get; private set; }
-    public bool IsVerified { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public Email Email { get; private set; } = null!; // Customer's account login email, e.g. "shopper@mail.com"
+    public HashedPassword PasswordHash { get; private set; } = null!; // Bcrypt hash of the customer's password
+    public PersonName FullName { get; private set; } = null!; // Customer's first + last name
+    public string Username { get; private set; } = null!; // Unique login username/handle for the customer
+    public PhoneNumber? Phone { get; private set; } // Primary contact phone (optional)
+    public PhoneNumber? SecondaryPhone { get; private set; } // Alternate contact phone (optional)
+    public bool IsVerified { get; private set; } // Whether the customer's email has been verified
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the customer registered
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last profile change
 
     // Navigation - Addresses
-    private readonly List<CustomerAddress> _addresses = [];
+    private readonly List<CustomerAddress> _addresses = []; // Backing list including soft-deleted addresses
     public IReadOnlyList<CustomerAddress> Addresses =>
-        _addresses.Where(a => !a.IsDeleted).ToList().AsReadOnly();
+        _addresses.Where(a => !a.IsDeleted).ToList().AsReadOnly(); // Customer's saved (non-deleted) addresses, one marked default
 
     // Navigation - Refresh Tokens
-    private readonly List<CustomerRefreshToken> _refreshTokens = [];
-    public IReadOnlyList<CustomerRefreshToken> RefreshTokens => _refreshTokens.AsReadOnly();
+    private readonly List<CustomerRefreshToken> _refreshTokens = []; // Backing list of issued refresh tokens
+    public IReadOnlyList<CustomerRefreshToken> RefreshTokens => _refreshTokens.AsReadOnly(); // Active/revoked refresh tokens for this customer's sessions
 
     // Private constructor for EF Core
     private StoreCustomer() : base(StoreCustomerId.Empty) { }

@@ -26,7 +26,7 @@ public class UpdateCategoryCommandHandler : ICommandHandler<UpdateCategoryComman
         if (category == null)
             return Result.Failure<CategoryDto>(new Error("Category.NotFound", "Category not found"));
 
-        var nameResult = CategoryName.Create(request.Name);
+        var nameResult = CategoryName.Create(request.Name, request.NameAr);
         if (nameResult.IsFailure)
             return Result.Failure<CategoryDto>(nameResult.Error);
 
@@ -39,6 +39,25 @@ public class UpdateCategoryCommandHandler : ICommandHandler<UpdateCategoryComman
         if (setParentResult.IsFailure)
             return Result.Failure<CategoryDto>(setParentResult.Error);
 
+        if (request.SortOrder.HasValue)
+        {
+            var sortResult = category.UpdateSortOrder(request.SortOrder.Value);
+            if (sortResult.IsFailure)
+                return Result.Failure<CategoryDto>(sortResult.Error);
+        }
+
+        var mediaResult = category.UpdateMedia(request.ImageUrl, request.IconName);
+        if (mediaResult.IsFailure)
+            return Result.Failure<CategoryDto>(mediaResult.Error);
+
+        var contentResult = CategoryContent.Create(request.ContentHtml, request.ContentHtmlAr);
+        if (contentResult.IsFailure)
+            return Result.Failure<CategoryDto>(contentResult.Error);
+
+        var updateContentResult = category.UpdateContent(contentResult.Value);
+        if (updateContentResult.IsFailure)
+            return Result.Failure<CategoryDto>(updateContentResult.Error);
+
         _categoryRepository.Update(category);
 
         var products = await _productRepository.GetByStoreIdAsync(category.StoreId, cancellationToken);
@@ -47,10 +66,15 @@ public class UpdateCategoryCommandHandler : ICommandHandler<UpdateCategoryComman
         var dto = new CategoryDto(
             category.Id.Value,
             category.Name.Value,
+            category.Name.Arabic,
             category.Slug.Value,
             category.ParentId?.Value,
             category.SortOrder,
-            productCount);
+            productCount,
+            category.ImageUrl,
+            category.IconName,
+            category.Content?.English,
+            category.Content?.Arabic);
 
         return Result.Success(dto);
     }

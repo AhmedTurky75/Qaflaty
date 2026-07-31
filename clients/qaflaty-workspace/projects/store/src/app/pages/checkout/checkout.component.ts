@@ -8,10 +8,13 @@ import { OrderService } from '../../services/order.service';
 import { StoreService } from '../../services/store.service';
 import { ConfigService } from '../../services/config.service';
 import { CustomerAuthService, CustomerAddress } from '../../services/customer-auth.service';
+import { PromoService, PromoValidationResult } from '../../services/promo.service';
+import { FeatureService } from '../../services/feature.service';
 import { CreateOrderRequest, OrderCalculation, OrderStatus } from '../../models/order.model';
 import { PaymentMethodAdjustment } from 'shared';
 import { LocationPickerComponent, PickedLocation } from '../../components/shared/location-picker.component';
 import { COUNTRIES, CITIES, DISTRICTS, Country, City, District, PhoneInputComponent } from 'shared';
+import { TrackingService } from '../../services/tracking.service';
 
 @Component({
   selector: 'app-checkout',
@@ -26,8 +29,18 @@ export class CheckoutComponent implements OnInit {
   private orderService = inject(OrderService);
   private storeService = inject(StoreService);
   private configService = inject(ConfigService);
+  private promoService = inject(PromoService);
+  private featureService = inject(FeatureService);
   private router = inject(Router);
+  private tracking = inject(TrackingService);
   readonly authService = inject(CustomerAuthService);
+
+  // Promo code state
+  readonly promoEnabled = this.featureService.isPromoCodesEnabled;
+  promoInput = signal<string>('');
+  applyingPromo = signal<boolean>(false);
+  promoError = signal<string>('');
+  appliedPromo = signal<PromoValidationResult | null>(null);
 
   cart = this.cartService.cart;
   store = this.storeService.currentStore;
@@ -134,6 +147,16 @@ export class CheckoutComponent implements OnInit {
     this.checkoutForm.get('paymentMethod')!.valueChanges.subscribe(() => {
       const cc = this.lastCountryCode();
       if (cc > 0) this.calculateOrder(cc, this.lastCityId(), this.lastDistrictId());
+      this.tracking.track('AddPaymentInfo', {
+        value: this.cart().total.amount,
+        currency: this.cart().total.currency
+      });
+    });
+
+    this.tracking.track('InitiateCheckout', {
+      value: this.cart().total.amount,
+      currency: this.cart().total.currency,
+      contents: this.cart().items.map(i => ({ contentId: i.productId, quantity: i.quantity, price: i.unitPrice.amount }))
     });
   }
 
@@ -342,8 +365,68 @@ export class CheckoutComponent implements OnInit {
   getDisplayTotal(): string {
     if (this.calculatingOrder()) return '...';
     const calc = this.orderCalculation();
-    if (!calc) return `${this.cart().subtotal.amount.toFixed(2)} ${this.cart().subtotal.currency}`;
-    return `${calc.total.amount.toFixed(2)} ${calc.total.currency}`;
+    const currency = calc?.total.currency ?? this.cart().subtotal.currency;
+    const baseTotal = calc?.total.amount ?? this.cart().subtotal.amount;
+    const total = Math.max(0, baseTotal - this.effectiveDiscount());
+    return `${total.toFixed(2)} ${currency}`;
+  }
+
+  /** Discount applied to the displayed total, including free-shipping (resolved against the delivery fee). */
+  effectiveDiscount(): number {
+    const promo = this.appliedPromo();
+    if (!promo || !promo.isValid) return 0;
+    if (promo.freeShipping) {
+      return this.orderCalculation()?.deliveryFee.amount ?? 0;
+    }
+    return promo.discountAmount;
+  }
+
+  getDisplayTax(): string {
+    const calc = this.orderCalculation();
+    if (!calc?.tax) return '';
+    return `${calc.tax.amount.toFixed(2)} ${calc.tax.currency}`;
+  }
+
+  getDiscountDisplay(): string {
+    const calc = this.orderCalculation();
+    const currency = calc?.total.currency ?? this.cart().subtotal.currency;
+    return `-${this.effectiveDiscount().toFixed(2)} ${currency}`;
+  }
+
+  applyPromo(): void {
+    const code = this.promoInput().trim();
+    if (!code) return;
+
+    const items = this.cart().items.map(item => ({
+      productId: item.productId,
+      quantity: item.quantity,
+      variantId: item.variantId
+    }));
+
+    this.applyingPromo.set(true);
+    this.promoError.set('');
+    this.promoService.validate(code, items).subscribe({
+      next: (result) => {
+        this.applyingPromo.set(false);
+        if (result.isValid) {
+          this.appliedPromo.set(result);
+        } else {
+          this.appliedPromo.set(null);
+          this.promoError.set(result.message ?? 'This promo code is not valid.');
+        }
+      },
+      error: () => {
+        this.applyingPromo.set(false);
+        this.appliedPromo.set(null);
+        this.promoError.set('Could not validate the promo code.');
+      }
+    });
+  }
+
+  removePromo(): void {
+    this.appliedPromo.set(null);
+    this.promoInput.set('');
+    this.promoError.set('');
   }
 
   submitOrder(): void {
@@ -392,6 +475,7 @@ export class CheckoutComponent implements OnInit {
           district: undefined,
           additionalInstructions: formValue.additionalInstructions || undefined,
           countryCode: selectedAddr.countryCode,
+          country: selectedAddr.country || this.countries.find(c => c.isoNumeric === selectedAddr.countryCode)?.name,
           cityId: selectedAddr.cityId,
           districtId: selectedAddr.districtId
         },
@@ -402,13 +486,15 @@ export class CheckoutComponent implements OnInit {
           variantAttributes: item.variantAttributes
         })),
         paymentMethod: formValue.paymentMethod,
-        notes: formValue.notes || undefined
+        notes: formValue.notes || undefined,
+        promoCode: this.appliedPromo()?.isValid ? this.appliedPromo()!.code : undefined
       };
     } else {
       const countryCode = Number(formValue.countryCode);
       const cityId = formValue.cityId ? Number(formValue.cityId) : undefined;
       const districtId = formValue.districtId ? Number(formValue.districtId) : undefined;
       const city = cityId ? this.guestCities().find(c => c.id === cityId) : undefined;
+      const country = this.countries.find(c => c.isoNumeric === countryCode);
 
       request = {
         customerInfo: {
@@ -423,6 +509,7 @@ export class CheckoutComponent implements OnInit {
           district: undefined,
           additionalInstructions: formValue.additionalInstructions || undefined,
           countryCode,
+          country: country?.name,
           cityId,
           districtId
         },
@@ -433,7 +520,8 @@ export class CheckoutComponent implements OnInit {
           variantAttributes: item.variantAttributes
         })),
         paymentMethod: formValue.paymentMethod,
-        notes: formValue.notes || undefined
+        notes: formValue.notes || undefined,
+        promoCode: this.appliedPromo()?.isValid ? this.appliedPromo()!.code : undefined
       };
     }
 
@@ -447,8 +535,16 @@ export class CheckoutComponent implements OnInit {
             queryParams: { email: emailForVerify }
           });
         } else {
-          // Order auto-confirmed — go straight to confirmation
-          this.router.navigate(['/order-confirmation', response.orderNumber]);
+          // Order auto-confirmed — go straight to confirmation. Carry the order id/value so
+          // the confirmation page can fire Purchase with the same event key the server uses
+          // (see OrderPlacedTrackingHandler), letting the provider deduplicate the two.
+          this.router.navigate(['/order-confirmation', response.orderNumber], {
+            queryParams: {
+              orderId: response.id,
+              value: response.pricing.total.amount,
+              currency: response.pricing.total.currency
+            }
+          });
         }
       },
       error: (error) => {

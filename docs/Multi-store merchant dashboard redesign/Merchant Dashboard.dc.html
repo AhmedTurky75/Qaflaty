@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#d9dce2;font-family:'IBM Plex Sans','IBM Plex Sans Arabic',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{text-decoration:none;color:inherit}
+  button{font-family:inherit;cursor:pointer;border:none;background:none}
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:rgba(120,130,150,.35);border-radius:6px}
+
+  /* ============ THEME TOKENS ============ */
+  .app{
+    --canvas:#f4f5f7; --surface:#ffffff; --surface2:#f7f8fa; --border:#e3e6eb;
+    --text:#16181d; --muted:#5b6472;
+    --primary:#4f46e5; --primaryH:#4338ca; --tint:#eeeefe; --onprimary:#ffffff;
+    --success:#0f9d63; --successT:#e4f6ee; --warning:#c77d18; --warningT:#fbf0d9; --danger:#d64545; --dangerT:#fbe9e9;
+    --ring:#4f46e5;
+    --railBg:#1e2536; --railText:#eef0f4; --railMuted:#9aa3b7; --railActive:#4f46e5; --railActiveText:#ffffff; --railBorder:#313a52;
+  }
+  .app[data-theme="blue"]{ --primary:#2563eb; --primaryH:#1d4ed8; --tint:#e4edff; --ring:#2563eb; --railBg:#16233d; --railActive:#2563eb; --railBorder:#26385c; }
+  .app[data-theme="grey"]{ --canvas:#f3f4f6; --surface:#ffffff; --surface2:#f7f8f9; --border:#e2e4e8; --text:#1c1f24; --muted:#5c636e; --primary:#4b5563; --primaryH:#374151; --tint:#eceef1; --ring:#4b5563; --railBg:#24282f; --railActive:#4b5563; --railBorder:#363b44; }
+  .app[data-theme="purple"]{ --canvas:#f6f4fb; --border:#e7e2f0; --text:#1e1a29; --muted:#61596f; --primary:#7c3aed; --primaryH:#6d28d9; --tint:#f1eafe; --ring:#7c3aed; --railBg:#241a3c; --railActive:#7c3aed; --railBorder:#3a2c5c; }
+  .app[data-theme="amber"]{ --canvas:#faf7f1; --border:#eae2d3; --text:#241f16; --muted:#6b6151; --primary:#b45309; --primaryH:#92400e; --tint:#fbeccd; --ring:#b45309; --railBg:#2a2010; --railActive:#b45309; --railText:#f6efe2; --railMuted:#b6a888; --railBorder:#46381f; }
+  .app[data-theme="emerald"]{ --canvas:#f2f7f4; --border:#dde8e2; --text:#16211c; --muted:#566860; --primary:#059669; --primaryH:#047857; --tint:#d9f3e6; --ring:#059669; --railBg:#0f241d; --railActive:#059669; --railBorder:#22463a; }
+  .app[data-theme="teal"]{ --canvas:#f1f7f6; --border:#dbe7e5; --text:#142320; --muted:#4f6764; --primary:#0d9488; --primaryH:#0f766e; --tint:#d3f1ec; --ring:#0d9488; --railBg:#0c2320; --railActive:#0d9488; --railBorder:#1f453f; }
+  .app[data-theme="rose"]{ --canvas:#faf3f4; --border:#ecdcdf; --text:#241318; --muted:#6e5259; --primary:#be123c; --primaryH:#9f1239; --tint:#fbdbe3; --ring:#be123c; --railBg:#2a1018; --railActive:#be123c; --railBorder:#4a2029; }
+  .app[data-theme="slate"]{
+    --canvas:#14171d; --surface:#1d212a; --surface2:#262b36; --border:#323947; --text:#eef1f6; --muted:#99a2b2;
+    --primary:#6366f1; --primaryH:#7c83f6; --tint:#23263a; --ring:#818cf8;
+    --successT:#12352a; --warningT:#3a2f16; --dangerT:#3a1f1f;
+    --railBg:#0f1218; --railText:#eef1f6; --railMuted:#8b93a5; --railActive:#6366f1; --railActiveText:#ffffff; --railBorder:#262b36;
+  }
+
+  /* ============ APP FRAME ============ */
+  .app{ background:var(--canvas); color:var(--text); border-radius:14px; overflow:hidden; box-shadow:0 24px 70px -30px rgba(15,20,40,.5); display:flex; flex-direction:column; }
+  .app.desktop{ width:100%; }
+  .app.tablet{ width:834px; margin:0 auto; }
+  .app.mobile{ width:390px; margin:0 auto; }
+
+  .stage{ padding:26px; display:flex; flex-direction:column; align-items:stretch; }
+
+  /* toolbar (design chrome, not the product) */
+  .toolbar{ background:#12151c; color:#e6e9f0; border-radius:12px; padding:11px 14px; margin-bottom:20px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; font-size:12.5px; }
+  .tbgrp{ display:flex; gap:7px; align-items:center; }
+  .tblabel{ font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:#828ba0; font-weight:600; margin-inline-end:2px; }
+  .swatch{ width:22px; height:22px; border-radius:6px; border:2px solid transparent; cursor:pointer; }
+  .swatch.on{ border-color:#fff; box-shadow:0 0 0 2px #12151c,0 0 0 3px rgba(255,255,255,.5); }
+  .seg{ display:flex; background:#20242e; border-radius:8px; padding:2px; }
+  .seg button{ color:#9aa3b7; font-size:12px; font-weight:600; padding:5px 11px; border-radius:6px; }
+  .seg button.on{ background:#3a4152; color:#fff; }
+
+  /* shell */
+  .shell{ display:flex; min-height:660px; }
+  .rail{ width:248px; flex-shrink:0; background:var(--railBg); color:var(--railText); display:flex; flex-direction:column; padding:16px 14px; }
+  .canvas{ flex:1; min-width:0; display:flex; flex-direction:column; background:var(--canvas); }
+  .content{ flex:1; padding:26px 30px; overflow-y:auto; max-height:760px; }
+  .mobilebar,.drawer,.drawerbg{ display:none; }
+
+  /* tablet: narrower rail */
+  .app.tablet .rail{ width:210px; }
+  .app.tablet .content{ padding:22px; }
+
+  /* mobile: hide rail, show bottom bar + drawer */
+  .app.mobile .rail{ display:none; }
+  .app.mobile .content{ padding:16px; max-height:640px; padding-bottom:78px; }
+  .app.mobile .mobilebar{ display:flex; }
+  .app.mobile .drawer.open{ display:flex; }
+  .app.mobile .drawerbg.open{ display:block; }
+  .app.mobile .crumb-full{ display:none; }
+  .app.mobile .crumb-mini{ display:flex; }
+  .crumb-mini{ display:none; }
+  .app.mobile .topbar-actions-desktop{ display:none; }
+
+  .mobilebar{ position:absolute; bottom:0; left:0; right:0; height:64px; background:var(--surface); border-top:1px solid var(--border); align-items:stretch; z-index:30; }
+  .drawerbg{ position:absolute; inset:0; background:rgba(10,12,20,.5); z-index:40; }
+  .drawer{ position:absolute; top:0; bottom:0; inset-inline-start:0; width:270px; background:var(--railBg); color:var(--railText); z-index:50; flex-direction:column; padding:16px 14px; }
+
+  /* responsive reflow of screen content */
+  .app.mobile .hamburger{ display:flex!important; }
+  .app.tablet .dash-stats{ grid-template-columns:repeat(2,1fr)!important; }
+  .app.tablet .dash-cols,.app.tablet .od-cols{ grid-template-columns:1fr!important; }
+  .app.mobile .dash-stats{ grid-template-columns:repeat(2,1fr)!important; }
+  .app.mobile .dash-cols,.app.mobile .od-cols{ grid-template-columns:1fr!important; }
+  .app.tablet .prod-grid,.app.tablet .theme-grid{ grid-template-columns:repeat(2,1fr)!important; }
+  .app.tablet .pf-cols,.app.tablet .set-cols{ grid-template-columns:1fr!important; }
+  .app.mobile .prod-grid,.app.mobile .theme-grid{ grid-template-columns:1fr!important; }
+  .app.mobile .pf-cols,.app.mobile .set-cols{ grid-template-columns:1fr!important; }
+
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .fade{ animation:fade .28s ease both; }
+</style>
+</helmet>
+
+<div class="stage">
+  <!-- ===== DESIGN TOOLBAR ===== -->
+  <div class="toolbar">
+    <div class="tbgrp"><span class="tblabel">Theme</span>
+      <sc-for list="{{ themes }}" as="t" hint-placeholder-count="9">
+        <button class="swatch {{ t.on }}" style="background:{{ t.dot }}" title="{{ t.name }}" onClick="{{ t.pick }}"></button>
+      </sc-for>
+    </div>
+    <div class="tbgrp"><span class="tblabel">Device</span>
+      <div class="seg">
+        <button class="{{ dDesktop }}" onClick="{{ setDesktop }}">Desktop</button>
+        <button class="{{ dTablet }}" onClick="{{ setTablet }}">Tablet</button>
+        <button class="{{ dMobile }}" onClick="{{ setMobile }}">Mobile</button>
+      </div>
+    </div>
+    <div class="tbgrp"><span class="tblabel">Language</span>
+      <div class="seg">
+        <button class="{{ lEN }}" onClick="{{ setEN }}">EN</button>
+        <button class="{{ lAR }}" onClick="{{ setAR }}">عربى</button>
+      </div>
+    </div>
+    <div class="tbgrp" style="margin-inline-start:auto;">
+      <span class="tblabel">Screen</span>
+      <div class="seg" style="flex-wrap:wrap;">
+        <button class="{{ sLogin }}" onClick="{{ goLogin }}">Login</button>
+        <button class="{{ sOnboard }}" onClick="{{ goOnboard }}">Onboarding</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== APP ===== -->
+  <div class="app {{ deviceClass }}" data-theme="{{ theme }}" dir="{{ dir }}">
+
+    <!-- ===== AUTH LAYOUT (login / onboarding) ===== -->
+    <sc-if value="{{ isAuth }}" hint-placeholder-val="{{ false }}">
+      <div style="min-height:660px;display:flex;align-items:center;justify-content:center;padding:40px 20px;background:var(--canvas);position:relative;overflow:hidden;">
+        <div style="position:absolute;inset-block-start:-120px;inset-inline-end:-100px;width:360px;height:360px;border-radius:50%;background:var(--tint);opacity:.7;"></div>
+        <div style="position:absolute;inset-block-end:-140px;inset-inline-start:-90px;width:300px;height:300px;border-radius:50%;background:var(--tint);opacity:.5;"></div>
+
+        <!-- LOGIN -->
+        <sc-if value="{{ isLogin }}" hint-placeholder-val="{{ false }}">
+          <div class="fade" style="position:relative;width:100%;max-width:400px;">
+            <div style="text-align:center;margin-bottom:22px;">
+              <div style="display:inline-flex;align-items:center;gap:10px;margin-bottom:16px;">
+                <div style="width:40px;height:40px;border-radius:11px;background:var(--primary);color:var(--onprimary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px;">Q</div>
+                <span style="font-size:23px;font-weight:700;color:var(--text);">Qaflaty</span>
+              </div>
+              <h1 style="font-size:22px;font-weight:700;color:var(--text);">{{ t_signin }}</h1>
+              <p style="font-size:14px;color:var(--muted);margin-top:6px;">{{ t_signinSub }}</p>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:26px;box-shadow:0 14px 40px -24px rgba(20,24,40,.4);">
+              <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;">{{ t_emailLabel }}</label>
+              <div style="display:flex;align-items:center;gap:9px;border:1px solid var(--border);border-radius:10px;padding:0 12px;background:var(--surface2);margin-bottom:16px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" style="width:18px;height:18px;flex-shrink:0;"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M4 7l8 6 8-6"/></svg>
+                <input placeholder="you@shop.com" style="flex:1;border:none;background:none;outline:none;padding:13px 0;font-size:14px;color:var(--text);font-family:inherit;">
+              </div>
+              <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;">{{ t_pwLabel }}</label>
+              <div style="display:flex;align-items:center;gap:9px;border:1px solid var(--border);border-radius:10px;padding:0 12px;background:var(--surface2);margin-bottom:20px;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.8" style="width:18px;height:18px;flex-shrink:0;"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>
+                <input type="password" value="password" style="flex:1;border:none;background:none;outline:none;padding:13px 0;font-size:14px;color:var(--text);font-family:inherit;">
+              </div>
+              <button onClick="{{ goOnboard }}" style="width:100%;padding:14px;border-radius:11px;background:var(--primary);color:var(--onprimary);font-weight:700;font-size:15px;">{{ t_continue }}</button>
+              <p style="text-align:center;font-size:13.5px;color:var(--muted);margin-top:18px;">{{ t_noAccount }} <span style="color:var(--primary);font-weight:600;">{{ t_register }}</span></p>
+            </div>
+            <p style="text-align:center;font-size:12px;color:var(--muted);margin-top:16px;">{{ t_secure }}</p>
+          </div>
+        </sc-if>
+
+        <!-- ONBOARDING WIZARD -->
+        <sc-if value="{{ isOnboard }}" hint-placeholder-val="{{ false }}">
+          <div class="fade" style="position:relative;width:100%;max-width:560px;">
+            <div style="text-align:center;margin-bottom:20px;">
+              <h1 style="font-size:24px;font-weight:700;color:var(--text);">{{ t_welcome }}</h1>
+              <p style="font-size:14.5px;color:var(--muted);margin-top:7px;">{{ t_welcomeSub }}</p>
+            </div>
+            <!-- steps -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:22px;">
+              <sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;">
+                  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:96px;">
+                    <div style="width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;background:{{ s.bg }};color:{{ s.fg }};border:2px solid {{ s.bd }}">{{ s.mark }}</div>
+                    <span style="font-size:11.5px;font-weight:600;color:{{ s.lblColor }};text-align:center;">{{ s.label }}</span>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;box-shadow:0 14px 40px -24px rgba(20,24,40,.4);">
+              <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                <div style="width:44px;height:44px;border-radius:12px;background:var(--tint);color:var(--primary);display:flex;align-items:center;justify-content:center;">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:22px;height:22px;"><path d="M3 9l1-4h16l1 4"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg>
+                </div>
+                <div>
+                  <h2 style="font-size:18px;font-weight:700;color:var(--text);">{{ t_ob_title }}</h2>
+                  <p style="font-size:13px;color:var(--muted);">{{ t_ob_sub }}</p>
+                </div>
+              </div>
+              <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;">{{ t_storeName }}</label>
+              <input placeholder="Cairo Branch" style="width:100%;border:1px solid var(--border);background:var(--surface2);border-radius:10px;padding:13px 14px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:16px;">
+              <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;">{{ t_currency }}</label>
+              <div style="display:flex;gap:9px;margin-bottom:8px;flex-wrap:wrap;">
+                <div style="border:2px solid var(--primary);background:var(--tint);border-radius:10px;padding:11px 15px;font-weight:600;font-size:13.5px;color:var(--text);">🇪🇬 EGP — Egyptian Pound</div>
+                <div style="border:1px solid var(--border);border-radius:10px;padding:11px 15px;font-weight:500;font-size:13.5px;color:var(--muted);">USD</div>
+                <div style="border:1px solid var(--border);border-radius:10px;padding:11px 15px;font-weight:500;font-size:13.5px;color:var(--muted);">SAR</div>
+              </div>
+              <p style="font-size:12px;color:var(--warning);font-weight:500;margin-bottom:22px;">⚠ {{ t_currencyWarn }}</p>
+              <div style="display:flex;gap:10px;">
+                <button onClick="{{ goLogin }}" style="padding:13px 18px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:600;font-size:14px;">{{ t_back }}</button>
+                <button onClick="{{ goDashboard }}" style="flex:1;padding:13px;border-radius:10px;background:var(--primary);color:var(--onprimary);font-weight:700;font-size:14px;">{{ t_createContinue }}</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+
+    <!-- ===== MAIN SHELL ===== -->
+    <sc-if value="{{ isApp }}" hint-placeholder-val="{{ true }}">
+      <div class="shell">
+        <!-- ===== RAIL (desktop/tablet) ===== -->
+        <aside class="rail">
+          <div style="display:flex;align-items:center;gap:9px;padding:2px 6px 14px;">
+            <div style="width:30px;height:30px;border-radius:8px;background:var(--primary);color:var(--onprimary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;">Q</div>
+            <span style="font-weight:700;font-size:17px;color:var(--railText);">Qaflaty</span>
+          </div>
+
+          <!-- store switcher -->
+          <div style="position:relative;margin-bottom:14px;">
+            <button onClick="{{ toggleSwitch }}" style="width:100%;display:flex;align-items:center;gap:9px;padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid var(--railBorder);">
+              <div style="width:30px;height:30px;border-radius:8px;background:{{ store.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">{{ store.initial }}</div>
+              <div style="flex:1;min-width:0;text-align:start;">
+                <div style="font-weight:700;font-size:13.5px;color:var(--railText);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ store.name }}</div>
+                <div style="font-size:10.5px;color:var(--railMuted);">{{ t_switchStore }}</div>
+              </div>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--railMuted)" stroke-width="2.2" style="width:14px;height:14px;flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <sc-if value="{{ switchOpen }}" hint-placeholder-val="{{ false }}">
+              <div class="fade" style="position:absolute;inset-inline:0;top:calc(100% + 6px);background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 16px 40px -18px rgba(10,14,30,.55);padding:6px;z-index:60;">
+                <sc-for list="{{ stores }}" as="st" hint-placeholder-count="3">
+                  <button onClick="{{ st.pick }}" style="width:100%;display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;background:{{ st.rowBg }};">
+                    <div style="width:28px;height:28px;border-radius:7px;background:{{ st.color }};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0;">{{ st.initial }}</div>
+                    <div style="flex:1;min-width:0;text-align:start;"><div style="font-weight:600;font-size:13px;color:var(--text);">{{ st.name }}</div><div style="font-size:11px;color:var(--muted);">{{ st.city }}</div></div>
+                    <span style="color:var(--primary);font-weight:700;">{{ st.check }}</span>
+                  </button>
+                </sc-for>
+                <div style="height:1px;background:var(--border);margin:5px 4px;"></div>
+                <button onClick="{{ goCreateStore }}" style="width:100%;display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:9px;color:var(--primary);">
+                  <div style="width:28px;height:28px;border-radius:7px;border:2px dashed var(--primary);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">+</div>
+                  <span style="font-weight:600;font-size:13px;">{{ t_addStore }}</span>
+                </button>
+              </div>
+            </sc-if>
+          </div>
+
+          <!-- nav -->
+          <nav style="display:flex;flex-direction:column;gap:3px;">
+            <sc-for list="{{ nav }}" as="n" hint-placeholder-count="6">
+              <button onClick="{{ n.go }}" style="display:flex;align-items:center;gap:12px;padding:10px 11px;border-radius:9px;font-weight:600;font-size:13.5px;background:{{ n.bg }};color:{{ n.color }};text-align:start;">
+                <span style="width:20px;height:20px;flex-shrink:0;display:flex;" dangerouslySetInnerHTML="{{ n.iconObj }}"></span>
+                <span style="flex:1;">{{ n.label }}</span>
+                <sc-if value="{{ n.badge }}" hint-placeholder-val="{{ false }}"><span style="background:var(--danger);color:#fff;font-size:10px;font-weight:700;border-radius:20px;padding:1px 7px;">{{ n.badge }}</span></sc-if>
+              </button>
+            </sc-for>
+          </nav>
+
+          <div style="margin-top:auto;padding-top:12px;border-top:1px solid var(--railBorder);display:flex;align-items:center;gap:9px;">
+            <div style="width:32px;height:32px;border-radius:8px;background:var(--primary);color:var(--onprimary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;">A</div>
+            <div style="flex:1;min-width:0;"><div style="font-weight:600;font-size:12.5px;color:var(--railText);">Ahmed Turky</div><div style="font-size:11px;color:var(--railMuted);">Owner</div></div>
+            <button onClick="{{ goLogin }}" title="Sign out"><svg viewBox="0 0 24 24" fill="none" stroke="var(--railMuted)" stroke-width="1.9" style="width:18px;height:18px;"><path d="M15 4h3a2 2 0 012 2v12a2 2 0 01-2 2h-3"/><path d="M10 17l5-5-5-5"/><path d="M15 12H3"/></svg></button>
+          </div>
+        </aside>
+
+        <!-- ===== CANVAS ===== -->
+        <div class="canvas">
+          <!-- topbar -->
+          <header style="background:var(--surface);border-bottom:1px solid var(--border);padding:0 22px;height:60px;display:flex;align-items:center;gap:14px;flex-shrink:0;">
+            <button class="hamburger" onClick="{{ openDrawer }}" style="display:none;"><svg viewBox="0 0 24 24" fill="none" stroke="var(--text)" stroke-width="2" style="width:22px;height:22px;"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+            <!-- full breadcrumb -->
+            <nav class="crumb-full" style="display:flex;align-items:center;gap:7px;font-size:13px;min-width:0;overflow:hidden;">
+              <sc-for list="{{ crumbs }}" as="c" hint-placeholder-count="3">
+                <sc-if value="{{ c.sep }}" hint-placeholder-val="{{ true }}"><svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" style="width:12px;height:12px;opacity:.5;flex-shrink:0;"><path d="M9 6l6 6-6 6"/></svg></sc-if>
+                <span style="font-weight:{{ c.weight }};color:{{ c.color }};white-space:nowrap;">{{ c.label }}</span>
+              </sc-for>
+            </nav>
+            <!-- mini breadcrumb (mobile) -->
+            <nav class="crumb-mini" style="align-items:center;gap:6px;font-size:13px;min-width:0;">
+              <button onClick="{{ goBack }}" style="display:flex;align-items:center;color:var(--muted);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="width:16px;height:16px;"><path d="M15 18l-6-6 6-6"/></svg></button>
+              <span style="color:var(--muted);">…</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" style="width:11px;height:11px;opacity:.5;"><path d="M9 6l6 6-6 6"/></svg>
+              <span style="font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ crumbLast }}</span>
+            </nav>
+
+            <div class="topbar-actions-desktop" style="margin-inline-start:auto;display:flex;align-items:center;gap:6px;">
+              <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:6px 11px;">
+                <div style="width:18px;height:18px;border-radius:5px;background:{{ store.color }};color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;">{{ store.initial }}</div>
+                <span style="font-size:12.5px;font-weight:600;color:var(--text);">{{ store.name }}</span>
+              </div>
+              <button style="width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;color:var(--muted);position:relative;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:20px;height:20px;"><path d="M18 8a6 6 0 10-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg><span style="position:absolute;top:8px;inset-inline-end:9px;width:7px;height:7px;border-radius:50%;background:var(--danger);border:1.5px solid var(--surface);"></span></button>
+            </div>
+          </header>
+
+          <main class="content">
+            <!-- screens injected below -->
+            <sc-if value="{{ isDashboard }}" hint-placeholder-val="{{ true }}"><div dangerouslySetInnerHTML="{{ dashboardObj }}"></div></sc-if>
+            <sc-if value="{{ isOrders }}" hint-placeholder-val="{{ false }}"><div dangerouslySetInnerHTML="{{ ordersObj }}"></div></sc-if>
+            <sc-if value="{{ isOrderDetail }}" hint-placeholder-val="{{ false }}"><div dangerouslySetInnerHTML="{{ orderDetailObj }}"></div></sc-if>
+            <sc-if value="{{ isProducts }}" hint-placeholder-val="{{ false }}"><div dangerouslySetInnerHTML="{{ productsObj }}"></div></sc-if>
+            <sc-if value="{{ isProductForm }}" hint-placeholder-val="{{ false }}"><div dangerouslySetInnerHTML="{{ productFormObj }}"></div></sc-if>
+            <sc-if value="{{ isStores }}" hint-placeholder-val="{{ false }}"><div dangerouslySetInnerHTML="{{ storesObj }}"></div></sc-if>
+            <sc-if value="{{ isCreateStore }}" hint-placeholder-val="{{ false }}"><div dangerouslySetInnerHTML="{{ createStoreObj }}"></div></sc-if>
+            <sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}"><div dangerouslySetInnerHTML="{{ settingsObj }}"></div></sc-if>
+          </main>
+
+          <!-- mobile bottom bar -->
+          <nav class="mobilebar">
+            <sc-for list="{{ mobileNav }}" as="m" hint-placeholder-count="5">
+              <button onClick="{{ m.go }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:{{ m.color }};">
+                <span style="width:22px;height:22px;display:flex;" dangerouslySetInnerHTML="{{ m.iconObj }}"></span>
+                <span style="font-size:10px;font-weight:600;">{{ m.label }}</span>
+              </button>
+            </sc-for>
+          </nav>
+        </div>
+      </div>
+
+      <!-- mobile drawer -->
+      <div class="drawerbg {{ drawerCls }}" onClick="{{ closeDrawer }}"></div>
+      <div class="drawer {{ drawerCls }}">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:2px 6px 14px;">
+          <div style="display:flex;align-items:center;gap:9px;"><div style="width:30px;height:30px;border-radius:8px;background:var(--primary);color:var(--onprimary);display:flex;align-items:center;justify-content:center;font-weight:700;">Q</div><span style="font-weight:700;font-size:17px;">Qaflaty</span></div>
+          <button onClick="{{ closeDrawer }}"><svg viewBox="0 0 24 24" fill="none" stroke="var(--railMuted)" stroke-width="2" style="width:22px;height:22px;"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        <nav style="display:flex;flex-direction:column;gap:3px;">
+          <sc-for list="{{ nav }}" as="n" hint-placeholder-count="6">
+            <button onClick="{{ n.goClose }}" style="display:flex;align-items:center;gap:12px;padding:12px 11px;border-radius:9px;font-weight:600;font-size:14px;background:{{ n.bg }};color:{{ n.color }};text-align:start;">
+              <span style="width:20px;height:20px;flex-shrink:0;display:flex;" dangerouslySetInnerHTML="{{ n.iconObj }}"></span>{{ n.label }}
+            </button>
+          </sc-for>
+        </nav>
+      </div>
+    </sc-if>
+  </div>
+
+  <p style="max-width:900px;margin:16px auto 0;text-align:center;font-size:12.5px;color:#6b7280;">Live prototype — switch <b>theme</b>, <b>device</b>, and <b>language</b> in the top bar; click the store switcher and the sidebar to navigate. The dark toolbar is design chrome, not part of the product.</p>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;1180&quot;,&quot;height&quot;:&quot;860&quot;}}">
+class Component extends DCLogic {
+  state = {
+    theme: 'blue', device: 'desktop', dir: 'ltr', screen: 'dashboard',
+    storeId: 'cairo', switchOpen: false, drawerOpen: false, last: 'dashboard'
+  };
+
+  T = {
+    en: { signin:'Sign in to your account', signinSub:'Manage your stores, products and orders in one place',
+      emailLabel:'Email or username', pwLabel:'Password', continue:'Continue', noAccount:"Don't have an account?",
+      register:'Create one', secure:'🔒 Secured with one-time code verification',
+      welcome:'Welcome to Qaflaty 👋', welcomeSub:"Let's set up your first store — it takes two minutes",
+      ob_title:'Create your first store', ob_sub:'You can add more stores anytime', storeName:'Store name',
+      currency:'Store currency', currencyWarn:'Chosen once and locked — every price in this store uses it',
+      back:'Back', createContinue:'Create store & continue', switchStore:'Tap to switch store', addStore:'Add new store' },
+    ar: { signin:'تسجيل الدخول إلى حسابك', signinSub:'أدر متاجرك ومنتجاتك وطلباتك في مكان واحد',
+      emailLabel:'البريد الإلكتروني أو اسم المستخدم', pwLabel:'كلمة المرور', continue:'متابعة', noAccount:'ليس لديك حساب؟',
+      register:'أنشئ حسابًا', secure:'🔒 محمي برمز تحقق لمرة واحدة',
+      welcome:'مرحبًا بك في قافلتي 👋', welcomeSub:'لنجهّز متجرك الأول — يستغرق دقيقتين',
+      ob_title:'أنشئ متجرك الأول', ob_sub:'يمكنك إضافة متاجر أخرى في أي وقت', storeName:'اسم المتجر',
+      currency:'عملة المتجر', currencyWarn:'يُختار مرة واحدة ويُقفل — كل الأسعار في هذا المتجر تستخدمه',
+      back:'رجوع', createContinue:'أنشئ المتجر وتابع', switchStore:'اضغط لتبديل المتجر', addStore:'إضافة متجر جديد' }
+  };
+
+  STORES = [
+    { id:'cairo', name:'Cairo Branch', initial:'C', color:'#4f46e5', city:'Cairo, Egypt' },
+    { id:'alex', name:'Alexandria Store', initial:'A', color:'#0d9488', city:'Alexandria, Egypt' },
+    { id:'giza', name:'Giza Outlet', initial:'G', color:'#d97706', city:'Giza, Egypt' }
+  ];
+
+  ic = {
+    home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:100%;height:100%"><path d="M3 12l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>',
+    orders:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:100%;height:100%"><path d="M6 2l1.5 4h9L18 2"/><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M9 11h6"/></svg>',
+    products:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:100%;height:100%"><path d="M21 8l-9-5-9 5 9 5 9-5z"/><path d="M3 8v8l9 5 9-5V8"/></svg>',
+    customers:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:100%;height:100%"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.3a3.2 3.2 0 010 5.4"/><path d="M21 20c0-2.5-1.5-4.6-3.6-5.5"/></svg>',
+    stores:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:100%;height:100%"><path d="M4 9l1-4h14l1 4"/><path d="M4 9a2.5 2.5 0 005 0 2.5 2.5 0 005 0 2.5 2.5 0 005 0"/><path d="M5 12v8h14v-8"/></svg>',
+    settings:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:100%;height:100%"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>',
+    more:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" style="width:100%;height:100%"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>'
+  };
+
+  componentDidMount(){ window.__go = (s)=>this.go(s); window.__theme = (t)=>this.setState({theme:t}); window.__device = (d)=>this.setState({device:d}); window.__dir = (d)=>this.setState({dir:d}); }
+  tr(k){ return this.T[this.state.dir==='rtl'?'ar':'en'][k]; }
+  store(){ return this.STORES.find(s=>s.id===this.state.storeId); }
+  go(screen){ this.setState(s=>({ last:s.screen, screen, switchOpen:false, drawerOpen:false })); }
+
+  navDef(){
+    return [
+      { key:'dashboard', en:'Home', ar:'الرئيسية', icon:this.ic.home },
+      { key:'orders', en:'Orders', ar:'الطلبات', icon:this.ic.orders, badge:'7' },
+      { key:'products', en:'Products', ar:'المنتجات', icon:this.ic.products },
+      { key:'customers', en:'Customers', ar:'العملاء', icon:this.ic.customers },
+      { key:'stores', en:'Stores', ar:'المتاجر', icon:this.ic.stores },
+      { key:'settings', en:'Settings', ar:'الإعدادات', icon:this.ic.settings }
+    ];
+  }
+
+  activeKey(){
+    const s=this.state.screen;
+    if(s==='orderDetail')return 'orders';
+    if(s==='productForm')return 'products';
+    if(s==='createStore')return 'stores';
+    return s;
+  }
+
+  crumbTrail(){
+    const ar=this.state.dir==='rtl'; const st=this.store().name;
+    const home=ar?'الرئيسية':'Home';
+    const map={
+      dashboard:[home, st, ar?'نظرة عامة':'Overview'],
+      orders:[home, st, ar?'الطلبات':'Orders'],
+      orderDetail:[home, st, ar?'الطلبات':'Orders', ar?'طلب #1042':'Order #1042'],
+      products:[home, st, ar?'المنتجات':'Products'],
+      productForm:[home, st, ar?'المنتجات':'Products', ar?'تعديل منتج':'Edit product'],
+      stores:[home, ar?'المتاجر':'Stores'],
+      createStore:[home, ar?'المتاجر':'Stores', ar?'متجر جديد':'New store'],
+      settings:[home, st, ar?'الإعدادات':'Settings', ar?'المظهر':'Appearance']
+    };
+    return map[this.state.screen]||[home];
+  }
+
+  renderVals(){
+    const st=this.state, store=this.store(), ar=st.dir==='rtl';
+    const themes=[
+      ['blue','Blue','#2563eb'],['slate','Slate / Dark','#1e2536'],['light','Light / White','#4f46e5'],
+      ['grey','Grey','#6b7280'],['purple','Purple','#7c3aed'],['amber','Amber','#d97706'],
+      ['emerald','Emerald','#059669'],['teal','Teal','#0d9488'],['rose','Rose','#e11d48']
+    ].map(([id,name,dot])=>({ id,name,dot, on: st.theme===id?'on':'', pick:()=>this.setState({theme:id}) }));
+
+    const nav=this.navDef().map(n=>{
+      const active=this.activeKey()===n.key;
+      return { label: ar?n.ar:n.en, iconObj:{__html:n.icon}, badge:n.badge||'',
+        bg: active?'var(--railActive)':'transparent',
+        color: active?'var(--railActiveText)':'var(--railMuted)',
+        go:()=>this.go(n.key), goClose:()=>this.go(n.key) };
+    });
+    const mobileNav=this.navDef().slice(0,4).concat([{key:'settings',en:'More',ar:'المزيد',icon:this.ic.more}]).map(n=>{
+      const active=this.activeKey()===n.key;
+      return { label: ar?n.ar:n.en, iconObj:{__html:n.icon}, color: active?'var(--primary)':'var(--muted)', go:()=>this.go(n.key) };
+    });
+
+    const stores=this.STORES.map(s=>({ ...s, rowBg: s.id===st.storeId?'var(--tint)':'transparent',
+      check: s.id===st.storeId?'✓':'', pick:()=>this.setState({storeId:s.id, switchOpen:false}) }));
+
+    const trail=this.crumbTrail();
+    const crumbs=[]; trail.forEach((label,i)=>{
+      if(i>0) crumbs.push({sep:true, label:'', weight:'400', color:'var(--muted)'});
+      const lastOne=i===trail.length-1;
+      crumbs.push({ sep:false, label, weight:lastOne?'700':'500', color:lastOne?'var(--text)':'var(--primary)' });
+    });
+
+    // onboarding steps
+    const stepLabels=ar?['أنشئ متجرًا','أضف منتجًا','ابدأ البيع']:['Create store','Add product','Start selling'];
+    const steps=stepLabels.map((label,i)=>({ label, mark: i===0?'1':(i+1),
+      bg: i===0?'var(--primary)':'var(--surface)', fg: i===0?'var(--onprimary)':'var(--muted)',
+      bd: i===0?'var(--primary)':'var(--border)', lblColor: i===0?'var(--text)':'var(--muted)' }));
+
+    return {
+      theme:st.theme, dir:st.dir, deviceClass:st.device,
+      dDesktop:st.device==='desktop'?'on':'', dTablet:st.device==='tablet'?'on':'', dMobile:st.device==='mobile'?'on':'',
+      lEN:st.dir==='ltr'?'on':'', lAR:st.dir==='rtl'?'on':'',
+      setDesktop:()=>this.setState({device:'desktop'}), setTablet:()=>this.setState({device:'tablet'}), setMobile:()=>this.setState({device:'mobile'}),
+      setEN:()=>this.setState({dir:'ltr'}), setAR:()=>this.setState({dir:'rtl'}),
+      themes, nav, mobileNav, stores, crumbs, crumbLast:trail[trail.length-1], store,
+      switchOpen:st.switchOpen, toggleSwitch:()=>this.setState(s=>({switchOpen:!s.switchOpen})),
+      drawerCls:st.drawerOpen?'open':'', openDrawer:()=>this.setState({drawerOpen:true}), closeDrawer:()=>this.setState({drawerOpen:false}),
+      goBack:()=>this.go(st.last),
+      // screen flags
+      isAuth: st.screen==='login'||st.screen==='onboard',
+      isApp: !(st.screen==='login'||st.screen==='onboard'),
+      isLogin:st.screen==='login', isOnboard:st.screen==='onboard',
+      isDashboard:st.screen==='dashboard', isOrders:st.screen==='orders', isOrderDetail:st.screen==='orderDetail',
+      isProducts:st.screen==='products', isProductForm:st.screen==='productForm',
+      isStores:st.screen==='stores', isCreateStore:st.screen==='createStore', isSettings:st.screen==='settings',
+      sLogin:st.screen==='login'?'on':'', sOnboard:st.screen==='onboard'?'on':'',
+      goLogin:()=>this.go('login'), goOnboard:()=>this.go('onboard'), goDashboard:()=>this.go('dashboard'),
+      goCreateStore:()=>this.go('createStore'),
+      steps,
+      // i18n text
+      t_signin:this.tr('signin'), t_signinSub:this.tr('signinSub'), t_emailLabel:this.tr('emailLabel'), t_pwLabel:this.tr('pwLabel'),
+      t_continue:this.tr('continue'), t_noAccount:this.tr('noAccount'), t_register:this.tr('register'), t_secure:this.tr('secure'),
+      t_welcome:this.tr('welcome'), t_welcomeSub:this.tr('welcomeSub'), t_ob_title:this.tr('ob_title'), t_ob_sub:this.tr('ob_sub'),
+      t_storeName:this.tr('storeName'), t_currency:this.tr('currency'), t_currencyWarn:this.tr('currencyWarn'),
+      t_back:this.tr('back'), t_createContinue:this.tr('createContinue'), t_switchStore:this.tr('switchStore'), t_addStore:this.tr('addStore'),
+      // screen html as {__html} objects for dangerouslySetInnerHTML
+      dashboardObj:{__html:this.dashboardHtml()}, ordersObj:{__html:this.ordersHtml()}, orderDetailObj:{__html:this.orderDetailHtml()},
+      productsObj:{__html:this.productsHtml?this.productsHtml():''}, productFormObj:{__html:this.productFormHtml?this.productFormHtml():''},
+      storesObj:{__html:this.storesHtml?this.storesHtml():''}, createStoreObj:{__html:this.createStoreHtml?this.createStoreHtml():''},
+      settingsObj:{__html:this.settingsHtml?this.settingsHtml():''}
+    };
+  }
+
+  // ---- screen builders (return HTML strings; use CSS vars so theme-reactive) ----
+  card(inner, pad){ return `<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;${pad!==false?'padding:18px;':''}">${inner}</div>`; }
+  h1(t,sub){ return `<div style="margin-bottom:20px;"><h1 style="font-size:23px;font-weight:700;color:var(--text);letter-spacing:-.01em;">${t}</h1>${sub?`<p style="font-size:13.5px;color:var(--muted);margin-top:4px;">${sub}</p>`:''}</div>`; }
+
+  dashboardHtml(){
+    const ar=this.state.dir==='rtl';
+    const stats=[
+      [ar?'مبيعات اليوم':'Sales today','EGP 4,820','▲ 12%','var(--success)'],
+      [ar?'طلبات جديدة':'New orders','18','▲ 5','var(--success)'],
+      [ar?'بانتظار الشحن':'To ship','7', ar?'يحتاج إجراء':'needs action','var(--warning)'],
+      [ar?'المنتجات':'Products','142','', 'var(--muted)']
+    ];
+    const statCards=stats.map(([k,v,d,c])=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px;">
+      <div style="font-size:12px;font-weight:600;color:var(--muted);">${k}</div>
+      <div style="font-size:24px;font-weight:700;color:var(--text);margin-top:7px;letter-spacing:-.01em;white-space:nowrap;">${v}</div>
+      ${d?`<div style="font-size:11.5px;font-weight:700;color:${c};margin-top:5px;">${d}</div>`:'<div style="height:17px;"></div>'}
+    </div>`).join('');
+    const orders=[['#1042','Mona Salah','EGP 320','Packing','var(--warningT)','var(--warning)'],['#1041','Karim Adel','EGP 145','Shipped','var(--successT)','var(--success)'],['#1040','Sara Mostafa','EGP 880','New','var(--tint)','var(--primary)']];
+    const orderRows=orders.map(([n,c,t,s,bg,fg])=>`<div style="display:grid;grid-template-columns:1fr 1.3fr .9fr auto;gap:10px;align-items:center;padding:11px 4px;border-top:1px solid var(--border);font-size:13px;">
+      <span style="font-weight:700;color:var(--text);">${n}</span><span style="color:var(--muted);">${c}</span><span style="font-weight:700;color:var(--text);">${t}</span>
+      <span style="background:${bg};color:${fg};font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;">${s}</span></div>`).join('');
+    return `<div class="fade">
+      ${this.h1(ar?`أهلاً أحمد — ${this.store().name}`:`Welcome back, Ahmed`, ar?'إليك ما يحدث في متجرك اليوم':"Here's what's happening at "+this.store().name+" today")}
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px;" class="dash-stats">${statCards}</div>
+      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;" class="dash-cols">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><span style="font-weight:700;font-size:15px;color:var(--text);">${ar?'أحدث الطلبات':'Latest orders'}</span><span style="font-size:12.5px;font-weight:600;color:var(--primary);">${ar?'عرض الكل':'View all'}</span></div>
+          ${orderRows}
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;">
+          <span style="font-weight:700;font-size:15px;color:var(--text);">${ar?'إجراءات سريعة':'Quick actions'}</span>
+          <div style="display:flex;flex-direction:column;gap:9px;margin-top:14px;">
+            ${[[ar?'أضف منتجًا':'Add a product','+'],[ar?'أنشئ طلبًا':'Create an order','🧾'],[ar?'ادعُ موظفًا':'Invite staff','👤']].map(([l])=>`<div style="display:flex;align-items:center;gap:11px;padding:12px;border:1px solid var(--border);border-radius:11px;background:var(--surface2);"><div style="width:34px;height:34px;border-radius:9px;background:var(--tint);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;">+</div><span style="font-weight:600;font-size:13.5px;color:var(--text);">${l}</span></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  ordersHtml(){
+    const ar=this.state.dir==='rtl';
+    const rows=[
+      ['#1042','Mona Salah','Today, 10:24','EGP 320','3','Packing','var(--warningT)','var(--warning)'],
+      ['#1041','Karim Adel','Today, 09:12','EGP 145','1','Shipped','var(--successT)','var(--success)'],
+      ['#1040','Sara Mostafa','Yesterday','EGP 880','5','New','var(--tint)','var(--primary)'],
+      ['#1039','Omar Hany','Yesterday','EGP 210','2','Delivered','var(--successT)','var(--success)'],
+      ['#1038','Nour Ali','2 days ago','EGP 540','4','Cancelled','var(--dangerT)','var(--danger)']
+    ];
+    const head=ar?['رقم الطلب','العميل','التاريخ','الإجمالي','العناصر','الحالة']:['Order','Customer','Date','Total','Items','Status'];
+    const tableRows=rows.map(([n,c,d,t,it,s,bg,fg])=>`<tr onclick="__go('orderDetail')" style="cursor:pointer;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
+      <td style="padding:13px 14px;font-weight:700;color:var(--text);border-top:1px solid var(--border);">${n}</td>
+      <td style="padding:13px 14px;color:var(--text);border-top:1px solid var(--border);">${c}</td>
+      <td style="padding:13px 14px;color:var(--muted);border-top:1px solid var(--border);">${d}</td>
+      <td style="padding:13px 14px;font-weight:700;color:var(--text);border-top:1px solid var(--border);">${t}</td>
+      <td style="padding:13px 14px;color:var(--muted);border-top:1px solid var(--border);">${it}</td>
+      <td style="padding:13px 14px;border-top:1px solid var(--border);"><span style="background:${bg};color:${fg};font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;white-space:nowrap;">${s}</span></td></tr>`).join('');
+    const chips=[[ar?'الكل':'All',true],[ar?'جديد':'New',false],[ar?'قيد التجهيز':'Packing',false],[ar?'تم الشحن':'Shipped',false],[ar?'ملغى':'Cancelled',false]];
+    const chipHtml=chips.map(([l,on])=>`<button style="padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:600;border:1px solid ${on?'var(--primary)':'var(--border)'};background:${on?'var(--primary)':'var(--surface)'};color:${on?'var(--onprimary)':'var(--muted)'};">${l}</button>`).join('');
+    return `<div class="fade">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+        <div><h1 style="font-size:23px;font-weight:700;color:var(--text);">${ar?'الطلبات':'Orders'}</h1><p style="font-size:13.5px;color:var(--muted);margin-top:4px;">${ar?'٥٢ طلبًا في ':'52 orders in '}${this.store().name}</p></div>
+        <button style="padding:11px 16px;border-radius:10px;background:var(--primary);color:var(--onprimary);font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;"><span style="font-size:16px;">+</span> ${ar?'طلب جديد':'New order'}</button>
+      </div>
+      <div style="display:flex;gap:9px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;flex:1;min-width:200px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:17px;height:17px;"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input placeholder="${ar?'ابحث برقم الطلب أو اسم العميل…':'Search order # or customer…'}" style="border:none;background:none;outline:none;font-size:13.5px;color:var(--text);font-family:inherit;flex:1;">
+        </div>
+        ${chipHtml}
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+        <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:13px;min-width:560px;">
+          <thead><tr style="background:var(--surface2);">${head.map(h=>`<th style="padding:11px 14px;text-align:start;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);">${h}</th>`).join('')}</tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table></div>
+      </div>
+    </div>`;
+  }
+
+  orderDetailHtml(){
+    const ar=this.state.dir==='rtl';
+    const items=[['Cotton T-Shirt (L, Blue)','2','EGP 120','EGP 240'],['Leather Wallet','1','EGP 80','EGP 80']];
+    const itemRows=items.map(([n,q,p,t])=>`<div style="display:grid;grid-template-columns:2fr .6fr .8fr .8fr;gap:8px;align-items:center;padding:12px 4px;border-top:1px solid var(--border);font-size:13px;">
+      <div style="display:flex;align-items:center;gap:10px;"><div style="width:38px;height:38px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);"></div><span style="font-weight:600;color:var(--text);">${n}</span></div>
+      <span style="color:var(--muted);">×${q}</span><span style="color:var(--muted);">${p}</span><span style="font-weight:700;color:var(--text);">${t}</span></div>`).join('');
+    const timeline=[[ar?'تم الطلب':'Order placed','Today 10:24','var(--success)',true],[ar?'تم الدفع':'Payment confirmed','Today 10:25','var(--success)',true],[ar?'قيد التجهيز':'Packing','Today 10:40','var(--warning)',true],[ar?'تم الشحن':'Shipped','—','var(--border)',false],[ar?'تم التوصيل':'Delivered','—','var(--border)',false]];
+    const tHtml=timeline.map(([l,d,c,done],i)=>`<div style="display:flex;gap:12px;">
+      <div style="display:flex;flex-direction:column;align-items:center;"><div style="width:14px;height:14px;border-radius:50%;background:${done?c:'var(--surface)'};border:2px solid ${c};"></div>${i<timeline.length-1?`<div style="width:2px;flex:1;background:var(--border);min-height:22px;"></div>`:''}</div>
+      <div style="padding-bottom:16px;"><div style="font-weight:600;font-size:13px;color:${done?'var(--text)':'var(--muted)'};">${l}</div><div style="font-size:11.5px;color:var(--muted);">${d}</div></div></div>`).join('');
+    return `<div class="fade">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+        <button onclick="__go('orders')" style="width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;${ar?'transform:scaleX(-1);':''}"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div style="flex:1;"><h1 style="font-size:22px;font-weight:700;color:var(--text);">${ar?'طلب #1042':'Order #1042'}</h1><p style="font-size:13px;color:var(--muted);">${ar?'اليوم، ١٠:٢٤ ص · مونا صلاح':'Today, 10:24 AM · Mona Salah'}</p></div>
+        <span style="background:var(--warningT);color:var(--warning);font-size:12px;font-weight:700;padding:6px 13px;border-radius:20px;">${ar?'قيد التجهيز':'Packing'}</span>
+        <button style="padding:10px 15px;border-radius:10px;background:var(--primary);color:var(--onprimary);font-weight:700;font-size:13px;">${ar?'تحديث الحالة':'Update status'}</button>
+      </div>
+      <div style="display:grid;grid-template-columns:1.7fr 1fr;gap:14px;" class="od-cols">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;">
+            <span style="font-weight:700;font-size:15px;color:var(--text);">${ar?'العناصر':'Items'}</span>
+            ${itemRows}
+            <div style="border-top:2px solid var(--border);margin-top:8px;padding-top:12px;display:flex;flex-direction:column;gap:6px;font-size:13px;">
+              <div style="display:flex;justify-content:space-between;color:var(--muted);"><span>${ar?'المجموع الفرعي':'Subtotal'}</span><span>EGP 320</span></div>
+              <div style="display:flex;justify-content:space-between;color:var(--muted);"><span>${ar?'التوصيل':'Delivery'}</span><span>EGP 0</span></div>
+              <div style="display:flex;justify-content:space-between;font-weight:700;font-size:15px;color:var(--text);margin-top:4px;"><span>${ar?'الإجمالي':'Total'}</span><span>EGP 320</span></div>
+            </div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;">
+            <span style="font-weight:700;font-size:15px;color:var(--text);">${ar?'الشحن':'Shipping'}</span>
+            <p style="font-size:13px;color:var(--muted);margin-top:8px;line-height:1.6;">${ar?'مونا صلاح · ٠١٠٠ ١٢٣ ٤٥٦٧<br>١٢ شارع التحرير، وسط البلد، القاهرة':'Mona Salah · 0100 123 4567<br>12 Tahrir St, Downtown, Cairo, Egypt'}</p>
+          </div>
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;height:fit-content;">
+          <span style="font-weight:700;font-size:15px;color:var(--text);">${ar?'مسار الطلب':'Order timeline'}</span>
+          <div style="margin-top:16px;">${tHtml}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  productsHtml(){
+    const ar=this.state.dir==='rtl';
+    const prods=[
+      ['Cotton T-Shirt','TSH-001','EGP 120','48','Active','var(--successT)','var(--success)'],
+      ['Leather Wallet','WAL-114','EGP 80','12','Active','var(--successT)','var(--success)'],
+      ['Ceramic Mug','MUG-220','EGP 45','3','Low stock','var(--warningT)','var(--warning)'],
+      ['Canvas Tote Bag','BAG-058','EGP 95','0','Out of stock','var(--dangerT)','var(--danger)'],
+      ['Wool Scarf','SCF-077','EGP 150','24','Draft','var(--surface2)','var(--muted)'],
+      ['Sunglasses','SUN-301','EGP 220','9','Active','var(--successT)','var(--success)']
+    ];
+    const cards=prods.map(([n,sku,price,stock,st,bg,fg])=>`<div onclick="__go('productForm')" style="cursor:pointer;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:box-shadow .15s;" onmouseover="this.style.boxShadow='0 10px 26px -14px rgba(20,24,40,.35)'" onmouseout="this.style.boxShadow='none'">
+      <div style="height:120px;background:repeating-linear-gradient(45deg,var(--surface2),var(--surface2) 10px,var(--canvas) 10px,var(--canvas) 20px);display:flex;align-items:center;justify-content:center;position:relative;">
+        <span style="font-family:ui-monospace,monospace;font-size:10.5px;color:var(--muted);background:var(--surface);padding:3px 8px;border-radius:6px;border:1px solid var(--border);">product photo</span>
+        <span style="position:absolute;top:9px;inset-inline-end:9px;background:${bg};color:${fg};font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;">${st}</span>
+      </div>
+      <div style="padding:13px 14px;">
+        <div style="font-weight:700;font-size:14px;color:var(--text);">${n}</div>
+        <div style="font-family:ui-monospace,monospace;font-size:11px;color:var(--muted);margin-top:2px;">${sku}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:11px;">
+          <span style="font-weight:700;font-size:15px;color:var(--text);">${price}</span>
+          <span style="font-size:12px;color:var(--muted);">${ar?'المخزون':'Stock'}: <b style="color:var(--text);">${stock}</b></span>
+        </div>
+      </div>
+    </div>`).join('');
+    return `<div class="fade">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+        <div><h1 style="font-size:23px;font-weight:700;color:var(--text);">${ar?'المنتجات':'Products'}</h1><p style="font-size:13.5px;color:var(--muted);margin-top:4px;">${ar?'١٤٢ منتجًا في ':'142 products in '}${this.store().name}</p></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;">
+          <button style="padding:11px 15px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:600;font-size:13.5px;">${ar?'الفئات':'Categories'}</button>
+          <button onclick="__go('productForm')" style="padding:11px 16px;border-radius:10px;background:var(--primary);color:var(--onprimary);font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;"><span style="font-size:16px;">+</span> ${ar?'أضف منتجًا':'Add product'}</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:9px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;flex:1;min-width:200px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" style="width:17px;height:17px;"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+          <input placeholder="${ar?'ابحث عن منتج…':'Search products…'}" style="border:none;background:none;outline:none;font-size:13.5px;color:var(--text);font-family:inherit;flex:1;">
+        </div>
+        <button style="padding:9px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-weight:600;font-size:12.5px;">${ar?'الحالة: الكل':'Status: All'}</button>
+        <button style="padding:9px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-weight:600;font-size:12.5px;">${ar?'المخزون: الكل':'Stock: All'}</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="prod-grid">${cards}</div>
+    </div>`;
+  }
+
+  productFormHtml(){
+    const ar=this.state.dir==='rtl';
+    const field=(label,ctrl)=>`<div style="margin-bottom:16px;"><label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;">${label}</label>${ctrl}</div>`;
+    const input=(val)=>`<input value="${val||''}" style="width:100%;border:1px solid var(--border);background:var(--surface2);border-radius:10px;padding:12px 13px;font-size:14px;color:var(--text);font-family:inherit;outline:none;">`;
+    return `<div class="fade">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+        <button onclick="__go('products')" style="width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;${ar?'transform:scaleX(-1);':''}"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div style="flex:1;"><h1 style="font-size:22px;font-weight:700;color:var(--text);">${ar?'تعديل المنتج':'Edit product'}</h1><p style="font-size:13px;color:var(--muted);">${ar?'قميص قطني · TSH-001':'Cotton T-Shirt · TSH-001'}</p></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:14px;" class="pf-cols">
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;">
+            <span style="font-weight:700;font-size:15px;color:var(--text);display:block;margin-bottom:16px;">${ar?'التفاصيل الأساسية':'Basic details'}</span>
+            ${field(ar?'اسم المنتج':'Product name', input('Cotton T-Shirt'))}
+            ${field(ar?'الوصف':'Description', `<textarea rows="3" style="width:100%;border:1px solid var(--border);background:var(--surface2);border-radius:10px;padding:12px 13px;font-size:14px;color:var(--text);font-family:inherit;outline:none;resize:none;">Soft 100% cotton t-shirt, available in multiple sizes and colors.</textarea>`)}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+              ${field(ar?'السعر (ج.م)':'Price (EGP)', input('120'))}
+              ${field(ar?'المخزون':'Stock quantity', input('48'))}
+            </div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;">
+            <span style="font-weight:700;font-size:15px;color:var(--text);display:block;margin-bottom:14px;">${ar?'الصور':'Images'}</span>
+            <div style="display:flex;gap:11px;flex-wrap:wrap;">
+              <div style="width:96px;height:96px;border-radius:11px;background:repeating-linear-gradient(45deg,var(--surface2),var(--surface2) 8px,var(--canvas) 8px,var(--canvas) 16px);border:1px solid var(--border);"></div>
+              <div style="width:96px;height:96px;border-radius:11px;background:repeating-linear-gradient(45deg,var(--surface2),var(--surface2) 8px,var(--canvas) 8px,var(--canvas) 16px);border:1px solid var(--border);"></div>
+              <div style="width:96px;height:96px;border-radius:11px;border:2px dashed var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;color:var(--muted);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:22px;height:22px;"><path d="M12 5v14M5 12h14"/></svg>
+                <span style="font-size:10.5px;font-weight:600;">${ar?'أضف صورة':'Add photo'}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;">
+            <span style="font-weight:700;font-size:15px;color:var(--text);display:block;margin-bottom:14px;">${ar?'التنظيم':'Organization'}</span>
+            ${field(ar?'الفئة':'Category', `<select style="width:100%;border:1px solid var(--border);background:var(--surface2);border-radius:10px;padding:12px 13px;font-size:14px;color:var(--text);font-family:inherit;outline:none;"><option>Apparel</option><option>Accessories</option></select>`)}
+            ${field(ar?'الحالة':'Status', `<div style="display:flex;gap:8px;"><button style="flex:1;padding:10px;border-radius:9px;border:2px solid var(--primary);background:var(--tint);color:var(--text);font-weight:600;font-size:13px;">${ar?'نشط':'Active'}</button><button style="flex:1;padding:10px;border-radius:9px;border:1px solid var(--border);background:var(--surface);color:var(--muted);font-weight:600;font-size:13px;">${ar?'مسودة':'Draft'}</button></div>`)}
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;">
+            <span style="font-weight:700;font-size:15px;color:var(--text);display:block;margin-bottom:6px;">${ar?'التنويعات':'Variants'}</span>
+            <p style="font-size:12.5px;color:var(--muted);margin-bottom:12px;">${ar?'مقاسات وألوان':'Sizes & colors'}</p>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">${['S','M','L','XL'].map(s=>`<span style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;font-size:12.5px;font-weight:600;color:var(--text);">${s}</span>`).join('')}</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);">
+        <button onclick="__go('products')" style="padding:12px 18px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:600;font-size:14px;">${ar?'إلغاء':'Cancel'}</button>
+        <button onclick="__go('products')" style="padding:12px 22px;border-radius:10px;background:var(--primary);color:var(--onprimary);font-weight:700;font-size:14px;">${ar?'حفظ المنتج':'Save product'}</button>
+      </div>
+    </div>`;
+  }
+
+  storesHtml(){
+    const ar=this.state.dir==='rtl';
+    const cards=this.STORES.map(s=>`<div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;">
+      <span style="position:absolute;top:16px;inset-inline-end:16px;background:var(--successT);color:var(--success);font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:20px;">${ar?'نشط':'Active'}</span>
+      <div style="width:52px;height:52px;border-radius:13px;background:${s.color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:22px;margin-bottom:14px;">${s.initial}</div>
+      <div style="font-weight:700;font-size:17px;color:var(--text);">${s.name}</div>
+      <div style="font-size:12.5px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:5px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:13px;height:13px;"><path d="M12 21s7-5.5 7-11a7 7 0 10-14 0c0 5.5 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>${s.city}</div>
+      <div style="font-family:ui-monospace,monospace;font-size:11.5px;color:var(--primary);margin-top:8px;">${s.id}.qaflaty.com</div>
+      <div style="display:flex;gap:14px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);font-size:12.5px;">
+        <div><span style="color:var(--muted);">${ar?'منتجات':'Products'}</span> <b style="color:var(--text);">${s.id==='cairo'?142:s.id==='alex'?86:40}</b></div>
+        <div><span style="color:var(--muted);">${ar?'طلبات':'Orders'}</span> <b style="color:var(--text);">${s.id==='cairo'?52:s.id==='alex'?31:12}</b></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;">
+        <button onclick="__go('dashboard')" style="color:var(--primary);font-weight:700;font-size:13px;">${ar?'إدارة المتجر ←':'Manage store →'}</button>
+        <button style="color:var(--muted);font-size:13px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:17px;height:17px;"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button>
+      </div>
+    </div>`).join('');
+    return `<div class="fade">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap;">
+        <div><h1 style="font-size:23px;font-weight:700;color:var(--text);">${ar?'متاجري':'My stores'}</h1><p style="font-size:13.5px;color:var(--muted);margin-top:4px;">${ar?'٣ متاجر · بدّل بينها من الشريط الجانبي':'3 stores · switch between them from the sidebar'}</p></div>
+        <button onclick="__go('createStore')" style="padding:11px 16px;border-radius:10px;background:var(--primary);color:var(--onprimary);font-weight:700;font-size:13.5px;display:inline-flex;align-items:center;gap:7px;"><span style="font-size:16px;">+</span> ${ar?'أنشئ متجرًا':'Create new store'}</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;" class="prod-grid">${cards}
+        <button onclick="__go('createStore')" style="border:2px dashed var(--border);border-radius:14px;padding:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--muted);min-height:200px;background:transparent;">
+          <div style="width:48px;height:48px;border-radius:12px;background:var(--tint);color:var(--primary);display:flex;align-items:center;justify-content:center;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:24px;height:24px;"><path d="M12 5v14M5 12h14"/></svg></div>
+          <span style="font-weight:600;font-size:13.5px;color:var(--text);">${ar?'أضف متجرًا جديدًا':'Add another store'}</span>
+        </button>
+      </div>
+    </div>`;
+  }
+
+  createStoreHtml(){
+    const ar=this.state.dir==='rtl';
+    return `<div class="fade" style="max-width:640px;">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;">
+        <button onclick="__go('stores')" style="width:36px;height:36px;border-radius:9px;border:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;${ar?'transform:scaleX(-1);':''}"><path d="M15 18l-6-6 6-6"/></svg></button>
+        <div><h1 style="font-size:22px;font-weight:700;color:var(--text);">${ar?'إنشاء متجر جديد':'Create a new store'}</h1><p style="font-size:13px;color:var(--muted);">${ar?'جهّز متجرك في خطوات بسيطة':'Set up your store in a few simple steps'}</p></div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;">
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;">${ar?'اسم المتجر':'Store name'} *</label>
+        <input placeholder="My Awesome Store" style="width:100%;border:1px solid var(--border);background:var(--surface2);border-radius:10px;padding:12px 13px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:5px;">
+        <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">${ar?'هذا الاسم الذي سيراه عملاؤك':'The display name customers will see'}</p>
+
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;">${ar?'رابط المتجر':'Store address'}</label>
+        <div style="display:flex;align-items:center;border:1px solid var(--border);background:var(--surface2);border-radius:10px;overflow:hidden;margin-bottom:16px;">
+          <input placeholder="my-store" style="flex:1;border:none;background:none;padding:12px 13px;font-size:14px;color:var(--text);font-family:inherit;outline:none;">
+          <span style="padding:12px 13px;font-size:13px;color:var(--muted);background:var(--canvas);border-inline-start:1px solid var(--border);">.qaflaty.com</span>
+        </div>
+
+        <label style="display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:7px;">${ar?'العملة':'Store currency'} *</label>
+        <select style="width:100%;border:1px solid var(--border);background:var(--surface2);border-radius:10px;padding:12px 13px;font-size:14px;color:var(--text);font-family:inherit;outline:none;margin-bottom:5px;"><option>EGP — Egyptian Pound (ج.م)</option><option>USD — US Dollar ($)</option><option>SAR — Saudi Riyal</option></select>
+        <p style="font-size:12px;color:var(--warning);font-weight:500;margin-bottom:20px;">⚠ ${ar?'يُختار مرة واحدة ويُقفل بعدها':'Chosen once and locked afterward'}</p>
+
+        <div style="display:flex;justify-content:flex-end;gap:10px;padding-top:16px;border-top:1px solid var(--border);">
+          <button onclick="__go('stores')" style="padding:12px 18px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-weight:600;font-size:14px;">${ar?'إلغاء':'Cancel'}</button>
+          <button onclick="__go('stores')" style="padding:12px 22px;border-radius:10px;background:var(--primary);color:var(--onprimary);font-weight:700;font-size:14px;">${ar?'أنشئ المتجر':'Create store'}</button>
+        </div>
+      </div>
+    </div>`;
+  }
+
+  settingsHtml(){
+    const ar=this.state.dir==='rtl';
+    const themeCards=[
+      ['blue','Blue','#2563eb','#16233d'],['light','Light / White','#4f46e5','#1e2536'],['slate','Slate / Dark','#6366f1','#0f1218'],
+      ['grey','Grey','#6b7280','#24282f'],['purple','Purple','#7c3aed','#241a3c'],['amber','Amber','#b45309','#2a2010'],
+      ['emerald','Emerald','#059669','#0f241d'],['teal','Teal','#0d9488','#0c2320'],['rose','Rose','#be123c','#2a1018']
+    ];
+    const sel=this.state.theme;
+    const cards=themeCards.map(([id,name,accent,rail])=>`<button onclick="__theme('${id}')" style="text-align:start;border:2px solid ${id===sel?'var(--primary)':'var(--border)'};border-radius:13px;padding:0;overflow:hidden;background:var(--surface);cursor:pointer;position:relative;">
+      ${id===sel?`<span style="position:absolute;top:8px;inset-inline-end:8px;width:20px;height:20px;border-radius:50%;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;z-index:2;">✓</span>`:''}
+      <div style="height:52px;display:flex;">
+        <div style="width:34%;background:${rail};"></div>
+        <div style="flex:1;background:${id==='slate'?'#14171d':'#f4f5f7'};position:relative;"><span style="position:absolute;bottom:8px;inset-inline-start:9px;width:34px;height:9px;border-radius:5px;background:${accent};"></span><span style="position:absolute;top:9px;inset-inline-start:9px;width:22px;height:6px;border-radius:4px;background:${id==='slate'?'#2a3040':'#e3e6eb'};"></span></div>
+      </div>
+      <div style="padding:10px 12px;display:flex;align-items:center;gap:8px;">
+        <span style="width:15px;height:15px;border-radius:5px;background:${accent};"></span>
+        <span style="font-weight:600;font-size:13px;color:var(--text);">${name}</span>
+      </div>
+    </button>`).join('');
+    const navRow=(icon,label,active)=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;font-size:13.5px;font-weight:600;background:${active?'var(--tint)':'transparent'};color:${active?'var(--primary)':'var(--muted)'};">${icon}${label}</div>`;
+    return `<div class="fade">
+      ${this.h1(ar?'الإعدادات':'Settings', ar?'حسابك، متجرك، والمظهر':'Your account, store, and appearance')}
+      <div style="display:grid;grid-template-columns:220px 1fr;gap:18px;" class="set-cols">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:8px;height:fit-content;">
+          ${navRow('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0114 0"/></svg>', ar?'الملف الشخصي':'Profile', false)}
+          ${navRow('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></svg>', ar?'كلمة المرور':'Password', false)}
+          ${navRow('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;"><path d="M4 9l1-4h14l1 4"/><path d="M5 9v11h14V9"/></svg>', ar?'المتجر':'Store', false)}
+          ${navRow('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>', ar?'الفريق':'Team', false)}
+          ${navRow('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:18px;height:18px;"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2"/></svg>', ar?'المظهر':'Appearance', true)}
+        </div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;">
+          <span style="font-weight:700;font-size:16px;color:var(--text);">${ar?'المظهر واللون':'Theme & appearance'}</span>
+          <p style="font-size:13px;color:var(--muted);margin-top:4px;margin-bottom:18px;">${ar?'اختر لونًا مريحًا لعينيك. يُطبَّق فورًا على كل الشاشات.':'Pick a colour that is easy on your eyes. It applies instantly across every screen.'}</p>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;" class="theme-grid">${cards}</div>
+          <div style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border);">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;">
+              <div><div style="font-weight:600;font-size:14px;color:var(--text);">${ar?'اللغة':'Language'}</div><div style="font-size:12.5px;color:var(--muted);">${ar?'العربية (RTL) أو الإنجليزية':'English or Arabic (RTL)'}</div></div>
+              <div style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:2px;"><span style="padding:7px 14px;border-radius:7px;background:var(--primary);color:var(--onprimary);font-size:12.5px;font-weight:600;">${ar?'العربية':'English'}</span><span style="padding:7px 14px;font-size:12.5px;font-weight:600;color:var(--muted);">${ar?'English':'العربية'}</span></div>
+            </div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border);">
+              <div><div style="font-weight:600;font-size:14px;color:var(--text);">${ar?'حجم النص':'Text size'}</div><div style="font-size:12.5px;color:var(--muted);">${ar?'أكبر لسهولة القراءة':'Larger for easier reading'}</div></div>
+              <div style="display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:2px;"><span style="padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--muted);">A</span><span style="padding:7px 12px;border-radius:7px;background:var(--primary);color:var(--onprimary);font-size:13.5px;font-weight:600;">A</span><span style="padding:7px 12px;font-size:15px;font-weight:600;color:var(--muted);">A</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }
+}
+
+</script>
+</body>
+</html>

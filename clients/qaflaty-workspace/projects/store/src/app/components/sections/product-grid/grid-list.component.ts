@@ -2,13 +2,14 @@ import { Component, input, inject, signal, OnInit } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 import { I18nService } from '../../../services/i18n.service';
 import { ProductService } from '../../../services/product.service';
-import { CommonModule, CurrencyPipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { StorePricePipe } from '../../../pipes/store-price.pipe';
 
 @Component({
   selector: 'app-grid-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, CurrencyPipe],
+  imports: [CommonModule, RouterLink, StorePricePipe],
   template: `
     <section class="py-12 px-4 bg-white">
       <div class="max-w-6xl mx-auto">
@@ -38,7 +39,7 @@ import { RouterLink } from '@angular/router';
                       @if (product.images?.length > 0) {
                         <img
                           [src]="product.images[0].url"
-                          [alt]="product.name"
+                          [alt]="i18n.nameFor(product.name, product.nameAr)"
                           class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                         />
                       } @else {
@@ -56,7 +57,7 @@ import { RouterLink } from '@angular/router';
                     <div>
                       <a [routerLink]="['/products', product.slug]">
                         <h3 class="text-xl font-bold text-gray-900 mb-2 hover:text-[var(--primary-color)] transition-colors">
-                          {{ product.name }}
+                          {{ i18n.nameFor(product.name, product.nameAr) }}
                         </h3>
                       </a>
                       @if (product.description) {
@@ -79,15 +80,15 @@ import { RouterLink } from '@angular/router';
                         @if (isOnSale(product)) {
                           <div class="flex items-center gap-2">
                             <span class="text-2xl font-bold text-[var(--primary-color)]">
-                              {{ product.price | currency:'EGP':'symbol':'1.2-2' }}
+                              {{ product.price | storePrice }}
                             </span>
                             <span class="text-base text-gray-400 line-through">
-                              {{ product.compareAtPrice | currency:'EGP':'symbol':'1.2-2' }}
+                              {{ product.compareAtPrice | storePrice }}
                             </span>
                           </div>
                         } @else {
                           <span class="text-2xl font-bold text-gray-900">
-                            {{ product.price | currency:'EGP':'symbol':'1.2-2' }}
+                            {{ product.price | storePrice }}
                           </span>
                         }
                       </div>

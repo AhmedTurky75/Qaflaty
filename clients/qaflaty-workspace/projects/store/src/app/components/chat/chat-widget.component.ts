@@ -8,11 +8,12 @@ import { FeatureService } from '../../services/feature.service';
 import { I18nService, TRANSLATIONS } from '../../services/i18n.service';
 import { Product } from '../../models/product.model';
 import { CreateOrderRequest, OrderResponse } from '../../models/order.model';
+import { StorePricePipe } from '../../pipes/store-price.pipe';
 
 @Component({
   selector: 'app-chat-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, StorePricePipe],
   templateUrl: './chat-widget.component.html',
   styleUrls: ['./chat-widget.component.css']
 })
@@ -238,6 +239,11 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
     return this.chatService.suggestedProducts()[messageId] ?? [];
   }
 
+  /** Display name of a suggested product in the shopper's active language. */
+  suggestionName(product: AiSuggestedProduct): string {
+    return this.i18n.nameFor(product.name, product.nameAr);
+  }
+
   /**
    * Add an AI-recommended product to the cart (explicit customer confirmation), then log it.
    */
@@ -246,6 +252,7 @@ export class ChatWidgetComponent implements OnInit, OnDestroy {
       id: product.productId,
       slug: product.slug,
       name: product.name,
+      nameAr: product.nameAr,
       price: product.price,
       compareAtPrice: null,
       inStock: product.inStock,

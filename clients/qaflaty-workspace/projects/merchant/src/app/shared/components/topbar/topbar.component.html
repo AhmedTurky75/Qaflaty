@@ -1,0 +1,90 @@
+<header class="sticky top-0 z-20 border-b border-border bg-surface">
+  <div class="flex h-16 items-center gap-3 px-4 sm:px-6">
+    <!-- Mobile hamburger -->
+    <button
+      type="button"
+      (click)="menu.emit()"
+      class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg text-text-muted hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary lg:hidden"
+      [attr.aria-label]="'common.openMenu' | transloco"
+    >
+      <app-icon name="menu" [size]="22" />
+    </button>
+
+    <!-- Breadcrumb -->
+    <div class="min-w-0 flex-1">
+      <app-breadcrumb />
+    </div>
+
+    <!-- Right cluster -->
+    <div class="flex flex-shrink-0 items-center gap-2">
+      <!-- Active-store chip (redundant store-context cue) -->
+      @if (currentStore(); as store) {
+        <span class="hidden items-center gap-2 rounded-full border border-border bg-surface-elevated py-1.5 ps-1.5 pe-3 md:flex">
+          <span
+            class="flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold text-white"
+            [style.background-color]="store.branding.primaryColor"
+          >{{ store.name.charAt(0).toUpperCase() }}</span>
+          <span class="max-w-[10rem] truncate text-sm font-medium text-text">{{ store.name }}</span>
+        </span>
+      }
+
+      <!-- Notifications -->
+      <button
+        type="button"
+        class="flex h-11 w-11 items-center justify-center rounded-lg text-text-muted hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary"
+        [attr.aria-label]="'common.notifications' | transloco"
+      >
+        <app-icon name="bell" [size]="20" />
+      </button>
+
+      <!-- User menu -->
+      <div class="relative" data-user-menu>
+        <button
+          type="button"
+          (click)="toggleUserMenu()"
+          class="flex min-h-[44px] items-center gap-2 rounded-lg p-1.5 hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-primary"
+          [attr.aria-expanded]="userMenuOpen()"
+          aria-haspopup="menu"
+        >
+          @if (merchant(); as m) {
+            <span class="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
+              {{ m.fullName.charAt(0).toUpperCase() }}
+            </span>
+            <span class="hidden max-w-[9rem] truncate text-sm font-medium text-text md:block">{{ m.fullName }}</span>
+          }
+          <span class="text-text-muted"><app-icon name="chevron-down" [size]="16" /></span>
+        </button>
+
+        @if (userMenuOpen()) {
+          <div
+            class="absolute end-0 mt-2 w-52 overflow-hidden rounded-xl border border-border bg-surface py-1 shadow-xl"
+            role="menu"
+          >
+            <a
+              routerLink="/settings/profile"
+              (click)="userMenuOpen.set(false)"
+              class="block px-4 py-2.5 text-sm text-text hover:bg-surface-elevated focus:outline-none focus:bg-surface-elevated"
+              role="menuitem"
+            >{{ 'user.profile' | transloco }}</a>
+            <a
+              routerLink="/settings"
+              (click)="userMenuOpen.set(false)"
+              class="block px-4 py-2.5 text-sm text-text hover:bg-surface-elevated focus:outline-none focus:bg-surface-elevated"
+              role="menuitem"
+            >{{ 'user.account' | transloco }}</a>
+            <hr class="my-1 border-border" />
+            <button
+              type="button"
+              (click)="logout()"
+              class="flex w-full items-center gap-2 px-4 py-2.5 text-start text-sm text-danger hover:bg-surface-elevated focus:outline-none focus:bg-surface-elevated"
+              role="menuitem"
+            >
+              <app-icon name="logout" [size]="16" />
+              {{ 'user.signOut' | transloco }}
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</header>

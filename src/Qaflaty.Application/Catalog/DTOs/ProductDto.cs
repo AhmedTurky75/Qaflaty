@@ -4,6 +4,7 @@ public record ProductDto(
     Guid Id,
     string Slug,
     string Name,
+    string NameAr,
     string? Description,
     decimal Price,
     decimal? CompareAtPrice,
@@ -21,8 +22,11 @@ public record ProductListDto(
     Guid Id,
     string Slug,
     string Name,
+    string NameAr,
     decimal Price,
     int Quantity,
+    bool TrackInventory,
+    bool InStock,
     string Status,
     string? FirstImageUrl
 );
@@ -31,6 +35,7 @@ public record ProductPublicDto(
     Guid Id,
     string Slug,
     string Name,
+    string NameAr,
     string? Description,
     decimal Price,
     decimal? CompareAtPrice,

@@ -5,11 +5,11 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class PaymentInfo : ValueObject
 {
-    public PaymentMethod Method { get; private set; }
-    public PaymentStatus Status { get; private set; }
-    public string? TransactionId { get; private set; }
-    public DateTime? PaidAt { get; private set; }
-    public string? FailureReason { get; private set; }
+    public PaymentMethod Method { get; private set; } // Chosen payment method, e.g. CashOnDelivery, Card
+    public PaymentStatus Status { get; private set; } // Current payment state: Pending → Paid / Failed / Refunded
+    public string? TransactionId { get; private set; } // Gateway transaction reference once paid/refunded; null while pending
+    public DateTime? PaidAt { get; private set; } // UTC timestamp when payment succeeded; null if not yet paid
+    public string? FailureReason { get; private set; } // Reason text when payment failed; null otherwise
 
     private PaymentInfo() { }
 

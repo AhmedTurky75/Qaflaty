@@ -1,4 +1,6 @@
 using FluentValidation;
+using Qaflaty.Domain.Catalog.Aggregates.Category;
+using Qaflaty.Domain.Catalog.ValueObjects;
 
 namespace Qaflaty.Application.Catalog.Commands.CreateCategory;
 
@@ -19,5 +21,21 @@ public class CreateCategoryCommandValidator : AbstractValidator<CreateCategoryCo
 
         RuleFor(x => x.SortOrder)
             .GreaterThanOrEqualTo(0).WithMessage("Sort order must be non-negative");
+
+        RuleFor(x => x.ImageUrl)
+            .MaximumLength(Category.MaxImageUrlLength)
+            .WithMessage($"Image URL must not exceed {Category.MaxImageUrlLength} characters");
+
+        RuleFor(x => x.IconName)
+            .MaximumLength(Category.MaxIconNameLength)
+            .WithMessage($"Icon name must not exceed {Category.MaxIconNameLength} characters");
+
+        RuleFor(x => x.ContentHtml)
+            .MaximumLength(CategoryContent.MaxLength)
+            .WithMessage($"Content must not exceed {CategoryContent.MaxLength} characters");
+
+        RuleFor(x => x.ContentHtmlAr)
+            .MaximumLength(CategoryContent.MaxLength)
+            .WithMessage($"Arabic content must not exceed {CategoryContent.MaxLength} characters");
     }
 }

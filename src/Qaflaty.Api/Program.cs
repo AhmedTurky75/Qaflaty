@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Qaflaty.Api.Common;
 using Qaflaty.Api.Middleware;
 using Qaflaty.Application;
 using Qaflaty.Infrastructure;
@@ -29,15 +31,32 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
 });
 
 // Add services to the container
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // Enforce tenant isolation: the route {storeId} must match the token's store_id claim.
+        options.Filters.Add<StoreScopeAuthorizationFilter>();
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
         options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
-// Add SignalR for real-time chat
-builder.Services.AddSignalR();
+// Add SignalR for real-time chat and merchant analytics. A Redis backplane is required for
+// multi-instance deployments (so a push from one API replica reaches connections on another);
+// it's applied only when ConnectionStrings:Redis is configured, matching the presence tracker's
+// own Redis/in-memory fallback in Qaflaty.Infrastructure.
+var redisConnectionString = builder.Configuration.GetConnectionString("Redis");
+var signalRBuilder = builder.Services.AddSignalR();
+if (!string.IsNullOrWhiteSpace(redisConnectionString))
+{
+    signalRBuilder.AddStackExchangeRedis(redisConnectionString);
+}
+
+// Real-time analytics push (AnalyticsHub). Singleton: IHubContext<T> is itself singleton-safe,
+// and this notifier is injected directly into the singleton PresenceSweeper background service.
+builder.Services.AddSingleton<Qaflaty.Application.Analytics.Abstractions.IRealtimeNotifier,
+    Qaflaty.Api.Services.Analytics.SignalRRealtimeNotifier>();
 
 // Configure CORS
 builder.Services.AddCors(options =>
@@ -83,10 +102,11 @@ builder.Services.AddAuthentication(options =>
     {
         OnMessageReceived = context =>
         {
-            // SignalR: read from query string for the chat hub
+            // SignalR: read from query string for hub connections (browsers can't set an
+            // Authorization header on the WebSocket handshake).
             var accessToken = context.Request.Query["access_token"];
             if (!string.IsNullOrEmpty(accessToken) &&
-                context.HttpContext.Request.Path.StartsWithSegments("/hubs/chat"))
+                context.HttpContext.Request.Path.StartsWithSegments("/hubs"))
             {
                 context.Token = accessToken;
                 return Task.CompletedTask;
@@ -157,17 +177,27 @@ builder.Services.AddAuthorization(options =>
               }));
 
     options.AddPolicy("CanManageStore", policy =>
-        policy.RequireRole("merchant")
-              .RequireAssertion(ctx =>
-              {
-                  var perms = ctx.User.FindFirst("permissions")?.Value ?? "";
-                  return perms.Contains("ManageStore");
-              }));
+        policy.RequireRole("merchant"));
+
+    options.AddPolicy("CanManageAds", policy =>
+        policy.RequireRole("merchant"));
+             
 
     options.AddPolicy("CanManageUsers", policy =>
         policy.RequireRole("merchant")
               .RequireClaim(ClaimTypes.Role, "Owner"));
 });
+
+// Data Protection (used to encrypt ad-provider access tokens at rest — see ICredentialProtector).
+// Persist the key ring to a stable folder and pin the application name so tokens encrypted
+// before an app restart stay decryptable afterward — otherwise a restart rotates the key and
+// every stored provider token becomes unreadable ("reconnect this provider" on dispatch).
+// In production, point this at a durable/shared location (mounted volume, blob, etc.).
+var dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, "keys", "dataprotection");
+Directory.CreateDirectory(dataProtectionKeysPath);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath))
+    .SetApplicationName("Qaflaty");
 
 // Antiforgery (CSRF protection)
 builder.Services.AddAntiforgery(opts =>
@@ -233,7 +263,14 @@ if (app.Environment.IsDevelopment())
 // Global exception handler must be early in the pipeline
 app.UseMiddleware<GlobalExceptionHandlerMiddleware>();
 
-app.UseHttpsRedirection();
+// Skipped in Development: the Angular dev-server proxy talks to this API over plain
+// HTTP (see proxy.conf.json), and an HTTPS redirect here would send the browser an
+// absolute https://localhost:5000 Location header, bypassing the proxy and turning
+// the request cross-origin again.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseStaticFiles();
 
@@ -247,8 +284,9 @@ app.UseAuthorization();
 // Tenant resolution for storefront routes
 app.UseMiddleware<TenantMiddleware>();
 
-// Map SignalR Hub
+// Map SignalR Hubs
 app.MapHub<Qaflaty.Api.Hubs.ChatHub>("/hubs/chat");
+app.MapHub<Qaflaty.Api.Hubs.AnalyticsHub>("/hubs/analytics").RequireAuthorization();
 
 app.MapControllers();
 

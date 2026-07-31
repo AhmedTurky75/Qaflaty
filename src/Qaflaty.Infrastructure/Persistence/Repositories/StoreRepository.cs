@@ -27,6 +27,28 @@ public class StoreRepository : IStoreRepository
     public async Task<IReadOnlyList<Store>> GetByMerchantIdAsync(MerchantId merchantId, CancellationToken ct = default)
         => await _context.Stores.Where(s => s.MerchantId == merchantId).ToListAsync(ct);
 
+    public async Task<IReadOnlyList<Store>> GetAccessibleByMerchantIdAsync(MerchantId merchantId, CancellationToken ct = default)
+    {
+        var assignedStoreIds = _context.MerchantStoreAssignments
+            .Where(a => a.MerchantId == merchantId && a.IsActive)
+            .Select(a => a.StoreId);
+
+        return await _context.Stores
+            .Where(s => s.MerchantId == merchantId || assignedStoreIds.Contains(s.Id))
+            .ToListAsync(ct);
+    }
+
+    public async Task<bool> CanMerchantAccessStoreAsync(MerchantId merchantId, StoreId storeId, CancellationToken ct = default)
+    {
+        var isOwner = await _context.Stores
+            .AnyAsync(s => s.Id == storeId && s.MerchantId == merchantId, ct);
+        if (isOwner)
+            return true;
+
+        return await _context.MerchantStoreAssignments
+            .AnyAsync(a => a.StoreId == storeId && a.MerchantId == merchantId && a.IsActive, ct);
+    }
+
     public async Task<bool> IsSlugAvailableAsync(StoreSlug slug, StoreId? excludeId = null, CancellationToken ct = default)
     {
         var query = _context.Stores.Where(s => s.Slug.Value == slug.Value);

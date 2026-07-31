@@ -34,10 +34,10 @@ All frontend commands run from `clients/qaflaty-workspace/`:
 ```bash
 npm install
 
-# Serve the merchant dashboard (port 4202)
+# Serve the merchant dashboard (port 4201)
 npm run start:merchant
 
-# Serve the customer store app (port 4201)
+# Serve the customer store app (port 4202)
 npm run start:store
 
 # Run Angular tests (Karma/Jasmine)
@@ -53,7 +53,7 @@ docker-compose up -d
 # pgAdmin at http://localhost:5050
 ```
 
-The backend API runs locally (not in Docker). Dev DB connection: `Host=localhost;Port=5432;Database=qaflaty_db;Username=postgres;Password=P@ssw0rd`.
+The backend API runs locally (not in Docker). It reads its connection string from the `ConnectionStrings__DefaultConnection` environment variable (or `dotnet user-secrets` for the `src/Qaflaty.Api` project) — it is intentionally not committed to `appsettings*.json`. For the default `docker-compose` Postgres service, use `Host=localhost;Port=5432;Database=qaflaty_db;Username=postgres;Password=<your-password>`.
 
 ## Architecture
 
@@ -99,8 +99,8 @@ src/
 
 Located in `clients/qaflaty-workspace/projects/`:
 
-- **merchant** — dashboard at port 4202; core services (`auth.service`, `store-context.service`), interceptors (`auth.interceptor`, `error.interceptor`), feature modules: `auth`, `stores`, `products`, `customers`, `orders`, `chat`, `store-builder`, `settings`, `dashboard`, `active-carts`
-- **store** — customer-facing storefront at port 4201; interceptors: `store-header.interceptor` (injects `X-Store-Slug`), `guest-cart.interceptor`, `customer-auth.interceptor`
+- **merchant** — dashboard at port 4201; core services (`auth.service`, `store-context.service`), interceptors (`auth.interceptor`, `error.interceptor`), feature modules: `auth`, `stores`, `products`, `customers`, `orders`, `chat`, `store-builder`, `settings`, `dashboard`, `active-carts`
+- **store** — customer-facing storefront at port 4202; interceptors: `store-header.interceptor` (injects `X-Store-Slug`), `guest-cart.interceptor`, `customer-auth.interceptor`
 - **shared** — shared Angular library consumed by merchant and store apps
 - **landing** — marketing landing page
 

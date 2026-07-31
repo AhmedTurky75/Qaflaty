@@ -1,0 +1,150 @@
+<div class="space-y-6">
+  <div class="rounded-lg border border-border bg-surface p-6 shadow-sm">
+    <div class="mb-6">
+      <h3 class="text-lg font-semibold text-text">Custom Product Properties</h3>
+      <p class="mt-0.5 text-sm text-text-muted">
+        Define custom attributes for your products (e.g. material, size, color, weight).
+        Merchants can then set values per product.
+      </p>
+    </div>
+
+    <!-- Add Form -->
+    <div class="mb-6 space-y-4 rounded-lg bg-surface-elevated p-4">
+      <h4 class="text-sm font-semibold text-text">{{ editingId() ? 'Edit Property' : 'Add New Property' }}</h4>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text-muted">
+            Machine Name <span class="text-text-muted">(lowercase, no spaces)</span>
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="newDef.name"
+            [disabled]="!!editingId()"
+            placeholder="e.g. material"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-surface-elevated"
+          />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text-muted">Display Name</label>
+          <input
+            type="text"
+            [(ngModel)]="newDef.displayName"
+            placeholder="e.g. Material"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text-muted">Type</label>
+          <select
+            [(ngModel)]="newDef.type"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            <option value="Text">Text (free input)</option>
+            <option value="Number">Number</option>
+            <option value="SingleChoice">Single Choice (one from list)</option>
+            <option value="MultiChoice">Multi Choice (multiple from list)</option>
+            <option value="Boolean">Boolean (Yes/No)</option>
+          </select>
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text-muted">Sort Order</label>
+          <input
+            type="number"
+            [(ngModel)]="newDef.sortOrder"
+            min="0"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+      </div>
+
+      @if (newDef.type === 'SingleChoice' || newDef.type === 'MultiChoice') {
+        <div>
+          <label class="mb-1 block text-xs font-medium text-text-muted">
+            Options <span class="text-text-muted">(comma-separated, e.g. Cotton, Polyester, Linen)</span>
+          </label>
+          <input
+            type="text"
+            [(ngModel)]="newDef.options"
+            placeholder="Option 1, Option 2, Option 3"
+            class="w-full rounded-md border border-border bg-surface px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+        </div>
+      }
+
+      <div class="flex items-center gap-6">
+        <label class="flex cursor-pointer items-center gap-2">
+          <input type="checkbox" [(ngModel)]="newDef.isRequired" class="h-4 w-4 rounded text-primary" />
+          <span class="text-sm text-text">Required</span>
+        </label>
+        <label class="flex cursor-pointer items-center gap-2">
+          <input type="checkbox" [(ngModel)]="newDef.isFilterable" class="h-4 w-4 rounded text-primary" />
+          <span class="text-sm text-text">Filterable (show in store search)</span>
+        </label>
+      </div>
+
+      <div class="flex gap-2">
+        <button
+          (click)="saveDefinition()"
+          [disabled]="saving() || !newDef.name || !newDef.displayName"
+          class="rounded-md bg-primary px-4 py-2 text-sm text-white hover:bg-primary-hover disabled:opacity-50"
+        >
+          {{ saving() ? 'Saving...' : editingId() ? 'Update Property' : 'Add Property' }}
+        </button>
+        @if (editingId()) {
+          <button
+            (click)="cancelEdit()"
+            class="rounded-md bg-surface-elevated px-4 py-2 text-sm text-text hover:bg-border/40"
+          >
+            Cancel
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Existing Definitions -->
+    @if (loading()) {
+      <p class="py-4 text-center text-sm text-text-muted">Loading...</p>
+    } @else if (definitions().length === 0) {
+      <div class="py-8 text-center text-text-muted">
+        <svg class="mx-auto mb-3 h-12 w-12 text-text-muted/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+        </svg>
+        <p class="text-sm">No custom properties defined yet.</p>
+      </div>
+    } @else {
+      <div class="space-y-2">
+        <h4 class="text-sm font-semibold text-text">Defined Properties ({{ definitions().length }})</h4>
+        @for (def of definitions(); track def.id) {
+          <div class="flex items-start justify-between rounded-lg border border-border p-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2">
+                <span class="text-sm font-medium text-text">{{ def.displayName }}</span>
+                <code class="rounded bg-surface-elevated px-1.5 py-0.5 text-xs text-text-muted">{{ def.name }}</code>
+                <span class="inline-flex items-center rounded-full bg-primary-tint px-2 py-0.5 text-xs font-medium text-primary">
+                  {{ def.type }}
+                </span>
+                @if (def.isRequired) {
+                  <span class="inline-flex items-center rounded-full bg-danger/10 px-2 py-0.5 text-xs font-medium text-danger">Required</span>
+                }
+                @if (def.isFilterable) {
+                  <span class="inline-flex items-center rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">Filterable</span>
+                }
+              </div>
+              @if (def.options && def.options.length > 0) {
+                <p class="mt-1 text-xs text-text-muted">Options: {{ def.options.join(', ') }}</p>
+              }
+            </div>
+            <div class="ms-4 flex items-center gap-2">
+              <button (click)="startEdit(def)" class="text-sm text-primary hover:text-primary-hover">Edit</button>
+              <button (click)="deleteDefinition(def.id)" class="text-sm text-danger hover:opacity-80">Delete</button>
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

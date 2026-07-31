@@ -11,25 +11,25 @@ namespace Qaflaty.Domain.Catalog.Aggregates.Product;
 /// </summary>
 public sealed class ProductVariant : Entity<Guid>
 {
-    public ProductId ProductId { get; private set; }
+    public ProductId ProductId { get; private set; } // Parent product this variant belongs to
 
     /// <summary>
     /// Variant attributes as key-value pairs (e.g., {"Color": "Red", "Size": "M"})
     /// Stored as JSONB in database for flexibility
     /// </summary>
-    public Dictionary<string, string> Attributes { get; private set; } = new();
+    public Dictionary<string, string> Attributes { get; private set; } = new(); // The specific option combination identifying this variant, e.g. {"Color":"Red","Size":"M"}
 
-    public string Sku { get; private set; } = string.Empty;
+    public string Sku { get; private set; } = string.Empty; // Unique stock-keeping code for this exact variant, e.g. "TSHIRT-RED-M"
 
     /// <summary>
     /// Price override for this variant. If null, uses product base price
     /// </summary>
-    public Money? PriceOverride { get; private set; }
+    public Money? PriceOverride { get; private set; } // Optional per-variant price; null means inherit the product's base price, e.g. larger size costs more
 
-    public int Quantity { get; private set; }
-    public bool AllowBackorder { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public int Quantity { get; private set; } // Stock on hand for this variant specifically
+    public bool AllowBackorder { get; private set; } // When true, the variant can be ordered even at zero stock (sells beyond inventory)
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the variant was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last variant change
 
     private ProductVariant() : base(Guid.Empty) { }
 

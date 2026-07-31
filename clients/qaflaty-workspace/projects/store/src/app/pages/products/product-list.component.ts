@@ -1,5 +1,6 @@
-import { Component, inject, signal, computed } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
+import { Component, inject, signal, computed, effect, DestroyRef, Renderer2, SecurityContext } from '@angular/core';
+import { CommonModule, NgClass, DOCUMENT } from '@angular/common';
+import { DomSanitizer } from '@angular/platform-browser';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
@@ -9,12 +10,14 @@ import { FeatureService } from '../../services/feature.service';
 import { Product, ProductFilter, ProductSortBy } from '../../models/product.model';
 import { Category } from '../../models/category.model';
 import { ProductCardComponent } from '../../components/products/product-card.component';
-import { FilterablePropertyDefinition } from 'shared';
+import { I18nService } from '../../services/i18n.service';
+import { TrackingService } from '../../services/tracking.service';
+import { FilterablePropertyDefinition, CategoryIconComponent } from 'shared';
 
 @Component({
   selector: 'app-product-list',
   standalone: true,
-  imports: [CommonModule, NgClass, RouterModule, FormsModule, ProductCardComponent],
+  imports: [CommonModule, NgClass, RouterModule, FormsModule, ProductCardComponent, CategoryIconComponent],
   templateUrl: './product-list.component.html',
   styleUrls: ['./product-list.component.css']
 })
@@ -23,8 +26,11 @@ export class ProductListComponent {
   private categoryService = inject(CategoryService);
   private configService = inject(ConfigService);
   readonly featureService = inject(FeatureService);
+  readonly i18n = inject(I18nService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private tracking = inject(TrackingService);
+  private sanitizer = inject(DomSanitizer);
 
   readonly ALL_SORT_OPTIONS = [
     { value: ProductSortBy.Newest, label: 'Newest' },
@@ -97,6 +103,81 @@ export class ProductListComponent {
     return catId ? this.categories().find(c => c.id === catId) : null;
   });
 
+  /**
+   * Splits merchant-authored HTML into its <style> blocks and the remaining markup. Angular's HTML
+   * sanitizer strips <style> elements outright (it isn't in the sanitizer's tag whitelist), so any
+   * CSS left inline would silently vanish. Pulling it out here lets the CSS be applied separately
+   * (see the effect below) while the body markup still goes through DomSanitizer as before.
+   */
+  private categoryContentParts = computed(() => {
+    const category = this.currentCategory();
+    if (!category) return { body: '', css: '' };
+
+    const raw = this.i18n.currentLanguage() === 'ar'
+      ? (category.contentHtmlAr || category.contentHtml)
+      : (category.contentHtml || category.contentHtmlAr);
+
+    if (!raw) return { body: '', css: '' };
+
+    let css = '';
+    const body = raw.replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, (_match, inner) => {
+      css += `${inner}\n`;
+      return '';
+    });
+
+    return { body, css: css.trim() };
+  });
+
+  /** Merchant-authored HTML for the open category, rendered above the product grid. */
+  categoryContent = computed(() => {
+    const { body } = this.categoryContentParts();
+    return body ? this.sanitizer.sanitize(SecurityContext.HTML, body) : '';
+  });
+
+  /**
+   * CSS pulled from <style> blocks in the category content. Not used directly in the template —
+   * Angular's template compiler special-cases a literal <style> element written in a component's
+   * template (treating it like the `styles:` metadata array), so a runtime-bound
+   * `<style [textContent]="...">` doesn't reliably carry dynamic content to the DOM. Applied
+   * instead via the effect below, which inserts/updates a real <style> element in <head> through
+   * Renderer2 — Angular's own cross-platform DOM abstraction (the same one structural directives
+   * and animations use under the hood) — rather than touching `document` directly, so this stays
+   * safe under server-side rendering or any non-browser renderer.
+   *
+   * This CSS is global to the page (categories don't get a scoped stylesheet), so merchants should
+   * scope their own selectors (e.g. under `.qf-cat-content`) to avoid affecting the rest of the
+   * storefront.
+   */
+  categoryStyle = computed(() => this.categoryContentParts().css);
+
+  private document = inject(DOCUMENT);
+  private renderer = inject(Renderer2);
+  private categoryStyleEl: HTMLStyleElement | null = null;
+
+  private applyCategoryStyleEffect = effect(() => {
+    const css = this.categoryStyle();
+
+    this.removeCategoryStyleEl();
+
+    if (!css) return;
+
+    const style = this.renderer.createElement('style') as HTMLStyleElement;
+    this.renderer.setAttribute(style, 'data-qf-category-style', '');
+    this.renderer.setProperty(style, 'textContent', css);
+    this.renderer.appendChild(this.document.head, style);
+    this.categoryStyleEl = style;
+  });
+
+  private removeCategoryStyleEl(): void {
+    if (!this.categoryStyleEl) return;
+    this.renderer.removeChild(this.document.head, this.categoryStyleEl);
+    this.categoryStyleEl = null;
+  }
+
+  constructor() {
+    inject(DestroyRef).onDestroy(() => this.removeCategoryStyleEl());
+  }
+
   pageNumbers = computed(() => {
     const total = this.totalPages();
     const current = this.currentPage();
@@ -167,6 +248,12 @@ export class ProductListComponent {
         this.totalCount.set(result.totalCount);
         this.totalPages.set(result.totalPages);
         this.loading.set(false);
+        if (filter.search) {
+          // customerRef identifies the visitor (fed to Meta as external_id) — it must not carry
+          // the search term itself, or every search corrupts the matching parameter with
+          // unrelated text. Let it default to the visitor id like every other tracked event.
+          this.tracking.track('Search');
+        }
       },
       error: (error) => {
         console.error('Failed to load products:', error);

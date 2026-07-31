@@ -1,21 +1,29 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ConfigService } from '../../services/config.service';
 import { I18nService } from '../../services/i18n.service';
 import { SeoService } from '../../services/seo.service';
 import { PageConfigurationDto } from 'shared';
+import { SectionRendererComponent } from '../../components/sections/section-renderer.component';
 
 @Component({
   selector: 'app-custom-page',
   standalone: true,
+  imports: [SectionRendererComponent],
   template: `
     @if (page()) {
-      <div class="max-w-4xl mx-auto px-4 py-12">
-        <h1 class="text-3xl font-bold text-gray-900 mb-8">{{ i18n.getText(page()!.title) }}</h1>
-        @if (page()!.contentJson) {
-          <div class="prose max-w-none" [innerHTML]="page()!.contentJson"></div>
-        }
-      </div>
+      @if (enabledSections().length) {
+        <!-- Section-built page: render the dynamic sections like home/product pages -->
+        <app-section-renderer [sections]="enabledSections()" />
+      } @else {
+        <!-- Legacy free-form content page -->
+        <div class="max-w-4xl mx-auto px-4 py-12">
+          <h1 class="text-3xl font-bold text-gray-900 mb-8">{{ i18n.getText(page()!.title) }}</h1>
+          @if (page()!.contentJson) {
+            <div class="prose max-w-none" [innerHTML]="page()!.contentJson"></div>
+          }
+        </div>
+      }
     }
   `
 })
@@ -25,6 +33,10 @@ export class CustomPageComponent implements OnInit {
   i18n = inject(I18nService);
   private seo = inject(SeoService);
   page = signal<PageConfigurationDto | null>(null);
+
+  enabledSections = computed(() =>
+    (this.page()?.sections ?? []).filter(s => s.isEnabled)
+  );
 
   ngOnInit() {
     this.route.params.subscribe(params => {

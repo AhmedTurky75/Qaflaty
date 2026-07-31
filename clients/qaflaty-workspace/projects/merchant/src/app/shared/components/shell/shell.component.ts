@@ -1,27 +1,29 @@
-import { Component, inject, signal, computed, OnInit, effect } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
-import { AuthService } from '../../../core/services/auth.service';
+import { Component, inject, signal, OnInit, effect } from '@angular/core';
+import { RouterOutlet } from '@angular/router';
 import { StoreContextService } from '../../../core/services/store-context.service';
 import { MerchantChatService } from '../../../features/chat/services/merchant-chat.service';
-import { StoreSwitcherComponent } from '../store-switcher/store-switcher.component';
+import { RailComponent } from '../rail/rail.component';
+import { TopbarComponent } from '../topbar/topbar.component';
+import { BottomNavComponent } from '../bottom-nav/bottom-nav.component';
+import { NavDrawerComponent } from '../nav-drawer/nav-drawer.component';
 
+/**
+ * Application shell (Direction C): coloured rail + topbar on desktop, bottom
+ * nav + slide-in drawer on mobile. Owns the drawer open state and keeps the
+ * existing chat-unread polling — the data flow is unchanged from before.
+ */
 @Component({
   selector: 'app-shell',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterOutlet, StoreSwitcherComponent],
+  imports: [RouterOutlet, RailComponent, TopbarComponent, BottomNavComponent, NavDrawerComponent],
   templateUrl: './shell.component.html',
-  styleUrls: ['./shell.component.scss']
+  styleUrls: ['./shell.component.scss'],
 })
 export class ShellComponent implements OnInit {
-  private authService = inject(AuthService);
-  private router = inject(Router);
   private storeContext = inject(StoreContextService);
   private chatService = inject(MerchantChatService);
 
-  currentMerchant = this.authService.currentMerchant;
-  sidebarOpen = signal(false);
-  userMenuOpen = signal(false);
+  drawerOpen = signal(false);
 
   // Chat unread count
   public chatUnreadCount = this.chatService.totalUnreadCount;
@@ -51,37 +53,5 @@ export class ShellComponent implements OnInit {
         // Silently fail
       }
     }
-  }
-
-  navigationItems = computed(() => {
-    const role = this.authService.role();
-    const isAdminOrAbove = role === 'Owner' || role === 'Admin';
-    const items = [
-      { name: 'Dashboard', icon: 'home', route: '/dashboard' },
-      { name: 'Stores', icon: 'store', route: '/stores' },
-      { name: 'Products', icon: 'box', route: '/products' },
-      { name: 'Orders', icon: 'shopping-bag', route: '/orders' },
-      { name: 'Active Carts', icon: 'cart', route: '/active-carts' },
-      { name: 'Customers', icon: 'users', route: '/customers' },
-      { name: 'Live Chat', icon: 'message-square', route: '/chat' },
-      { name: 'Store Builder', icon: 'layout', route: '/store-builder' },
-      { name: 'Settings', icon: 'settings', route: '/settings' }
-    ];
-    if (isAdminOrAbove) {
-      items.splice(2, 0, { name: 'Team', icon: 'team', route: '/stores/team' });
-    }
-    return items;
-  });
-
-  toggleSidebar(): void {
-    this.sidebarOpen.update(v => !v);
-  }
-
-  toggleUserMenu(): void {
-    this.userMenuOpen.update(v => !v);
-  }
-
-  logout(): void {
-    this.authService.logout();
   }
 }

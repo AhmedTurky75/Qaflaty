@@ -1,0 +1,12 @@
+:host {
+  display: block;
+}
+
+/* Sticky purchase bar entrance */
+.sticky-bar-anim {
+  animation: slideUp 0.2s ease;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}

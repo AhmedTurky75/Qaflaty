@@ -6,17 +6,17 @@ namespace Qaflaty.Domain.Storefront.Aggregates.Cart;
 
 public sealed class Cart : AggregateRoot<CartId>
 {
-    public StoreCustomerId? CustomerId { get; private set; }
-    public string? GuestId { get; private set; }
-    public StoreId? StoreId { get; private set; }
-    public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
+    public StoreCustomerId? CustomerId { get; private set; } // Owner customer for an authenticated cart; null for guest carts
+    public string? GuestId { get; private set; } // Guest session id for an anonymous cart; null for authenticated carts (cart duality)
+    public StoreId? StoreId { get; private set; } // Store the cart belongs to
+    public DateTime CreatedAt { get; private set; } // UTC timestamp when the cart was created
+    public DateTime UpdatedAt { get; private set; } // UTC timestamp of the last cart change (used to expire stale guest carts)
 
-    private readonly List<CartItem> _items = [];
-    public IReadOnlyList<CartItem> Items => _items.AsReadOnly();
+    private readonly List<CartItem> _items = []; // Backing list of cart line items
+    public IReadOnlyList<CartItem> Items => _items.AsReadOnly(); // Products (and chosen variants) currently in the cart
 
-    public int TotalItems => _items.Sum(i => i.Quantity);
-    public bool IsGuestCart => GuestId != null;
+    public int TotalItems => _items.Sum(i => i.Quantity); // Total unit count across all line items (for the cart badge)
+    public bool IsGuestCart => GuestId != null; // True when this is an anonymous/guest cart
 
     private Cart() : base(CartId.Empty) { }
 
@@ -50,9 +50,6 @@ public sealed class Cart : AggregateRoot<CartId>
 
         return Result<Cart>.Success(cart);
     }
-
-    /// <summary>Keep for backward compatibility with existing callers.</summary>
-    public static Result<Cart> Create(StoreCustomerId customerId) => CreateForCustomer(customerId);
 
     public Result AddItem(ProductId productId, int quantity, Guid? variantId = null)
     {

@@ -4,8 +4,8 @@ namespace Qaflaty.Domain.Ordering.ValueObjects;
 
 public sealed class DeliveryInfo : ValueObject
 {
-    public Address Address { get; private set; } = null!;
-    public string? Instructions { get; private set; }
+    public Address Address { get; private set; } = null!; // The shipping destination address for the order
+    public string? Instructions { get; private set; } // Optional delivery instructions from the customer, e.g. "Leave at the door"
 
     private DeliveryInfo() { }
 

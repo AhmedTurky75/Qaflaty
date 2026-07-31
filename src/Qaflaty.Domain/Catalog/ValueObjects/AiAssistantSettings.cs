@@ -15,10 +15,10 @@ public sealed class AiAssistantSettings : ValueObject
     /// <summary>When true, human live chat is hidden while the AI assistant is enabled.</summary>
     public bool DisableHumanChat { get; private set; }
 
-    public string? AssistantName { get; private set; }
-    public string? WelcomeMessage { get; private set; }
-    public AssistantPersonality Personality { get; private set; }
-    public AssistantLanguage Language { get; private set; }
+    public string? AssistantName { get; private set; } // Display name of the AI assistant in chat, e.g. "Sara"
+    public string? WelcomeMessage { get; private set; } // First greeting the assistant sends, e.g. "Hi! How can I help you today?"
+    public AssistantPersonality Personality { get; private set; } // Tone/persona used by the assistant, e.g. Friendly, Professional
+    public AssistantLanguage Language { get; private set; } // Reply language policy, e.g. AutoDetect / Arabic / English
 
     /// <summary>Hour of day (0-23, UTC) the assistant becomes available, or null for always-on.</summary>
     public int? EnabledHoursStart { get; private set; }
