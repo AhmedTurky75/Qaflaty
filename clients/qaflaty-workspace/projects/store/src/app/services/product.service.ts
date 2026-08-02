@@ -45,6 +45,11 @@ export class ProductService {
           params = params.append('propertyFilters', pf);
         }
       }
+      if (filter.slugs && filter.slugs.length > 0) {
+        for (const slug of filter.slugs) {
+          params = params.append('slugs', slug);
+        }
+      }
     }
 
     return this.http.get<PaginatedProducts>(this.apiUrl, { params });

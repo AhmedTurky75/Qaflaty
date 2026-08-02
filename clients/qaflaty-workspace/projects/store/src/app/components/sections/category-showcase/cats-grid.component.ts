@@ -1,7 +1,7 @@
 import { Component, input, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { SectionConfigurationDto, CategoryIconComponent } from 'shared';
-import { CategoryService } from '../../../services/category.service';
+import { SectionContentService } from '../../../services/section-content.service';
 import { Category } from '../../../models/category.model';
 import { I18nService } from '../../../services/i18n.service';
 
@@ -11,7 +11,9 @@ import { I18nService } from '../../../services/i18n.service';
   imports: [RouterLink, CategoryIconComponent],
   template: `
     <div class="max-w-7xl mx-auto px-4 py-12 bg-gray-50">
-      <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">Shop by Category</h2>
+      @if (title()) {
+        <h2 class="text-2xl font-bold text-gray-900 mb-8 text-center">{{ title() }}</h2>
+      }
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         @for (category of categories(); track category.id) {
           <a [routerLink]="['/products']" [queryParams]="{ category: category.id }"
@@ -33,14 +35,29 @@ import { I18nService } from '../../../services/i18n.service';
 })
 export class CatsGridComponent implements OnInit {
   config = input.required<SectionConfigurationDto>();
-  private categoryService = inject(CategoryService);
+  private sectionContent = inject(SectionContentService);
   i18n = inject(I18nService);
   categories = signal<Category[]>([]);
 
   ngOnInit() {
-    // The API already returns categories in the merchant's display order.
-    this.categoryService.getCategories().subscribe(res => {
-      this.categories.set(res || []);
+    // Which categories, and in what order, is the merchant's choice; with none
+    // chosen this falls back to all of them in their display order.
+    this.sectionContent.categories(this.config(), 8).subscribe({
+      next: categories => this.categories.set(categories),
+      error: () => this.categories.set([])
     });
+  }
+
+  /** The merchant's heading, or nothing — never a hardcoded English one. */
+  title(): string {
+    return this.i18n.getText(this.content()?.title);
+  }
+
+  private content(): any {
+    try {
+      return this.config().contentJson ? JSON.parse(this.config().contentJson!) : {};
+    } catch {
+      return {};
+    }
   }
 }

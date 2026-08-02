@@ -2,7 +2,10 @@ import { Component, Input, Output, EventEmitter, signal, computed, OnInit, injec
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { PageConfigurationDto, SectionConfigurationDto, PageSeoSettings } from 'shared';
+import {
+  PageConfigurationDto, SectionConfigurationDto, PageSeoSettings,
+  SectionContentSource, SectionSettings
+} from 'shared';
 import { MediaService } from '../products/services/media.service';
 import { ProductService } from '../products/services/product.service';
 import { RichTextEditorComponent } from './rich-text-editor.component';
@@ -12,7 +15,7 @@ import { BuilderDragStateService } from './section-canvas/builder-drag-state.ser
 import { SectionPreviewDataService } from './section-preview/section-preview-data.service';
 import {
   PAGE_TEMPLATES, PageTemplate, SECTION_TYPES, SectionVariant,
-  createSectionInstance, sectionTypeLabel, variantsFor
+  createSectionInstance, findSectionType, sectionTypeLabel, variantsFor
 } from './section-preview/section-catalog';
 
 @Component({
@@ -127,6 +130,133 @@ import {
                     <option [value]="variant.id">{{ variant.label }}</option>
                   }
                 </select>
+              </div>
+            }
+
+            <!-- What this section pulls from the catalogue -->
+            @if (dataSourceKind(section); as kind) {
+              <div class="rounded-lg border border-border bg-surface-elevated p-3 space-y-3">
+                <p class="text-xs font-semibold text-text">
+                  {{ kind === 'products' ? 'Which products to show' : 'Which categories to show' }}
+                </p>
+
+                @if (kind === 'products') {
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-text" [attr.for]="'source-mode-' + section.id">Choose products by</label>
+                      <select
+                        [id]="'source-mode-' + section.id"
+                        #sourceMode
+                        [value]="sourceOf(section).mode || 'newest'"
+                        (change)="setSourceMode(section, sourceMode.value)"
+                        class="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      >
+                        <option value="newest">Newest first</option>
+                        <option value="priceAsc">Price: low to high</option>
+                        <option value="priceDesc">Price: high to low</option>
+                        <option value="nameAsc">Name: A to Z</option>
+                        <option value="category">Everything in one category</option>
+                        <option value="manual">Products I pick myself</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-text" [attr.for]="'source-limit-' + section.id">How many to show</label>
+                      <input
+                        type="number" min="1" max="24"
+                        [id]="'source-limit-' + section.id"
+                        #sourceLimit
+                        [value]="sourceLimitOf(section)"
+                        (input)="setSourceField(section, 'limit', +sourceLimit.value)"
+                        class="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      />
+                    </div>
+                  </div>
+
+                  @if (sourceOf(section).mode === 'category') {
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-text" [attr.for]="'source-cat-' + section.id">Category</label>
+                      <select
+                        [id]="'source-cat-' + section.id"
+                        #sourceCat
+                        [value]="sourceOf(section).categoryId || ''"
+                        (change)="setSourceField(section, 'categoryId', sourceCat.value)"
+                        class="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      >
+                        <option value="">Choose a category…</option>
+                        @for (category of categoryOptions(); track category.id) {
+                          <option [value]="category.id">{{ category.name }}</option>
+                        }
+                      </select>
+                    </div>
+                  }
+
+                  @if (sourceOf(section).mode === 'manual') {
+                    <div>
+                      <p class="mb-1 text-xs font-medium text-text">
+                        Pick products
+                        <span class="font-normal text-text-muted">— they appear in the order you tick them ({{ pickedSlugs(section).length }} chosen)</span>
+                      </p>
+                      <div class="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border bg-surface p-2">
+                        @for (product of productOptions(); track product.slug) {
+                          <label class="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm text-text hover:bg-surface-elevated">
+                            <input
+                              type="checkbox"
+                              class="h-4 w-4 rounded text-primary focus:ring-2 focus:ring-primary/40"
+                              [checked]="isPicked(section, product.slug)"
+                              (change)="togglePickedProduct(section, product.slug)"
+                            />
+                            <span class="truncate">{{ product.name }}</span>
+                          </label>
+                        } @empty {
+                          <p class="px-1 py-2 text-xs text-text-muted">This store has no products yet. Add one first, then come back to pick it.</p>
+                        }
+                      </div>
+                    </div>
+                  }
+                } @else {
+                  <div class="grid grid-cols-2 gap-3">
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-text" [attr.for]="'cat-mode-' + section.id">Show</label>
+                      <select
+                        [id]="'cat-mode-' + section.id"
+                        #catMode
+                        [value]="pickedCategoryIds(section).length ? 'chosen' : 'all'"
+                        (change)="setCategoryMode(section, catMode.value)"
+                        class="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      >
+                        <option value="all">All my categories</option>
+                        <option value="chosen">Only the ones I pick</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="mb-1 block text-xs font-medium text-text" [attr.for]="'cat-limit-' + section.id">How many to show</label>
+                      <input
+                        type="number" min="1" max="12"
+                        [id]="'cat-limit-' + section.id"
+                        #catLimit
+                        [value]="sourceLimitOf(section)"
+                        (input)="setSourceField(section, 'limit', +catLimit.value)"
+                        class="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                      />
+                    </div>
+                  </div>
+
+                  @if (pickedCategoryIds(section).length) {
+                    <div class="max-h-40 space-y-1 overflow-y-auto rounded-md border border-border bg-surface p-2">
+                      @for (category of categoryOptions(); track category.id) {
+                        <label class="flex cursor-pointer items-center gap-2 rounded px-1 py-0.5 text-sm text-text hover:bg-surface-elevated">
+                          <input
+                            type="checkbox"
+                            class="h-4 w-4 rounded text-primary focus:ring-2 focus:ring-primary/40"
+                            [checked]="isCategoryPicked(section, category.id)"
+                            (change)="togglePickedCategory(section, category.id)"
+                          />
+                          <span class="truncate">{{ category.name }}</span>
+                        </label>
+                      }
+                    </div>
+                  }
+                }
               </div>
             }
 
@@ -1873,6 +2003,96 @@ export class SectionEditorComponent implements OnInit {
 
   setVariant(section: SectionConfigurationDto, variantId: string): void {
     this.patchSection(section, { variantId });
+  }
+
+  // ── "What should this section show?" ───────────────────────────────────
+
+  /** 'products' / 'categories' for catalogue-driven sections, null otherwise. */
+  dataSourceKind(section: SectionConfigurationDto): 'products' | 'categories' | null {
+    return findSectionType(section.sectionType)?.dataSource ?? null;
+  }
+
+  categoryOptions(): { id: string; name: string }[] {
+    return this.previewData.categories();
+  }
+
+  sourceOf(section: SectionConfigurationDto): SectionContentSource {
+    const settings = this.getSettings(section) as SectionSettings;
+    return settings.source ?? {};
+  }
+
+  /** Falls back to the legacy `pageSize` so an older section shows its real number. */
+  sourceLimitOf(section: SectionConfigurationDto): number {
+    const settings = this.getSettings(section) as SectionSettings;
+    const legacy = typeof settings['pageSize'] === 'number' ? settings['pageSize'] as number : undefined;
+    return this.sourceOf(section).limit ?? legacy ?? 8;
+  }
+
+  setSourceField<K extends keyof SectionContentSource>(
+    section: SectionConfigurationDto,
+    field: K,
+    value: SectionContentSource[K]
+  ): void {
+    const source: SectionContentSource = { ...this.sourceOf(section), [field]: value };
+
+    // Drop the settings that belong to a mode the merchant just left, so the
+    // stored source never describes two different selections at once.
+    if (field === 'mode') {
+      if (value !== 'category') delete source.categoryId;
+      if (value !== 'manual') delete source.productSlugs;
+    }
+
+    this.setSettingsField(section, 'source', source);
+  }
+
+  /** Narrows the raw `<select>` value onto the union the source accepts. */
+  setSourceMode(section: SectionConfigurationDto, mode: string): void {
+    const allowed: SectionContentSource['mode'][] = ['newest', 'priceAsc', 'priceDesc', 'nameAsc', 'category', 'manual'];
+    const next = allowed.find(m => m === mode) ?? 'newest';
+    this.setSourceField(section, 'mode', next);
+  }
+
+  pickedSlugs(section: SectionConfigurationDto): string[] {
+    return this.sourceOf(section).productSlugs ?? [];
+  }
+
+  isPicked(section: SectionConfigurationDto, slug: string): boolean {
+    return this.pickedSlugs(section).includes(slug);
+  }
+
+  /** Ticking appends, so the chosen order is the order they appear on the page. */
+  togglePickedProduct(section: SectionConfigurationDto, slug: string): void {
+    const current = this.pickedSlugs(section);
+    const next = current.includes(slug)
+      ? current.filter(s => s !== slug)
+      : [...current, slug];
+    this.setSourceField(section, 'productSlugs', next);
+  }
+
+  pickedCategoryIds(section: SectionConfigurationDto): string[] {
+    return this.sourceOf(section).categoryIds ?? [];
+  }
+
+  isCategoryPicked(section: SectionConfigurationDto, id: string): boolean {
+    return this.pickedCategoryIds(section).includes(id);
+  }
+
+  togglePickedCategory(section: SectionConfigurationDto, id: string): void {
+    const current = this.pickedCategoryIds(section);
+    const next = current.includes(id)
+      ? current.filter(c => c !== id)
+      : [...current, id];
+    this.setSourceField(section, 'categoryIds', next);
+  }
+
+  /** "All" clears the selection; "chosen" seeds it with the first category. */
+  setCategoryMode(section: SectionConfigurationDto, mode: string): void {
+    if (mode === 'all') {
+      this.setSourceField(section, 'categoryIds', []);
+      return;
+    }
+    const first = this.categoryOptions()[0];
+    this.setSourceField(section, 'categoryIds', first ? [first.id] : []);
   }
 
   /**

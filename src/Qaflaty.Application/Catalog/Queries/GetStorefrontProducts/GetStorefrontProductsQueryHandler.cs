@@ -7,6 +7,7 @@ using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Catalog.ValueObjects;
 using Qaflaty.Domain.Common.Errors;
 using Qaflaty.Domain.Common.Identifiers;
+using ProductEntity = Qaflaty.Domain.Catalog.Aggregates.Product.Product;
 
 namespace Qaflaty.Application.Catalog.Queries.GetStorefrontProducts;
 
@@ -82,6 +83,24 @@ public class GetStorefrontProductsQueryHandler : IQueryHandler<GetStorefrontProd
             }
         }
 
+        // A hand-picked selection keeps the merchant's own order, so it is
+        // applied instead of — not alongside — the sort options below.
+        if (request.Slugs is { Count: > 0 })
+        {
+            // TryAdd rather than ToDictionary: a repeated slug keeps its first
+            // position instead of throwing.
+            var order = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            for (var i = 0; i < request.Slugs.Count; i++)
+                order.TryAdd(request.Slugs[i], i);
+
+            var picked = query
+                .Where(p => order.ContainsKey(p.Slug.Value))
+                .OrderBy(p => order[p.Slug.Value]);
+
+            return Result.Success(PaginatedList<ProductPublicDto>.Create(
+                picked.Select(ToPublicDto), request.PageNumber, request.PageSize));
+        }
+
         if (!string.IsNullOrWhiteSpace(request.SortBy) &&
             Enum.TryParse<ProductSortOption>(request.SortBy, true, out var sortOption))
         {
@@ -99,18 +118,20 @@ public class GetStorefrontProductsQueryHandler : IQueryHandler<GetStorefrontProd
             query = query.OrderByDescending(p => p.CreatedAt);
         }
 
-        var dtos = query.Select(p => new ProductPublicDto(
-            p.Id.Value,
-            p.Slug.Value,
-            p.Name.Value,
-            p.Name.Arabic,
-            p.Description,
-            p.Pricing.Price.Amount,
-            p.Pricing.CompareAtPrice?.Amount,
-            p.Inventory.InStock,
-            p.Images.Select(i => new ProductImageDto(i.Id, i.Url, i.AltText, i.SortOrder)).ToList()
-        ));
+        var dtos = query.Select(ToPublicDto);
 
         return Result.Success(PaginatedList<ProductPublicDto>.Create(dtos, request.PageNumber, request.PageSize));
     }
+
+    private static ProductPublicDto ToPublicDto(ProductEntity p) => new(
+        p.Id.Value,
+        p.Slug.Value,
+        p.Name.Value,
+        p.Name.Arabic,
+        p.Description,
+        p.Pricing.Price.Amount,
+        p.Pricing.CompareAtPrice?.Amount,
+        p.Inventory.InStock,
+        p.Images.Select(i => new ProductImageDto(i.Id, i.Url, i.AltText, i.SortOrder)).ToList()
+    );
 }

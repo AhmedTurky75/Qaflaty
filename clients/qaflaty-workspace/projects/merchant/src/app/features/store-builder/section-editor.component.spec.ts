@@ -124,6 +124,63 @@ describe('SectionEditorComponent', () => {
     expect(editor.hasUnsavedChanges()).toBe(false);
   });
 
+  it('adds a content source without disturbing the stored design settings', () => {
+    const original = legacySection();
+    original.sectionType = 'FeaturedProducts';
+    original.variantId = 'grid-standard';
+
+    const fixture = mount([original]);
+    const editor = fixture.componentInstance;
+
+    editor.setSourceMode(editor.localSections()[0], 'category');
+    editor.setSourceField(editor.localSections()[0], 'categoryId', 'cat-9');
+    editor.setSourceField(editor.localSections()[0], 'limit', 4);
+
+    const settings = JSON.parse(editor.localSections()[0].settingsJson!);
+    expect(settings.source).toEqual({ mode: 'category', categoryId: 'cat-9', limit: 4 });
+    // Everything the old Design tab wrote is still there, untouched.
+    expect(settings.backgroundColor).toBe('#101828');
+    expect(settings.paddingY).toBe('xl');
+    expect(settings.animation).toBe('slide-up');
+    expect(settings.anchorId).toBe('top-hero');
+  });
+
+  it('drops the other mode\'s selection when the mode changes', () => {
+    const fixture = mount([legacySection()]);
+    const editor = fixture.componentInstance;
+
+    editor.setSourceMode(editor.localSections()[0], 'category');
+    editor.setSourceField(editor.localSections()[0], 'categoryId', 'cat-9');
+    editor.setSourceMode(editor.localSections()[0], 'manual');
+    editor.togglePickedProduct(editor.localSections()[0], 'candle');
+    editor.togglePickedProduct(editor.localSections()[0], 'mug');
+
+    const source = JSON.parse(editor.localSections()[0].settingsJson!).source;
+    expect(source.categoryId).toBeUndefined();
+    // Ticking order is the order they appear on the page.
+    expect(source.productSlugs).toEqual(['candle', 'mug']);
+
+    editor.togglePickedProduct(editor.localSections()[0], 'candle');
+    expect(JSON.parse(editor.localSections()[0].settingsJson!).source.productSlugs).toEqual(['mug']);
+  });
+
+  it('reads the legacy pageSize as the starting item count', () => {
+    const withPageSize = legacySection();
+    withPageSize.settingsJson = JSON.stringify({ pageSize: 6, backgroundColor: '#fff' });
+
+    const fixture = mount([withPageSize]);
+    expect(fixture.componentInstance.sourceLimitOf(fixture.componentInstance.localSections()[0])).toBe(6);
+  });
+
+  it('only offers a content source to catalogue-driven sections', () => {
+    const fixture = mount([legacySection()]);
+    const editor = fixture.componentInstance;
+
+    expect(editor.dataSourceKind({ ...legacySection(), sectionType: 'FeaturedProducts' })).toBe('products');
+    expect(editor.dataSourceKind({ ...legacySection(), sectionType: 'CategoryShowcase' })).toBe('categories');
+    expect(editor.dataSourceKind({ ...legacySection(), sectionType: 'Hero' })).toBeNull();
+  });
+
   it('never renders a Design tab', () => {
     const fixture = mount([legacySection()]);
     fixture.detectChanges();

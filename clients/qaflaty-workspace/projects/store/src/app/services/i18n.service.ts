@@ -32,9 +32,24 @@ export class I18nService {
     localStorage.setItem('store-language', lang);
   }
 
-  getText(text: BilingualText | undefined | null): string {
+  /**
+   * Resolves a bilingual value in either shape the platform stores:
+   * `{ english, arabic }` on DTOs, and `{ en, ar }` inside a section's
+   * `contentJson` (what the page builder writes). A plain string is returned
+   * as-is, and a missing translation falls back to the other language rather
+   * than rendering an empty element.
+   */
+  getText(text: BilingualText | { en?: string; ar?: string } | string | undefined | null): string {
     if (!text) return '';
-    return this.currentLanguage() === 'ar' ? text.arabic : text.english;
+    if (typeof text === 'string') return text;
+
+    const isArabic = this.currentLanguage() === 'ar';
+    const value = text as { english?: string; arabic?: string; en?: string; ar?: string };
+    const arabic = value.arabic ?? value.ar ?? '';
+    const english = value.english ?? value.en ?? '';
+
+    const preferred = isArabic ? arabic : english;
+    return preferred || (isArabic ? english : arabic) || '';
   }
 
   /**

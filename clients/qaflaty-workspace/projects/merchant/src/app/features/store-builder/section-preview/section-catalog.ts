@@ -36,6 +36,11 @@ export interface SectionTypeInfo {
   aspect: number;
   /** Content applied to a freshly created instance so it renders finished. */
   defaultContent?: Record<string, unknown>;
+  /**
+   * Set when the section draws from the store's catalogue, which is what gives
+   * it a "what should this show?" picker in its settings.
+   */
+  dataSource?: 'products' | 'categories';
 }
 
 export const SECTION_GROUPS: SectionGroup[] = [
@@ -99,12 +104,12 @@ export const SECTION_TYPES: SectionTypeInfo[] = [
 
   {
     key: 'FeaturedProducts', label: 'Featured products', description: 'A grid of products from your store',
-    group: 'products', defaultVariantId: 'grid-standard', aspect: 16 / 11,
+    group: 'products', defaultVariantId: 'grid-standard', aspect: 16 / 11, dataSource: 'products',
     defaultContent: { title: bi('Featured products', 'منتجات مميزة'), subtitle: bi('Handpicked for you', 'مختارة لك') }
   },
   {
     key: 'ProductCarousel', label: 'Product carousel', description: 'Products that scroll sideways',
-    group: 'products', defaultVariantId: 'carousel-standard', aspect: 16 / 9,
+    group: 'products', defaultVariantId: 'carousel-standard', aspect: 16 / 9, dataSource: 'products',
     defaultContent: { title: bi('You may also like', 'قد يعجبك أيضًا') }
   },
   {
@@ -124,7 +129,7 @@ export const SECTION_TYPES: SectionTypeInfo[] = [
 
   {
     key: 'CategoryShowcase', label: 'Category grid', description: 'Your categories as browsable tiles',
-    group: 'categories', defaultVariantId: 'cats-grid', aspect: 16 / 10,
+    group: 'categories', defaultVariantId: 'cats-grid', aspect: 16 / 10, dataSource: 'categories',
     defaultContent: { title: bi('Shop by category', 'تسوق حسب الفئة') }
   },
 

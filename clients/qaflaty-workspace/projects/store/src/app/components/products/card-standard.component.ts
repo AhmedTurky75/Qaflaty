@@ -14,7 +14,7 @@ import { StorePricePipe } from '../../pipes/store-price.pipe';
           @if (product().images && product().images.length > 0) {
             <img
               [src]="product().images[0].url"
-              [alt]="i18n.getText(product().name)"
+              [alt]="i18n.nameFor(product().name, product().nameAr)"
               class="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
             />
           } @else {
@@ -29,7 +29,7 @@ import { StorePricePipe } from '../../pipes/store-price.pipe';
       <div class="p-4">
         <a [routerLink]="['/products', product().slug]" class="block">
           <h3 class="text-lg font-semibold text-gray-800 mb-2 hover:text-blue-600 transition-colors line-clamp-2">
-            {{ i18n.getText(product().name) }}
+            {{ i18n.nameFor(product().name, product().nameAr) }}
           </h3>
         </a>
         <div class="flex items-center justify-between mb-4">

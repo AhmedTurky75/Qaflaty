@@ -83,9 +83,30 @@ export interface PageSeoSettings {
  * merchant editor (writes) and the storefront wrapper (reads). No DB migration
  * needed — this is stored inside the existing `SettingsJson` JSONB string.
  */
+/**
+ * What a data-bound section (product grids, carousels, category showcases)
+ * should pull from the store. Stored under `SectionSettings.source`, so no
+ * migration is needed and a section saved before this existed keeps behaving
+ * exactly as it did: no `source` means "newest products", honouring `pageSize`.
+ */
+export interface SectionContentSource {
+  /** How the products are chosen. Omitted = newest. */
+  mode?: 'newest' | 'priceAsc' | 'priceDesc' | 'nameAsc' | 'category' | 'manual';
+  /** Used when mode is 'category'. */
+  categoryId?: string;
+  /** Used when mode is 'manual' — hand-picked products, in the merchant's order. */
+  productSlugs?: string[];
+  /** Category showcases: which categories to show, in this order. Empty = all. */
+  categoryIds?: string[];
+  /** How many items to show. Falls back to the legacy `pageSize` setting. */
+  limit?: number;
+}
+
 export interface SectionSettings {
   /** Section-type specific settings live here too (e.g. pageSize) — kept loose. */
   [key: string]: unknown;
+  /** Which products/categories a data-bound section shows. */
+  source?: SectionContentSource;
   backgroundColor?: string;      // hex / css var
   backgroundImageUrl?: string;
   textColor?: string;            // hex / css var
