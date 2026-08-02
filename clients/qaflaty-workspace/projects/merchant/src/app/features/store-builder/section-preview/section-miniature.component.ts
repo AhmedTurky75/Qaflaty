@@ -1,6 +1,6 @@
 import { Component, computed, inject, input } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { SectionConfigurationDto } from 'shared';
+import { SectionConfigurationDto, SectionContentSource, SectionSettings } from 'shared';
 import { PreviewCategory, PreviewProduct, SectionPreviewDataService } from './section-preview-data.service';
 
 /**
@@ -698,16 +698,66 @@ export class SectionMiniatureComponent {
     return Array.isArray(value) ? value as Record<string, unknown>[] : [];
   }
 
+  /** What the section is configured to show; empty for a library card. */
+  private source = computed<SectionContentSource>(() => {
+    const raw = this.section()?.settingsJson;
+    if (!raw) return {};
+    try {
+      const settings = JSON.parse(raw) as SectionSettings;
+      return settings.source ?? {};
+    } catch {
+      return {};
+    }
+  });
+
+  /**
+   * Mirrors the storefront's selection against the cached slice. Where a
+   * filter matches nothing in that slice the full slice is drawn instead — a
+   * representative preview beats an empty box, and the storefront still does
+   * the real query.
+   */
   products(count: number): PreviewProduct[] {
-    return this.data.products().slice(0, count);
+    const all = this.data.products();
+    const source = this.source();
+    let picked = all;
+
+    if (source.mode === 'manual' && source.productSlugs?.length) {
+      const bySlug = new Map(all.map(p => [p.slug, p]));
+      picked = source.productSlugs
+        .map(slug => bySlug.get(slug))
+        .filter((p): p is PreviewProduct => p !== undefined);
+    } else if (source.mode === 'category' && source.categoryId) {
+      picked = all.filter(p => p.categoryId === source.categoryId);
+    } else if (source.mode === 'priceAsc') {
+      picked = [...all].sort((a, b) => a.price - b.price);
+    } else if (source.mode === 'priceDesc') {
+      picked = [...all].sort((a, b) => b.price - a.price);
+    } else if (source.mode === 'nameAsc') {
+      picked = [...all].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    if (picked.length === 0) picked = all;
+
+    // A half-typed limit (empty input reads as 0) must not blank the preview.
+    const limit = source.limit && source.limit > 0 ? source.limit : count;
+    return picked.slice(0, Math.min(count, limit));
   }
 
   firstProduct(): PreviewProduct | null {
-    return this.data.products()[0] ?? null;
+    return this.products(1)[0] ?? null;
   }
 
   categories(count: number): PreviewCategory[] {
-    return this.data.categories().slice(0, count);
+    const all = this.data.categories();
+    const chosen = this.source().categoryIds ?? [];
+    if (chosen.length === 0) return all.slice(0, count);
+
+    const byId = new Map(all.map(c => [c.id, c]));
+    const picked = chosen
+      .map(id => byId.get(id))
+      .filter((c): c is PreviewCategory => c !== undefined);
+
+    return (picked.length ? picked : all).slice(0, count);
   }
 
   price(amount: number): string {

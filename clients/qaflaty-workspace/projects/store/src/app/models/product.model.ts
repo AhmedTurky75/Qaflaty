@@ -47,6 +47,8 @@ export interface ProductFilter {
   pageSize?: number;
   // "definitionId:value" pairs, one entry per selected option
   propertyFilters?: string[];
+  // Hand-picked products, returned in this order; overrides sorting.
+  slugs?: string[];
 }
 
 export enum ProductSortBy {

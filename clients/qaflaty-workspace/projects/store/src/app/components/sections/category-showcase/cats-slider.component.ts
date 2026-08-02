@@ -1,6 +1,8 @@
-import { Component, input, inject } from '@angular/core';
+import { Component, OnInit, input, inject, signal } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 import { I18nService } from '../../../services/i18n.service';
+import { SectionContentService } from '../../../services/section-content.service';
+import { Category } from '../../../models/category.model';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
@@ -26,22 +28,23 @@ import { RouterLink } from '@angular/router';
         }
 
         <!-- Horizontally Scrollable Category Cards -->
-        @if (content?.categories && content.categories.length > 0) {
+        @if (categories().length > 0) {
           <div class="relative">
             <div class="overflow-x-auto scrollbar-hide pb-4">
               <div class="flex gap-6" style="scroll-snap-type: x mandatory;">
-                @for (category of content.categories; track category.id) {
+                @for (category of categories(); track category.id) {
                   <a
-                    [routerLink]="['/categories', category.slug]"
+                    [routerLink]="['/products']"
+                    [queryParams]="{ category: category.id }"
                     class="flex-shrink-0 w-64 scroll-snap-align-start group"
                   >
                     <div class="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1">
                       <!-- Category Image -->
                       <div class="aspect-video overflow-hidden bg-gray-100">
-                        @if (category.image) {
+                        @if (category.imageUrl) {
                           <img
-                            [src]="category.image.url"
-                            [alt]="i18n.getText(category.name)"
+                            [src]="category.imageUrl"
+                            [alt]="i18n.nameFor(category.name, category.nameAr)"
                             class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                           />
                         } @else {
@@ -56,13 +59,8 @@ import { RouterLink } from '@angular/router';
                       <!-- Category Info -->
                       <div class="p-4">
                         <h3 class="text-lg font-bold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                          {{ i18n.getText(category.name) }}
+                          {{ i18n.nameFor(category.name, category.nameAr) }}
                         </h3>
-                        @if (category.description) {
-                          <p class="text-sm text-gray-600 line-clamp-2">
-                            {{ i18n.getText(category.description) }}
-                          </p>
-                        }
                         @if (category.productCount !== undefined) {
                           <p class="text-sm text-gray-500 mt-2">
                             {{ category.productCount }} {{ i18n.currentLanguage() === 'ar' ? 'منتج' : 'products' }}
@@ -102,9 +100,19 @@ import { RouterLink } from '@angular/router';
     </style>
   `
 })
-export class CatsSliderComponent {
+export class CatsSliderComponent implements OnInit {
   config = input.required<SectionConfigurationDto>();
   i18n = inject(I18nService);
+  private sectionContent = inject(SectionContentService);
+
+  categories = signal<Category[]>([]);
+
+  ngOnInit(): void {
+    this.sectionContent.categories(this.config(), 8).subscribe({
+      next: categories => this.categories.set(categories),
+      error: () => this.categories.set([])
+    });
+  }
 
   get content(): any {
     try {

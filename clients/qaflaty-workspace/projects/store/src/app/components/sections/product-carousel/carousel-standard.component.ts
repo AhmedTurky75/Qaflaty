@@ -1,8 +1,12 @@
-import { Component, input, inject } from '@angular/core';
+import { Component, ElementRef, OnInit, inject, input, signal, viewChild } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 import { I18nService } from '../../../services/i18n.service';
+import { SectionContentService } from '../../../services/section-content.service';
+import { Product } from '../../../models/product.model';
 import { CardStandardComponent } from '../../products/card-standard.component';
 import { CommonModule } from '@angular/common';
+
+const CARD_WIDTH = 312; // w-72 card + gap-6
 
 @Component({
   selector: 'app-carousel-standard',
@@ -26,10 +30,10 @@ import { CommonModule } from '@angular/common';
             </div>
 
             <!-- Navigation Arrows -->
-            @if (content?.products && content.products.length > 3) {
+            @if (products().length > 3) {
               <div class="hidden md:flex gap-2">
                 <button
-                  (click)="scrollLeft()"
+                  (click)="scrollByCards(-1)"
                   class="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors duration-200"
                   type="button"
                   aria-label="Previous"
@@ -39,7 +43,7 @@ import { CommonModule } from '@angular/common';
                   </svg>
                 </button>
                 <button
-                  (click)="scrollRight()"
+                  (click)="scrollByCards(1)"
                   class="p-3 bg-gray-100 hover:bg-gray-200 rounded-full transition-colors duration-200"
                   type="button"
                   aria-label="Next"
@@ -54,7 +58,15 @@ import { CommonModule } from '@angular/common';
         }
 
         <!-- Product Carousel -->
-        @if (content?.products && content.products.length > 0) {
+        @if (isLoading()) {
+          <div class="flex gap-6 overflow-hidden">
+            @for (i of skeletons; track i) {
+              <div class="w-72 flex-shrink-0">
+                <div class="bg-gray-100 rounded-lg animate-pulse aspect-square"></div>
+              </div>
+            }
+          </div>
+        } @else if (products().length > 0) {
           <div class="relative">
             <div
               #carouselContainer
@@ -62,7 +74,7 @@ import { CommonModule } from '@angular/common';
               style="scroll-snap-type: x mandatory;"
             >
               <div class="flex gap-6" style="width: fit-content;">
-                @for (product of content.products; track product.id) {
+                @for (product of products(); track product.id) {
                   <div class="w-72 flex-shrink-0" style="scroll-snap-align: start;">
                     <app-card-standard [product]="product" />
                   </div>
@@ -71,13 +83,13 @@ import { CommonModule } from '@angular/common';
             </div>
 
             <!-- Scroll Indicators -->
-            @if (content.products.length > 3) {
+            @if (products().length > 3) {
               <div class="flex justify-center gap-2 mt-6">
-                @for (dot of getDots(); track $index) {
+                @for (dot of dots(); track $index) {
                   <button
                     (click)="scrollToIndex($index)"
-                    [class.bg-blue-600]="currentIndex === $index"
-                    [class.bg-gray-300]="currentIndex !== $index"
+                    [class.bg-blue-600]="currentIndex() === $index"
+                    [class.bg-gray-300]="currentIndex() !== $index"
                     class="w-2 h-2 rounded-full transition-colors duration-200"
                     type="button"
                     [attr.aria-label]="'Go to slide ' + ($index + 1)"
@@ -98,22 +110,34 @@ import { CommonModule } from '@angular/common';
         }
       </div>
     </section>
-
-    <style>
-      .scrollbar-hide::-webkit-scrollbar {
-        display: none;
-      }
-      .scrollbar-hide {
-        -ms-overflow-style: none;
-        scrollbar-width: none;
-      }
-    </style>
-  `
+  `,
+  styles: [`
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  `]
 })
-export class CarouselStandardComponent {
+export class CarouselStandardComponent implements OnInit {
   config = input.required<SectionConfigurationDto>();
   i18n = inject(I18nService);
-  currentIndex = 0;
+  private sectionContent = inject(SectionContentService);
+
+  /** Scoped to this carousel — a page can hold more than one. */
+  private container = viewChild<ElementRef<HTMLElement>>('carouselContainer');
+
+  products = signal<Product[]>([]);
+  isLoading = signal(true);
+  currentIndex = signal(0);
+  readonly skeletons = [1, 2, 3, 4];
+
+  ngOnInit(): void {
+    this.sectionContent.products(this.config(), 8).subscribe({
+      next: products => {
+        this.products.set(products);
+        this.isLoading.set(false);
+      },
+      error: () => this.isLoading.set(false)
+    });
+  }
 
   get content(): any {
     try {
@@ -123,47 +147,24 @@ export class CarouselStandardComponent {
     }
   }
 
-  get settings(): any {
-    try {
-      return this.config().settingsJson ? JSON.parse(this.config().settingsJson!) : {};
-    } catch {
-      return {};
-    }
+  dots(): number[] {
+    return Array.from({ length: Math.ceil(this.products().length / 3) }, (_, i) => i);
   }
 
-  scrollLeft(): void {
-    const container = document.querySelector('#carouselContainer') as HTMLElement;
-    if (container) {
-      container.scrollBy({ left: -300, behavior: 'smooth' });
-      this.updateCurrentIndex(-1);
-    }
-  }
+  scrollByCards(direction: number): void {
+    const el = this.container()?.nativeElement;
+    if (!el) return;
 
-  scrollRight(): void {
-    const container = document.querySelector('#carouselContainer') as HTMLElement;
-    if (container) {
-      container.scrollBy({ left: 300, behavior: 'smooth' });
-      this.updateCurrentIndex(1);
-    }
+    el.scrollBy({ left: direction * CARD_WIDTH, behavior: 'smooth' });
+    const maxIndex = Math.max(0, this.dots().length - 1);
+    this.currentIndex.set(Math.max(0, Math.min(maxIndex, this.currentIndex() + direction)));
   }
 
   scrollToIndex(index: number): void {
-    const container = document.querySelector('#carouselContainer') as HTMLElement;
-    if (container) {
-      const scrollAmount = index * 300;
-      container.scrollTo({ left: scrollAmount, behavior: 'smooth' });
-      this.currentIndex = index;
-    }
-  }
+    const el = this.container()?.nativeElement;
+    if (!el) return;
 
-  updateCurrentIndex(direction: number): void {
-    const maxIndex = this.getDots().length - 1;
-    this.currentIndex = Math.max(0, Math.min(maxIndex, this.currentIndex + direction));
-  }
-
-  getDots(): number[] {
-    const productCount = this.content?.products?.length || 0;
-    const dotsCount = Math.ceil(productCount / 3);
-    return Array.from({ length: dotsCount }, (_, i) => i);
+    el.scrollTo({ left: index * CARD_WIDTH * 3, behavior: 'smooth' });
+    this.currentIndex.set(index);
   }
 }

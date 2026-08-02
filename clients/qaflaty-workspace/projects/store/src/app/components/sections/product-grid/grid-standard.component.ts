@@ -1,7 +1,7 @@
 import { Component, input, inject, signal, OnInit } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 import { I18nService } from '../../../services/i18n.service';
-import { ProductService } from '../../../services/product.service';
+import { SectionContentService } from '../../../services/section-content.service';
 import { ProductCardComponent } from '../../products/product-card.component';
 import { CommonModule } from '@angular/common';
 
@@ -49,17 +49,16 @@ export class GridStandardComponent implements OnInit {
   config = input.required<SectionConfigurationDto>();
 
   i18n = inject(I18nService);
-  private productService = inject(ProductService);
+  private sectionContent = inject(SectionContentService);
 
   products = signal<any[]>([]);
   isLoading = signal(true);
   skeletons = [1, 2, 3, 4, 5, 6, 7, 8];
 
   ngOnInit() {
-    const pageSize = this.settings?.pageSize ?? 8;
-    this.productService.getFeaturedProducts(pageSize).subscribe({
-      next: res => {
-        this.products.set(res.items ?? []);
+    this.sectionContent.products(this.config(), 8).subscribe({
+      next: products => {
+        this.products.set(products);
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false)

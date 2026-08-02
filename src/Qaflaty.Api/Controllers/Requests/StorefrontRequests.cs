@@ -52,5 +52,8 @@ public record GetProductsRequest(
     int PageNumber = 1,
     int PageSize = 20,
     // "definitionId:value" pairs, e.g. "3fa85f64-...:Cotton"
-    [Microsoft.AspNetCore.Mvc.FromQuery(Name = "propertyFilters")] List<string>? PropertyFilters = null
+    [Microsoft.AspNetCore.Mvc.FromQuery(Name = "propertyFilters")] List<string>? PropertyFilters = null,
+    // Hand-picked products, in the order the merchant arranged them. Used by
+    // storefront sections configured with a manual product selection.
+    [Microsoft.AspNetCore.Mvc.FromQuery(Name = "slugs")] List<string>? Slugs = null
 );

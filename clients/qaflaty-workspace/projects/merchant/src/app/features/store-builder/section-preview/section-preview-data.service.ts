@@ -9,10 +9,12 @@ import { StoreContextService } from '../../../core/services/store-context.servic
 /** Trimmed product shape the miniatures render — real store data, no extras. */
 export interface PreviewProduct {
   id: string;
+  slug: string;
   name: string;
   price: number;
   compareAtPrice?: number;
   imageUrl?: string;
+  categoryId?: string;
 }
 
 export interface PreviewCategory {
@@ -23,14 +25,14 @@ export interface PreviewCategory {
 
 /** Used when the store has nothing to show yet, so a card is never blank. */
 const DEMO_PRODUCTS: PreviewProduct[] = [
-  { id: 'demo-1', name: 'Classic cotton tee', price: 249, compareAtPrice: 349 },
-  { id: 'demo-2', name: 'Everyday backpack', price: 780 },
-  { id: 'demo-3', name: 'Leather card holder', price: 320, compareAtPrice: 400 },
-  { id: 'demo-4', name: 'Ceramic mug set', price: 190 },
-  { id: 'demo-5', name: 'Linen shirt', price: 560 },
-  { id: 'demo-6', name: 'Running socks (3 pack)', price: 130, compareAtPrice: 160 },
-  { id: 'demo-7', name: 'Desk lamp', price: 640 },
-  { id: 'demo-8', name: 'Canvas tote', price: 210 }
+  { id: 'demo-1', slug: 'demo-1', name: 'Classic cotton tee', price: 249, compareAtPrice: 349 },
+  { id: 'demo-2', slug: 'demo-2', name: 'Everyday backpack', price: 780 },
+  { id: 'demo-3', slug: 'demo-3', name: 'Leather card holder', price: 320, compareAtPrice: 400 },
+  { id: 'demo-4', slug: 'demo-4', name: 'Ceramic mug set', price: 190 },
+  { id: 'demo-5', slug: 'demo-5', name: 'Linen shirt', price: 560 },
+  { id: 'demo-6', slug: 'demo-6', name: 'Running socks (3 pack)', price: 130, compareAtPrice: 160 },
+  { id: 'demo-7', slug: 'demo-7', name: 'Desk lamp', price: 640 },
+  { id: 'demo-8', slug: 'demo-8', name: 'Canvas tote', price: 210 }
 ];
 
 const DEMO_CATEGORIES: PreviewCategory[] = [
@@ -54,8 +56,13 @@ export class SectionPreviewDataService {
   private categoryService = inject(CategoryService);
   private storeContext = inject(StoreContextService);
 
-  private static readonly PRODUCT_LIMIT = 12;
-  private static readonly CATEGORY_LIMIT = 8;
+  /**
+   * Fetched wider than a card shows, so a preview filtered to one category or
+   * to hand-picked products still has something real to draw. Still one
+   * request, shared by every card and canvas block.
+   */
+  private static readonly PRODUCT_LIMIT = 24;
+  private static readonly CATEGORY_LIMIT = 12;
 
   private readonly realProducts = signal<PreviewProduct[]>([]);
   private readonly realCategories = signal<PreviewCategory[]>([]);
@@ -108,10 +115,12 @@ export class SectionPreviewDataService {
   private toPreviewProducts(items: ProductDto[]): PreviewProduct[] {
     return items.slice(0, SectionPreviewDataService.PRODUCT_LIMIT).map(p => ({
       id: p.id,
+      slug: p.slug,
       name: p.name,
       price: p.price,
       compareAtPrice: p.compareAtPrice,
-      imageUrl: p.firstImageUrl || p.images?.[0]?.url
+      imageUrl: p.firstImageUrl || p.images?.[0]?.url,
+      categoryId: p.categoryId
     }));
   }
 

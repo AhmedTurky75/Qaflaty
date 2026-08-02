@@ -1,6 +1,8 @@
-import { Component, input, inject } from '@angular/core';
+import { Component, OnInit, input, inject, signal } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 import { I18nService } from '../../../services/i18n.service';
+import { SectionContentService } from '../../../services/section-content.service';
+import { Category } from '../../../models/category.model';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
@@ -26,19 +28,20 @@ import { RouterLink } from '@angular/router';
         }
 
         <!-- Category Icons Grid -->
-        @if (content?.categories && content.categories.length > 0) {
+        @if (categories().length > 0) {
           <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-6">
-            @for (category of content.categories; track category.id) {
+            @for (category of categories(); track category.id) {
               <a
-                [routerLink]="['/categories', category.slug]"
+                [routerLink]="['/products']"
+                [queryParams]="{ category: category.id }"
                 class="group flex flex-col items-center text-center"
               >
                 <!-- Circle Icon -->
                 <div class="relative mb-3 w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 shadow-md group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-110">
-                  @if (category.image) {
+                  @if (category.imageUrl) {
                     <img
-                      [src]="category.image.url"
-                      [alt]="i18n.getText(category.name)"
+                      [src]="category.imageUrl"
+                      [alt]="i18n.nameFor(category.name, category.nameAr)"
                       class="w-full h-full object-cover"
                     />
                   } @else {
@@ -55,7 +58,7 @@ import { RouterLink } from '@angular/router';
 
                 <!-- Category Name -->
                 <h3 class="text-sm font-semibold text-gray-800 group-hover:text-blue-600 transition-colors line-clamp-2">
-                  {{ i18n.getText(category.name) }}
+                  {{ i18n.nameFor(category.name, category.nameAr) }}
                 </h3>
 
                 <!-- Product Count (Optional) -->
@@ -81,9 +84,19 @@ import { RouterLink } from '@angular/router';
     </section>
   `
 })
-export class CatsIconsComponent {
+export class CatsIconsComponent implements OnInit {
   config = input.required<SectionConfigurationDto>();
   i18n = inject(I18nService);
+  private sectionContent = inject(SectionContentService);
+
+  categories = signal<Category[]>([]);
+
+  ngOnInit(): void {
+    this.sectionContent.categories(this.config(), 8).subscribe({
+      next: categories => this.categories.set(categories),
+      error: () => this.categories.set([])
+    });
+  }
 
   get content(): any {
     try {

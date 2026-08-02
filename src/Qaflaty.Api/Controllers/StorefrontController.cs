@@ -85,7 +85,8 @@ public class StorefrontController : ApiController
             MaxPrice: request.MaxPrice,
             PageNumber: request.PageNumber,
             PageSize: request.PageSize,
-            PropertyFilters: request.PropertyFilters);
+            PropertyFilters: request.PropertyFilters,
+            Slugs: request.Slugs);
 
         var result = await Sender.Send(query, ct);
         return HandleResult(result);
