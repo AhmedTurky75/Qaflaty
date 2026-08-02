@@ -1,7 +1,8 @@
-import { Component, ElementRef, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { StoreContextService } from '../../../core/services/store-context.service';
+import { HasUnsavedChanges } from '../../../core/guards/unsaved-changes.guard';
 import { BuilderService } from '../services/builder.service';
 import { SectionEditorComponent } from '../section-editor.component';
 import { PageConfigurationDto, SectionConfigurationDto, PageSeoSettings, UpdatePageConfigurationRequest, UpdateSectionsRequest, PageVariantDto } from 'shared';
@@ -16,7 +17,7 @@ type PreviewDevice = 'desktop' | 'tablet' | 'mobile';
   templateUrl: './page-sections.component.html',
   styleUrl: './page-sections.component.scss'
 })
-export class PageSectionsComponent implements OnInit, OnDestroy {
+export class PageSectionsComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private storeContext = inject(StoreContextService);
@@ -24,6 +25,7 @@ export class PageSectionsComponent implements OnInit, OnDestroy {
   private sanitizer = inject(DomSanitizer);
 
   @ViewChild('previewFrame') previewFrame?: ElementRef<HTMLIFrameElement>;
+  @ViewChild(SectionEditorComponent) editor?: SectionEditorComponent;
 
   loading = signal(true);
   saving = signal(false);
@@ -31,6 +33,9 @@ export class PageSectionsComponent implements OnInit, OnDestroy {
   loadErr = signal<string | null>(null);
   saveErr = signal<string | null>(null);
   page = signal<PageConfigurationDto | null>(null);
+
+  /** The canvas is the working surface now; this is the storefront cross-check. */
+  showStorefrontPreview = signal(false);
 
   device = signal<PreviewDevice>('desktop');
   previewUrl = signal<SafeResourceUrl | null>(null);
@@ -193,6 +198,7 @@ export class PageSectionsComponent implements OnInit, OnDestroy {
             this.saving.set(false);
             this.saved.set(true);
             this.page.set(updated);
+            this.editor?.markSaved();
             setTimeout(() => this.saved.set(false), 2500);
           },
           error: (err) => {
@@ -210,6 +216,16 @@ export class PageSectionsComponent implements OnInit, OnDestroy {
 
   onClose(): void {
     this.router.navigate(['/store-builder/pages']);
+  }
+
+  /** Used by the route guard, and mirrored for full page reloads / tab closes. */
+  hasUnsavedChanges(): boolean {
+    return this.editor?.hasUnsavedChanges() ?? false;
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.hasUnsavedChanges()) event.preventDefault();
   }
 
   // ── A/B testing ──

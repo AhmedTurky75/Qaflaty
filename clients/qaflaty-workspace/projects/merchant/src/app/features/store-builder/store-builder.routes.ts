@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { unsavedChangesGuard } from '../../core/guards/unsaved-changes.guard';
 
 export const STORE_BUILDER_ROUTES: Routes = [
   {
@@ -39,7 +40,8 @@ export const STORE_BUILDER_ROUTES: Routes = [
   },
   {
     path: 'pages/:pageId',
-    loadComponent: () => import('./pages/page-sections.component').then(m => m.PageSectionsComponent)
+    loadComponent: () => import('./pages/page-sections.component').then(m => m.PageSectionsComponent),
+    canDeactivate: [unsavedChangesGuard]
   },
   {
     path: 'faq',

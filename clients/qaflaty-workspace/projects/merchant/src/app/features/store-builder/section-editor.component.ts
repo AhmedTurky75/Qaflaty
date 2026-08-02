@@ -1,183 +1,135 @@
-import { Component, Input, Output, EventEmitter, signal, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal, computed, OnInit, inject, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { PageConfigurationDto, SectionConfigurationDto, PageSeoSettings } from 'shared';
 import { MediaService } from '../products/services/media.service';
 import { ProductService } from '../products/services/product.service';
 import { RichTextEditorComponent } from './rich-text-editor.component';
-
-interface SectionVariant {
-  id: string;
-  label: string;
-}
-
-interface SectionTypeInfo {
-  key: string;
-  label: string;
-  description: string;
-  defaultVariantId: string;
-}
-
-interface SectionPreset {
-  key: string;
-  label: string;
-  description: string;
-  sectionType: string;
-  variantId: string;
-  content?: unknown;
-  settings?: unknown;
-}
-
-interface PageTemplate {
-  key: string;
-  label: string;
-  description: string;
-  sections: Array<{ sectionType: string; variantId: string; content?: unknown; settings?: unknown }>;
-}
+import { SectionLibraryComponent } from './section-library/section-library.component';
+import { SectionCanvasComponent } from './section-canvas/section-canvas.component';
+import { BuilderDragStateService } from './section-canvas/builder-drag-state.service';
+import { SectionPreviewDataService } from './section-preview/section-preview-data.service';
+import {
+  PAGE_TEMPLATES, PageTemplate, SECTION_TYPES, SectionVariant,
+  createSectionInstance, sectionTypeLabel, variantsFor
+} from './section-preview/section-catalog';
 
 @Component({
   selector: 'app-section-editor',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, RichTextEditorComponent],
+  imports: [
+    CommonModule, FormsModule, DragDropModule, RichTextEditorComponent,
+    SectionLibraryComponent, SectionCanvasComponent
+  ],
   template: `
     <div class="bg-surface rounded-lg shadow">
       <!-- Header -->
-      <div class="px-6 py-4 border-b border-border">
-        <div class="flex items-center justify-between">
+      <div class="px-6 py-4 border-b border-border transition-opacity" [class.opacity-60]="dragState.dragging()">
+        <div class="flex items-center justify-between gap-3">
           <div>
             <h3 class="text-lg font-semibold text-text">
-              Edit Sections: {{ page?.title?.english }}
+              {{ page?.title?.english }}
             </h3>
             <p class="text-sm text-text-muted mt-1">
-              Configure the sections displayed on this page
+              Drag sections onto the page. Open one with the pencil only if you want to change its wording.
             </p>
           </div>
-          <button (click)="onClose()" class="text-text-muted hover:text-text-muted">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
-          </button>
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="showTemplateModal.set(true)"
+              class="rounded-md border border-border px-3 py-2 text-sm font-medium text-text hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40">
+              Start from a template
+            </button>
+            <button type="button" (click)="onClose()" class="p-1.5 text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-primary/40 rounded" aria-label="Close the page builder">
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Sections List -->
-      <div class="p-6 space-y-3 max-h-[560px] overflow-y-auto">
-        <div cdkDropList (cdkDropListDropped)="onDrop($event)" class="space-y-3">
-        @for (section of localSections; track section.id; let idx = $index) {
-          <div cdkDrag [cdkDragDisabled]="isExpanded(section.id)" class="border border-border rounded-lg overflow-hidden bg-surface">
-            <!-- Drag placeholder shown in the drop gap -->
-            <div class="h-16 bg-primary-tint border-2 border-dashed border-primary rounded-lg" *cdkDragPlaceholder></div>
-            <!-- Section Row Header -->
-            <div class="p-4 flex items-start gap-3 bg-surface">
-              <!-- Drag Handle -->
-              <button
-                type="button"
-                cdkDragHandle
-                class="pt-1 text-text-muted hover:text-text-muted cursor-move disabled:cursor-not-allowed disabled:opacity-30"
-                [disabled]="isExpanded(section.id)"
-                [title]="isExpanded(section.id) ? 'Collapse to reorder' : 'Drag to reorder'"
-              >
-                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M7 4a1 1 0 100 2 1 1 0 000-2zM7 9a1 1 0 100 2 1 1 0 000-2zM7 14a1 1 0 100 2 1 1 0 000-2zM13 4a1 1 0 100 2 1 1 0 000-2zM13 9a1 1 0 100 2 1 1 0 000-2zM13 14a1 1 0 100 2 1 1 0 000-2z"></path>
-                </svg>
-              </button>
+      <!-- Sections panel + page canvas, connected as one drop-list group -->
+      <div cdkDropListGroup class="relative flex gap-4 p-4">
+        @if (librarySheetOpen()) {
+          <button type="button" (click)="librarySheetOpen.set(false)" aria-label="Close the sections panel"
+            class="fixed inset-0 z-30 bg-black/40 lg:hidden"></button>
+        }
 
-              <!-- Section Details -->
-              <div class="flex-1 space-y-2">
-                <div class="flex items-center justify-between">
-                  <h4 class="text-sm font-semibold text-text">
-                    {{ getSectionTypeLabel(section.sectionType) }}
-                    <span class="ms-2 text-xs text-text-muted font-normal">#{{ section.sortOrder }}</span>
-                  </h4>
-                  <div class="flex items-center gap-3">
-                    <!-- Enabled Toggle -->
-                    <label class="flex items-center gap-1.5 cursor-pointer">
-                      <span class="text-xs font-medium text-text-muted">Enabled</span>
-                      <input
-                        type="checkbox"
-                        [(ngModel)]="section.isEnabled"
-                        (ngModelChange)="notifyChange()"
-                        class="h-4 w-4 text-primary rounded focus:ring-2 focus:ring-primary/40"
-                      />
-                    </label>
-                    <!-- Expand/Collapse -->
-                    <button
-                      (click)="toggleExpanded(section.id)"
-                      class="text-text-muted hover:text-primary transition-colors"
-                      [title]="isExpanded(section.id) ? 'Collapse' : 'Expand to edit content'"
-                    >
-                      <svg class="w-4 h-4 transition-transform" [class.rotate-180]="isExpanded(section.id)" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                      </svg>
-                    </button>
-                    <!-- Duplicate -->
-                    <button
-                      (click)="duplicateSection(idx)"
-                      class="text-text-muted hover:text-primary transition-colors"
-                      title="Duplicate section"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2"></path>
-                      </svg>
-                    </button>
-                    <!-- Delete -->
-                    <button
-                      (click)="deleteSection(idx)"
-                      class="text-danger hover:text-danger transition-colors"
-                      title="Delete section"
-                    >
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+        <aside
+          class="fixed inset-x-0 bottom-0 z-40 flex h-[70vh] flex-col rounded-t-2xl border border-border bg-surface shadow-2xl lg:static lg:z-auto lg:h-[620px] lg:w-[290px] lg:shrink-0 lg:rounded-xl lg:shadow-none"
+          [ngClass]="{ 'max-lg:hidden': !librarySheetOpen() }"
+        >
+          <div class="flex items-center justify-between border-b border-border px-4 py-2 lg:hidden">
+            <span class="text-sm font-semibold text-text">Sections</span>
+            <button type="button" (click)="librarySheetOpen.set(false)"
+              class="rounded p-1 text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40" aria-label="Close the sections panel">✕</button>
+          </div>
+          <div class="min-h-0 flex-1">
+            <app-section-library (add)="onLibraryAdd($event)" />
+          </div>
+        </aside>
 
-                <!-- Variant Selector -->
+        <div class="min-w-0 flex-1">
+          <button type="button" (click)="librarySheetOpen.set(true)"
+            class="mb-3 flex w-full items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border py-2.5 text-sm font-medium text-text-muted hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40 lg:hidden">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add a section
+          </button>
+
+          <div class="h-[620px]">
+            <app-section-canvas
+              [sections]="localSections()"
+              (sectionsChange)="onCanvasChange($event)"
+              (editSection)="openSettings($event)"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section settings. Optional by design: a section dropped and never opened
+         still saves and renders with its defaults plus your real store data. -->
+    @if (editingSection(); as section) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        (click)="closeSettings()" (document:keydown.escape)="closeSettings()">
+        <div class="flex max-h-[88vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl bg-surface shadow-xl"
+          role="dialog" aria-modal="true" [attr.aria-label]="'Settings for ' + typeLabel(section.sectionType)"
+          (click)="$event.stopPropagation()">
+
+          <div class="flex items-center justify-between border-b border-border px-5 py-4">
+            <div>
+              <h3 class="text-base font-semibold text-text">{{ typeLabel(section.sectionType) }}</h3>
+              <p class="mt-0.5 text-xs text-text-muted">Your changes show on the page straight away.</p>
+            </div>
+            <button type="button" (click)="closeSettings()"
+              class="rounded p-1.5 text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-primary/40" aria-label="Close section settings">
+              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+
+          <div class="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-4">
+            @if (variantsFor(section.sectionType).length > 1) {
+              <div>
+                <label class="mb-1 block text-xs font-medium text-text" [attr.for]="'variant-' + section.id">Layout</label>
                 <select
-                  [(ngModel)]="section.variantId"
-                  (ngModelChange)="notifyChange()"
-                  class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary/40 bg-surface"
+                  [id]="'variant-' + section.id"
+                  #variantSelect
+                  [value]="section.variantId"
+                  (change)="setVariant(section, variantSelect.value)"
+                  class="w-full rounded-md border border-border bg-surface px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
                 >
-                  @for (variant of getVariantsForSection(section.sectionType); track variant.id) {
+                  @for (variant of variantsFor(section.sectionType); track variant.id) {
                     <option [value]="variant.id">{{ variant.label }}</option>
                   }
                 </select>
               </div>
-            </div>
+            }
 
-            <!-- Expanded Content Form -->
-            @if (isExpanded(section.id)) {
-              <div class="px-4 pb-4 pt-2 border-t border-border bg-surface-elevated space-y-4">
-                <!-- Content / Design tabs -->
-                <div class="flex gap-4 border-b border-border">
-                  <button
-                    type="button"
-                    (click)="setTab(section.id, 'content')"
-                    class="pb-2 -mb-px text-sm font-medium border-b-2 transition-colors"
-                    [class.border-primary]="!isDesignTab(section.id)"
-                    [class.text-primary]="!isDesignTab(section.id)"
-                    [class.border-transparent]="isDesignTab(section.id)"
-                    [class.text-text-muted]="isDesignTab(section.id)"
-                  >Content</button>
-                  <button
-                    type="button"
-                    (click)="setTab(section.id, 'design')"
-                    class="pb-2 -mb-px text-sm font-medium border-b-2 transition-colors flex items-center gap-1"
-                    [class.border-primary]="isDesignTab(section.id)"
-                    [class.text-primary]="isDesignTab(section.id)"
-                    [class.border-transparent]="!isDesignTab(section.id)"
-                    [class.text-text-muted]="!isDesignTab(section.id)"
-                  >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path>
-                    </svg>
-                    Design
-                  </button>
-                </div>
-
-                @if (!isDesignTab(section.id)) {
                 @switch (section.sectionType) {
                   @case ('Hero') {
                     <div class="grid grid-cols-2 gap-3">
@@ -1565,214 +1517,29 @@ interface PageTemplate {
                     </div>
                   }
                   @default {
-                    <p class="text-xs text-text-muted py-2">No content fields available for this section type.</p>
+                    <p class="text-xs text-text-muted py-2">There is nothing to fill in here — this section builds itself from your store's own content.</p>
                   }
                 }
-                }
-
-                <!-- Design settings (applies SettingsJson on the storefront) -->
-                @if (isDesignTab(section.id)) {
-                  <div class="space-y-4">
-                    <div class="grid grid-cols-2 gap-3">
-                      <div>
-                        <label class="block text-xs font-medium text-text mb-1">Background Color</label>
-                        <div class="flex items-center gap-2">
-                          <input
-                            type="color"
-                            [value]="getSettings(section)?.backgroundColor || '#ffffff'"
-                            (input)="setSettingsField(section, 'backgroundColor', dBg.value)"
-                            #dBg
-                            class="h-8 w-10 rounded border border-border cursor-pointer p-0"
-                          />
-                          <input
-                            type="text"
-                            [value]="getSettings(section)?.backgroundColor || ''"
-                            (input)="setSettingsField(section, 'backgroundColor', dBgText.value)"
-                            #dBgText
-                            placeholder="#ffffff or var(--x)"
-                            class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
-                          />
-                          @if (getSettings(section)?.backgroundColor) {
-                            <button type="button" (click)="clearSettingsField(section, 'backgroundColor')" class="text-xs text-text-muted hover:text-danger" title="Clear">✕</button>
-                          }
-                        </div>
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-text mb-1">Text Color</label>
-                        <div class="flex items-center gap-2">
-                          <input
-                            type="color"
-                            [value]="getSettings(section)?.textColor || '#111827'"
-                            (input)="setSettingsField(section, 'textColor', dText.value)"
-                            #dText
-                            class="h-8 w-10 rounded border border-border cursor-pointer p-0"
-                          />
-                          <input
-                            type="text"
-                            [value]="getSettings(section)?.textColor || ''"
-                            (input)="setSettingsField(section, 'textColor', dTextText.value)"
-                            #dTextText
-                            placeholder="#111827"
-                            class="flex-1 text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
-                          />
-                          @if (getSettings(section)?.textColor) {
-                            <button type="button" (click)="clearSettingsField(section, 'textColor')" class="text-xs text-text-muted hover:text-danger" title="Clear">✕</button>
-                          }
-                        </div>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label class="block text-xs font-medium text-text mb-1">Background Image URL</label>
-                      <input
-                        type="text"
-                        [value]="getSettings(section)?.backgroundImageUrl || ''"
-                        (input)="setSettingsField(section, 'backgroundImageUrl', dBgImg.value)"
-                        #dBgImg
-                        placeholder="https://... (optional, sits behind content)"
-                        class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
-                      />
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                      <div>
-                        <label class="block text-xs font-medium text-text mb-1">Vertical Padding</label>
-                        <select
-                          [value]="getSettings(section)?.paddingY || ''"
-                          (change)="setSettingsField(section, 'paddingY', dPadY.value)"
-                          #dPadY
-                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
-                        >
-                          <option value="">Default</option>
-                          <option value="none">None</option>
-                          <option value="sm">Small</option>
-                          <option value="md">Medium</option>
-                          <option value="lg">Large</option>
-                          <option value="xl">Extra Large</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-text mb-1">Horizontal Padding</label>
-                        <select
-                          [value]="getSettings(section)?.paddingX || ''"
-                          (change)="setSettingsField(section, 'paddingX', dPadX.value)"
-                          #dPadX
-                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
-                        >
-                          <option value="">Default</option>
-                          <option value="none">None</option>
-                          <option value="sm">Small</option>
-                          <option value="md">Medium</option>
-                          <option value="lg">Large</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-text mb-1">Content Width</label>
-                        <select
-                          [value]="getSettings(section)?.maxWidth || ''"
-                          (change)="setSettingsField(section, 'maxWidth', dWidth.value)"
-                          #dWidth
-                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
-                        >
-                          <option value="">Default</option>
-                          <option value="full">Full Width</option>
-                          <option value="wide">Wide (max 80rem)</option>
-                          <option value="narrow">Narrow (max 48rem)</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-text mb-1">Corner Radius</label>
-                        <select
-                          [value]="getSettings(section)?.borderRadius || ''"
-                          (change)="setSettingsField(section, 'borderRadius', dRadius.value)"
-                          #dRadius
-                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
-                        >
-                          <option value="">Default</option>
-                          <option value="none">None</option>
-                          <option value="sm">Small</option>
-                          <option value="md">Medium</option>
-                          <option value="lg">Large</option>
-                          <option value="2xl">Extra Large</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                      <div>
-                        <label class="block text-xs font-medium text-text mb-1">
-                          Device Visibility
-                          <span class="ms-1 inline-flex items-center px-1 py-0.5 rounded text-xs font-medium bg-success/10 text-success" title="Uses CSS media queries so content stays crawlable">SEO</span>
-                        </label>
-                        <select
-                          [value]="getSettings(section)?.visibility || 'all'"
-                          (change)="setSettingsField(section, 'visibility', dVis.value)"
-                          #dVis
-                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
-                        >
-                          <option value="all">All Devices</option>
-                          <option value="desktop">Desktop Only</option>
-                          <option value="mobile">Mobile Only</option>
-                        </select>
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-text mb-1">Anchor ID</label>
-                        <input
-                          type="text"
-                          [value]="getSettings(section)?.anchorId || ''"
-                          (input)="setSettingsField(section, 'anchorId', dAnchor.value)"
-                          #dAnchor
-                          placeholder="e.g. order-form (for #links)"
-                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40"
-                        />
-                      </div>
-                      <div>
-                        <label class="block text-xs font-medium text-text mb-1">Scroll Animation</label>
-                        <select
-                          [value]="getSettings(section)?.animation || 'none'"
-                          (change)="setSettingsField(section, 'animation', dAnim.value)"
-                          #dAnim
-                          class="w-full text-sm px-2 py-1.5 border border-border rounded-md focus:outline-none focus:ring-1 focus:ring-primary/40 bg-surface"
-                        >
-                          <option value="none">None</option>
-                          <option value="fade">Fade in</option>
-                          <option value="slide-up">Slide up</option>
-                          <option value="slide-left">Slide in</option>
-                          <option value="zoom">Zoom in</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                }
-              </div>
-            }
           </div>
-        } @empty {
-          <div class="bg-surface-elevated rounded-lg p-8 text-center">
-            <p class="text-text-muted mb-4">No sections yet. Add your first section below.</p>
+
+          <div class="flex items-center justify-end gap-2 border-t border-border px-5 py-3">
+            <button type="button" (click)="closeSettings()"
+              class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40">
+              Done
+            </button>
           </div>
-        }
         </div>
-
-        <!-- Add Section Button -->
-        <button
-          (click)="showAddModal.set(true)"
-          class="w-full py-3 border-2 border-dashed border-border rounded-lg text-sm font-medium text-text-muted hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          Add Section
-        </button>
       </div>
+    }
 
-      <!-- Page SEO Settings -->
-      <div class="px-6 py-5 border-t border-border bg-surface-elevated">
+    <div class="bg-surface rounded-lg shadow mt-4 transition-opacity" [class.opacity-60]="dragState.dragging()">
+      <!-- How this page looks in search results -->
+      <div class="px-6 py-5 bg-surface-elevated rounded-t-lg">
         <h4 class="text-sm font-semibold text-text mb-4 flex items-center gap-2">
           <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
           </svg>
-          Page SEO Settings
+          How this page appears in search results
         </h4>
         <div class="grid grid-cols-2 gap-3">
           <div>
@@ -1876,74 +1643,50 @@ interface PageTemplate {
         </div>
         <div class="flex items-center gap-3">
           <button
+            type="button"
             (click)="onClose()"
             class="px-4 py-2 bg-surface-elevated text-text rounded-md hover:bg-surface-elevated focus:outline-none focus:ring-2 focus:ring-border"
           >
-            Cancel
+            Discard and go back
           </button>
           <button
+            type="button"
             (click)="onSave()"
             class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
-            Save Changes
+            Save changes
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Add Section Modal -->
-    @if (showAddModal()) {
-      <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <div class="bg-surface rounded-lg p-6 max-w-2xl w-full mx-4 shadow-xl max-h-[85vh] overflow-y-auto">
-          <h3 class="text-base font-semibold text-text mb-4">Add New Section</h3>
+    <!-- Page templates: a whole starting layout in one click -->
+    @if (showTemplateModal()) {
+      <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+        (click)="showTemplateModal.set(false)" (document:keydown.escape)="showTemplateModal.set(false)">
+        <div class="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-surface p-6 shadow-xl"
+          role="dialog" aria-modal="true" aria-label="Start from a template" (click)="$event.stopPropagation()">
+          <h3 class="text-base font-semibold text-text">Start from a template</h3>
+          <p class="mb-4 mt-1 text-xs text-text-muted">
+            A template replaces everything currently on the page. Nothing is saved until you choose Save changes.
+          </p>
 
-          <!-- Blank section types -->
-          <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mb-2">Section Types</p>
-          <div class="grid grid-cols-3 gap-3">
-            @for (type of sectionTypes; track type.key) {
-              <button
-                (click)="addSection(type.key)"
-                class="p-3 border-2 border-border rounded-lg text-start hover:border-primary hover:bg-primary-tint transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
-              >
-                <div class="text-sm font-medium text-text">{{ type.label }}</div>
-                <div class="text-xs text-text-muted mt-0.5">{{ type.description }}</div>
-              </button>
-            }
-          </div>
-
-          <!-- Pre-filled section presets -->
-          <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mt-6 mb-2">Presets (pre-filled)</p>
-          <div class="grid grid-cols-3 gap-3">
-            @for (preset of sectionPresets; track preset.key) {
-              <button
-                (click)="addPreset(preset)"
-                class="p-3 border-2 border-border rounded-lg text-start hover:border-success hover:bg-success/10 transition-colors focus:outline-none focus:ring-2 focus:ring-success/40"
-              >
-                <div class="text-sm font-medium text-text">{{ preset.label }}</div>
-                <div class="text-xs text-text-muted mt-0.5">{{ preset.description }}</div>
-              </button>
-            }
-          </div>
-
-          <!-- Full-page templates -->
-          <p class="text-xs font-semibold text-text-muted uppercase tracking-wide mt-6 mb-2">Page Templates (replace all)</p>
-          <div class="grid grid-cols-2 gap-3">
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             @for (tpl of pageTemplates; track tpl.key) {
               <button
+                type="button"
                 (click)="applyPageTemplate(tpl)"
-                class="p-3 border-2 border-border rounded-lg text-start hover:border-primary hover:bg-primary-tint transition-colors focus:outline-none focus:ring-2 focus:ring-primary/40"
+                class="rounded-lg border-2 border-border p-3 text-start transition-colors hover:border-primary hover:bg-primary-tint focus:outline-none focus:ring-2 focus:ring-primary/40"
               >
                 <div class="text-sm font-medium text-text">{{ tpl.label }}</div>
-                <div class="text-xs text-text-muted mt-0.5">{{ tpl.description }}</div>
+                <div class="mt-0.5 text-xs text-text-muted">{{ tpl.description }}</div>
               </button>
             }
           </div>
 
           <div class="mt-6 flex justify-end">
-            <button
-              (click)="showAddModal.set(false)"
-              class="px-4 py-2 text-sm bg-surface-elevated text-text rounded-md hover:bg-surface-elevated"
-            >
+            <button type="button" (click)="showTemplateModal.set(false)"
+              class="rounded-md bg-surface-elevated px-4 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-primary/40">
               Cancel
             </button>
           </div>
@@ -1959,7 +1702,12 @@ export class SectionEditorComponent implements OnInit {
   /** Emits the current (unsaved) section list on every edit, to drive the live preview. */
   @Output() sectionsChange = new EventEmitter<SectionConfigurationDto[]>();
 
-  localSections: SectionConfigurationDto[] = [];
+  /**
+   * The working section list. Held as a signal, and every edit swaps in a new
+   * array (and a new object for the section that changed) so the canvas
+   * miniatures repaint the moment something changes.
+   */
+  localSections = signal<SectionConfigurationDto[]>([]);
   localSeoSettings: PageSeoSettings = {
     metaTitle: { arabic: '', english: '' },
     metaDescription: { arabic: '', english: '' },
@@ -1968,15 +1716,27 @@ export class SectionEditorComponent implements OnInit {
     noFollow: false
   };
 
-  expandedSectionIds = signal<Set<string>>(new Set());
-  designTabSectionIds = signal<Set<string>>(new Set());
-  showAddModal = signal(false);
+  showTemplateModal = signal(false);
+  librarySheetOpen = signal(false);
   uploadingField = signal<string | null>(null);
   importErr = signal<string | null>(null);
   videoUploadError = signal<string | null>(null);
 
+  /** Id of the section whose settings modal is open, if any. */
+  private editingSectionId = signal<string | null>(null);
+  editingSection = computed<SectionConfigurationDto | null>(() => {
+    const id = this.editingSectionId();
+    return id === null ? null : this.localSections().find(s => s.id === id) ?? null;
+  });
+
+  private canvas = viewChild(SectionCanvasComponent);
+
+  readonly dragState = inject(BuilderDragStateService);
+  readonly pageTemplates = PAGE_TEMPLATES;
+
   private mediaService = inject(MediaService);
   private productService = inject(ProductService);
+  private previewData = inject(SectionPreviewDataService);
 
   /** Products for the product-bound section pickers (Order Form / Bundle / Sticky Bar). */
   productOptions = signal<{ slug: string; name: string }[]>([]);
@@ -2036,225 +1796,35 @@ export class SectionEditorComponent implements OnInit {
     return cur.row >= rowLo && cur.row <= rowHi && cur.col >= colLo && cur.col <= colHi;
   }
 
-  readonly sectionTypes: SectionTypeInfo[] = [
-    { key: 'Hero', label: 'Hero Banner', description: 'Top hero section', defaultVariantId: 'hero-full-image' },
-    { key: 'FeaturedProducts', label: 'Featured Products', description: 'Product grid', defaultVariantId: 'grid-standard' },
-    { key: 'CategoryShowcase', label: 'Categories', description: 'Category display', defaultVariantId: 'cats-grid' },
-    { key: 'FeatureHighlights', label: 'Features', description: 'Key features', defaultVariantId: 'feat-icons' },
-    { key: 'Newsletter', label: 'Newsletter', description: 'Email signup', defaultVariantId: 'news-inline' },
-    { key: 'Banner', label: 'Banner', description: 'Promo banner', defaultVariantId: 'banner-strip' },
-    { key: 'ProductCarousel', label: 'Carousel', description: 'Scrolling products', defaultVariantId: 'carousel-standard' },
-    { key: 'Testimonials', label: 'Testimonials', description: 'Customer reviews', defaultVariantId: 'test-cards' },
-    { key: 'CustomHtml', label: 'Custom HTML', description: 'Raw HTML block', defaultVariantId: 'custom-html' },
-    { key: 'MediaText', label: 'Media + Text', description: 'Alternating image/text rows', defaultVariantId: 'media-text-standard' },
-    { key: 'Benefits', label: 'Benefits', description: 'Icon + text value props', defaultVariantId: 'benefits-standard' },
-    { key: 'ReviewsShowcase', label: 'Reviews', description: 'Product reviews (product pages)', defaultVariantId: 'reviews-standard' },
-    { key: 'Faq', label: 'FAQ', description: 'Question & answer accordion', defaultVariantId: 'faq-accordion' },
-    { key: 'Guarantee', label: 'Guarantee', description: 'Trust / guarantee banner', defaultVariantId: 'guarantee-standard' },
-    { key: 'CallToAction', label: 'Call to Action', description: 'Closing CTA band', defaultVariantId: 'cta-band' },
-    { key: 'Slider', label: 'Image Slider', description: 'Rotating image slides', defaultVariantId: 'slider-standard' },
-    { key: 'Video', label: 'Video', description: 'YouTube / video embed', defaultVariantId: 'video-youtube' },
-    { key: 'AnnouncementBar', label: 'Announcement Bar', description: 'Top promo strip', defaultVariantId: 'announcement-bar' },
-    { key: 'Countdown', label: 'Countdown Timer', description: 'Urgency timer', defaultVariantId: 'countdown-standard' },
-    { key: 'RichText', label: 'Rich Text', description: 'Formatted HTML block', defaultVariantId: 'rich-text' },
-    { key: 'CtaButton', label: 'CTA Button', description: 'Standalone / WhatsApp button', defaultVariantId: 'cta-button' },
-    { key: 'Stats', label: 'Stats / Counters', description: 'Animated numbers', defaultVariantId: 'stats-standard' },
-    { key: 'Comparison', label: 'Comparison Table', description: 'Us vs. others', defaultVariantId: 'comparison-standard' },
-    { key: 'BeforeAfter', label: 'Before / After', description: 'Image comparison slider', defaultVariantId: 'before-after-standard' },
-    { key: 'Image', label: 'Image', description: 'Full-width image block', defaultVariantId: 'image-standard' },
-    { key: 'Specs', label: 'Specs Table', description: 'Grouped specification rows', defaultVariantId: 'specs-standard' },
-    { key: 'Marquee', label: 'Marquee', description: 'Scrolling running-text bar', defaultVariantId: 'marquee-standard' },
-    { key: 'OrderForm', label: 'Order Form', description: 'Inline buy box for a product', defaultVariantId: 'order-form' },
-    { key: 'StickyBar', label: 'Sticky Buy Bar', description: 'Mobile bottom buy bar', defaultVariantId: 'sticky-bar' },
-    { key: 'Bundle', label: 'Bundle Offers', description: 'Quantity offer tiers', defaultVariantId: 'bundle-tiers' },
-  ];
-
-  private readonly sectionVariants: Record<string, SectionVariant[]> = {
-    Hero: [
-      { id: 'hero-full-image', label: 'Full Width Image' },
-      { id: 'hero-split', label: 'Split Content' },
-      { id: 'hero-slider', label: 'Slider' },
-      { id: 'hero-minimal', label: 'Minimal' }
-    ],
-    FeaturedProducts: [
-      { id: 'grid-standard', label: 'Standard Grid' },
-      { id: 'grid-large', label: 'Large Grid' },
-      { id: 'grid-list', label: 'List View' },
-      { id: 'grid-compact', label: 'Compact Grid' }
-    ],
-    CategoryShowcase: [
-      { id: 'cats-grid', label: 'Category Grid' },
-      { id: 'cats-slider', label: 'Category Slider' },
-      { id: 'cats-icons', label: 'Category Icons' }
-    ],
-    FeatureHighlights: [
-      { id: 'feat-icons', label: 'Icons Layout' },
-      { id: 'feat-cards', label: 'Cards Layout' }
-    ],
-    Newsletter: [
-      { id: 'news-inline', label: 'Inline Form' },
-      { id: 'news-card', label: 'Card Form' }
-    ],
-    Banner: [
-      { id: 'banner-strip', label: 'Banner Strip' },
-      { id: 'banner-card', label: 'Banner Card' }
-    ],
-    ProductCarousel: [
-      { id: 'carousel-standard', label: 'Standard Carousel' }
-    ],
-    Testimonials: [
-      { id: 'test-cards', label: 'Cards' },
-      { id: 'test-slider', label: 'Slider' }
-    ],
-    CustomHtml: [
-      { id: 'custom-html', label: 'Custom HTML Block' }
-    ],
-    MediaText: [
-      { id: 'media-text-standard', label: 'Standard' }
-    ],
-    Benefits: [
-      { id: 'benefits-standard', label: 'Standard' },
-      { id: 'benefits-strip', label: 'Trust Badge Strip' }
-    ],
-    Slider: [
-      { id: 'slider-standard', label: 'Standard' }
-    ],
-    Video: [
-      { id: 'video-youtube', label: 'YouTube' }
-    ],
-    AnnouncementBar: [
-      { id: 'announcement-bar', label: 'Standard' }
-    ],
-    Countdown: [
-      { id: 'countdown-standard', label: 'Standard' }
-    ],
-    RichText: [
-      { id: 'rich-text', label: 'Standard' }
-    ],
-    CtaButton: [
-      { id: 'cta-button', label: 'Standard' }
-    ],
-    Stats: [
-      { id: 'stats-standard', label: 'Standard' }
-    ],
-    Comparison: [
-      { id: 'comparison-standard', label: 'Standard' }
-    ],
-    BeforeAfter: [
-      { id: 'before-after-standard', label: 'Standard' }
-    ],
-    Image: [
-      { id: 'image-standard', label: 'Standard' }
-    ],
-    Specs: [
-      { id: 'specs-standard', label: 'Standard' }
-    ],
-    Marquee: [
-      { id: 'marquee-standard', label: 'Standard' }
-    ],
-    OrderForm: [
-      { id: 'order-form', label: 'Standard' }
-    ],
-    StickyBar: [
-      { id: 'sticky-bar', label: 'Standard' }
-    ],
-    Bundle: [
-      { id: 'bundle-tiers', label: 'Quantity Tiers' }
-    ],
-    ReviewsShowcase: [
-      { id: 'reviews-standard', label: 'Standard' }
-    ],
-    Faq: [
-      { id: 'faq-accordion', label: 'Accordion' }
-    ],
-    Guarantee: [
-      { id: 'guarantee-standard', label: 'Standard' }
-    ],
-    CallToAction: [
-      { id: 'cta-band', label: 'Band' }
-    ]
-  };
-
-  // ── Presets: single, pre-filled sections merchants can drop in ──
-  readonly sectionPresets: SectionPreset[] = [
-    {
-      key: 'preset-hero', label: 'Hero (image)', description: 'Headline + CTA over an image',
-      sectionType: 'Hero', variantId: 'hero-full-image',
-      content: { title: { en: 'Welcome to our store', ar: 'مرحبًا بكم في متجرنا' }, subtitle: { en: 'Quality products, delivered fast', ar: 'منتجات عالية الجودة، توصيل سريع' }, buttonText: 'Shop Now', buttonLink: '/products' }
-    },
-    {
-      key: 'preset-benefits', label: 'Benefits (3)', description: 'Three value-prop icons',
-      sectionType: 'Benefits', variantId: 'benefits-standard',
-      content: { title: { en: "Why You'll Love It", ar: 'لماذا ستحبه' }, items: [
-        { icon: '🚚', title: { en: 'Fast Delivery', ar: 'توصيل سريع' }, text: { en: 'Get it in days, not weeks', ar: 'استلمه خلال أيام' } },
-        { icon: '🛡️', title: { en: 'Secure Checkout', ar: 'دفع آمن' }, text: { en: 'Your data is protected', ar: 'بياناتك محمية' } },
-        { icon: '↩️', title: { en: 'Easy Returns', ar: 'إرجاع سهل' }, text: { en: 'Hassle-free returns', ar: 'إرجاع بدون متاعب' } }
-      ] }
-    },
-    {
-      key: 'preset-faq', label: 'FAQ starter', description: 'Two starter questions',
-      sectionType: 'Faq', variantId: 'faq-accordion',
-      content: { title: { en: 'Frequently Asked Questions', ar: 'الأسئلة الشائعة' }, items: [
-        { question: { en: 'How long does delivery take?', ar: 'كم يستغرق التوصيل؟' }, answer: { en: 'Typically 2–5 business days.', ar: 'عادةً من 2 إلى 5 أيام عمل.' } },
-        { question: { en: 'Can I return an item?', ar: 'هل يمكنني إرجاع المنتج؟' }, answer: { en: 'Yes, within 14 days of delivery.', ar: 'نعم، خلال 14 يومًا من الاستلام.' } }
-      ] }
-    },
-    {
-      key: 'preset-cta', label: 'CTA band', description: 'Closing call-to-action',
-      sectionType: 'CallToAction', variantId: 'cta-band',
-      content: { title: { en: 'Ready to get yours?', ar: 'هل أنت مستعد للحصول عليه؟' }, subtitle: { en: 'Order now while stock lasts', ar: 'اطلب الآن قبل نفاد الكمية' }, buttonText: { en: 'Shop Now', ar: 'تسوق الآن' } }
-    },
-    {
-      key: 'preset-announcement', label: 'Announcement', description: 'Dismissible promo strip',
-      sectionType: 'AnnouncementBar', variantId: 'announcement-bar',
-      content: { text: { en: 'Free shipping on orders over 500!', ar: 'شحن مجاني للطلبات فوق 500!' }, link: '/products', bg: '#111827', textColor: '#ffffff', dismissible: true }
-    },
-    {
-      key: 'preset-countdown', label: 'Countdown offer', description: 'Urgency timer',
-      sectionType: 'Countdown', variantId: 'countdown-standard',
-      content: { title: { en: 'Hurry, offer ends in', ar: 'أسرع، ينتهي العرض خلال' }, expiredBehavior: 'message', expiredText: { en: 'Offer ended', ar: 'انتهى العرض' } }
-    }
-  ];
-
-  // ── Full-page templates: replace the whole section list ──
-  readonly pageTemplates: PageTemplate[] = [
-    {
-      key: 'tpl-landing', label: 'Product Landing — Conversion', description: 'Announcement, hero, benefits, countdown, reviews, FAQ, guarantee, CTA',
-      sections: [
-        { sectionType: 'AnnouncementBar', variantId: 'announcement-bar', content: { text: { en: 'Limited time offer!', ar: 'عرض لفترة محدودة!' }, bg: '#111827', textColor: '#ffffff', dismissible: true } },
-        { sectionType: 'Hero', variantId: 'hero-full-image', content: { title: { en: 'The product you need', ar: 'المنتج الذي تحتاجه' }, subtitle: { en: 'Trusted by thousands', ar: 'موثوق من الآلاف' }, buttonText: 'Buy Now', buttonLink: '/products' } },
-        { sectionType: 'Benefits', variantId: 'benefits-standard', content: { items: [
-          { icon: '⭐', title: { en: 'Top Rated', ar: 'الأعلى تقييمًا' }, text: { en: 'Loved by customers', ar: 'محبوب من العملاء' } },
-          { icon: '🚚', title: { en: 'Fast Delivery', ar: 'توصيل سريع' }, text: { en: 'Delivered in days', ar: 'يصل خلال أيام' } },
-          { icon: '🛡️', title: { en: 'Guaranteed', ar: 'مضمون' }, text: { en: 'Money-back promise', ar: 'ضمان استرداد الأموال' } }
-        ] } },
-        { sectionType: 'Countdown', variantId: 'countdown-standard', content: { title: { en: 'Offer ends in', ar: 'ينتهي العرض خلال' }, expiredBehavior: 'message', expiredText: { en: 'Offer ended', ar: 'انتهى العرض' } } },
-        { sectionType: 'ReviewsShowcase', variantId: 'reviews-standard', content: { title: { en: 'What Customers Say', ar: 'ماذا يقول العملاء' } } },
-        { sectionType: 'Faq', variantId: 'faq-accordion', content: { title: { en: 'Frequently Asked Questions', ar: 'الأسئلة الشائعة' }, items: [] } },
-        { sectionType: 'Guarantee', variantId: 'guarantee-standard', content: { icon: '🛡️', title: { en: 'Satisfaction Guaranteed', ar: 'رضا مضمون' }, text: { en: 'Or your money back', ar: 'أو استرداد أموالك' } } },
-        { sectionType: 'CallToAction', variantId: 'cta-band', content: { title: { en: 'Ready to order?', ar: 'مستعد للطلب؟' }, buttonText: { en: 'Buy Now', ar: 'اشترِ الآن' } } }
-      ]
-    },
-    {
-      key: 'tpl-home', label: 'Simple Store Home', description: 'Hero, featured products, categories, newsletter',
-      sections: [
-        { sectionType: 'Hero', variantId: 'hero-full-image', content: { title: { en: 'Welcome', ar: 'مرحبًا' }, subtitle: { en: 'Discover our collection', ar: 'اكتشف مجموعتنا' }, buttonText: 'Shop Now', buttonLink: '/products' } },
-        { sectionType: 'FeaturedProducts', variantId: 'grid-standard', content: { title: { en: 'Featured Products', ar: 'منتجات مميزة' } } },
-        { sectionType: 'CategoryShowcase', variantId: 'cats-grid', content: { title: { en: 'Shop by Category', ar: 'تسوق حسب الفئة' } } },
-        { sectionType: 'Newsletter', variantId: 'news-inline', content: { title: { en: 'Stay in the loop', ar: 'ابقَ على اطلاع' }, buttonText: 'Subscribe' } }
-      ]
-    }
-  ];
-
   ngOnInit(): void {
     if (this.page?.sections) {
-      this.localSections = JSON.parse(JSON.stringify(this.page.sections));
-      this.localSections.sort((a, b) => a.sortOrder - b.sortOrder);
+      const sections: SectionConfigurationDto[] = JSON.parse(JSON.stringify(this.page.sections));
+      sections.sort((a, b) => a.sortOrder - b.sortOrder);
+      this.localSections.set(sections);
     }
     if (this.page?.seoSettings) {
       this.localSeoSettings = JSON.parse(JSON.stringify(this.page.seoSettings));
     }
     this.loadProductOptions();
+    this.previewData.load(this.page?.storeId);
+    this.baseline = this.snapshot();
+  }
+
+  /** Serialized state as last loaded or saved, for the unsaved-changes guard. */
+  private baseline = '';
+
+  private snapshot(): string {
+    return JSON.stringify({ sections: this.localSections(), seo: this.localSeoSettings });
+  }
+
+  /** True when the page differs from what was last loaded or saved. */
+  hasUnsavedChanges(): boolean {
+    return this.snapshot() !== this.baseline;
+  }
+
+  /** Called by the host once a save round-trip has succeeded. */
+  markSaved(): void {
+    this.baseline = this.snapshot();
   }
 
   private loadProductOptions(): void {
@@ -2268,105 +1838,75 @@ export class SectionEditorComponent implements OnInit {
 
   /** Notify listeners (live preview) that the working section list changed. */
   notifyChange(): void {
-    this.sectionsChange.emit([...this.localSections]);
+    this.sectionsChange.emit([...this.localSections()]);
   }
 
-  getSectionTypeLabel(sectionType: string): string {
-    return this.sectionTypes.find(t => t.key === sectionType)?.label ?? sectionType;
+  typeLabel(sectionType: string): string {
+    return sectionTypeLabel(sectionType);
   }
 
-  getVariantsForSection(sectionType: string): SectionVariant[] {
-    return this.sectionVariants[sectionType] ?? [{ id: sectionType.toLowerCase(), label: 'Standard' }];
+  variantsFor(sectionType: string): SectionVariant[] {
+    return variantsFor(sectionType);
   }
 
-  toggleExpanded(sectionId: string): void {
-    const set = new Set(this.expandedSectionIds());
-    if (set.has(sectionId)) {
-      set.delete(sectionId);
-    } else {
-      set.add(sectionId);
-    }
-    this.expandedSectionIds.set(set);
-  }
+  // ── Canvas & library plumbing ──────────────────────────────────────────
 
-  isExpanded(sectionId: string): boolean {
-    return this.expandedSectionIds().has(sectionId);
-  }
-
-  setTab(sectionId: string, tab: 'content' | 'design'): void {
-    const set = new Set(this.designTabSectionIds());
-    if (tab === 'design') {
-      set.add(sectionId);
-    } else {
-      set.delete(sectionId);
-    }
-    this.designTabSectionIds.set(set);
-  }
-
-  isDesignTab(sectionId: string): boolean {
-    return this.designTabSectionIds().has(sectionId);
-  }
-
-  onDrop(event: CdkDragDrop<SectionConfigurationDto[]>): void {
-    if (event.previousIndex === event.currentIndex) return;
-    moveItemInArray(this.localSections, event.previousIndex, event.currentIndex);
-    this.updateSortOrders();
+  /** The canvas owns ordering and per-section actions; it hands the list back. */
+  onCanvasChange(sections: SectionConfigurationDto[]): void {
+    this.localSections.set(sections);
     this.notifyChange();
   }
 
-  duplicateSection(index: number): void {
-    const source = this.localSections[index];
-    if (!source) return;
-    // Deep clone with a fresh temporary id; the backend re-creates all sections
-    // with server-generated ids on save, so this persists as a new row.
-    const clone: SectionConfigurationDto = {
-      ...JSON.parse(JSON.stringify(source)),
-      id: crypto.randomUUID()
-    };
-    this.localSections.splice(index + 1, 0, clone);
-    this.localSections = [...this.localSections];
-    this.updateSortOrders();
+  /** Keyboard / click path from the library — appends to the end of the page. */
+  onLibraryAdd(typeKey: string): void {
+    this.canvas()?.addSection(typeKey);
+    this.librarySheetOpen.set(false);
+  }
+
+  openSettings(section: SectionConfigurationDto): void {
+    this.editingSectionId.set(section.id);
+  }
+
+  closeSettings(): void {
+    this.editingSectionId.set(null);
+  }
+
+  setVariant(section: SectionConfigurationDto, variantId: string): void {
+    this.patchSection(section, { variantId });
+  }
+
+  /**
+   * Swaps in a new object for the edited section, keeping every property the
+   * builder does not touch — including the layout settings that used to live in
+   * the Design tab — exactly as they were loaded.
+   */
+  private patchSection(target: SectionConfigurationDto, patch: Partial<SectionConfigurationDto>): void {
+    this.localSections.set(
+      this.localSections().map(s => s.id === target.id ? { ...s, ...patch } : s)
+    );
     this.notifyChange();
   }
 
-  private updateSortOrders(): void {
-    this.localSections.forEach((section, index) => {
-      section.sortOrder = index + 1;
-    });
-  }
-
-  // ── Presets & templates (Phase E) ──
-
-  addPreset(preset: SectionPreset): void {
-    const newSection: SectionConfigurationDto = {
-      id: crypto.randomUUID(),
-      sectionType: preset.sectionType,
-      variantId: preset.variantId,
-      isEnabled: true,
-      sortOrder: this.localSections.length + 1,
-      contentJson: preset.content !== undefined ? JSON.stringify(preset.content) : undefined,
-      settingsJson: preset.settings !== undefined ? JSON.stringify(preset.settings) : undefined
-    };
-    this.localSections = [...this.localSections, newSection];
-    this.showAddModal.set(false);
-    this.notifyChange();
-  }
+  // ── Page templates ─────────────────────────────────────────────────────
 
   applyPageTemplate(tpl: PageTemplate): void {
-    if (this.localSections.length > 0 &&
-        !confirm(`Replace all ${this.localSections.length} current section(s) with the "${tpl.label}" template? This is not saved until you click Save Changes.`)) {
+    const current = this.localSections();
+    if (current.length > 0 &&
+        !confirm(`Replace the ${current.length} section(s) on this page with "${tpl.label}"? Nothing is saved until you choose Save changes.`)) {
       return;
     }
-    this.localSections = tpl.sections.map((s, i) => ({
-      id: crypto.randomUUID(),
-      sectionType: s.sectionType,
-      variantId: s.variantId,
-      isEnabled: true,
-      sortOrder: i + 1,
-      contentJson: s.content !== undefined ? JSON.stringify(s.content) : undefined,
-      settingsJson: s.settings !== undefined ? JSON.stringify(s.settings) : undefined
-    }));
-    this.showAddModal.set(false);
+
+    const sections = tpl.sections
+      .map(s => createSectionInstance(s.sectionType, {
+        variantId: s.variantId,
+        content: s.content,
+        settings: s.settings
+      }))
+      .filter((s): s is SectionConfigurationDto => s !== null);
+
+    sections.forEach((section, index) => { section.sortOrder = index + 1; });
+    this.localSections.set(sections);
+    this.showTemplateModal.set(false);
     this.notifyChange();
   }
 
@@ -2376,7 +1916,7 @@ export class SectionEditorComponent implements OnInit {
     const payload = {
       version: 1,
       exportedAt: new Date().toISOString(),
-      sections: this.localSections.map(({ sectionType, variantId, isEnabled, sortOrder, contentJson, settingsJson }) =>
+      sections: this.localSections().map(({ sectionType, variantId, isEnabled, sortOrder, contentJson, settingsJson }) =>
         ({ sectionType, variantId, isEnabled, sortOrder, contentJson, settingsJson })),
       seoSettings: this.localSeoSettings
     };
@@ -2420,7 +1960,7 @@ export class SectionEditorComponent implements OnInit {
       return;
     }
 
-    const validTypes = new Set(this.sectionTypes.map(t => t.key));
+    const validTypes = new Set(SECTION_TYPES.map(t => t.key));
     const imported: SectionConfigurationDto[] = [];
     for (const s of rawSections) {
       if (!s || typeof s.sectionType !== 'string' || typeof s.variantId !== 'string') {
@@ -2442,8 +1982,8 @@ export class SectionEditorComponent implements OnInit {
       });
     }
 
-    this.localSections = imported;
-    this.updateSortOrders();
+    imported.forEach((section, index) => { section.sortOrder = index + 1; });
+    this.localSections.set(imported);
 
     // Optional SEO settings block.
     const seo = parsed?.seoSettings;
@@ -2460,32 +2000,20 @@ export class SectionEditorComponent implements OnInit {
     this.notifyChange();
   }
 
-  addSection(sectionTypeKey: string): void {
-    const typeInfo = this.sectionTypes.find(t => t.key === sectionTypeKey);
-    if (!typeInfo) return;
-    const newSection: SectionConfigurationDto = {
-      id: crypto.randomUUID(),
-      sectionType: sectionTypeKey,
-      variantId: typeInfo.defaultVariantId,
-      isEnabled: true,
-      sortOrder: this.localSections.length + 1,
-      contentJson: undefined,
-      settingsJson: undefined
-    };
-    this.localSections = [...this.localSections, newSection];
-    this.showAddModal.set(false);
-    this.notifyChange();
-  }
-
-  deleteSection(index: number): void {
-    this.localSections = this.localSections.filter((_, i) => i !== index);
-    this.updateSortOrders();
-    this.notifyChange();
+  /**
+   * Every edit replaces the section object, so a caller holding an older
+   * reference (two setters chained in one handler, for instance) must still read
+   * the latest content. Look the section up by id and fall back to what we were
+   * given if it is no longer in the list.
+   */
+  private currentSection(section: SectionConfigurationDto): SectionConfigurationDto {
+    return this.localSections().find(s => s.id === section.id) ?? section;
   }
 
   getContent(section: SectionConfigurationDto): any {
+    const json = this.currentSection(section).contentJson;
     try {
-      return section.contentJson ? JSON.parse(section.contentJson) : {};
+      return json ? JSON.parse(json) : {};
     } catch {
       return {};
     }
@@ -2494,21 +2022,20 @@ export class SectionEditorComponent implements OnInit {
   setContentField(section: SectionConfigurationDto, field: string, value: any): void {
     const content = this.getContent(section);
     content[field] = value;
-    section.contentJson = JSON.stringify(content);
-    this.notifyChange();
+    this.patchSection(section, { contentJson: JSON.stringify(content) });
   }
 
   setContentBilingual(section: SectionConfigurationDto, field: string, lang: 'en' | 'ar', value: string): void {
     const content = this.getContent(section);
     if (!content[field]) content[field] = { en: '', ar: '' };
     content[field][lang] = value;
-    section.contentJson = JSON.stringify(content);
-    this.notifyChange();
+    this.patchSection(section, { contentJson: JSON.stringify(content) });
   }
 
   getSettings(section: SectionConfigurationDto): any {
+    const json = this.currentSection(section).settingsJson;
     try {
-      return section.settingsJson ? JSON.parse(section.settingsJson) : {};
+      return json ? JSON.parse(json) : {};
     } catch {
       return {};
     }
@@ -2521,8 +2048,9 @@ export class SectionEditorComponent implements OnInit {
     } else {
       settings[field] = value;
     }
-    section.settingsJson = Object.keys(settings).length ? JSON.stringify(settings) : undefined;
-    this.notifyChange();
+    this.patchSection(section, {
+      settingsJson: Object.keys(settings).length ? JSON.stringify(settings) : undefined
+    });
   }
 
   clearSettingsField(section: SectionConfigurationDto, field: string): void {
@@ -2539,8 +2067,7 @@ export class SectionEditorComponent implements OnInit {
   private setContentArray(section: SectionConfigurationDto, field: string, items: any[]): void {
     const content = this.getContent(section);
     content[field] = items;
-    section.contentJson = JSON.stringify(content);
-    this.notifyChange();
+    this.patchSection(section, { contentJson: JSON.stringify(content) });
   }
 
   addArrayItem(section: SectionConfigurationDto, field: string, template: any): void {
@@ -2575,8 +2102,7 @@ export class SectionEditorComponent implements OnInit {
   private setSpecGroups(section: SectionConfigurationDto, groups: any[]): void {
     const content = this.getContent(section);
     content.groups = groups;
-    section.contentJson = JSON.stringify(content);
-    this.notifyChange();
+    this.patchSection(section, { contentJson: JSON.stringify(content) });
   }
 
   addSpecGroup(section: SectionConfigurationDto): void {
@@ -2696,7 +2222,7 @@ export class SectionEditorComponent implements OnInit {
   }
 
   onSave(): void {
-    this.save.emit({ sections: this.localSections, seoSettings: this.localSeoSettings });
+    this.save.emit({ sections: this.localSections(), seoSettings: this.localSeoSettings });
   }
 
   onClose(): void {
