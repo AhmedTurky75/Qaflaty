@@ -1,6 +1,5 @@
 import { Injectable, inject, signal, computed, effect } from '@angular/core';
 import { ConfigService } from './config.service';
-import { BilingualText } from 'shared';
 
 @Injectable({ providedIn: 'root' })
 export class I18nService {
@@ -39,9 +38,10 @@ export class I18nService {
    * as-is, and a missing translation falls back to the other language rather
    * than rendering an empty element.
    */
-  getText(text: BilingualText | { en?: string; ar?: string } | string | undefined | null): string {
+  getText(text: unknown): string {
     if (!text) return '';
     if (typeof text === 'string') return text;
+    if (typeof text !== 'object') return String(text);
 
     const isArabic = this.currentLanguage() === 'ar';
     const value = text as { english?: string; arabic?: string; en?: string; ar?: string };
