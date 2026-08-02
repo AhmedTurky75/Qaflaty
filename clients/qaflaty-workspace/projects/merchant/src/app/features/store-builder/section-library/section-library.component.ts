@@ -1,6 +1,6 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
 import { DragDropModule } from '@angular/cdk/drag-drop';
-import { SECTION_GROUPS, SECTION_TYPES, SectionGroup, SectionTypeInfo } from '../section-preview/section-catalog';
+import { SECTION_GROUPS, SECTION_TYPES, SectionGroup, SectionTypeInfo, sectionTypesFor } from '../section-preview/section-catalog';
 import { SectionMiniatureComponent } from '../section-preview/section-miniature.component';
 import { SectionPreviewFrameComponent } from '../section-preview/section-preview-frame.component';
 import { SectionPreviewDataService } from '../section-preview/section-preview-data.service';
@@ -172,6 +172,8 @@ import { BuilderDragStateService } from '../section-canvas/builder-drag-state.se
 export class SectionLibraryComponent {
   /** Shared id so the canvas can name this list as a connected drop target. */
   dropListId = input<string>('section-library-list');
+  /** Whether the canvas is a page or a header/footer group. */
+  scope = input<'page' | 'layout'>('page');
   /** Emitted by the keyboard/click "Add" affordance — appends to the page end. */
   add = output<string>();
 
@@ -186,10 +188,13 @@ export class SectionLibraryComponent {
   protected readonly dragStartDelay =
     typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches ? 150 : 0;
 
+  private available = computed<SectionTypeInfo[]>(() => sectionTypesFor(this.scope()));
+
   private matches = computed<SectionTypeInfo[]>(() => {
     const q = this.query().trim().toLowerCase();
-    if (!q) return SECTION_TYPES;
-    return SECTION_TYPES.filter(t =>
+    const available = this.available();
+    if (!q) return available;
+    return available.filter(t =>
       t.label.toLowerCase().includes(q) || t.description.toLowerCase().includes(q));
   });
 

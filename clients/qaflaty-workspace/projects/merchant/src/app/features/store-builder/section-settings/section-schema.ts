@@ -21,8 +21,22 @@ export type SectionFieldKind =
   | 'product'
   | 'datetime'
   | 'list'
+  | 'blocks'
   | 'specGroups'
   | 'overlayAnchor';
+
+/**
+ * One kind of block a `blocks` field accepts. Unlike a list — where every row
+ * has the same shape — a section can offer several block types and the merchant
+ * picks which to add. Blocks are stored as `[{ type, …fields }]`.
+ */
+export interface SectionBlockType {
+  type: string;
+  label: string;
+  fields: SectionField[];
+  /** Shape of a newly added block, without its `type`. */
+  newBlock?: ContentTemplate;
+}
 
 export interface SectionFieldOption {
   value: string;
@@ -63,6 +77,9 @@ export interface SectionField {
   newItem?: ContentTemplate;
   /** Singular noun for the row header, e.g. "Slide 2". */
   itemNoun?: string;
+
+  // ── blocks only ──
+  blockTypes?: SectionBlockType[];
 }
 
 export type ContentTemplate = Record<string, unknown>;
@@ -414,6 +431,82 @@ export const SECTION_SCHEMAS: Record<string, SectionField[]> = {
     }
   ]
 };
+
+// ── Header and footer ──────────────────────────────────────────────────────
+
+SECTION_SCHEMAS['HeaderBar'] = [
+  { key: 'showName', label: 'Show the store name beside the logo', kind: 'toggle', defaultOn: true },
+  { key: 'sticky', label: 'Stay visible while scrolling', kind: 'toggle', defaultOn: true },
+  { key: 'showCart', label: 'Show the cart', kind: 'toggle', defaultOn: true },
+  { key: 'showAccount', label: 'Show the account link', kind: 'toggle', defaultOn: true },
+  { key: 'showLanguage', label: 'Show the language switcher', kind: 'toggle', defaultOn: true },
+  {
+    key: 'blocks', label: 'Menu links', kind: 'blocks', full: true,
+    addLabel: 'Add a link', itemNoun: 'Link',
+    help: 'With no links added, the header lists your store pages.',
+    blockTypes: [{
+      type: 'link',
+      label: 'Menu link',
+      newBlock: { label: bilingualPair(), url: '/products' },
+      fields: [
+        { key: 'label', label: 'Link text', kind: 'bilingual', full: true, placeholder: 'Shop' },
+        { key: 'url', label: 'Goes to', kind: 'text', full: true, placeholder: '/products' }
+      ]
+    }]
+  }
+];
+
+SECTION_SCHEMAS['FooterColumns'] = [
+  { key: 'showStoreBlurb', label: 'Show the store name and description', kind: 'toggle', defaultOn: true, full: true },
+  {
+    key: 'blocks', label: 'Columns', kind: 'blocks', full: true,
+    addLabel: 'Add a column', itemNoun: 'Column',
+    help: 'With no columns added, the footer lists your store pages.',
+    blockTypes: [
+      {
+        type: 'links',
+        label: 'Column of links',
+        newBlock: { title: bilingualPair(), links: [] },
+        fields: [
+          { key: 'title', label: 'Column heading', kind: 'bilingual', full: true, placeholder: 'Shop' },
+          {
+            key: 'links', label: 'Links', kind: 'list', full: true,
+            addLabel: 'Add a link', itemNoun: 'Link',
+            newItem: { label: bilingualPair(), url: '' },
+            itemFields: [
+              { key: 'label', label: 'Link text', kind: 'bilingual', full: true },
+              { key: 'url', label: 'Goes to', kind: 'text', full: true, placeholder: '/products' }
+            ]
+          }
+        ]
+      },
+      {
+        type: 'text',
+        label: 'Column of text',
+        newBlock: { title: bilingualPair(), text: bilingualPair() },
+        fields: [
+          { key: 'title', label: 'Column heading', kind: 'bilingual', full: true },
+          { key: 'text', label: 'Text', kind: 'bilingualArea', full: true }
+        ]
+      }
+    ]
+  }
+];
+
+SECTION_SCHEMAS['FooterSocial'] = [
+  {
+    key: 'title', label: 'Heading', kind: 'bilingual', full: true, placeholder: 'Follow us',
+    help: 'The accounts themselves come from your store settings.'
+  }
+];
+
+SECTION_SCHEMAS['Copyright'] = [
+  {
+    key: 'text', label: 'Closing line', kind: 'bilingual', full: true,
+    placeholder: '© {year} {store}. All rights reserved.',
+    help: 'Write {year} for the current year and {store} for your store name.'
+  }
+];
 
 export function schemaFor(sectionType: string): SectionField[] {
   return SECTION_SCHEMAS[sectionType] ?? [];

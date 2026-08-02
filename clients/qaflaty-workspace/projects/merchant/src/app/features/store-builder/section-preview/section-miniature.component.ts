@@ -587,6 +587,56 @@ import { PreviewCategory, PreviewProduct, SectionPreviewDataService } from './se
           </div>
         }
 
+        <!-- ── Header & footer ──────────────────────────────────────────── -->
+        @case ('header-bar') {
+          <div class="flex items-center justify-between border-b border-gray-200 bg-white px-10 py-5">
+            <div class="flex items-center gap-3">
+              <span class="h-8 w-8 rounded" style="background: var(--qf-primary)"></span>
+              <span class="text-xl font-bold text-gray-900">Your store</span>
+            </div>
+            <div class="flex items-center gap-7 text-base text-gray-700">
+              @for (link of headerLinks(); track $index) { <span>{{ link }}</span> }
+            </div>
+            <div class="flex items-center gap-4 text-gray-600">
+              <span class="text-sm">EN</span>
+              <span class="text-xl">🛒</span>
+            </div>
+          </div>
+        }
+        @case ('footer-columns') {
+          <div class="bg-gray-900 px-10 py-10">
+            <div class="grid grid-cols-4 gap-8">
+              <div>
+                <p class="mb-3 text-lg font-bold text-white">Your store</p>
+                <p class="text-sm text-gray-400">A line about what you sell.</p>
+              </div>
+              @for (column of footerColumns(); track $index) {
+                <div>
+                  <p class="mb-3 text-base font-semibold text-white">{{ column.title }}</p>
+                  @for (link of column.links; track $index) {
+                    <p class="mb-1.5 text-sm text-gray-400">{{ link }}</p>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        }
+        @case ('footer-social') {
+          <div class="bg-gray-900 px-10 py-7 text-center">
+            @if (title('')) { <p class="mb-3 text-sm text-gray-400">{{ title('') }}</p> }
+            <div class="flex justify-center gap-3">
+              @for (i of [1, 2, 3, 4]; track i) {
+                <span class="flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-sm text-white">●</span>
+              }
+            </div>
+          </div>
+        }
+        @case ('copyright-bar') {
+          <div class="border-t border-gray-800 bg-gray-900 px-10 py-5 text-center">
+            <p class="text-sm text-gray-500">{{ copyrightLine() }}</p>
+          </div>
+        }
+
         @default {
           <div class="flex h-[200px] items-center justify-center bg-gray-50">
             <p class="text-lg text-gray-400">{{ fallbackLabel() }}</p>
@@ -888,6 +938,43 @@ export class SectionMiniatureComponent {
       { qty: 2, label: 'Two pieces', badge: 'Most popular', highlight: true },
       { qty: 3, label: 'Three pieces', badge: 'Best value', highlight: false }
     ];
+  }
+
+  // ── Header & footer ──
+
+  /** The merchant's menu links, or the pages a real header would list. */
+  headerLinks(): string[] {
+    const written = this.array('blocks')
+      .filter(block => block['type'] === 'link')
+      .map(block => this.read(block['label']))
+      .filter(Boolean);
+
+    return written.length ? written.slice(0, 5) : ['Home', 'Shop', 'About', 'Contact'];
+  }
+
+  footerColumns(): { title: string; links: string[] }[] {
+    const written = this.array('blocks').map(block => ({
+      title: this.read(block['title']),
+      links: (Array.isArray(block['links']) ? block['links'] as Record<string, unknown>[] : [])
+        .map(link => this.read(link['label']))
+        .filter(Boolean)
+        .slice(0, 4)
+    })).filter(column => column.title || column.links.length);
+
+    if (written.length) return written.slice(0, 3);
+    return [
+      { title: 'Shop', links: ['All products', 'New in', 'Offers'] },
+      { title: 'Help', links: ['Contact', 'Delivery', 'Returns'] },
+      { title: 'About', links: ['Our story', 'Terms', 'Privacy'] }
+    ];
+  }
+
+  copyrightLine(): string {
+    const written = this.text('text');
+    const template = written || '© {year} {store}. All rights reserved.';
+    return template
+      .replace(/\{year\}/g, String(new Date().getFullYear()))
+      .replace(/\{store\}/g, 'Your store');
   }
 
   marqueeMessages(): string[] {

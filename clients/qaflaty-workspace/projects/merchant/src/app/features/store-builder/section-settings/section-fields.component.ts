@@ -2,7 +2,7 @@ import { Component, effect, input, output, signal } from '@angular/core';
 import { SectionConfigurationDto } from 'shared';
 import { SectionFieldControlComponent } from './section-field-control.component';
 import { ContentObject, readArray, readContent, readSettings, setArray, setContentValue, setSettingsValue } from './section-content';
-import { SectionField, schemaFor } from './section-schema';
+import { SectionBlockType, SectionField, schemaFor } from './section-schema';
 
 /** 5x5 anchor grid ("row-col", 1-based) for text placed over an image. */
 const OVERLAY_CELLS = Array.from({ length: 25 }, (_, i) => `${Math.floor(i / 5) + 1}-${(i % 5) + 1}`);
@@ -89,6 +89,97 @@ const LEGACY_COL: Record<string, number> = { left: 1, center: 3, right: 5 };
                   class="mt-2 rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary-tint focus:outline-none focus:ring-2 focus:ring-primary/40">
                   + {{ field.addLabel || 'Add' }}
                 </button>
+              </div>
+            }
+
+            @case ('blocks') {
+              <div class="rounded-lg border border-border p-3">
+                <p class="mb-1 text-xs font-semibold text-text">{{ field.label }}</p>
+                @if (field.help) {
+                  <p class="mb-2 text-[11px] text-text-muted">{{ field.help }}</p>
+                }
+
+                <div class="space-y-3">
+                  @for (block of itemsOf(field.key); track $index; let index = $index; let count = $count) {
+                    <div class="rounded-md border border-border bg-surface-elevated p-3">
+                      <div class="mb-2 flex items-center justify-between">
+                        <span class="text-xs font-medium text-text-muted">
+                          {{ blockLabel(field, block) }} {{ index + 1 }}
+                        </span>
+                        <div class="flex items-center gap-1">
+                          <button type="button" (click)="moveItem(field.key, index, -1)" [disabled]="index === 0"
+                            class="rounded p-1 text-text-muted hover:text-primary disabled:opacity-30 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            [attr.aria-label]="'Move ' + (field.itemNoun || 'block') + ' ' + (index + 1) + ' up'">↑</button>
+                          <button type="button" (click)="moveItem(field.key, index, 1)" [disabled]="index === count - 1"
+                            class="rounded p-1 text-text-muted hover:text-primary disabled:opacity-30 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            [attr.aria-label]="'Move ' + (field.itemNoun || 'block') + ' ' + (index + 1) + ' down'">↓</button>
+                          <button type="button" (click)="removeItem(field.key, index)"
+                            class="rounded p-1 text-danger hover:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary/40"
+                            [attr.aria-label]="'Remove ' + (field.itemNoun || 'block') + ' ' + (index + 1)">✕</button>
+                        </div>
+                      </div>
+
+                      <div class="grid grid-cols-2 gap-3">
+                        @for (blockField of blockFields(field, block); track blockField.key) {
+                          <div [class.col-span-2]="blockField.full">
+                            @if (blockField.kind === 'list') {
+                              <div class="rounded-md border border-border p-2">
+                                <p class="mb-2 text-xs font-medium text-text">{{ blockField.label }}</p>
+                                @for (row of nestedRows(field.key, index, blockField.key); track $index; let ri = $index) {
+                                  <div class="mb-2 rounded border border-border bg-surface p-2">
+                                    <div class="mb-1 flex justify-end">
+                                      <button type="button" (click)="removeNestedRow(field.key, index, blockField.key, ri)"
+                                        class="rounded p-0.5 text-danger focus:outline-none focus:ring-2 focus:ring-primary/40"
+                                        [attr.aria-label]="'Remove ' + (blockField.itemNoun || 'row') + ' ' + (ri + 1)">✕</button>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                      @for (rowField of blockField.itemFields || []; track rowField.key) {
+                                        <div [class.col-span-2]="rowField.full">
+                                          <app-section-field-control
+                                            [field]="rowField"
+                                            [value]="row[rowField.key]"
+                                            [storeId]="storeId()"
+                                            [productOptions]="productOptions()"
+                                            [idPrefix]="idPrefix() + '-' + field.key + '-' + index + '-' + blockField.key + '-' + ri"
+                                            (valueChange)="setNestedRowValue(field.key, index, blockField.key, ri, rowField.key, $event)"
+                                          />
+                                        </div>
+                                      }
+                                    </div>
+                                  </div>
+                                }
+                                <button type="button" (click)="addNestedRow(field.key, index, blockField)"
+                                  class="rounded px-2 py-1 text-xs font-medium text-primary hover:bg-primary-tint focus:outline-none focus:ring-2 focus:ring-primary/40">
+                                  + {{ blockField.addLabel || 'Add' }}
+                                </button>
+                              </div>
+                            } @else {
+                              <app-section-field-control
+                                [field]="blockField"
+                                [value]="block[blockField.key]"
+                                [storeId]="storeId()"
+                                [productOptions]="productOptions()"
+                                [idPrefix]="idPrefix() + '-' + field.key + '-' + index"
+                                (valueChange)="setItemValue(field.key, index, blockField.key, $event)"
+                              />
+                            }
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  } @empty {
+                    <p class="py-2 text-xs text-text-muted">Nothing here yet.</p>
+                  }
+                </div>
+
+                <div class="mt-2 flex flex-wrap gap-2">
+                  @for (blockType of field.blockTypes || []; track blockType.type) {
+                    <button type="button" (click)="addBlock(field, blockType)"
+                      class="rounded-md px-2 py-1 text-xs font-medium text-primary hover:bg-primary-tint focus:outline-none focus:ring-2 focus:ring-primary/40">
+                      + {{ (field.blockTypes || []).length > 1 ? blockType.label : (field.addLabel || blockType.label) }}
+                    </button>
+                  }
+                </div>
               </div>
             }
 
@@ -285,6 +376,58 @@ export class SectionFieldsComponent {
     const [moved] = items.splice(index, 1);
     items.splice(target, 0, moved);
     this.emit(setArray(this.current(), listKey, items));
+  }
+
+  // ── Blocks ───────────────────────────────────────────────────────────────
+
+  /** The declared type of a stored block, if the schema still offers it. */
+  private blockTypeOf(field: SectionField, block: ContentObject): SectionBlockType | undefined {
+    const type = typeof block['type'] === 'string' ? block['type'] : '';
+    const types = field.blockTypes ?? [];
+    return types.find(candidate => candidate.type === type) ?? types[0];
+  }
+
+  protected blockLabel(field: SectionField, block: ContentObject): string {
+    return this.blockTypeOf(field, block)?.label ?? field.itemNoun ?? 'Block';
+  }
+
+  protected blockFields(field: SectionField, block: ContentObject): SectionField[] {
+    return (this.blockTypeOf(field, block)?.fields ?? []).filter(f => this.isVisible(f, block));
+  }
+
+  protected addBlock(field: SectionField, blockType: SectionBlockType): void {
+    const block: ContentObject = { type: blockType.type, ...(blockType.newBlock ?? {}) };
+    this.emit(setArray(this.current(), field.key, [...this.itemsOf(field.key), block]));
+  }
+
+  /** Rows of a list nested inside a block, e.g. the links in a footer column. */
+  protected nestedRows(blocksKey: string, blockIndex: number, listKey: string): ContentObject[] {
+    const value = this.itemsOf(blocksKey)[blockIndex]?.[listKey];
+    return Array.isArray(value) ? value as ContentObject[] : [];
+  }
+
+  protected addNestedRow(blocksKey: string, blockIndex: number, listField: SectionField): void {
+    const rows = this.nestedRows(blocksKey, blockIndex, listField.key);
+    const template = listField.newItem ? { ...listField.newItem } : {};
+    this.patchItem(blocksKey, blockIndex, { [listField.key]: [...rows, template] });
+  }
+
+  protected removeNestedRow(blocksKey: string, blockIndex: number, listKey: string, rowIndex: number): void {
+    const rows = this.nestedRows(blocksKey, blockIndex, listKey).filter((_, i) => i !== rowIndex);
+    this.patchItem(blocksKey, blockIndex, { [listKey]: rows });
+  }
+
+  protected setNestedRowValue(
+    blocksKey: string,
+    blockIndex: number,
+    listKey: string,
+    rowIndex: number,
+    key: string,
+    value: unknown
+  ): void {
+    const rows = this.nestedRows(blocksKey, blockIndex, listKey)
+      .map((row, i) => i === rowIndex ? { ...row, [key]: value } : row);
+    this.patchItem(blocksKey, blockIndex, { [listKey]: rows });
   }
 
   // ── Specifications table ─────────────────────────────────────────────────

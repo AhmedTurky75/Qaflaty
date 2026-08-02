@@ -39,14 +39,20 @@ import {
           <div>
             <h3 class="text-lg font-semibold text-text">{{ page?.title?.english }}</h3>
             <p class="text-sm text-text-muted mt-1">
-              Drag sections onto the page. Open one with the pencil only if you want to change its wording.
+              @if (isLayoutGroup()) {
+                This is what wraps every page of your store. Drag sections in, and open one with the pencil to change its wording.
+              } @else {
+                Drag sections onto the page. Open one with the pencil only if you want to change its wording.
+              }
             </p>
           </div>
           <div class="flex items-center gap-2">
-            <button type="button" (click)="showTemplateModal.set(true)"
-              class="rounded-md border border-border px-3 py-2 text-sm font-medium text-text hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40">
-              Start from a template
-            </button>
+            @if (!isLayoutGroup()) {
+              <button type="button" (click)="showTemplateModal.set(true)"
+                class="rounded-md border border-border px-3 py-2 text-sm font-medium text-text hover:border-primary hover:text-primary focus:outline-none focus:ring-2 focus:ring-primary/40">
+                Start from a template
+              </button>
+            }
             <button type="button" (click)="onClose()"
               class="rounded p-1.5 text-text-muted hover:text-text focus:outline-none focus:ring-2 focus:ring-primary/40" aria-label="Close the page builder">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +80,7 @@ import {
               class="rounded p-1 text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/40" aria-label="Close the sections panel">✕</button>
           </div>
           <div class="min-h-0 flex-1">
-            <app-section-library (add)="onLibraryAdd($event)" />
+            <app-section-library [scope]="scope()" (add)="onLibraryAdd($event)" />
           </div>
         </aside>
 
@@ -286,8 +292,9 @@ import {
     }
 
     <div class="bg-surface rounded-lg shadow mt-4 transition-opacity" [class.opacity-60]="dragState.dragging()">
-      <!-- How this page appears in search results -->
-      <div class="px-6 py-5 bg-surface-elevated rounded-t-lg">
+      <!-- How this page appears in search results. A header or footer is not a
+           page shoppers land on, so it has nothing to say to search engines. -->
+      <div class="px-6 py-5 bg-surface-elevated rounded-t-lg" [class.hidden]="isLayoutGroup()">
         <h4 class="text-sm font-semibold text-text mb-4 flex items-center gap-2">
           <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -457,6 +464,18 @@ export class SectionEditorComponent implements OnInit {
 
   readonly dragState = inject(BuilderDragStateService);
   readonly pageTemplates = PAGE_TEMPLATES;
+
+  /**
+   * Header and footer groups offer layout sections; pages offer page sections.
+   * A plain method, not a computed: `page` is a static input set once by the host.
+   */
+  scope(): 'page' | 'layout' {
+    return this.isLayoutGroup() ? 'layout' : 'page';
+  }
+
+  isLayoutGroup(): boolean {
+    return this.page?.pageType === 'Header' || this.page?.pageType === 'Footer';
+  }
 
   private productService = inject(ProductService);
   private previewData = inject(SectionPreviewDataService);

@@ -44,6 +44,10 @@ import { BundleTiersComponent } from './bundle/bundle-tiers.component';
 import { MarqueeBarComponent } from './marquee/marquee-bar.component';
 import { ImageBlockComponent } from './image/image-block.component';
 import { SpecsTableComponent } from './specs/specs-table.component';
+import { HeaderBarComponent } from './layout/header-bar.component';
+import { FooterColumnsComponent } from './layout/footer-columns.component';
+import { FooterSocialComponent } from './layout/footer-social.component';
+import { CopyrightBarComponent } from './layout/copyright-bar.component';
 
 @Component({
   selector: 'app-section-renderer',
@@ -65,7 +69,8 @@ import { SpecsTableComponent } from './specs/specs-table.component';
     CountdownTimerComponent, RichTextComponent, CtaButtonComponent,
     StatsStandardComponent, ComparisonStandardComponent, BeforeAfterStandardComponent,
     OrderFormComponent, StickyBuyBarComponent, BundleTiersComponent, MarqueeBarComponent,
-    ImageBlockComponent, SpecsTableComponent
+    ImageBlockComponent, SpecsTableComponent,
+    HeaderBarComponent, FooterColumnsComponent, FooterSocialComponent, CopyrightBarComponent
   ],
   template: `
     @for (section of sections(); track section.id) {
@@ -116,6 +121,10 @@ import { SpecsTableComponent } from './specs/specs-table.component';
             @case ('order-form') { <app-order-form [config]="section" [product]="product()" /> }
             @case ('sticky-bar') { <app-sticky-buy-bar [config]="section" [product]="product()" /> }
             @case ('bundle-tiers') { <app-bundle-tiers [config]="section" [product]="product()" /> }
+            @case ('header-bar') { <app-header-bar [config]="section" /> }
+            @case ('footer-columns') { <app-footer-columns [config]="section" /> }
+            @case ('footer-social') { <app-footer-social [config]="section" /> }
+            @case ('copyright-bar') { <app-copyright-bar [config]="section" /> }
           }
           </app-section-wrapper>
         </section>

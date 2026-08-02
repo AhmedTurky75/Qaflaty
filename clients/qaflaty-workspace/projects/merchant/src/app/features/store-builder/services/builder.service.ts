@@ -80,6 +80,14 @@ export class BuilderService {
     return this.http.post<PageConfigurationDto>(`${this.apiUrl}/stores/${storeId}/pages/custom`, req);
   }
 
+  /**
+   * Fetches the store's header or footer group, creating it for stores that
+   * predate them. Safe to call every time the builder opens one.
+   */
+  ensureLayoutPage(storeId: string, layoutType: 'Header' | 'Footer'): Observable<PageConfigurationDto> {
+    return this.http.post<PageConfigurationDto>(`${this.apiUrl}/stores/${storeId}/pages/layout/${layoutType}`, {});
+  }
+
   deleteCustomPage(storeId: string, pageId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/stores/${storeId}/pages/${pageId}`);
   }

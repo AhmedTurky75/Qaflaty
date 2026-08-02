@@ -1,5 +1,6 @@
 using Qaflaty.Application.Catalog.DTOs;
 using Qaflaty.Application.Common.CQRS;
+using Qaflaty.Domain.Catalog.Enums;
 using Qaflaty.Domain.Catalog.Errors;
 using Qaflaty.Domain.Catalog.Repositories;
 using Qaflaty.Domain.Common.Errors;
@@ -29,6 +30,13 @@ public class GetCustomPageQueryHandler : IQueryHandler<GetCustomPageQuery, PageC
         }
 
         if (!page.IsEnabled)
+        {
+            return Result.Failure<PageConfigurationDto>(CatalogErrors.PageConfigurationNotFound);
+        }
+
+        // Header and footer are layout groups, not pages a shopper can browse to,
+        // even though they carry a slug like any other page configuration.
+        if (page.PageType is PageType.Header or PageType.Footer)
         {
             return Result.Failure<PageConfigurationDto>(CatalogErrors.PageConfigurationNotFound);
         }

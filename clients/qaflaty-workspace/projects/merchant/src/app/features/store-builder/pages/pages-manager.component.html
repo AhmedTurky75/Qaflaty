@@ -32,6 +32,28 @@
     }
 
     @if (!loading() && !loadErr()) {
+      <!-- The header and footer wrap every page, so they sit above the list. -->
+      <div class="mb-6">
+        <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">Around every page</h2>
+        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <button type="button" (click)="openLayout('Header')" [disabled]="openingLayout() !== null"
+            class="rounded-xl border border-border bg-surface p-4 text-start shadow-sm transition-colors hover:border-primary disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-primary/40">
+            <p class="text-sm font-semibold text-text">Header</p>
+            <p class="mt-0.5 text-xs text-text-muted">
+              {{ openingLayout() === 'Header' ? 'Opening…' : 'Logo, menu links, cart — shown at the top of every page' }}
+            </p>
+          </button>
+          <button type="button" (click)="openLayout('Footer')" [disabled]="openingLayout() !== null"
+            class="rounded-xl border border-border bg-surface p-4 text-start shadow-sm transition-colors hover:border-primary disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-primary/40">
+            <p class="text-sm font-semibold text-text">Footer</p>
+            <p class="mt-0.5 text-xs text-text-muted">
+              {{ openingLayout() === 'Footer' ? 'Opening…' : 'Link columns, social accounts, copyright — shown at the bottom' }}
+            </p>
+          </button>
+        </div>
+      </div>
+
+      <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-text-muted">Pages</h2>
       <div class="space-y-3">
         @for (page of pages(); track page.id) {
           <div class="rounded-xl border border-border bg-surface p-4 shadow-sm">
