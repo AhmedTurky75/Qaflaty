@@ -16,7 +16,13 @@ export interface SectionVariant {
 }
 
 /** Purpose-based grouping used by the library panel. */
-export type SectionGroupKey = 'hero' | 'products' | 'categories' | 'content' | 'trust' | 'conversion';
+export type SectionGroupKey = 'hero' | 'products' | 'categories' | 'content' | 'trust' | 'conversion' | 'layout';
+
+/**
+ * Where a section can be used: on a page, in the header/footer layout groups,
+ * or either. Keeps page-only blocks out of the header and vice versa.
+ */
+export type SectionScope = 'page' | 'layout' | 'both';
 
 export interface SectionGroup {
   key: SectionGroupKey;
@@ -41,6 +47,8 @@ export interface SectionTypeInfo {
    * it a "what should this show?" picker in its settings.
    */
   dataSource?: 'products' | 'categories';
+  /** Defaults to 'page' when unset. */
+  scope?: SectionScope;
 }
 
 export const SECTION_GROUPS: SectionGroup[] = [
@@ -49,7 +57,8 @@ export const SECTION_GROUPS: SectionGroup[] = [
   { key: 'categories', label: 'Categories', hint: 'Help shoppers browse' },
   { key: 'content', label: 'Content', hint: 'Tell your story' },
   { key: 'trust', label: 'Trust & social proof', hint: 'Reasons to buy from you' },
-  { key: 'conversion', label: 'Offers & checkout', hint: 'Turn visits into orders' }
+  { key: 'conversion', label: 'Offers & checkout', hint: 'Turn visits into orders' },
+  { key: 'layout', label: 'Header & footer', hint: 'What wraps every page' }
 ];
 
 const bi = (en: string, ar: string) => ({ en, ar });
@@ -80,7 +89,8 @@ export const SECTION_TYPES: SectionTypeInfo[] = [
   },
   {
     key: 'AnnouncementBar', label: 'Announcement bar', description: 'Thin promo strip across the top',
-    group: 'hero', defaultVariantId: 'announcement-bar', aspect: 16 / 3,
+    // Equally at home above the header or on a page.
+    group: 'hero', defaultVariantId: 'announcement-bar', aspect: 16 / 3, scope: 'both',
     defaultContent: {
       text: bi('Free shipping on orders over 500', 'شحن مجاني للطلبات فوق 500'),
       link: '/products', bg: '#111827', textColor: '#ffffff', dismissible: true
@@ -320,8 +330,35 @@ export const SECTION_TYPES: SectionTypeInfo[] = [
     key: 'StickyBar', label: 'Sticky buy bar', description: 'A buy bar pinned to the screen bottom',
     group: 'conversion', defaultVariantId: 'sticky-bar', aspect: 16 / 4,
     defaultContent: { buttonText: bi('Add to cart', 'أضف إلى السلة') }
+  },
+
+  // ── Header and footer ──
+  {
+    key: 'HeaderBar', label: 'Header bar', description: 'Logo, menu links, cart and language',
+    group: 'layout', defaultVariantId: 'header-bar', aspect: 16 / 2.4, scope: 'layout',
+    defaultContent: { showName: true, sticky: true, showCart: true, showAccount: true, showLanguage: true }
+  },
+  {
+    key: 'FooterColumns', label: 'Footer columns', description: 'Columns of links or text',
+    group: 'layout', defaultVariantId: 'footer-columns', aspect: 16 / 7, scope: 'layout',
+    defaultContent: { showStoreBlurb: true, blocks: [] }
+  },
+  {
+    key: 'FooterSocial', label: 'Social links', description: 'Your social accounts as icons',
+    group: 'layout', defaultVariantId: 'footer-social', aspect: 16 / 3, scope: 'layout',
+    defaultContent: { title: bi('Follow us', 'تابعنا') }
+  },
+  {
+    key: 'Copyright', label: 'Copyright line', description: 'The closing line of the footer',
+    group: 'layout', defaultVariantId: 'copyright-bar', aspect: 16 / 2.4, scope: 'layout',
+    defaultContent: { text: bi('© {year} {store}. All rights reserved.', '© {year} {store}. جميع الحقوق محفوظة.') }
   }
 ];
+
+/** The section types offered while editing a page, or a header/footer group. */
+export function sectionTypesFor(scope: 'page' | 'layout'): SectionTypeInfo[] {
+  return SECTION_TYPES.filter(type => (type.scope ?? 'page') === scope || type.scope === 'both');
+}
 
 export const SECTION_VARIANTS: Record<string, SectionVariant[]> = {
   Hero: [
@@ -382,7 +419,11 @@ export const SECTION_VARIANTS: Record<string, SectionVariant[]> = {
   ReviewsShowcase: [{ id: 'reviews-standard', label: 'Standard' }],
   Faq: [{ id: 'faq-accordion', label: 'Accordion' }],
   Guarantee: [{ id: 'guarantee-standard', label: 'Standard' }],
-  CallToAction: [{ id: 'cta-band', label: 'Band' }]
+  CallToAction: [{ id: 'cta-band', label: 'Band' }],
+  HeaderBar: [{ id: 'header-bar', label: 'Standard' }],
+  FooterColumns: [{ id: 'footer-columns', label: 'Columns' }],
+  FooterSocial: [{ id: 'footer-social', label: 'Icons' }],
+  Copyright: [{ id: 'copyright-bar', label: 'Standard' }]
 };
 
 export interface PageTemplate {

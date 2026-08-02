@@ -5,7 +5,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { SectionConfigurationDto } from 'shared';
 import { SectionFieldsComponent } from './section-fields.component';
 import { SECTION_SCHEMAS, schemaFor } from './section-schema';
-import { SECTION_TYPES } from '../section-preview/section-catalog';
+import { SECTION_TYPES, sectionTypesFor } from '../section-preview/section-catalog';
 import { readContent, readSettings } from './section-content';
 
 @Component({
@@ -153,6 +153,54 @@ describe('SectionFieldsComponent', () => {
     ]);
   });
 
+  it('adds blocks of the chosen type and keeps their order', () => {
+    const { host, fields } = mount({ sectionType: 'FooterColumns' });
+    const blocks = schemaFor('FooterColumns').find(f => f.kind === 'blocks')!;
+    const [linksType, textType] = blocks.blockTypes!;
+
+    fields['addBlock'](blocks, linksType);
+    fields['addBlock'](blocks, textType);
+
+    let stored = readContent(host.section())['blocks'] as Record<string, unknown>[];
+    expect(stored.map(b => b['type'])).toEqual(['links', 'text']);
+
+    fields['moveItem']('blocks', 0, 1);
+    stored = readContent(host.section())['blocks'] as Record<string, unknown>[];
+    expect(stored.map(b => b['type'])).toEqual(['text', 'links']);
+  });
+
+  it('shows each block only the fields of its own type', () => {
+    const { fields } = mount({ sectionType: 'FooterColumns' });
+    const blocks = schemaFor('FooterColumns').find(f => f.kind === 'blocks')!;
+
+    const linkColumn = fields['blockFields'](blocks, { type: 'links' });
+    const textColumn = fields['blockFields'](blocks, { type: 'text' });
+
+    expect(linkColumn.map(f => f.key)).toEqual(['title', 'links']);
+    expect(textColumn.map(f => f.key)).toEqual(['title', 'text']);
+  });
+
+  it('edits a list nested inside a block', () => {
+    const { host, fields } = mount({
+      sectionType: 'FooterColumns',
+      contentJson: JSON.stringify({ blocks: [{ type: 'links', title: { en: 'Shop' }, links: [] }] })
+    });
+    const blocks = schemaFor('FooterColumns').find(f => f.kind === 'blocks')!;
+    const linksField = blocks.blockTypes![0].fields.find(f => f.kind === 'list')!;
+
+    fields['addNestedRow']('blocks', 0, linksField);
+    fields['setNestedRowValue']('blocks', 0, 'links', 0, 'label', { en: 'All products', ar: '' });
+    fields['setNestedRowValue']('blocks', 0, 'links', 0, 'url', '/products');
+
+    const stored = (readContent(host.section())['blocks'] as Record<string, unknown>[])[0];
+    expect(stored['links']).toEqual([{ label: { en: 'All products', ar: '' }, url: '/products' }]);
+    // The block's own fields are untouched by edits to its list.
+    expect(stored['title']).toEqual({ en: 'Shop' });
+
+    fields['removeNestedRow']('blocks', 0, 'links', 0);
+    expect((readContent(host.section())['blocks'] as Record<string, unknown>[])[0]['links']).toEqual([]);
+  });
+
   it('writes a settings-targeted field to settingsJson, not content', () => {
     const settingsField = { key: 'pageSize', label: 'How many', kind: 'number' as const, target: 'settings' as const };
     const { host, fields } = mount({ sectionType: 'Hero' });
@@ -187,6 +235,36 @@ describe('section schemas', () => {
         }
         if (field.kind === 'select') {
           expect(field.options?.length).withContext(`${type}.${field.key} options`).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it('keeps page sections and layout sections apart', () => {
+    const pageKeys = sectionTypesFor('page').map(t => t.key);
+    const layoutKeys = sectionTypesFor('layout').map(t => t.key);
+
+    expect(layoutKeys).toContain('HeaderBar');
+    expect(layoutKeys).toContain('FooterColumns');
+    expect(pageKeys).not.toContain('HeaderBar');
+    expect(pageKeys).not.toContain('FooterColumns');
+
+    // A promo strip belongs in both places.
+    expect(pageKeys).toContain('AnnouncementBar');
+    expect(layoutKeys).toContain('AnnouncementBar');
+
+    // Page blocks stay off the header.
+    expect(layoutKeys).not.toContain('FeaturedProducts');
+  });
+
+  it('gives every block type a label and at least one field', () => {
+    for (const [type, fields] of Object.entries(SECTION_SCHEMAS)) {
+      for (const field of fields.filter(f => f.kind === 'blocks')) {
+        expect(field.blockTypes?.length).withContext(`${type}.${field.key}`).toBeGreaterThan(0);
+        for (const blockType of field.blockTypes ?? []) {
+          expect(blockType.type).withContext(`${type}.${field.key} block type`).toBeTruthy();
+          expect(blockType.label).withContext(`${type}.${field.key} block label`).toBeTruthy();
+          expect(blockType.fields.length).withContext(`${type}.${field.key} block fields`).toBeGreaterThan(0);
         }
       }
     }

@@ -99,6 +99,18 @@ public class StoreCreatedSeedConfigHandler : INotificationHandler<StoreCreatedEv
         var cartPage = CreatePage(storeId, PageType.Cart, "cart",
             BilingualText.Create("سلة التسوق", "Cart"));
         if (cartPage != null) await _pageRepo.AddAsync(cartPage, ct);
+
+        // Header and footer layout groups. Shoppers never visit these; they hold
+        // the sections drawn around every page. Seeded empty, so the storefront
+        // keeps using the store's header/footer variant until the merchant puts
+        // something in them.
+        var headerGroup = CreatePage(storeId, PageType.Header, "header",
+            BilingualText.Create("الترويسة", "Header"));
+        if (headerGroup != null) await _pageRepo.AddAsync(headerGroup, ct);
+
+        var footerGroup = CreatePage(storeId, PageType.Footer, "footer",
+            BilingualText.Create("التذييل", "Footer"));
+        if (footerGroup != null) await _pageRepo.AddAsync(footerGroup, ct);
     }
 
     private static PageConfiguration? CreatePage(

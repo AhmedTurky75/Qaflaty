@@ -5,6 +5,7 @@ using Qaflaty.Application.Catalog.Commands.CreateCustomPage;
 using Qaflaty.Application.Catalog.Commands.CreateFaqItem;
 using Qaflaty.Application.Catalog.Commands.DeleteCustomPage;
 using Qaflaty.Application.Catalog.Commands.DeleteFaqItem;
+using Qaflaty.Application.Catalog.Commands.EnsureLayoutPage;
 using Qaflaty.Application.Catalog.Commands.ReorderFaqItems;
 using Qaflaty.Application.Catalog.Commands.UpdateFaqItem;
 using Qaflaty.Application.Catalog.Commands.UpdatePageConfiguration;
@@ -111,6 +112,17 @@ public class StoreConfigurationController : ApiController
 
         if (result.IsFailure) return HandleResult(result);
         return StatusCode(StatusCodes.Status201Created, result.Value);
+    }
+
+    /// <summary>
+    /// Returns the store's header or footer layout group, creating it for stores
+    /// that predate them. Safe to call every time the builder opens one.
+    /// </summary>
+    [HttpPost("pages/layout/{layoutType}")]
+    public async Task<IActionResult> EnsureLayoutPage(Guid storeId, string layoutType, CancellationToken ct)
+    {
+        var result = await Sender.Send(new EnsureLayoutPageCommand(storeId, layoutType), ct);
+        return HandleResult(result);
     }
 
     [HttpDelete("pages/{pageId:guid}")]

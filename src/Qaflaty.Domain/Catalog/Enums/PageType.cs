@@ -13,5 +13,10 @@ public enum PageType
     ShippingReturns,
     Cart,
     Custom,
-    ProductLanding
+    ProductLanding,
+
+    // Layout groups. These are not pages a shopper visits — they hold the
+    // sections that make up the header and footer shown around every page.
+    Header,
+    Footer
 }

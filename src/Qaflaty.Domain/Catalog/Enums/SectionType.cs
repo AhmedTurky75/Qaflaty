@@ -31,5 +31,11 @@ public enum SectionType
     Bundle,
     Marquee,
     Image,
-    Specs
+    Specs,
+
+    // Sections that belong to the header and footer layout groups.
+    HeaderBar,
+    FooterColumns,
+    FooterSocial,
+    Copyright
 }
