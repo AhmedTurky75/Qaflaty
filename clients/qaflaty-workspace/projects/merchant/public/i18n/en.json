@@ -20,7 +20,6 @@
     "customers": "Customers",
     "stores": "Stores",
     "settings": "Settings",
-    "more": "More",
     "live": "Live",
     "activeCarts": "Active Carts",
     "returns": "Returns",
@@ -29,7 +28,19 @@
     "chat": "Live Chat",
     "builder": "Store Builder",
     "ads": "Ads Management",
-    "team": "Team"
+    "team": "Team",
+    "primary": "Main navigation",
+    "menu": "Menu",
+    "categories": "Categories",
+    "blockedPhones": "Blocked numbers",
+    "group": {
+      "sales": "Sales",
+      "catalog": "Catalog",
+      "customers": "Customers",
+      "marketing": "Marketing",
+      "storefront": "Storefront",
+      "settings": "Settings"
+    }
   },
   "switcher": {
     "loading": "Loading…",
@@ -608,8 +619,7 @@
     "appearance": "Appearance",
     "password": "Password",
     "stores": "Stores",
-    "notifications": "Notifications",
-    "moreHint": "Everything else — reach any feature here. Nothing was removed."
+    "notifications": "Notifications"
   },
   "theme": {
     "title": "Appearance",
@@ -625,7 +635,14 @@
     "emerald": "Emerald",
     "teal": "Teal",
     "rose": "Rose",
-    "lang": { "en": "English", "ar": "العربية" },
-    "size": { "small": "Small", "normal": "Normal", "large": "Large" }
+    "lang": {
+      "en": "English",
+      "ar": "العربية"
+    },
+    "size": {
+      "small": "Small",
+      "normal": "Normal",
+      "large": "Large"
+    }
   }
 }

@@ -31,6 +31,7 @@ const LABEL_KEYS: Record<string, string> = {
   'store-builder': 'nav.builder',
   ads: 'nav.ads',
   'active-carts': 'nav.activeCarts',
+  'blocked-phones': 'nav.blockedPhones',
   live: 'nav.live',
   team: 'nav.team',
   new: 'crumb.new',

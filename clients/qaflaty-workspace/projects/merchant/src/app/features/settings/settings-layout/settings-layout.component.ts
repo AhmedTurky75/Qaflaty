@@ -17,6 +17,5 @@ export class SettingsLayoutComponent {
     { labelKey: 'settings.password', path: '/settings/password', icon: 'lock' },
     { labelKey: 'settings.stores', path: '/settings/stores', icon: 'stores' },
     { labelKey: 'settings.notifications', path: '/settings/notifications', icon: 'bell' },
-    { labelKey: 'nav.more', path: '/settings/more', icon: 'more' },
   ];
 }

@@ -1,7 +1,7 @@
 <div class="min-h-screen bg-canvas text-text">
   <!-- Rail (desktop, fixed) -->
   <div class="hidden lg:fixed lg:inset-y-0 lg:start-0 lg:z-30 lg:block">
-    <app-rail [chatUnread]="chatUnreadCount()" (more)="drawerOpen.set(true)" />
+    <app-rail [badges]="badges()" />
   </div>
 
   <!-- Content column -->
@@ -14,12 +14,12 @@
   </div>
 
   <!-- Mobile bottom navigation -->
-  <app-bottom-nav [chatUnread]="chatUnreadCount()" (more)="drawerOpen.set(true)" />
+  <app-bottom-nav [badges]="badges()" (more)="drawerOpen.set(true)" />
 
-  <!-- Shared "More" / mobile nav drawer -->
+  <!-- Mobile nav drawer -->
   <app-nav-drawer
     [open]="drawerOpen()"
-    [chatUnread]="chatUnreadCount()"
+    [badges]="badges()"
     (close)="drawerOpen.set(false)"
   />
 </div>

@@ -20,7 +20,6 @@
     "customers": "العملاء",
     "stores": "المتاجر",
     "settings": "الإعدادات",
-    "more": "المزيد",
     "live": "المباشر",
     "activeCarts": "السلات النشطة",
     "returns": "المرتجعات",
@@ -29,7 +28,19 @@
     "chat": "المحادثة المباشرة",
     "builder": "منشئ المتجر",
     "ads": "إدارة الإعلانات",
-    "team": "الفريق"
+    "team": "الفريق",
+    "primary": "التنقل الرئيسي",
+    "menu": "القائمة",
+    "categories": "الفئات",
+    "blockedPhones": "الأرقام المحظورة",
+    "group": {
+      "sales": "المبيعات",
+      "catalog": "الكتالوج",
+      "customers": "العملاء",
+      "marketing": "التسويق",
+      "storefront": "واجهة المتجر",
+      "settings": "الإعدادات"
+    }
   },
   "switcher": {
     "loading": "جارٍ التحميل…",
@@ -608,8 +619,7 @@
     "appearance": "المظهر",
     "password": "كلمة المرور",
     "stores": "المتاجر",
-    "notifications": "الإشعارات",
-    "moreHint": "كل ما تبقّى — يمكنك الوصول لأي ميزة من هنا. لم يُحذف شيء."
+    "notifications": "الإشعارات"
   },
   "theme": {
     "title": "المظهر",
@@ -625,7 +635,14 @@
     "emerald": "أخضر",
     "teal": "فيروزي",
     "rose": "وردي",
-    "lang": { "en": "English", "ar": "العربية" },
-    "size": { "small": "صغير", "normal": "عادي", "large": "كبير" }
+    "lang": {
+      "en": "English",
+      "ar": "العربية"
+    },
+    "size": {
+      "small": "صغير",
+      "normal": "عادي",
+      "large": "كبير"
+    }
   }
 }

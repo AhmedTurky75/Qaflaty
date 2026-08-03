@@ -1,42 +1,45 @@
-import { ChangeDetectionStrategy, Component, computed, inject, input, output } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { NgClass } from '@angular/common';
+import { ChangeDetectionStrategy, Component, ElementRef, inject, input, output } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
-import { AuthService } from '../../../core/services/auth.service';
-import { StoreContextService } from '../../../core/services/store-context.service';
 import { IconComponent } from '../icon/icon.component';
-import { MORE_NAV, NavItem } from '../shell/nav.config';
+import { handleNavKeydown } from '../shell/nav-keyboard';
+import { NavBadgeCounts, NavStateService } from '../shell/nav-state.service';
+import { isNavGroup, NavGroup } from '../shell/nav.config';
 
 /**
- * Slide-in drawer holding the "More" destinations — every feature that isn't a
- * core rail item, all reachable at their original routes. Opened from the rail's
- * More button, the mobile bottom-nav More, or the topbar hamburger.
- *
- * The Team entry is owner-only, mirroring the previous shell's rule: authority
- * comes from owning the active store (there is no role claim on the token).
+ * Slide-in drawer holding the full navigation for mobile, where the rail is
+ * hidden. It renders the same config, grouping and expansion state as the rail,
+ * so the information architecture is identical on both. Opened from the mobile
+ * bottom-nav More button or the topbar hamburger.
  */
 @Component({
   selector: 'app-nav-drawer',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, TranslocoPipe, IconComponent],
+  imports: [NgClass, RouterLink, TranslocoPipe, IconComponent],
   templateUrl: './nav-drawer.component.html',
   styleUrl: './nav-drawer.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class NavDrawerComponent {
-  private readonly auth = inject(AuthService);
-  private readonly storeContext = inject(StoreContextService);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+
+  protected readonly nav = inject(NavStateService);
 
   readonly open = input<boolean>(false);
-  readonly chatUnread = input<number>(0);
+  readonly badges = input<NavBadgeCounts>({});
   readonly close = output<void>();
 
-  private readonly isStoreOwner = computed(() => {
-    const m = this.auth.currentMerchant();
-    const s = this.storeContext.currentStore();
-    return !!m && !!s && s.merchantId === m.id;
-  });
+  protected readonly entries = this.nav.entries;
+  protected readonly firstGroupId = this.nav.firstGroupId;
 
-  protected readonly items = computed<NavItem[]>(() =>
-    MORE_NAV.filter((i) => !i.ownerOnly || this.isStoreOwner()),
-  );
+  protected readonly isGroup = isNavGroup;
+
+  protected showsCollapsedActive(group: NavGroup): boolean {
+    return !this.nav.isExpanded(group.id) && this.nav.activeGroupId() === group.id;
+  }
+
+  protected onKeydown(event: KeyboardEvent): void {
+    handleNavKeydown(event, this.host.nativeElement);
+  }
 }

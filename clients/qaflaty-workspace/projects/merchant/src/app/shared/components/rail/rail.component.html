@@ -10,31 +10,88 @@
     <app-store-switcher />
   </div>
 
-  <!-- Core navigation -->
-  <nav class="flex-1 space-y-0.5 overflow-y-auto px-3 py-2" aria-label="Primary">
-    @for (item of coreNav; track item.route) {
-      <a
-        [routerLink]="item.route"
-        routerLinkActive="bg-rail-active text-rail-active-text hover:bg-rail-active"
-        class="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-rail-muted transition-colors hover:bg-rail-border/10 hover:text-rail-text focus:outline-none focus:ring-2 focus:ring-rail-active"
-      >
-        <app-icon [name]="item.icon" [size]="20" />
-        <span class="text-sm font-medium">{{ item.labelKey | transloco }}</span>
-      </a>
-    }
+  <!-- Navigation: pinned destinations, then collapsible groups -->
+  <nav
+    class="flex-1 space-y-0.5 overflow-y-auto px-3 py-2"
+    [attr.aria-label]="'nav.primary' | transloco"
+    (keydown)="onKeydown($event)"
+  >
+    @for (entry of entries(); track entry.id) {
+      @if (isGroup(entry)) {
+        <div [class]="entry.id === firstGroupId() ? 'mt-2 border-t border-rail-border/15 pt-2' : ''">
+          <button
+            type="button"
+            data-nav-focusable
+            (click)="nav.toggle(entry.id)"
+            [attr.aria-expanded]="nav.isExpanded(entry.id)"
+            [attr.aria-controls]="'rail-group-' + entry.id"
+            class="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2.5 text-rail-muted transition-colors hover:bg-rail-border/10 hover:text-rail-text focus:outline-none focus:ring-2 focus:ring-rail-active"
+            [class.text-rail-text]="showsCollapsedActive(entry)"
+          >
+            <app-icon [name]="entry.icon" [size]="20" />
+            <span class="flex-1 text-start text-sm font-medium">{{ entry.labelKey | transloco }}</span>
 
-    <!-- More -->
-    <button
-      type="button"
-      (click)="more.emit()"
-      class="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2.5 text-rail-muted transition-colors hover:bg-rail-border/10 hover:text-rail-text focus:outline-none focus:ring-2 focus:ring-rail-active"
-    >
-      <app-icon name="more" [size]="20" />
-      <span class="text-sm font-medium">{{ 'nav.more' | transloco }}</span>
-      @if (chatUnread() > 0) {
-        <span class="ms-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{{ chatUnread() }}</span>
+            <!-- Collapsed group with the active item inside: subtle active marker -->
+            @if (showsCollapsedActive(entry)) {
+              <span class="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-rail-active" aria-hidden="true"></span>
+            }
+
+            <!-- Counts bubble up while the group is closed -->
+            @if (!nav.isExpanded(entry.id) && nav.groupBadge(entry, badges()); as count) {
+              <span class="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{{ count }}</span>
+            }
+
+            <app-icon
+              name="chevron-down"
+              [size]="16"
+              class="nav-chevron flex-shrink-0"
+              [class.nav-chevron--collapsed]="!nav.isExpanded(entry.id)"
+            />
+          </button>
+
+          <div class="nav-group-panel" [class.nav-group-panel--open]="nav.isExpanded(entry.id)">
+            <div>
+              <div
+                [id]="'rail-group-' + entry.id"
+                role="group"
+                [attr.aria-label]="entry.labelKey | transloco"
+                class="space-y-0.5 ps-3 pt-0.5"
+              >
+                @for (item of entry.items; track item.id) {
+                  <a
+                    [routerLink]="item.route"
+                    data-nav-focusable
+                    [attr.aria-current]="nav.isActive(item.id) ? 'page' : null"
+                    class="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-rail-muted transition-colors hover:bg-rail-border/10 hover:text-rail-text focus:outline-none focus:ring-2 focus:ring-rail-active"
+                    [ngClass]="nav.isActive(item.id) ? 'bg-rail-active text-rail-active-text hover:bg-rail-active' : ''"
+                  >
+                    <app-icon [name]="item.icon" [size]="20" />
+                    <span class="flex-1 text-sm font-medium">{{ item.labelKey | transloco }}</span>
+                    @if (nav.itemBadge(item, badges()); as count) {
+                      <span class="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{{ count }}</span>
+                    }
+                  </a>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+      } @else {
+        <a
+          [routerLink]="entry.route"
+          data-nav-focusable
+          [attr.aria-current]="nav.isActive(entry.id) ? 'page' : null"
+          class="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-rail-muted transition-colors hover:bg-rail-border/10 hover:text-rail-text focus:outline-none focus:ring-2 focus:ring-rail-active"
+          [ngClass]="nav.isActive(entry.id) ? 'bg-rail-active text-rail-active-text hover:bg-rail-active' : ''"
+        >
+          <app-icon [name]="entry.icon" [size]="20" />
+          <span class="flex-1 text-sm font-medium">{{ entry.labelKey | transloco }}</span>
+          @if (nav.itemBadge(entry, badges()); as count) {
+            <span class="inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-danger px-1.5 text-[11px] font-bold text-white">{{ count }}</span>
+          }
+        </a>
       }
-    </button>
+    }
   </nav>
 
   <!-- User block -->

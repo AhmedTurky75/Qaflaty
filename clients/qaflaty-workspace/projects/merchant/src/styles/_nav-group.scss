@@ -1,0 +1,51 @@
+/**
+ * Shared collapsible-group mechanics for the sidebar surfaces (rail + drawer).
+ * Consumed with `@use` from each component's stylesheet so it stays inside view
+ * encapsulation rather than leaking globally.
+ *
+ * Height is animated with the grid `0fr → 1fr` trick so no pixel height has to
+ * be measured. The inner wrapper is `visibility: hidden` while collapsed, which
+ * keeps the hidden items out of the tab order without an @if that would kill the
+ * transition.
+ */
+.nav-group-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 150ms ease-out;
+
+  > * {
+    overflow: hidden;
+    visibility: hidden;
+    transition: visibility 150ms ease-out;
+  }
+
+  &--open {
+    grid-template-rows: 1fr;
+
+    > * {
+      visibility: visible;
+    }
+  }
+}
+
+.nav-chevron {
+  display: inline-flex;
+  transition: transform 150ms ease-out;
+
+  &--collapsed {
+    transform: rotate(-90deg);
+  }
+}
+
+/* The chevron points the other way when the shell runs right-to-left. */
+:host-context([dir='rtl']) .nav-chevron--collapsed {
+  transform: rotate(90deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-group-panel,
+  .nav-group-panel > *,
+  .nav-chevron {
+    transition: none;
+  }
+}

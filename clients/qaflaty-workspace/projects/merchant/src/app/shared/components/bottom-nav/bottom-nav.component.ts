@@ -1,12 +1,13 @@
-import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, input, output } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { IconComponent } from '../icon/icon.component';
-import { BOTTOM_NAV } from '../shell/nav.config';
+import { NavBadgeCounts, NavStateService } from '../shell/nav-state.service';
+import { BOTTOM_NAV, NavItem } from '../shell/nav.config';
 
 /**
- * Mobile bottom navigation: four core destinations plus a "More" trigger that
- * opens the shared nav drawer. Shown only below the `lg` breakpoint.
+ * Mobile bottom navigation: the pinned destinations plus a trigger that opens
+ * the full grouped nav drawer. Shown only below the `lg` breakpoint.
  */
 @Component({
   selector: 'app-bottom-nav',
@@ -17,8 +18,14 @@ import { BOTTOM_NAV } from '../shell/nav.config';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BottomNavComponent {
-  readonly chatUnread = input<number>(0);
+  private readonly nav = inject(NavStateService);
+
+  readonly badges = input<NavBadgeCounts>({});
   readonly more = output<void>();
 
   protected readonly items = BOTTOM_NAV;
+
+  protected badgeFor(item: NavItem): number {
+    return this.nav.itemBadge(item, this.badges());
+  }
 }

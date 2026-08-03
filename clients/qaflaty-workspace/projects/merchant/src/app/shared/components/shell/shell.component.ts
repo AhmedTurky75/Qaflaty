@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, effect } from '@angular/core';
+import { Component, computed, inject, signal, OnInit, effect } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { StoreContextService } from '../../../core/services/store-context.service';
 import { MerchantChatService } from '../../../features/chat/services/merchant-chat.service';
@@ -6,11 +6,12 @@ import { RailComponent } from '../rail/rail.component';
 import { TopbarComponent } from '../topbar/topbar.component';
 import { BottomNavComponent } from '../bottom-nav/bottom-nav.component';
 import { NavDrawerComponent } from '../nav-drawer/nav-drawer.component';
+import { NavBadgeCounts } from './nav-state.service';
 
 /**
- * Application shell (Direction C): coloured rail + topbar on desktop, bottom
- * nav + slide-in drawer on mobile. Owns the drawer open state and keeps the
- * existing chat-unread polling — the data flow is unchanged from before.
+ * Application shell: coloured rail + topbar on desktop, bottom nav + slide-in
+ * drawer on mobile. Owns the drawer open state and keeps the existing
+ * chat-unread polling — the data flow is unchanged from before.
  */
 @Component({
   selector: 'app-shell',
@@ -27,6 +28,12 @@ export class ShellComponent implements OnInit {
 
   // Chat unread count
   public chatUnreadCount = this.chatService.totalUnreadCount;
+
+  /**
+   * Counts feeding the navigation badges. Chat is the only source in the app
+   * today; adding another means adding a key here and a `badgeKey` in nav.config.
+   */
+  public badges = computed<NavBadgeCounts>(() => ({ chat: this.chatUnreadCount() }));
 
   constructor() {
     // Poll for unread count every 30 seconds when a store is selected
