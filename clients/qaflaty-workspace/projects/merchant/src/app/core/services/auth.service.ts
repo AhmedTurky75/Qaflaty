@@ -15,6 +15,22 @@ import {
   VerifyLoginResponse
 } from 'shared';
 
+/**
+ * Module-level, not a class field: the signals below are initialised in field
+ * declaration order, so a `private readonly MERCHANT_KEY` declared after them
+ * would still be `undefined` while they run — the restored session would be read
+ * from `localStorage.getItem(undefined)` and every reload would bounce the
+ * merchant to the login page.
+ */
+const MERCHANT_KEY = 'qaflaty_merchant';
+
+function loadStoredMerchant(): MerchantDto | null {
+  try {
+    const m = localStorage.getItem(MERCHANT_KEY);
+    return m ? JSON.parse(m) : null;
+  } catch { return null; }
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
@@ -22,21 +38,13 @@ export class AuthService {
   private storeContext = inject(StoreContextService);
 
   // Signals for reactive state
-  currentMerchant = signal<MerchantDto | null>(this.loadStoredMerchant());
-  isAuthenticated = signal<boolean>(!!this.loadStoredMerchant());
+  currentMerchant = signal<MerchantDto | null>(loadStoredMerchant());
+  isAuthenticated = signal<boolean>(!!this.currentMerchant());
   storeId = signal<string | null>(localStorage.getItem('qaflaty_store_id'));
   role = signal<string | null>(localStorage.getItem('qaflaty_role'));
   permissions = signal<string[]>(JSON.parse(localStorage.getItem('qaflaty_permissions') || '[]'));
 
-  private readonly MERCHANT_KEY = 'qaflaty_merchant';
   private refreshInProgress$: Observable<MerchantDto> | null = null;
-
-  private loadStoredMerchant(): MerchantDto | null {
-    try {
-      const m = localStorage.getItem(this.MERCHANT_KEY);
-      return m ? JSON.parse(m) : null;
-    } catch { return null; }
-  }
 
   /** Step 1: credentials → OTP sent, returns email */
   initiateLogin(request: LoginRequest): Observable<InitiateLoginResponse> {
@@ -134,13 +142,13 @@ export class AuthService {
   }
 
   private storeMerchant(merchant: MerchantDto): void {
-    localStorage.setItem(this.MERCHANT_KEY, JSON.stringify(merchant));
+    localStorage.setItem(MERCHANT_KEY, JSON.stringify(merchant));
     this.currentMerchant.set(merchant);
     this.isAuthenticated.set(true);
   }
 
   private clearAuth(): void {
-    localStorage.removeItem(this.MERCHANT_KEY);
+    localStorage.removeItem(MERCHANT_KEY);
     localStorage.removeItem('qaflaty_store_id');
     localStorage.removeItem('qaflaty_role');
     localStorage.removeItem('qaflaty_permissions');
